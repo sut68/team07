@@ -15,4 +15,7 @@ type IssueReport struct {
 
 	TypeID int        `json:"type_id"`
 	Type   *IssueType `gorm:"foreignKey:TypeID" json:"type"`
+
+	UserID int   `json:"user_id"`
+	User   *User `gorm:"foreignKey:UserID" json:"user"`
 }
