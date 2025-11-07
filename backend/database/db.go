@@ -38,7 +38,14 @@ func ConnectDatabase() {
 
 func SetUpDatabase() {
 	db.AutoMigrate(
-		&entity.User{},
+		&entity.Evaluation{},
+		&entity.EvaResult{},
+		&entity.Criteria{},
+		&entity.IndividualScore{},
+		&entity.Appointment{},
+		&entity.AppointmentType{},
+		&entity.Room{},
+		&entity.Schedule{},
 	)
 }
 
