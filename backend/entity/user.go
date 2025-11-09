@@ -2,17 +2,14 @@ package entity
 
 import "gorm.io/gorm"
 
-type Role string
-
-const (
-	Teacher   Role = "teacher"
-	Student   Role = "student"
-	Admin   Role = "admin"
-)
-
 type User struct {
 	gorm.Model
-	Username string `gorm:"unique"`
-	Password string `gorm:"not null"`
-	Role    Role `gorm:"column:role;type:enum('teacher','student','admin')"`
+	Username string `json:"username"`
+	Password string `gorm:"not null" json:"-"`
+
+	StatusID int          `json:"status_id"`
+	Status   *AccountStatus `gorm:"foreignKey:StatusID" json:"status"`
+
+	RoleID int          `json:"role_id"`
+	Role   *UserRole `gorm:"foreignKey:RoleID" json:"role"`
 }
