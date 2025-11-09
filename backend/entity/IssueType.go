@@ -6,5 +6,5 @@ import (
 
 type IssueType struct {
 	gorm.Model
-	Type string
+	Type string `json:"type"`
 }

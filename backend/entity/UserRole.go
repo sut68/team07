@@ -2,8 +2,7 @@ package entity
 
 import "gorm.io/gorm"
 
-
-type Gender struct{
+type UserRole struct{
 	gorm.Model
-	Name string `json:"name"`
+	Role string `json:"role"`
 }
