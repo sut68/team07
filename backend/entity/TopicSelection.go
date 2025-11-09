@@ -1,4 +1,3 @@
-
 package entity
 
 import (
@@ -7,16 +6,15 @@ import (
 )
 
 type TopicSelection struct {
-    gorm.Model
-    DateSelected time.Time `json:"date_selected"`
+	gorm.Model
+	DateSelected time.Time `json:"date_selected"`
 
-    GroupID uint        `json:"group_id"`
-    Group   Group       `gorm:"foreignKey:GroupID" json:"group"`
+	GroupID uint  `json:"group_id"`
+	Group   Group `gorm:"foreignKey:GroupID" json:"group"`
 
-    TopicID *uint          `json:"topic_id"`
-    ProjectTopic *ProjectTopic `gorm:"foreignKey:TopicID" json:"project_topic"`
+	TopicID      *uint         `json:"topic_id"`
+	ProjectTopic *ProjectTopic `gorm:"foreignKey:TopicID" json:"project_topic"`
 
-    STopicID *uint         `json:"s_topic_id"`
-    StudentTopic *StudentTopic `gorm:"foreignKey:STopicID" json:"student_topic"`
+	STopicID     *uint         `json:"s_topic_id"`
+	StudentTopic *StudentTopic `gorm:"foreignKey:STopicID" json:"student_topic"`
 }
-

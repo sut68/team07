@@ -22,7 +22,5 @@ type Project struct {
 
 
 	Group         []Group     `gorm:"foreignKey:ProjectID"`
- 
-	
 
 }

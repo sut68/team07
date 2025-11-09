@@ -55,7 +55,6 @@ func SetUpDatabase() {
 		&entity.AppointmentType{},
 		&entity.Room{},
 		&entity.Schedule{},
-
 	)
 }
 
