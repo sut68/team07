@@ -10,9 +10,9 @@ type TeacherInfo struct {
 	Major     string `json:"major"`
 	Phone     string `json:"phone"`
 
-	UserID int   `json:"user_id"`
+	UserID uint   `json:"user_id"`
 	User   *User `gorm:"foreignKey:UserID" json:"user"`
 
-	GenderID int   `json:"gender_id"`
+	GenderID uint   `json:"gender_id"`
 	Gender   *Gender `gorm:"foreignKey:GenderID" json:"gender"`
 }

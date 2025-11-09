@@ -39,13 +39,33 @@ func ConnectDatabase() {
 
 func SetUpDatabase() {
 	db.AutoMigrate(
-		
+		&entity.AccountStatus{},
+		&entity.ActionType{},
+		&entity.AppointmentType{},
+		&entity.Appointment{},
+		&entity.Branch{},
+		&entity.Chat{},
+		&entity.Criteria{},
+		&entity.Evaluation{},
+		&entity.EvaResult{},
+		&entity.Gender{},
+		&entity.Group{},
+		&entity.IndividualScore{},
+		&entity.IssueReport{},
+		&entity.IssueStatus{},
+		&entity.IssueType{},
+		&entity.Logs{},
+		&entity.Progress{},
+		&entity.Project{},
+		&entity.ProjectTopic{},
+		&entity.Room{},
+		&entity.Schedule{},
 		&entity.StudentInfo{},
 		&entity.TeacherInfo{},
-		&entity.Gender{},
-		&entity.IssueType{},
-		&entity.IssueStatus{},
-		&entity.IssueReport{},
+		&entity.TopicApproval{},
+		&entity.TopicSelection{},
+		&entity.User{},
+		&entity.UserRole{},
 	)
 }
 
