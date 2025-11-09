@@ -17,6 +17,6 @@ type EvaResult struct {
 	AppointmentID uint        `json:"appointment_id"`
 	Appointment   *Appointment  `gorm:"foreignKey:AppointmentID" json:"appointment"`
 
-	// TeacherID uint   `json:"teacher_id"`
-	// Teacher   Teacher `gorm:"foreignKey:TeacherID" json:"teacher"`
+	TeacherID uint   `json:"teacher_id"`
+	Teacher   TeacherInfo `gorm:"foreignKey:TeacherID" json:"teacher"`
 }

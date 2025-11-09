@@ -32,12 +32,21 @@ func ConnectDatabase() {
 	}
 
 	fmt.Println("Database connected successfully to PostgreSQL")
+	fmt.Println("Database Name : ",os.Getenv("DB_NAME"))
 
 	db = database
 }
 
 func SetUpDatabase() {
 	db.AutoMigrate(
+		&entity.User{},
+		&entity.StudentInfo{},
+		&entity.TeacherInfo{},
+		&entity.Group{},
+		&entity.GenderInfo{},
+		&entity.IssueType{},
+		&entity.IssueStatus{},
+		&entity.IssueReport{},
 		&entity.Evaluation{},
 		&entity.EvaResult{},
 		&entity.Criteria{},
@@ -46,6 +55,7 @@ func SetUpDatabase() {
 		&entity.AppointmentType{},
 		&entity.Room{},
 		&entity.Schedule{},
+
 	)
 }
 

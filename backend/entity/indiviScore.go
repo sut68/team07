@@ -1,5 +1,4 @@
 package entity
-
 import "gorm.io/gorm"
 
 type IndividualScore struct {
@@ -12,9 +11,9 @@ type IndividualScore struct {
 	AppointmentID uint        `json:"appointment_id"`
 	Appointment   *Appointment  `gorm:"foreignKey:AppointmentID" json:"appointment"`
 
-	// TeacherID uint   `json:"teacher_id"`
-	// Teacher   Teacher `gorm:"foreignKey:TeacherID" json:"teacher"`
+	TeacherID uint   `json:"teacher_id"`
+	Teacher   *TeacherInfo `gorm:"foreignKey:TeacherID" json:"teacher"`
 
-	// StudentID uint    `json:"student_id"`
-	// Student   Student `gorm:"foreignKey:StudentID" json:"student"`
+	StudentID uint    `json:"student_id"`
+	Student   *StudentInfo `gorm:"foreignKey:StudentID" json:"student"`
 }

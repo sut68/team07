@@ -9,5 +9,5 @@ type Group struct {
 	ProjectName string `gorm:"project_name"`
 
 	TeacherID int   `json:"teacher_id"`
-	Teacher   *User `gorm:"foreignKey:TeacherID" json:"teacher"`
+	Teacher   *TeacherInfo `gorm:"foreignKey:TeacherID" json:"teacher"`
 }

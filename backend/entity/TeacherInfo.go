@@ -9,7 +9,9 @@ type TeacherInfo struct {
 	Email     string `gorm:"email"`
 	Major     string `gorm:"major"`
 	Phone     string `gorm:"phone"`
-	Gender    Gender `gorm:"column:gender;type:enum('male','female')"`
+	GenderID  int `json:"gender_id"`
+	Gender    *Gender `gorm:"foreignKey:GenderID" json:"gender"`
+	// `gorm:"column:gender;type:enum('male','female')"`
 
 	UserID int   `json:"user_id"`
 	User   *User `gorm:"foreignKey:UserID" json:"user"`
