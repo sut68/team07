@@ -9,4 +9,6 @@ type Branch struct {
 	BranchName string `gorm:"column:branch_name"`
 	
 	Projects []Project `gorm:"foreignKey:BranchID"`
+	TeacherInfo []TeacherInfo `gorm:"foreignKey:BranchID"`
+	StudentInfo []StudentInfo `gorm:"foreignKey:BranchID"`
 }

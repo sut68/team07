@@ -7,7 +7,6 @@ type TeacherInfo struct {
 	Firstname string `json:"firstname"`
 	Lastname  string `json:"lastname"`
 	Email     string `json:"email"`
-	Major     string `json:"major"`
 	Phone     string `json:"phone"`
 
 	UserID uint   `json:"user_id"`
@@ -15,4 +14,7 @@ type TeacherInfo struct {
 
 	GenderID uint   `json:"gender_id"`
 	Gender   *Gender `gorm:"foreignKey:GenderID" json:"gender"`
+
+	BranchID uint    `json:"branch_id"`
+	Branch   *Branch `gorm:"foreignKey:BranchID" json:"branch"`
 }

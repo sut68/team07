@@ -18,14 +18,14 @@ func DB() *gorm.DB {
 }
 
 func ConnectDatabase() {
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
-		os.Getenv("DB_HOST"),
-		os.Getenv("DB_USER"),
-		os.Getenv("DB_PASSWORD"),
-		os.Getenv("DB_NAME"),
-		os.Getenv("DB_PORT"),
-		os.Getenv("DB_SSLMODE"),
-	)
+    dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
+        os.Getenv("DB_HOST"),
+        os.Getenv("DB_USER"),
+        os.Getenv("DB_PASSWORD"),
+        os.Getenv("DB_NAME"),
+        os.Getenv("DB_PORT"),
+        os.Getenv("DB_SSLMODE"),
+    )
 	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
@@ -38,34 +38,41 @@ func ConnectDatabase() {
 }
 
 func SetUpDatabase() {
+	// ผมเเยก AutoMigrate เพราะให้มันจัดลำดับการสร้างตารางได้ง่ายขึ้น
 	db.AutoMigrate(
-		&entity.AccountStatus{},
-		&entity.ActionType{},
-		&entity.AppointmentType{},
-		&entity.Appointment{},
-		&entity.Branch{},
-		&entity.Chat{},
-		&entity.Criteria{},
-		&entity.Evaluation{},
-		&entity.EvaResult{},
 		&entity.Gender{},
-		&entity.Group{},
-		&entity.IndividualScore{},
-		&entity.IssueReport{},
+		&entity.UserRole{},
+		&entity.AccountStatus{},
+		&entity.Branch{},
 		&entity.IssueStatus{},
 		&entity.IssueType{},
-		&entity.Logs{},
-		&entity.Progress{},
+		&entity.ActionType{},
+	)
+
+	db.AutoMigrate(
+		&entity.User{},            
 		&entity.Project{},
 		&entity.ProjectTopic{},
+		&entity.Criteria{},
 		&entity.Room{},
-		&entity.Schedule{},
-		&entity.StudentInfo{},
+		&entity.AppointmentType{},
+	)
+
+	db.AutoMigrate(
 		&entity.TeacherInfo{},
-		&entity.TopicApproval{},
+		&entity.Group{},
+		&entity.StudentInfo{},
 		&entity.TopicSelection{},
-		&entity.User{},
-		&entity.UserRole{},
+		&entity.TopicApproval{},
+		&entity.Evaluation{},
+		&entity.IssueReport{},
+		&entity.Appointment{},
+		&entity.Schedule{},
+		&entity.Progress{},
+		&entity.Chat{},
+		&entity.Logs{},
+		&entity.IndividualScore{},
+		&entity.EvaResult{},
 	)
 }
 

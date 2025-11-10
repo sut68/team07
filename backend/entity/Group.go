@@ -6,8 +6,6 @@ import (
 
 type Group struct {
 	gorm.Model
-	ProjectName string `gorm:"project_name"`
-
 	TeacherID uint          `json:"teacher_id"`
 	Teacher   *TeacherInfo `gorm:"foreignKey:TeacherID" json:"teacher"`
 
