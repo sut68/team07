@@ -20,8 +20,8 @@ type Appointment struct {
 	ScheduleID uint     `json:"schedule_id"`
 	Schedule   *Schedule `gorm:"foreignKey:ScheduleID" json:"schedule"`
 
-	GroupID uint `json:"group_id"`
-	Group   *Group `gorm:"foreignKey:GroupID" json:"group"`
+	GroupProjectID uint          `json:"group_project_id"`
+	GroupProject   *GroupProject `gorm:"foreignKey:GroupProjectID" json:"group_project"`
 
 	EvaResults []EvaResult `gorm:"foreignKey:AppointmentID" json:"eva_results"`
 }

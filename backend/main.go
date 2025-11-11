@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/sut68/team07/backend/database"
-	mockdata "github.com/sut68/team07/backend/mockData"
+	// mockdata "github.com/sut68/team07/backend/mockData"
 )
 
 func main() {
@@ -12,8 +12,8 @@ func main() {
 	database.ConnectDatabase()
 	database.SetUpDatabase()
 	//============== Insert Data ===============
-	Data := database.DB()
-	mockdata.InsertMock(Data)
+	// Data := database.DB()
+	// mockdata.InsertMock(Data)
 	//=================================
 	r := gin.Default()
 	r.Use(database.CORSMiddleware())

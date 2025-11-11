@@ -12,12 +12,10 @@ type Project struct {
 	Year          int       `gorm:"column:Year"`
 	Status        string    `gorm:"column:Status"`
 	FilePath      string    `gorm:"column:FilePath"`
+
+	SelectionID uint          `json:"selection_id"`
+	TopicSelection *TopicSelection `gorm:"foreignKey:SelectionID" json:"topic_selection"`
 	
 
-	BranchID      uint       `gorm:"column:branch_id"`
-	Branch        *Branch    `gorm:"foreignKey:BranchID"`
-
-
-	Group         []Group     `gorm:"foreignKey:ProjectID"`
 
 }

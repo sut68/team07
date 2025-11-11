@@ -53,19 +53,21 @@ func SetUpDatabase() {
 		&entity.User{},            
 		&entity.Project{},
 		&entity.ProjectTopic{},
+		&entity.StudentTopic{},
+		&entity.TeacherTopic{},
 		&entity.Criteria{},
 		&entity.Room{},
 		&entity.AppointmentType{},
 	)
 
 	db.AutoMigrate(
-		&entity.TeacherInfo{},
-		&entity.Group{},
-		&entity.StudentInfo{},
+		&entity.GroupProject{},
+		&entity.GroupMember{},
 		&entity.TopicSelection{},
 		&entity.TopicApproval{},
 		&entity.Evaluation{},
 		&entity.IssueReport{},
+		&entity.Advisor{},
 		&entity.Appointment{},
 		&entity.Schedule{},
 		&entity.Progress{},
@@ -73,6 +75,7 @@ func SetUpDatabase() {
 		&entity.Logs{},
 		&entity.IndividualScore{},
 		&entity.EvaResult{},
+		&entity.ProjectStorage{},
 	)
 }
 
