@@ -39,6 +39,15 @@ func ConnectDatabase() {
 func SetUpDatabase() {
 	db.AutoMigrate(
 		&entity.User{},
+		&entity.UserRole{},
+		&entity.AccountStatus{},
+		&entity.Gender{},
+		&entity.Group{},
+		&entity.IssueReport{},
+		&entity.IssueStatus{},
+		&entity.IssueType{},
+		&entity.StudentInfo{},
+		&entity.TeacherInfo{},
 	)
 }
 
