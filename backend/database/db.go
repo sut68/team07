@@ -31,6 +31,7 @@ func ConnectDatabase() {
 	}
 
 	fmt.Println("Database connected successfully to PostgreSQL")
+	fmt.Println("Database Name : ",os.Getenv("DB_NAME"))
 
 	db = database
 }
