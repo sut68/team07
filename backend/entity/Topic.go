@@ -15,7 +15,7 @@ type Topic struct {
 	GroupProjectID uint `json:"group_project_id"`
 	GroupProject   *GroupProject `gorm:"foreignKey:GroupProjectID" json:"group_project"`
 
-    TopicSelectionID  []TopicSelection `gorm:"foreignKey:TeacherTopicID" json:"topic_selections"`
+    TopicSelectionID  []TopicSelection `gorm:"foreignKey:TopicID" json:"topic_selections"`
 }
 
 //true

@@ -25,12 +25,13 @@ type User struct {
 	GroupMembers  []GroupMember  `gorm:"foreignKey:StudentID" json:"group_members"`
 	SelectAdvisors []SelectAdvisor `gorm:"foreignKey:TeacherID" json:"select_advisors"`
 	ChatsSent     []Chat         `gorm:"foreignKey:SenderID" json:"chats_sent"`
-	IssueReports []IssueReport `gorm:"foreignKey:ReporterID" json:"issue_reports"`
+	IssueReports []IssueReport `gorm:"foreignKey:UserID" json:"issue_reports"`
 	ChatsReceived []Chat         `gorm:"foreignKey:ReceiverID" json:"chats_received"`
 	ProjectStorages []ProjectStorage `gorm:"foreignKey:TeacherID" json:"project_storages"`
 	TopicApprovals []TopicApproval `gorm:"foreignKey:TeacherID" json:"topic_approvals"`
 	IndividualScores []IndividualScore `gorm:"foreignKey:StudentID" json:"individual_scores"`
-	EvaResults      []EvaResult      `gorm:"foreignKey:StudentID" json:"eva_results"`
+	IndividualScore []IndividualScore `gorm:"foreignKey:TeacherID" json:"individual_score"`
+	EvaResults      []EvaResult      `gorm:"foreignKey:TeacherID" json:"eva_results"`
 	Schedules      []Schedule      `gorm:"foreignKey:TeacherID" json:"schedules"`
 	Logs		  []Log           `gorm:"foreignKey:UserID" json:"logs"`
 	

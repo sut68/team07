@@ -6,7 +6,7 @@ type UserRole struct{
 	gorm.Model
 	Role string `json:"role"`
 
-	Users []User `gorm:"foreignKey:UserRoleID"`
+	Users []User `gorm:"foreignKey:RoleID"`
 }
 
 //true
