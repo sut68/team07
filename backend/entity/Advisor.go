@@ -2,7 +2,7 @@ package entity
 
 import "gorm.io/gorm"
 
-type Advisor struct {
+type SelectAdvisor struct {
 	gorm.Model
 	No int `json:"no"`
 	Title string `json:"title"`
@@ -12,3 +12,5 @@ type Advisor struct {
 	TeacherID uint   `json:"teacher_id"`
 	Teacher   *User `gorm:"foreignKey:TeacherID" json:"teacher"`
 }
+
+//true

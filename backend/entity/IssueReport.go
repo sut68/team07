@@ -19,3 +19,5 @@ type IssueReport struct {
 	UserID uint   `json:"user_id"`
 	User   *User `gorm:"foreignKey:UserID" json:"user"`
 }
+
+//true

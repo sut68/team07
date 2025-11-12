@@ -17,3 +17,4 @@ type IndividualScore struct {
 	StudentID uint    `json:"student_id"`
 	Student   *User `gorm:"foreignKey:StudentID" json:"student"`
 }
+//true

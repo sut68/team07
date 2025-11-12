@@ -20,3 +20,4 @@ type EvaResult struct {
 	TeacherID uint   `json:"teacher_id"`
 	Teacher   *User `gorm:"foreignKey:TeacherID" json:"teacher"`
 }
+//true

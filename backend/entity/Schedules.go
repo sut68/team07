@@ -12,7 +12,9 @@ type Schedule struct {
 	EndTime       string    `json:"end_time"`
 	EffectiveDate time.Time `json:"effective_date"`
 	ExpiryDate    time.Time `json:"expiry_date"`
+	ScheduleType  string    `json:"schedule_type"`
 	TeacherID     uint      `json:"teacher_id"`
 	Teacher       *User     `gorm:"foreignKey:TeacherID" json:"teacher"`
-	Appointments []Appointment `gorm:"foreignKey:ScheduleID" json:"appointments"`
 }
+
+//true

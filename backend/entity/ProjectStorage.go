@@ -7,7 +7,7 @@ import (
 type ProjectStorage struct {
     gorm.Model
     Title         string `json:"title"`
-    Description   string `json:"description"`
+    Abstract	  string `json:"abstract"`
 	Keywords 	string `json:"keywords"`
 	Year		int    `json:"year"`
 	FilePath	string `json:"file_path"`
@@ -16,3 +16,4 @@ type ProjectStorage struct {
 	Teacher   *User `gorm:"foreignKey:TeacherID" json:"teacher"`
 }
 
+//true

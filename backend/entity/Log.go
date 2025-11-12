@@ -5,7 +5,7 @@ import (
     "gorm.io/gorm"
 )
 
-type Logs struct {
+type Log struct {
     gorm.Model
     UserID       uint       `json:"user_id"`                     
     User         *User      `gorm:"foreignKey:UserID" json:"user"`
@@ -14,3 +14,5 @@ type Logs struct {
     ActionType   *ActionType `gorm:"foreignKey:ActionTypeID" json:"action_type"`
     SentAt       time.Time  `json:"sent"`                     
 }
+
+//true

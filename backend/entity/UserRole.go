@@ -8,3 +8,5 @@ type UserRole struct{
 
 	Users []User `gorm:"foreignKey:UserRoleID"`
 }
+
+//true

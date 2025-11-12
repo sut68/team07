@@ -8,3 +8,5 @@ type Gender struct{
 
 	Users []User `gorm:"foreignKey:GenderID"`
 }
+
+//true

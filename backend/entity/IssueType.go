@@ -10,3 +10,4 @@ type IssueType struct {
 
 	IssueReports []IssueReport `gorm:"foreignKey:TypeID" json:"issue_reports"`
 }
+//true

@@ -14,3 +14,5 @@ type Progress struct {
 	File     string  	`json:"file"`
 	Send 	 time.Time 	`json:"send"`
 }
+
+//true

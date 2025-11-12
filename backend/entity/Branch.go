@@ -10,3 +10,5 @@ type Branch struct {
 	
 	Users []User `gorm:"foreignKey:BranchID"`
 }
+
+//true
