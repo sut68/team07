@@ -25,6 +25,7 @@ func InsertMock(db *gorm.DB) {
 	log.Println("Starting database seeding (Refactored)...")
 
 	var genders, roles, accountStatuses, branch, IssueStatus, IssueType, actionType []interface{}
+	var users []interface{}
 
 	for i := range MockGender {
 		genders = append(genders, &MockGender[i])
@@ -47,21 +48,25 @@ func InsertMock(db *gorm.DB) {
 	for i := range MockActionType {
 		actionType = append(actionType, &MockActionType[i])
 	}
+	for i := range MockUser {
+		users = append(users, &MockUser[i])
+	}
 
-	MockData := true
+	MockDataNotRun := true
+	MockData := false
 	// คือ true ป้องกันการสร้างข้อมูลซ้ำ
 	// คือ false จะสร้างข้อมูลใหม่ทุกครั้งที่รัน
 
 	tx := db.Begin()
 
-	seedGenericData(tx, genders, "Gender", MockData)
-	seedGenericData(tx, roles, "Role", MockData)
-	seedGenericData(tx, accountStatuses, "AccountStatus", MockData)
-	seedGenericData(tx, branch, "Branch", MockData)
-	seedGenericData(tx, IssueStatus, "IssueStatus", MockData)
-	seedGenericData(tx, IssueType, "IssueType", MockData)
-	seedGenericData(tx, actionType, "ActionType", MockData)
-
+	seedGenericData(tx, genders, "Gender", MockDataNotRun)
+	seedGenericData(tx, roles, "Role", MockDataNotRun)
+	seedGenericData(tx, accountStatuses, "AccountStatus", MockDataNotRun)
+	seedGenericData(tx, branch, "Branch", MockDataNotRun)
+	seedGenericData(tx, IssueStatus, "IssueStatus", MockDataNotRun)
+	seedGenericData(tx, IssueType, "IssueType", MockDataNotRun)
+	seedGenericData(tx, actionType, "ActionType", MockDataNotRun)
+	seedGenericData(tx, users, "User", MockData)
 	if tx.Error != nil {
 		log.Println("Seeding failed, rolling back...")
 		tx.Rollback()
