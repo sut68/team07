@@ -14,6 +14,7 @@ func main() {
 	database.ConnectDatabase()
 	database.SetUpDatabase()
 	//============== Insert Data ===============
+	// ถ้าเพิ่มข้อมูลไม่ได้ให้ไป ปรับ mockDataCreate = false
 	Data := database.DB()
 	mockdata.InsertMock(Data)
 	//=================================

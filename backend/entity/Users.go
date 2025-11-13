@@ -10,7 +10,7 @@ type User struct {
 	Lastname  string `json:"lastname"`
 	Email     string `json:"email"`
 	Phone     string `json:"phone"`
-    Pass    bool   `json:"pass"`
+    Pass    *bool   `json:"pass"`
 
 	GenderID uint   `json:"gender_id"`
 	Gender   *Gender `gorm:"foreignKey:GenderID" json:"gender"`
