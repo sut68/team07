@@ -75,8 +75,8 @@ var MockUser = []entity.User{
 }
 
 var MockGroupProject = []entity.GroupProject{
-	{Model:gorm.Model{ID: 1},GroupNumber: 1, GroupStatus: "In Process", TeacherID: 2},
-	{Model:gorm.Model{ID: 2},GroupNumber: 2, GroupStatus: "Pending", TeacherID: 3},
+	{Model:gorm.Model{ID: 1},GroupNumber: 1, GroupStatus: "In Process",Membership: 5, TeacherID: 2},
+	{Model:gorm.Model{ID: 2},GroupNumber: 2, GroupStatus: "Pending",Membership: 5, TeacherID: 3},
 }
 
 
