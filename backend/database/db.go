@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"github.com/sut68/team07/backend/entity"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
@@ -32,6 +31,7 @@ func ConnectDatabase() {
 	}
 
 	fmt.Println("Database connected successfully to PostgreSQL")
+	fmt.Println("Database Name : ",os.Getenv("DB_NAME"))
 
 	db = database
 }
@@ -39,6 +39,15 @@ func ConnectDatabase() {
 func SetUpDatabase() {
 	db.AutoMigrate(
 		&entity.User{},
+		&entity.UserRole{},
+		&entity.AccountStatus{},
+		&entity.Gender{},
+		&entity.Group{},
+		&entity.IssueReport{},
+		&entity.IssueStatus{},
+		&entity.IssueType{},
+		&entity.StudentInfo{},
+		&entity.TeacherInfo{},
 	)
 }
 
