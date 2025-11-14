@@ -23,4 +23,12 @@ type Project struct {
 
 	Group         []Group     `gorm:"foreignKey:ProjectID"`
 
+
+	SelectionID uint          `json:"selection_id"`
+	TopicSelection *TopicSelection `gorm:"foreignKey:SelectionID" json:"topic_selection"`
+	
+
+
 }
+
+//true

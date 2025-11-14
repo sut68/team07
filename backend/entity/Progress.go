@@ -8,9 +8,11 @@ import (
 type Progress struct {
 	gorm.Model
 
-	GroupID  uint    	`json:"group_id"`
-	Group    *Group  	`gorm:"foreignKey:GroupID" json:"group"`
+	GroupProjectID uint          `json:"group_project_id"`
+	GroupProject   *GroupProject `gorm:"foreignKey:GroupProjectID" json:"group_project"`
 
 	File     string  	`json:"file"`
 	Send 	 time.Time 	`json:"send"`
 }
+
+//true
