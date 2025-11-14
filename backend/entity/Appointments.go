@@ -25,5 +25,3 @@ type Appointment struct {
 
 	EvaResults []EvaResult `gorm:"foreignKey:AppointmentID" json:"eva_results"`
 }
-
-//true
