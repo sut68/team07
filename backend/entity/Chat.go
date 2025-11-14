@@ -8,8 +8,8 @@ import (
 type Chat struct {
 	gorm.Model
 
-	GroupID   uint       `json:"group_id"`
-	Group     *Group     `gorm:"foreignKey:GroupID" json:"group"`
+	GroupMemberID uint         `json:"group_member_id"`
+	GroupMember   *GroupMember `gorm:"foreignKey:GroupMemberID" json:"group_member"`
 
 	ProcessID uint              `json:"process_id"`
 	Process   *Progress  `gorm:"foreignKey:ProcessID" json:"process"`

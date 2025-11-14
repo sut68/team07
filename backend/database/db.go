@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"log"
 	"os"
+
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"github.com/sut68/team07/backend/entity"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -31,14 +33,48 @@ func ConnectDatabase() {
 	}
 
 	fmt.Println("Database connected successfully to PostgreSQL")
-	fmt.Println("Database Name : ",os.Getenv("DB_NAME"))
+	fmt.Println("Database Name : ", os.Getenv("DB_NAME"))
 
 	db = database
 }
 
 func SetUpDatabase() {
+	// ผมเเยก AutoMigrate เพราะให้มันจัดลำดับการสร้างตารางได้ง่ายขึ้น
 	db.AutoMigrate(
-		
+		&entity.Gender{},
+		&entity.UserRole{},
+		&entity.AccountStatus{},
+		&entity.Branch{},
+		&entity.IssueStatus{},
+		&entity.IssueType{},
+		&entity.ActionType{},
+	)
+
+	db.AutoMigrate(
+		&entity.User{},
+		&entity.Project{},
+		&entity.Topic{},
+		&entity.Criteria{},
+		&entity.Room{},
+		&entity.AppointmentType{},
+	)
+
+	db.AutoMigrate(
+		&entity.GroupProject{},
+		&entity.GroupMember{},
+		&entity.TopicSelection{},
+		&entity.TopicApproval{},
+		&entity.Evaluation{},
+		&entity.IssueReport{},
+		&entity.SelectAdvisor{},
+		&entity.Appointment{},
+		&entity.Schedule{},
+		&entity.Progress{},
+		&entity.Chat{},
+		&entity.Log{},
+		&entity.IndividualScore{},
+		&entity.EvaResult{},
+		&entity.ProjectStorage{},
 	)
 }
 

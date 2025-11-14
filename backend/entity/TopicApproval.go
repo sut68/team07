@@ -12,8 +12,10 @@ type TopicApproval struct {
     ApprovalDate time.Time `json:"approval_date"`
 
     TeacherID uint    `json:"teacher_id"`
-    TeacherInfo   *TeacherInfo `gorm:"foreignKey:TeacherID" json:"teacher"`
+    Teacher   *User `gorm:"foreignKey:TeacherID" json:"teacher"`
 
     SelectionID uint          `json:"selection_id"`
     TopicSelection *TopicSelection `gorm:"foreignKey:SelectionID" json:"topic_selection"`
 }
+
+//true
