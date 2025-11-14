@@ -5,13 +5,6 @@ import (
 	"gorm.io/gorm"
 )
 
-type ActionType string
-
-const (
-	AddUser    ActionType = "Adduser"
-	DeleteUser ActionType = "Deleteuser"
-	ModifyUser ActionType = "Modifyuser"
-)
 
 type Logs struct {
 	gorm.Model
