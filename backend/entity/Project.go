@@ -2,6 +2,7 @@ package entity
 
 import (
 	"gorm.io/gorm"
+	"time"
 )
 
 type Project struct {
@@ -12,6 +13,16 @@ type Project struct {
 	Year          int       `gorm:"column:Year"`
 	Status        string    `gorm:"column:Status"`
 	FilePath      string    `gorm:"column:FilePath"`
+	CreatedDate   time.Time `gorm:"column:CreatedDate"`
+	UpdatedDate   time.Time `gorm:"column:UpdatedDate"`
+	
+
+	BranchID      int       `gorm:"column:branch_id"`
+	Branch        *Branch    `gorm:"foreignKey:BranchID"`
+
+
+	Group         []Group     `gorm:"foreignKey:ProjectID"`
+
 
 	SelectionID uint          `json:"selection_id"`
 	TopicSelection *TopicSelection `gorm:"foreignKey:SelectionID" json:"topic_selection"`

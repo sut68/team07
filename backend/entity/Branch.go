@@ -8,7 +8,5 @@ type Branch struct {
 	gorm.Model
 	BranchName string `gorm:"column:branch_name"`
 	
-	Users []User `gorm:"foreignKey:BranchID"`
+	Projects []Project `gorm:"foreignKey:BranchID"`
 }
-
-//true
