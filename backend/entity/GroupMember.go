@@ -14,4 +14,3 @@ type GroupMember struct {
 	Appointment  []Appointment `gorm:"foreignKey:GroupMemberID" json:"appointments"`
 	Chats      []Chat        `gorm:"foreignKey:GroupMemberID" json:"chats"`
 }
-//true
