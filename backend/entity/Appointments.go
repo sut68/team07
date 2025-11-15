@@ -24,4 +24,5 @@ type Appointment struct {
 	GroupMember   *GroupMember `gorm:"foreignKey:GroupMemberID" json:"group_member"`
 
 	EvaResults []EvaResult `gorm:"foreignKey:AppointmentID" json:"eva_results"`
+	IndividualScores []IndividualScore `gorm:"foreignKey:AppointmentID" json:"individual_scores"`
 }

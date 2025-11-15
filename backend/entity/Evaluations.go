@@ -8,8 +8,8 @@ type Evaluation struct {
 	TotalScore   float64 `json:"total_score"`
 	ForGroupOnly bool    `json:"for_group_only"`
 
-	AppointmentID uint        `json:"appointment_id"`
-	Appointment   *Appointment `gorm:"foreignKey:AppointmentID" json:"appointment"`
+	AppointmentTypeID uint             `json:"appointment_type_id"`
+	AppointmentType   *AppointmentType `gorm:"foreignKey:AppointmentTypeID" json:"appointment_type"`
 	Criteria []Criteria `gorm:"foreignKey:EvaluationID" json:"criteria"`
 }
 
