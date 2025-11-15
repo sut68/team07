@@ -9,7 +9,7 @@ export default function LoginPage() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    router.push('/student/dashboard');
+    router.push('/teacher/dashboard');
   };
 
   const overlayColor = 'rgba(0, 0, 0, 0.3)';
