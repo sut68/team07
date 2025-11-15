@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"github.com/sut68/team07/backend/entity"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
@@ -39,14 +38,6 @@ func ConnectDatabase() {
 
 func SetUpDatabase() {
 	db.AutoMigrate(
-		&entity.StudentInfo{},
-		&entity.TeacherInfo{},
-		&entity.Group{},
-		&entity.GenderInfo{},
-		&entity.IssueType{},
-		&entity.IssueStatus{},
-		&entity.IssueReport{},
-		
 
 	)
 }
