@@ -10,6 +10,11 @@ body {
     background-color: white;
 }
 
+@font-face {
+  font-family: 'zzzTH';
+  src: url("../public/font/Sound.ttf");
+}
+
 .app-container {
     display: flex;
     min-height: 100vh;
@@ -22,9 +27,9 @@ body {
     color: black;
     padding: 15px;
     display: flex;
-    flex-direction: column; 
+    flex-direction: column;
     border-right: 1px solid #ddd;
-    flex-shrink: 0; 
+    flex-shrink: 0;
 }
 
 .sidebar-header {
@@ -54,7 +59,7 @@ body {
 }
 
 .main-content {
-    flex-grow: 1; 
+    flex-grow: 1;
     padding: 20px;
     background-color: white;
     overflow-y: auto;
@@ -66,35 +71,3 @@ body {
     color: black;
 }
 
-.login-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    background-color: white;
-}
-
-.login-form {
-    padding: 30px;
-    background-color: #f7f7f7;
-    border-radius: 5px;
-    border: 1px solid #ddd;
-    box-shadow: none;
-    width: 300px; 
-}
-
-.login-button {
-    width: 100%;
-    padding: 10px;
-    background-color: #f0f0f0;
-    color: black;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-    cursor: pointer;
-    font-size: 1em;
-    transition: background-color 0.1s;
-}
-
-.login-button:hover {
-    background-color: #e0e0e0;
-}
