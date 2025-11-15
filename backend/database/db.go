@@ -51,6 +51,7 @@ func SetUpDatabase() {
 
 	db.AutoMigrate(
 		&entity.User{},
+		&entity.RefreshToken{},
 		&entity.Project{},
 		&entity.Topic{},
 		&entity.Criteria{},

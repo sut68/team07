@@ -34,6 +34,7 @@ type User struct {
 	EvaResults      []EvaResult      `gorm:"foreignKey:TeacherID" json:"eva_results"`
 	Schedules      []Schedule      `gorm:"foreignKey:TeacherID" json:"schedules"`
 	Logs		  []Log           `gorm:"foreignKey:UserID" json:"logs"`
+	RefreshTokens  []RefreshToken `gorm:"foreignKey:UserID" json:"refresh_tokens"`
 	
 }
 
