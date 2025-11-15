@@ -1,26 +1,100 @@
-@import "tailwindcss";
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+    font-family: Arial, sans-serif;
+    color: black;
+    background-color: white;
+}
+
+.app-container {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+}
+
+.sidebar {
+    width: 200px;
+    background-color: #f7f7f7;
+    color: black;
+    padding: 15px;
+    display: flex;
+    flex-direction: column; 
+    border-right: 1px solid #ddd;
+    flex-shrink: 0; 
+}
+
+.sidebar-header {
+    font-size: 1.2em;
+    font-weight: bold;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.sidebar-nav ul {
+    list-style: none;
+    padding: 0;
+}
+
+.sidebar-nav a {
+    display: block;
+    text-decoration: none;
+    color: black;
+    padding: 8px;
+    border-radius: 3px;
+    transition: background-color 0.1s;
+}
+
+.sidebar-nav a:hover {
+    background-color: #e0e0e0;
+}
+
+.main-content {
+    flex-grow: 1; 
+    padding: 20px;
+    background-color: white;
+    overflow-y: auto;
+}
+
+.page-title {
+    font-size: 1.8em;
+    margin-bottom: 15px;
+    color: black;
+}
+
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: white;
+}
+
+.login-form {
+    padding: 30px;
+    background-color: #f7f7f7;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    box-shadow: none;
+    width: 300px; 
+}
+
+.login-button {
+    width: 100%;
+    padding: 10px;
+    background-color: #f0f0f0;
+    color: black;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.1s;
+}
+
+.login-button:hover {
+    background-color: #e0e0e0;
 }
