@@ -39,7 +39,7 @@ func InsertMock(db *gorm.DB) {
 	for i := range MockGroupMember {groupMem = append(groupMem, &MockGroupMember[i])}
 	for i := range MockRoom {rooms = append(rooms, &MockRoom[i])}
 
-	MockDataCreate := false
+	MockDataCreate := true
 	// คือ true ป้องกันการสร้างข้อมูลซ้ำ
 	// คือ false จะสร้างข้อมูลใหม่ทุกครั้งที่รัน
 
