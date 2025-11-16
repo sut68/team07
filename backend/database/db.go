@@ -93,6 +93,7 @@ func CORSMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
 func CheckGetENV() {
 	err := godotenv.Load()
 	if err != nil {

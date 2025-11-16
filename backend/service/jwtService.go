@@ -14,7 +14,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// Claims คือส่วน Payload ของ JWT ที่เราต้องการ
 type Claims struct {
 	ID       uint   `json:"id"`
 	Username string `json:"username"`
@@ -30,34 +29,27 @@ type JwtService interface {
 	ValidateToken(tokenStr string) (*Claims, error)
 	SaveRefreshToken(db *gorm.DB, tokenStr string, userID uint) error
 	CheckAndRevokeRefreshToken(db *gorm.DB, tokenStr string, userID uint) error
+	HashTokenSHA256(tokenStr string) string
 }
 
 type jwtServiceImpl struct{}
 
-// NewJwtService ฟังก์ชันสร้าง Instance
 func NewJwtService() JwtService {
 	return &jwtServiceImpl{}
 }
 
-// ---------------------------------------------------------------------
-// --- Implementations ที่ Interface ต้องการ ---
-// ---------------------------------------------------------------------
-
-// HashPassword: ใช้ Bcrypt ในการเข้ารหัส Password
 func (s *jwtServiceImpl) HashPassword(password string) string {
 	bytes, _ := bcrypt.GenerateFromPassword([]byte(password), 12)
 	return string(bytes)
 }
 
-// CheckPasswordHash: ตรวจสอบ Password ที่ Hash แล้ว
 func (s *jwtServiceImpl) CheckPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) 
 	return err == nil
 }
 
-// GenerateToken: สร้าง JWT (Access หรือ Refresh)
+//สร้าง JWT
 func (s *jwtServiceImpl) GenerateToken(user *entity.User, duration time.Duration) (string, error) {
-	// *สมมติว่า user.Role.Role มีข้อมูล Role เป็น string อยู่
 	roleName := user.Role.Role 
 
 	claims := &Claims{
@@ -76,7 +68,7 @@ func (s *jwtServiceImpl) GenerateToken(user *entity.User, duration time.Duration
 	return token.SignedString(config.JwtSecret()) 
 }
 
-// ValidateToken: ใช้ตรวจสอบความถูกต้องและลายเซ็นของ JWT
+//ใช้ตรวจสอบความถูกต้องและลายเซ็นของ JWT
 func (s *jwtServiceImpl) ValidateToken(tokenStr string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenStr, &Claims{}, func(t *jwt.Token) (any, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -98,23 +90,22 @@ func (s *jwtServiceImpl) ValidateToken(tokenStr string) (*Claims, error) {
 	return claims, nil
 }
 
-// ---------------------------------------------------------------------
-// --- Refresh Token Logic ---
-// ---------------------------------------------------------------------
 
-// TokenHashSHA256: ใช้สำหรับ Hash Refresh Token ก่อนบันทึกเข้า DB
-func TokenHashSHA256(tokenStr string) string {
+func HashTokenSHA256(tokenStr string) string {
 	hash := sha256.New()
 	hash.Write([]byte(tokenStr))
 	return hex.EncodeToString(hash.Sum(nil))
 }
 
-// SaveRefreshToken: บันทึก Refresh Token ใหม่ลงฐานข้อมูล
-func (s *jwtServiceImpl) SaveRefreshToken(db *gorm.DB, tokenStr string, userID uint) error {
-	// 1. Hash Token String ที่ได้รับเพื่อความปลอดภัยในการจัดเก็บ
-	tokenHash := TokenHashSHA256(tokenStr)
+func (s *jwtServiceImpl) HashTokenSHA256(tokenStr string) string {
+    return HashTokenSHA256(tokenStr)
+}
 
-	// 2. Validate Token เพื่อดึงค่า ExpiresAt มาบันทึกใน DB
+// บันทึก Refresh Token ใหม่ลงฐานข้อมูล
+func (s *jwtServiceImpl) SaveRefreshToken(db *gorm.DB, tokenStr string, userID uint) error {
+	tokenHash := HashTokenSHA256(tokenStr)
+
+	// ดึงค่า ExpiresAt มาบันทึกใน DB
 	claims, err := s.ValidateToken(tokenStr)
 	if err != nil {
 		return fmt.Errorf("invalid token during save: %w", err)
@@ -135,48 +126,47 @@ func (s *jwtServiceImpl) SaveRefreshToken(db *gorm.DB, tokenStr string, userID u
 	return nil 
 }
 
-// CheckAndRevokeRefreshToken: ตรวจสอบความถูกต้อง, ลบ Token เก่า, และป้องกัน Token Replay Attack
+// ตรวจสอบความถูกต้อง, ลบ Token เก่า, และป้องกัน Token Replay Attack
 func (s *jwtServiceImpl) CheckAndRevokeRefreshToken(db *gorm.DB, tokenStr string, userID uint) error {
-	// 1. Hash Token String เพื่อใช้ค้นหาใน DB
-	tokenHash := TokenHashSHA256(tokenStr)
+	//Hash Token เพื่อใช้ค้นหาใน DB
+	tokenHash := HashTokenSHA256(tokenStr)
 
 	var token entity.RefreshToken
-	// 2. ค้นหา Token ใน DB โดยใช้ Hash และ UserID
+	//ค้นหา Token ใน DB โดยใช้ Hash และ UserID
 	if err := db.Where("user_id = ? AND token_hash = ?", userID, tokenHash).First(&token).Error; err != nil {
-		// Replay Attack Scenario: หากไม่พบ Token ใน DB
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			s.revokeAllTokensForUser(db, userID) // เพิกถอน Token Family ทั้งหมด
+			s.revokeAllTokensForUser(db, userID)
 			return fmt.Errorf("refresh token not found (potential replay attack)")
 		}
 		return fmt.Errorf("database query error: %w", err)
 	}
 
-	// 3. ตรวจสอบว่า Token ถูกเพิกถอนแล้วหรือไม่
+	//ตรวจสอบว่า Token ถูกเพิกถอนแล้วหรือไม่
 	if token.IsRevoked {
 		return errors.New("token family already revoked, force re-login") 
 	}
 
-	// 4. ตรวจสอบ Cooldown (ป้องกันการยิง Refresh รัวๆ)
+	//ตรวจสอบ Cooldown (ป้องกันการยิง Refresh รัวๆ)
 	if time.Now().Before(token.CreatedAt.Add(config.RefreshCooldown())) {
-		s.revokeAllTokensForUser(db, userID) // Revoke ทันทีเมื่อยิงรัวเกินไป
+		s.revokeAllTokensForUser(db, userID)
 		return errors.New("refresh cooldown violation, session revoked")
 	}
 
-	// 5. ตรวจสอบวันหมดอายุ (ซ้ำอีกครั้งใน DB)
+	// ตรวจสอบวันหมดอายุ
 	if time.Now().Unix() > token.ExpiresAt {
 		db.Delete(&token)
 		return errors.New("refresh token expired")
 	}
 
-	// 6. ลบ Token เก่าออกจาก DB (Token Rotation)
+	//ลบ Token เก่าออกจาก DB (Token Rotation)
 	if err := db.Delete(&token).Error; err != nil {
 		return fmt.Errorf("failed to delete old refresh token: %w", err)
 	}
 
-	return nil // สำเร็จ
+	return nil
 }
 
-// revokeAllTokensForUser: ตั้งค่า IsRevoked = true ให้ Token ทั้งหมดที่ยังไม่หมดอายุ
+//ตั้งค่า IsRevoked = true ให้ Token ทั้งหมดที่ยังไม่หมดอายุ
 func (s *jwtServiceImpl) revokeAllTokensForUser(db *gorm.DB, userID uint) error {
 	return db.Model(&entity.RefreshToken{}).
 		Where("user_id = ? AND expires_at > ? AND is_revoked = ?", userID, time.Now().Unix(), false).
