@@ -10,11 +10,6 @@ const api = axios.create({
 
 api.interceptors.request.use(config => {
     
-    // ดึง token ที่ได้จากการล็อกอิน
-    const authToken = localStorage.getItem("token"); 
-    if (authToken) {
-        config.headers["Authorization"] = `Bearer ${authToken}`;
-    }
     
     // ดึง csrfToken ที่ได้จากฟังก์ชัน getCSRFToken
     const csrfToken = localStorage.getItem("csrfToken");

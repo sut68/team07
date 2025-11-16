@@ -1,11 +1,25 @@
 import Link from 'next/link';
 
-const mainNavItems = [
-  { name: 'Dashboard', href: '/dashboard' },
-];
+const roleNavItems: { [key: string]: { name: string; href: string }[] } = { 
+  Admin: [
+    { name: 'Dashboard Admin', href: '/admin/dashboard' },
+    { name: 'จัดการผู้ใช้', href: '/admin/users' },
+  ],
+  Teacher: [
+    { name: 'Dashboard Teacher', href: '/teacher/dashboard' },
+    { name: 'กำหนดการสอน', href: '/teacher/schedule' },
+  ],
+  Student: [
+    { name: 'Dashboard Student', href: '/student/dashboard' },
+    { name: 'ข้อมูลโครงการ', href: '/student/project' },
+  ],
+};
 
 const logoutItem = { name: 'Logout', href: '/login' };
-export default function Sidebar() {
+
+export default function Sidebar({ userRole }: { userRole: string | null }) { 
+  const mainNavItems = roleNavItems[userRole || ''] || []; 
+
   return (
     <aside className="sidebar">
       
@@ -23,7 +37,6 @@ export default function Sidebar() {
           ))}
         </ul>
       </nav>
-      
       <div className="sidebar-logout" style={{ marginTop: 'auto' }}>
         <nav className="sidebar-nav">
           <ul>

@@ -16,6 +16,7 @@ func init() {
 	}
 }
 
+
 func getenv(key, defaultVal string) string {
 	if value, ok := os.LookupEnv(key); ok && value != "" {
 		return value
@@ -66,4 +67,12 @@ func CookieDomain() string {
 // Environment Check
 func IsProduction() bool {
 	return getenv("APP_ENV", "development") == "production"
+}
+
+func FrontendURL() string {
+    return os.Getenv("FRONTEND_URL") 
+}
+
+func RefreshSecret() []byte {
+    return []byte(getenv("REFRESH_SECRET_KEY", "super-strong-default-refresh-secret"))
 }

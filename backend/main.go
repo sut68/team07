@@ -30,7 +30,7 @@ func main() {
 	protected := r.Group("/") 
 	protected.Use(middleware.CSRFCheckMiddleware(), middleware.AuthMiddleware())
 	{	// user ทุก Role สามารถเข้าถึงได้
-		protected.GET("/me", authHandler.Me) 
+		protected.GET("/me", authHandler.Me)
 
 		// Route ที่ต้องการสิทธิ์เฉพาะ (Admin Only)
 

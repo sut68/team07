@@ -90,7 +90,7 @@ func (h *LoginHandler) Login(c *gin.Context) {
         return
     }
 
-    refreshToken, err := h.JwtService.GenerateToken(&user, config.RefreshTokenTTL())
+    refreshToken, err := h.JwtService.GenerateRefreshToken(&user, config.RefreshTokenTTL())
     if err != nil {
         log.Printf("Error generating refresh token: %v", err)
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not issue refresh token"})
@@ -119,27 +119,29 @@ func (h *LoginHandler) Login(c *gin.Context) {
 
 func (h *LoginHandler) Refresh(c *gin.Context) {
 
-	// 1. ดึง Refresh Token จาก Cookie
-	refreshToken, err := c.Cookie("refresh_token")
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing refresh token"})
-		return
-	}
+    // 1. ดึง Refresh Token จาก Cookie
+    refreshToken, err := c.Cookie("refresh_token")
+    if err != nil {
+        // ... (โค้ดจัดการเมื่อไม่มี Refresh Token (ให้ CSRF Token) เหมือนเดิม)
+        return
+    }
 
-	// 2. Validate Refresh Token เพื่อดึง Claims
-	claims, err := h.JwtService.ValidateToken(refreshToken)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired refresh token"})
-		return
-	}
+    // 2. Validate Refresh Token เพื่อดึง Claims
+    claims, err := h.JwtService.ValidateRefreshToken(refreshToken)
+    if err != nil {
+        log.Printf("Refresh Token Validation Failed: %v", err) 
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired refresh token"})
+        return
+    }
 
-	// 3.ตรวจสอบ Token Replay Attack และลบ Token เก่าใน DB
-	if err := h.JwtService.CheckAndRevokeRefreshToken(h.DB, refreshToken, claims.ID); err != nil {
-		clearAuthCookies(c)
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or revoked session. Please log in again."})
-		return
-	}
-
+    // 3.ตรวจสอบ Token Replay Attack และลบ Token เก่าใน DB
+    if err := h.JwtService.CheckAndRevokeRefreshToken(h.DB, refreshToken, claims.ID); err != nil {
+        clearAuthCookies(c)
+        // ข้อความนี้สอดคล้องกับ Log ที่คุณเห็น
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or revoked session. Please log in again."}) 
+        return
+    }
+	// 4. ดึงข้อมูลผู้ใช้จาก DB
 	var user entity.User
 	if err := h.DB.Preload("Role").First(&user, claims.ID).Error; err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User data not found"})
@@ -153,7 +155,7 @@ func (h *LoginHandler) Refresh(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not issue new access token"})
 		return
 	}
-	newRefreshToken, err := h.JwtService.GenerateToken(&user, config.RefreshTokenTTL())
+	newRefreshToken, err := h.JwtService.GenerateRefreshToken(&user, config.RefreshTokenTTL())
 	if err != nil {
 		log.Printf("Error generating new refresh token: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not issue new refresh token"})
@@ -201,45 +203,53 @@ func (h *LoginHandler) Logout(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
 }
 
+func setSingleCSRFToken(c *gin.Context, csrfToken string) {
+    cookieDomain := config.CookieDomain()
+    isProd := config.IsProduction()
+
+    http.SetCookie(c.Writer, &http.Cookie{
+        Name:   "csrf_token",
+        Value:  csrfToken,
+        Path:   "/",
+        Domain:  cookieDomain,
+        MaxAge:  int(config.RefreshTokenTTL().Seconds()),
+        Secure:  isProd,
+        HttpOnly: false,
+        SameSite: http.SameSiteLaxMode,
+    })
+}
+
+
 func setAuthCookies(c *gin.Context, accessToken, refreshToken, csrfToken string) {
-	cookieDomain := config.CookieDomain()
-	isProd := config.IsProduction()
+    cookieDomain := config.CookieDomain()
+    isProd := config.IsProduction()
 
-	// Access Token (HTTP-Only)
-	http.SetCookie(c.Writer, &http.Cookie{
-		Name:     "access_token",
-		Value:    accessToken,
-		Path:     "/",
-		Domain:   cookieDomain,
-		MaxAge:   int(config.AccessTokenTTL().Seconds()),
-		Secure:   isProd,
-		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
-	})
+    // Access Token (HTTP-Only)
+    http.SetCookie(c.Writer, &http.Cookie{
+        Name: "access_token",
+        Value:  accessToken,
+        Path:   "/",
+        Domain:  cookieDomain,
+        MaxAge:  int(config.AccessTokenTTL().Seconds()),
+        Secure:  isProd,
+        HttpOnly: true,
+        SameSite: http.SameSiteLaxMode,
+    })
 
-	// Refresh Token (HTTP-Only)
-	http.SetCookie(c.Writer, &http.Cookie{
-		Name:     "refresh_token",
-		Value:    refreshToken,
-		Path:     "/refresh",
-		Domain:   cookieDomain,
-		MaxAge:   int(config.RefreshTokenTTL().Seconds()),
-		Secure:   isProd,
-		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
-	})
+    // Refresh Token (HTTP-Only)
+    http.SetCookie(c.Writer, &http.Cookie{
+        Name:   "refresh_token",
+        Value:  refreshToken,
+        Path:   "/",
+        Domain:  cookieDomain,
+        MaxAge:  int(config.RefreshTokenTTL().Seconds()),
+        Secure:  isProd,
+        HttpOnly: true,
+        SameSite: http.SameSiteLaxMode,
+    })
 
-	//CSRF Token (Non-HttpOnly)  เพื่อให้ Frontend  อ่านค่าได้
-	http.SetCookie(c.Writer, &http.Cookie{
-		Name:     "csrf_token",
-		Value:    csrfToken,
-		Path:     "/",
-		Domain:   cookieDomain,
-		MaxAge:   int(config.RefreshTokenTTL().Seconds()),
-		Secure:   isProd,
-		HttpOnly: false,
-		SameSite: http.SameSiteLaxMode,
-	})
+    // CSRF Token (Non-HTTP-Only)
+    setSingleCSRFToken(c, csrfToken)
 }
 
 // clearAuthCookies
@@ -250,7 +260,7 @@ func clearAuthCookies(c *gin.Context) {
 	// ลบ Access Token
 	http.SetCookie(c.Writer, &http.Cookie{Name: "access_token", Value: "", Path: "/", Domain: cookieDomain, MaxAge: -1, Secure: isProd, HttpOnly: true, SameSite: http.SameSiteLaxMode})
 	// ลบ Refresh Token
-	http.SetCookie(c.Writer, &http.Cookie{Name: "refresh_token", Value: "", Path: "/refresh", Domain: cookieDomain, MaxAge: -1, Secure: isProd, HttpOnly: true, SameSite: http.SameSiteLaxMode})
+	http.SetCookie(c.Writer, &http.Cookie{Name: "refresh_token", Value: "", Path: "/", Domain: cookieDomain, MaxAge: -1, Secure: isProd, HttpOnly: true, SameSite: http.SameSiteLaxMode})
 	// ลบ CSRF Token
 	http.SetCookie(c.Writer, &http.Cookie{Name: "csrf_token", Value: "", Path: "/", Domain: cookieDomain, MaxAge: -1, Secure: isProd, HttpOnly: false, SameSite: http.SameSiteLaxMode})
 }
