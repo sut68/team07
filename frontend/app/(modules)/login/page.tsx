@@ -12,7 +12,7 @@ export default function LoginPage() {
     router.push('/teacher/dashboard');
   };
 
-  const overlayColor = 'rgba(0, 0, 0, 0.3)';
+  const overlayColor = 'rgba(0, 0, 0, 0.1)';
 
   return (
     <div className="login-container" style={{
@@ -24,8 +24,8 @@ export default function LoginPage() {
     }}>
 
       <form onSubmit={handleLogin} className="login-form">
-        <h1 style={{ fontSize: '2em', marginBottom: '30px', marginTop:'30px',textAlign: 'center', fontFamily: 'zzzTH' }}>Log in to CapstoneHub</h1>
-        
+        <h1 style={{ fontSize: '2em', marginBottom: '30px', marginTop: '30px', textAlign: 'center', fontFamily: 'zzzTH' }}>Log in to CapstoneHub</h1>
+
         <div className='login-info-container'>
           <input
             type="text"
@@ -33,7 +33,7 @@ export default function LoginPage() {
             name="username"
             // value={Info.firstname}
             // onChange={HandleInfo}
-          className='login-info'
+            className='login-info'
           />
 
           <input
@@ -42,21 +42,23 @@ export default function LoginPage() {
             name="password"
             // value={Info.firstname}
             // onChange={HandleInfo}
-          className='login-info'
+            className='login-info'
           />
-        </div>
-        <div className='login-button-container'>
-          <div style={{ marginBottom: '0px' }}>
-          <button
-            type="submit"
-            className="login-button"
-          >
-            Login
-          </button>
-        </div>
-        </div>
-      </form>
 
+          <div className='login-button-container'>
+            <div style={{ marginBottom: '0px' }}>
+              <button
+                type="submit"
+                className="login-button"
+              >
+                Login
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+      </form>
     </div>
   );
 }
