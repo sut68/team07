@@ -10,7 +10,6 @@ const api = axios.create({
 
 api.interceptors.request.use(config => {
     
-    
     // ดึง csrfToken ที่ได้จากฟังก์ชัน getCSRFToken
     const csrfToken = localStorage.getItem("csrfToken");
     

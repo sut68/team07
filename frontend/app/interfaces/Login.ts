@@ -9,3 +9,12 @@ export interface UserDataInterface {
     role: string;
     message: string;
 }
+
+export interface ForgotPasswordInterface {
+    email: string;
+}
+
+export interface ResetPasswordInterface {
+    token: string;
+    new_password: string;
+}

@@ -35,6 +35,7 @@ type User struct {
 	Schedules      []Schedule      `gorm:"foreignKey:TeacherID" json:"schedules"`
 	Logs		  []Log           `gorm:"foreignKey:UserID" json:"logs"`
 	RefreshTokens  []RefreshToken `gorm:"foreignKey:UserID" json:"refresh_tokens"`
+	ResetPasswordTokens []ResetPasswordToken `gorm:"foreignKey:UserID" json:"reset_password_tokens"`
 	
 }
 
