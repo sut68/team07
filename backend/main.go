@@ -9,6 +9,7 @@ import (
 	"github.com/sut68/team07/backend/database"
 	"github.com/sut68/team07/backend/middleware"
 	mockdata "github.com/sut68/team07/backend/mockData"
+	"github.com/sut68/team07/backend/service"
 )
 
 func main() {
@@ -20,6 +21,8 @@ func main() {
 	Data := database.DB()
 	mockdata.InsertMock(Data)
 	//=========================================
+	service.InitEmailConfig()
+	service.StartCleanupWorker(database.DB())
 	r := gin.Default()
 	r.Use(database.CORSMiddleware())
 
@@ -27,11 +30,13 @@ func main() {
 
 	r.POST("/login", authHandler.Login)
 	r.POST("/refresh", authHandler.Refresh)
+	r.POST("/forgot-password", authHandler.ForgotPassword)
+	r.POST("/reset-password", authHandler.ResetPassword)
 
 	protected := r.Group("/")
 	protected.Use(middleware.CSRFCheckMiddleware(), middleware.AuthMiddleware())
-	{ 
-		
+	{
+
 		// user ทุก Role สามารถเข้าถึงได้
 		protected.GET("/me", authHandler.Me)
 		protected.GET("/getProcess", progress.GetProGressByID)

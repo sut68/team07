@@ -1,5 +1,5 @@
 import api from "./api";
-import type { SignInInterface } from "../interfaces/Login";
+import type { ForgotPasswordInterface, SignInInterface,ResetPasswordInterface } from "../interfaces/Login";
 
 async function SignIn(data: SignInInterface) {
     const res = await api.post("/login", data);
@@ -17,4 +17,12 @@ async function GetMe() {
     return await api.get("/me");
 }
 
-export { SignIn, Logout, GetMe };
+async function ForgotPassword(data: ForgotPasswordInterface) {
+    return await api.post("/forgot-password", data);
+}
+
+async function ResetPassword(data: ResetPasswordInterface) {
+    return await api.post("/reset-password", data);
+}
+
+export { SignIn, Logout, GetMe , ForgotPassword ,ResetPassword};

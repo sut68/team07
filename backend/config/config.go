@@ -42,11 +42,15 @@ func JwtSecret() []byte {
 }
 
 func AccessTokenTTL() time.Duration {
-	return getenvDuration("ACCESS_TOKEN_TTL", 15*time.Minute) 
+	return getenvDuration("ACCESS_TOKEN_TTL", 4*time.Hour) 
 }
 
 func RefreshTokenTTL() time.Duration {
 	return getenvDuration("REFRESH_TOKEN_TTL", 7*24*time.Hour) 
+}
+
+func ResetTokenTTL() time.Duration {
+	return getenvDuration("RESET_TOKEN_TTL", 8*time.Minute) 
 }
 
 // ป้องกันการ Refresh Token รัวๆ
