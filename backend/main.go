@@ -16,10 +16,9 @@ func main() {
 	database.CheckGetENV()
 	database.ConnectDatabase()
 	database.SetUpDatabase()
-	//============== Insert Data ===============
 	Data := database.DB()
 	mockdata.InsertMock(Data)
-	//=========================================
+
 	r := gin.Default()
 	r.Use(database.CORSMiddleware())
 
@@ -27,6 +26,7 @@ func main() {
 
 	r.POST("/login", authHandler.Login)
 	r.POST("/refresh", authHandler.Refresh)
+
 
 	protected := r.Group("/")
 	protected.Use(middleware.CSRFCheckMiddleware(), middleware.AuthMiddleware())
@@ -53,10 +53,10 @@ func main() {
 		studentGroup.Use(middleware.RoleGuard("Student"))
 		{
 			
-			protected.GET("/getProcess", progress.GetProGressByID)
-			protected.POST("/assignProgress", progress.AssignProGress)
-			protected.POST("/modifyProgress", progress.UpdateProGress)
-			protected.DELETE("/deleteProgress", progress.DeleteProgress)
+			studentGroup.GET("/getProcess", progress.GetProGressByID)
+			studentGroup.POST("/assignProgress", progress.AssignProGress)
+			studentGroup.POST("/modifyProgress", progress.UpdateProGress)
+			studentGroup.DELETE("/deleteProgress", progress.DeleteProgress)
 
 		}
 
