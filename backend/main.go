@@ -34,10 +34,6 @@ func main() {
 		
 		// user ทุก Role สามารถเข้าถึงได้
 		protected.GET("/me", authHandler.Me)
-		protected.GET("/getProcess", progress.GetProGressByID)
-		protected.POST("/assignProgress", progress.AssignProGress)
-		protected.POST("/modifyProgress", progress.UpdateProGress)
-		protected.DELETE("/deleteProgress", progress.DeleteProgress)
 
 		// Route ที่ต้องการสิทธิ์เฉพาะ (Admin Only)
 
@@ -56,6 +52,11 @@ func main() {
 		studentGroup := protected.Group("/student")
 		studentGroup.Use(middleware.RoleGuard("Student"))
 		{
+			
+			protected.GET("/getProcess", progress.GetProGressByID)
+			protected.POST("/assignProgress", progress.AssignProGress)
+			protected.POST("/modifyProgress", progress.UpdateProGress)
+			protected.DELETE("/deleteProgress", progress.DeleteProgress)
 
 		}
 
