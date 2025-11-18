@@ -41,7 +41,7 @@ func main() {
 		// user ทุก Role สามารถเข้าถึงได้
 		protected.GET("/me", authHandler.Me)
 		protected.GET("/GetChat",chat.GetAllChat)
-		protected.GET("/SendChat",chat.InsertChat)
+		protected.POST("/SendChat",chat.InsertChat)
 		protected.DELETE("/DeleteChat",chat.DeleteChat)
 
 		// Route ที่ต้องการสิทธิ์เฉพาะ (Admin Only)
