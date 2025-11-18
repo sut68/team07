@@ -1,0 +1,95 @@
+package chat
+
+import (
+	"net/http"
+	"strconv"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/sut68/team07/backend/database"
+	"github.com/sut68/team07/backend/entity"
+	"github.com/sut68/team07/backend/controller.go/log"
+)
+
+func GetAllChat(c * gin.Context) {
+	
+	db := database.DB()
+	var groupstr = c.Query("group_member_id")
+	group,err := strconv.ParseUint(groupstr,10,64)
+	if err != nil{
+		c.JSON(http.StatusBadRequest,"invalid (blank) group project")
+		return
+	}
+
+	var prostr = c.Query("process_id")
+	pro,err := strconv.ParseUint(prostr,10,64)
+	if err != nil{
+		c.JSON(http.StatusBadRequest,"invalid (blank) progress_id ")
+		return
+	}
+
+	var chat [] entity.Chat
+	db.Where("group_member_id = ? and process_id = ?", group,pro).Find(&chat)
+	log.InsertLog(c,8)
+
+	c.JSON(http.StatusOK, &chat)
+
+}
+
+
+
+func InsertChat(c * gin.Context){
+
+	db := database.DB()
+
+	var groupstr = c.Query("group_member_id")
+	group,err := strconv.ParseUint(groupstr,10,64)
+	if err != nil{
+		c.JSON(http.StatusBadRequest,"invalid (blank) group project")
+		return
+	}
+
+	var prostr = c.Query("process_id")
+	pro,err := strconv.ParseUint(prostr,10,64)
+	if err != nil{
+		c.JSON(http.StatusBadRequest,"invalid (blank) group progress_id")
+		return
+	}
+
+
+	var senderstr = c.Query("sender_id")
+	sender,err := strconv.ParseUint(senderstr,10,64)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "Blank sender id!"})
+		return
+	}
+
+	
+	var recstr = c.Query("receiver_id")
+	rec,err := strconv.ParseUint(recstr,10,64)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "Blank reciver id!"})
+		return
+	}
+
+	var message = c.Query("messege")
+	if message == "" {
+		c.JSON(400, gin.H{"error": "blank messege at least type ' '"})
+		return
+	}
+
+	Chat := []entity.Chat{
+		{	
+			GroupMemberID: 	uint(group), 
+			ProcessID: 		uint(pro),
+			SenderID: 		uint(sender), 
+			ReceiverID: 	uint(rec),
+			Message: 		message,		
+			SentWhen: 		time.Now(),
+		},
+	}
+
+	db.Create(&Chat)
+	log.InsertLog(c,9)
+	c.JSON(http.StatusOK, &Chat)
+}

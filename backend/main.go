@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/sut68/team07/backend/controller.go/auth"
+	"github.com/sut68/team07/backend/controller.go/chat"
 	"github.com/sut68/team07/backend/controller.go/issues"
 	"github.com/sut68/team07/backend/controller.go/progress"
 	"github.com/sut68/team07/backend/controller.go/users"
@@ -39,6 +40,8 @@ func main() {
 
 		// user ทุก Role สามารถเข้าถึงได้
 		protected.GET("/me", authHandler.Me)
+		protected.GET("/GetChat",chat.GetAllChat)
+		protected.GET("/SendChat",chat.InsertChat)
 
 		// Route ที่ต้องการสิทธิ์เฉพาะ (Admin Only)
 
