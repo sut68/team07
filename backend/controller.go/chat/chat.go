@@ -36,8 +36,6 @@ func GetAllChat(c * gin.Context) {
 
 }
 
-
-
 func InsertChat(c * gin.Context){
 
 	db := database.DB()
@@ -92,4 +90,35 @@ func InsertChat(c * gin.Context){
 	db.Create(&Chat)
 	log.InsertLog(c,9)
 	c.JSON(http.StatusOK, &Chat)
+}
+
+func DeleteChat(c * gin.Context) {
+	
+	db := database.DB()
+	var groupstr = c.Query("group_member_id")
+	group,err := strconv.ParseUint(groupstr,10,64)
+	if err != nil{
+		c.JSON(http.StatusBadRequest,"invalid (blank) group project")
+		return
+	}
+
+	var prostr = c.Query("process_id")
+	pro,err := strconv.ParseUint(prostr,10,64)
+	if err != nil{
+		c.JSON(http.StatusBadRequest,"invalid (blank) progress_id ")
+		return
+	}
+
+	var chatstr = c.Query("id")
+	chatid,err := strconv.ParseUint(chatstr,10,64)
+	if err != nil{
+		c.JSON(http.StatusBadRequest,"invalid (blank) progress_id ")
+		return
+	}
+
+	db.Where("group_member_id = ? and process_id = ? and id = ?", group,pro,chatid).Delete(&entity.Chat{})
+	log.InsertLog(c,10)
+
+	c.JSON(http.StatusOK, "suscessfully to delete")
+
 }
