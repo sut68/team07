@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/sut68/team07/backend/controller.go/auth"
+	"github.com/sut68/team07/backend/controller.go/chat"
 	"github.com/sut68/team07/backend/controller.go/issues"
 	"github.com/sut68/team07/backend/controller.go/progress"
 	"github.com/sut68/team07/backend/controller.go/users"
@@ -17,7 +18,6 @@ func main() {
 	database.CheckGetENV()
 	database.ConnectDatabase()
 	database.SetUpDatabase()
-	//============== Insert Data ===============
 	Data := database.DB()
 	mockdata.InsertMock(Data)
 	//=========================================
@@ -33,16 +33,16 @@ func main() {
 	r.POST("/forgot-password", authHandler.ForgotPassword)
 	r.POST("/reset-password", authHandler.ResetPassword)
 
+
 	protected := r.Group("/")
 	protected.Use(middleware.CSRFCheckMiddleware(), middleware.AuthMiddleware())
 	{
 
 		// user ทุก Role สามารถเข้าถึงได้
 		protected.GET("/me", authHandler.Me)
-		protected.GET("/getProcess", progress.GetProGressByID)
-		protected.POST("/assignProgress", progress.AssignProGress)
-		protected.POST("/modifyProgress", progress.UpdateProGress)
-		protected.DELETE("/deleteProgress", progress.DeleteProgress)
+		protected.GET("/GetChat",chat.GetAllChat)
+		protected.POST("/SendChat",chat.InsertChat)
+		protected.DELETE("/DeleteChat",chat.DeleteChat)
 
 		// Route ที่ต้องการสิทธิ์เฉพาะ (Admin Only)
 
@@ -61,6 +61,11 @@ func main() {
 		studentGroup := protected.Group("/student")
 		studentGroup.Use(middleware.RoleGuard("Student"))
 		{
+			
+			studentGroup.GET("/getProcess", progress.GetProGressByID)
+			studentGroup.POST("/assignProgress", progress.AssignProGress)
+			studentGroup.POST("/modifyProgress", progress.UpdateProGress)
+			studentGroup.DELETE("/deleteProgress", progress.DeleteProgress)
 
 		}
 

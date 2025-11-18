@@ -39,9 +39,16 @@ var MockIssueType = []entity.IssueType{
 }
 
 var MockActionType = []entity.ActionType{
-	{Model: gorm.Model{ID: 1}, ActionType: "Create"},
+	{Model: gorm.Model{ID: 1}, ActionType: "Created"},
 	{Model: gorm.Model{ID: 2}, ActionType: "Update"},
 	{Model: gorm.Model{ID: 3}, ActionType: "Delete"},
+	{Model: gorm.Model{ID: 4}, ActionType: "GetAllProGress"},
+	{Model: gorm.Model{ID: 5}, ActionType: "InsertProGress"},
+	{Model: gorm.Model{ID: 6}, ActionType: "UpdateProGress"},
+	{Model: gorm.Model{ID: 7}, ActionType: "DeleteProGress"},
+	{Model: gorm.Model{ID: 8}, ActionType: "GetMessege"},
+	{Model: gorm.Model{ID: 9}, ActionType: "SendMessege"},
+	{Model: gorm.Model{ID: 10}, ActionType: "DeleteMessege"},
 }
 
 var (
@@ -99,3 +106,4 @@ var MockRoom = []entity.Room{
 	{Model: gorm.Model{ID: 3}, Name: "B5201", Location: "เรียนรวม2", Capacity: 120},
 	{Model: gorm.Model{ID: 4}, Name: "B5202", Location: "เรียนรวม2", Capacity: 120},
 }
+
