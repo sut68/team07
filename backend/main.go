@@ -17,7 +17,6 @@ func main() {
 	database.CheckGetENV()
 	database.ConnectDatabase()
 	database.SetUpDatabase()
-	//============== Insert Data ===============
 	Data := database.DB()
 	mockdata.InsertMock(Data)
 	//=========================================
@@ -33,16 +32,13 @@ func main() {
 	r.POST("/forgot-password", authHandler.ForgotPassword)
 	r.POST("/reset-password", authHandler.ResetPassword)
 
+
 	protected := r.Group("/")
 	protected.Use(middleware.CSRFCheckMiddleware(), middleware.AuthMiddleware())
 	{
 
 		// user ทุก Role สามารถเข้าถึงได้
 		protected.GET("/me", authHandler.Me)
-		protected.GET("/getProcess", progress.GetProGressByID)
-		protected.POST("/assignProgress", progress.AssignProGress)
-		protected.POST("/modifyProgress", progress.UpdateProGress)
-		protected.DELETE("/deleteProgress", progress.DeleteProgress)
 
 		// Route ที่ต้องการสิทธิ์เฉพาะ (Admin Only)
 
@@ -61,6 +57,11 @@ func main() {
 		studentGroup := protected.Group("/student")
 		studentGroup.Use(middleware.RoleGuard("Student"))
 		{
+			
+			studentGroup.GET("/getProcess", progress.GetProGressByID)
+			studentGroup.POST("/assignProgress", progress.AssignProGress)
+			studentGroup.POST("/modifyProgress", progress.UpdateProGress)
+			studentGroup.DELETE("/deleteProgress", progress.DeleteProgress)
 
 		}
 
