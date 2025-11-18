@@ -49,6 +49,8 @@ var MockActionType = []entity.ActionType{
 	{Model: gorm.Model{ID: 8}, ActionType: "GetMessege"},
 	{Model: gorm.Model{ID: 9}, ActionType: "SendMessege"},
 	{Model: gorm.Model{ID: 10}, ActionType: "DeleteMessege"},
+	{Model: gorm.Model{ID: 11}, ActionType: "Login"},
+	{Model: gorm.Model{ID: 12}, ActionType: "Logout"},
 }
 
 var (
