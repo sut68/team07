@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"log"
+	logSys "log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -81,7 +81,7 @@ func (h *LoginHandler) Login(c *gin.Context) {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found or credentials invalid"})
 			return
 		}
-		log.Printf("DB error finding user: %v", err)
+		logSys.Printf("DB error finding user: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
@@ -94,14 +94,14 @@ func (h *LoginHandler) Login(c *gin.Context) {
 	// 1. สร้าง Access Token และ Refresh Token
 	accessToken, err := h.JwtService.GenerateToken(&user, config.AccessTokenTTL())
 	if err != nil {
-		log.Printf("Error generating access token: %v", err)
+		logSys.Printf("Error generating access token: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not issue access token"})
 		return
 	}
 
 	refreshToken, err := h.JwtService.GenerateRefreshToken(&user, config.RefreshTokenTTL())
 	if err != nil {
-		log.Printf("Error generating refresh token: %v", err)
+		logSys.Printf("Error generating refresh token: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not issue refresh token"})
 		return
 	}
@@ -111,7 +111,7 @@ func (h *LoginHandler) Login(c *gin.Context) {
 
 	// 2. บันทึก Refresh Token Hash ลง DB
 	if err := h.JwtService.SaveRefreshToken(h.DB, refreshToken, user.ID); err != nil {
-		log.Printf("Error saving refresh token to DB: %v", err)
+		logSys.Printf("Error saving refresh token to DB: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not process login"})
 		return
 	}
@@ -119,76 +119,11 @@ func (h *LoginHandler) Login(c *gin.Context) {
 	setAuthCookies(c, accessToken, refreshToken, csrfToken)
 
 	go service.SendLoginNotification(user.Email, user.Username, c.ClientIP())
-
 	c.JSON(http.StatusOK, LoginResponse{
 		ID:       user.ID,
 		Username: user.Username,
 		Role:     user.Role.Role,
 		Message:  "Login successfully",
-	})
-}
-
-func (h *LoginHandler) Refresh(c *gin.Context) {
-
-    // 1. ดึง Refresh Token จาก Cookie
-    refreshToken, err := c.Cookie("refresh_token")
-    if err != nil {
-        // ... (โค้ดจัดการเมื่อไม่มี Refresh Token (ให้ CSRF Token) เหมือนเดิม)
-        return
-    }
-
-    // 2. Validate Refresh Token เพื่อดึง Claims
-    claims, err := h.JwtService.ValidateRefreshToken(refreshToken)
-    if err != nil {
-        log.Printf("Refresh Token Validation Failed: %v", err) 
-        c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired refresh token"})
-        return
-    }
-
-    // 3.ตรวจสอบ Token Replay Attack และลบ Token เก่าใน DB
-    if err := h.JwtService.CheckAndRevokeRefreshToken(h.DB, refreshToken, claims.ID); err != nil {
-        clearAuthCookies(c)
-        // ข้อความนี้สอดคล้องกับ Log ที่คุณเห็น
-        c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or revoked session. Please log in again."}) 
-        return
-    }
-	// 4. ดึงข้อมูลผู้ใช้จาก DB
-	var user entity.User
-	if err := h.DB.Preload("Role").First(&user, claims.ID).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "User data not found"})
-		return
-	}
-
-	// 5. สร้าง Access Token และ Refresh Token ใหม่
-	newAccessToken, err := h.JwtService.GenerateToken(&user, config.AccessTokenTTL())
-	if err != nil {
-		log.Printf("Error generating new access token: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not issue new access token"})
-		return
-	}
-	newRefreshToken, err := h.JwtService.GenerateRefreshToken(&user, config.RefreshTokenTTL())
-	if err != nil {
-		log.Printf("Error generating new refresh token: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not issue new refresh token"})
-		return
-	}
-
-	// 6. สร้าง CSRF Token ใหม่
-	csrfToken := h.JwtService.HashTokenSHA256(newAccessToken) // ใช้ Hash ของ Access Token เป็น CSRF Token
-
-	// 7. บันทึก Refresh Token ใหม่ลง DB
-	if err := h.JwtService.SaveRefreshToken(h.DB, newRefreshToken, user.ID); err != nil {
-		log.Printf("Error saving new refresh token to DB: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not process refresh"})
-		return
-	}
-
-	// 8. ตั้งค่า Cookie ที่เป็น Non-HttpOnly)
-	setAuthCookies(c, newAccessToken, newRefreshToken, csrfToken)
-
-	c.JSON(http.StatusOK, RefreshResponse{
-		CSRFToken: csrfToken,
-		Message:   "Tokens refreshed successfully",
 	})
 }
 
@@ -203,7 +138,7 @@ func (h *LoginHandler) Logout(c *gin.Context) {
 
 	// ลบ Refresh Token ทั้งหมดของ User นี้ออกจาก DB (เพิกถอน Session)
 	if err := h.DB.Where("user_id = ?", claims.ID).Delete(&entity.RefreshToken{}).Error; err != nil {
-		log.Printf("Error deleting refresh tokens for user %d: %v", claims.ID, err)
+		logSys.Printf("Error deleting refresh tokens for user %d: %v", claims.ID, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not process logout completely"})
 		return
 	}
@@ -214,55 +149,118 @@ func (h *LoginHandler) Logout(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
 }
 
-func setSingleCSRFToken(c *gin.Context, csrfToken string) {
-    cookieDomain := config.CookieDomain()
-    isProd := config.IsProduction()
+func (h *LoginHandler) Refresh(c *gin.Context) {
 
-    http.SetCookie(c.Writer, &http.Cookie{
-        Name:   "csrf_token",
-        Value:  csrfToken,
-        Path:   "/",
-        Domain:  cookieDomain,
-        MaxAge:  int(config.RefreshTokenTTL().Seconds()),
-        Secure:  isProd,
-        HttpOnly: false,
-        SameSite: http.SameSiteLaxMode,
-    })
+	// 1. ดึง Refresh Token จาก Cookie
+	refreshToken, err := c.Cookie("refresh_token")
+	if err != nil {
+		// ... (โค้ดจัดการเมื่อไม่มี Refresh Token (ให้ CSRF Token) เหมือนเดิม)
+		return
+	}
+
+	// 2. Validate Refresh Token เพื่อดึง Claims
+	claims, err := h.JwtService.ValidateRefreshToken(refreshToken)
+	if err != nil {
+		logSys.Printf("Refresh Token Validation Failed: %v", err)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired refresh token"})
+		return
+	}
+
+	// 3.ตรวจสอบ Token Replay Attack และลบ Token เก่าใน DB
+	if err := h.JwtService.CheckAndRevokeRefreshToken(h.DB, refreshToken, claims.ID); err != nil {
+		clearAuthCookies(c)
+		// ข้อความนี้สอดคล้องกับ Log ที่คุณเห็น
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or revoked session. Please log in again."})
+		return
+	}
+	// 4. ดึงข้อมูลผู้ใช้จาก DB
+	var user entity.User
+	if err := h.DB.Preload("Role").First(&user, claims.ID).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User data not found"})
+		return
+	}
+
+	// 5. สร้าง Access Token และ Refresh Token ใหม่
+	newAccessToken, err := h.JwtService.GenerateToken(&user, config.AccessTokenTTL())
+	if err != nil {
+		logSys.Printf("Error generating new access token: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not issue new access token"})
+		return
+	}
+	newRefreshToken, err := h.JwtService.GenerateRefreshToken(&user, config.RefreshTokenTTL())
+	if err != nil {
+		logSys.Printf("Error generating new refresh token: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not issue new refresh token"})
+		return
+	}
+
+	// 6. สร้าง CSRF Token ใหม่
+	csrfToken := h.JwtService.HashTokenSHA256(newAccessToken) // ใช้ Hash ของ Access Token เป็น CSRF Token
+
+	// 7. บันทึก Refresh Token ใหม่ลง DB
+	if err := h.JwtService.SaveRefreshToken(h.DB, newRefreshToken, user.ID); err != nil {
+		logSys.Printf("Error saving new refresh token to DB: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not process refresh"})
+		return
+	}
+
+	// 8. ตั้งค่า Cookie ที่เป็น Non-HttpOnly)
+	setAuthCookies(c, newAccessToken, newRefreshToken, csrfToken)
+
+	c.JSON(http.StatusOK, RefreshResponse{
+		CSRFToken: csrfToken,
+		Message:   "Tokens refreshed successfully",
+	})
 }
+func setSingleCSRFToken(c *gin.Context, csrfToken string) {
+	cookieDomain := config.CookieDomain()
+	isProd := config.IsProduction()
 
+	http.SetCookie(c.Writer, &http.Cookie{
+		Name:     "csrf_token",
+		Value:    csrfToken,
+		Path:     "/",
+		Domain:   cookieDomain,
+		MaxAge:   int(config.RefreshTokenTTL().Seconds()),
+		Secure:   isProd,
+		HttpOnly: false,
+		SameSite: http.SameSiteLaxMode,
+	})
+}
 
 func setAuthCookies(c *gin.Context, accessToken, refreshToken, csrfToken string) {
-    cookieDomain := config.CookieDomain()
-    isProd := config.IsProduction()
+	cookieDomain := config.CookieDomain()
+	isProd := config.IsProduction()
 
-    // Access Token (HTTP-Only)
-    http.SetCookie(c.Writer, &http.Cookie{
-        Name: "access_token",
-        Value:  accessToken,
-        Path:   "/",
-        Domain:  cookieDomain,
-        MaxAge:  int(config.AccessTokenTTL().Seconds()),
-        Secure:  isProd,
-        HttpOnly: true,
-        SameSite: http.SameSiteLaxMode,
-    })
+	// Access Token (HTTP-Only)
+	http.SetCookie(c.Writer, &http.Cookie{
+		Name:     "access_token",
+		Value:    accessToken,
+		Path:     "/",
+		Domain:   cookieDomain,
+		MaxAge:   int(config.AccessTokenTTL().Seconds()),
+		Secure:   isProd,
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	})
 
-    // Refresh Token (HTTP-Only)
-    http.SetCookie(c.Writer, &http.Cookie{
-        Name:   "refresh_token",
-        Value:  refreshToken,
-        Path:   "/",
-        Domain:  cookieDomain,
-        MaxAge:  int(config.RefreshTokenTTL().Seconds()),
-        Secure:  isProd,
-        HttpOnly: true,
-        SameSite: http.SameSiteLaxMode,
-    })
+	// Refresh Token (HTTP-Only)
+	http.SetCookie(c.Writer, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    refreshToken,
+		Path:     "/",
+		Domain:   cookieDomain,
+		MaxAge:   int(config.RefreshTokenTTL().Seconds()),
+		Secure:   isProd,
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	})
 
-    // CSRF Token (Non-HTTP-Only)
-    setSingleCSRFToken(c, csrfToken)
+	// CSRF Token (Non-HTTP-Only)
+	setSingleCSRFToken(c, csrfToken)
 }
-// ForgotPassword Handles 
+
+// ForgotPassword Handles
 func (h *LoginHandler) ForgotPassword(c *gin.Context) {
 	var input ForgotPasswordInput
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -273,7 +271,7 @@ func (h *LoginHandler) ForgotPassword(c *gin.Context) {
 	var user entity.User
 	// 1. ค้นหาผู้ใช้ด้วยอีเมล
 	if err := h.DB.Where("email = ?", input.Email).First(&user).Error; err != nil {
-		log.Printf("INFO: Forgot password request for non-existent email: %s", input.Email)
+		logSys.Printf("INFO: Forgot password request for non-existent email: %s", input.Email)
 		c.JSON(http.StatusOK, gin.H{"message": "If the email exists, a password reset link has been sent."})
 		return
 	}
@@ -281,7 +279,7 @@ func (h *LoginHandler) ForgotPassword(c *gin.Context) {
 	// 2. สร้าง Reset Token และบันทึก Hash ลง DB
 	rawToken, err := service.GenerateAndSaveResetToken(h.DB, user.ID)
 	if err != nil {
-		log.Printf("ERROR: Failed to generate reset token for user %d: %v", user.ID, err)
+		logSys.Printf("ERROR: Failed to generate reset token for user %d: %v", user.ID, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not process reset request"})
 		return
 	}
@@ -312,21 +310,21 @@ func (h *LoginHandler) ResetPassword(c *gin.Context) {
 	// 3. อัปเดตรหัสผ่านผู้ใช้
 	var user entity.User
 	if err := h.DB.First(&user, userID).Error; err != nil {
-		log.Printf("FATAL: User not found after consuming valid reset token: %d", userID)
+		logSys.Printf("FATAL: User not found after consuming valid reset token: %d", userID)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal error during password update"})
 		return
 	}
 
 	// ใช้ GORM Update เพื่ออัปเดตเฉพาะช่อง Password
 	if err := h.DB.Model(&user).Update("Password", hashedPassword).Error; err != nil {
-		log.Printf("ERROR: Failed to update password for user %d: %v", userID, err)
+		logSys.Printf("ERROR: Failed to update password for user %d: %v", userID, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update password"})
 		return
 	}
 
 	// 4. (ความปลอดภัย) เพิกถอน Refresh Token ทั้งหมดของ User นี้ทันทีเพื่อบังคับ Logout ทุก Session เก่า
 	if err := h.DB.Where("user_id = ?", userID).Delete(&entity.RefreshToken{}).Error; err != nil {
-		log.Printf("WARNING: Failed to revoke old refresh tokens after password reset for user %d: %v", userID, err)
+		logSys.Printf("WARNING: Failed to revoke old refresh tokens after password reset for user %d: %v", userID, err)
 	}
 
 	// 5. ส่งอีเมลแจ้งเตือนการเปลี่ยนรหัสผ่าน
