@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"time"
 	"gorm.io/gorm"
 )
 
@@ -16,5 +17,7 @@ type Chat struct {
 	SenderID   uint   `json:"sender_id"`
 	Sender     *User  `gorm:"foreignKey:SenderID" json:"sender"`
 
+
 	Message   string    `json:"message"`
+	SentWhen  time.Time `json:"sent_when"`
 }

@@ -62,6 +62,7 @@ func InsertChat(c * gin.Context){
 	}
 
 
+
 	var message = c.Query("messege")
 	if message == "" {
 		c.JSON(400, gin.H{"error": "blank messege at least type ' '"})

@@ -26,7 +26,6 @@ type User struct {
 	SelectAdvisors []SelectAdvisor `gorm:"foreignKey:TeacherID" json:"select_advisors"`
 	ChatsSent     []Chat         `gorm:"foreignKey:SenderID" json:"chats_sent"`
 	IssueReports []IssueReport `gorm:"foreignKey:UserID" json:"issue_reports"`
-	ChatsReceived []Chat         `gorm:"foreignKey:ReceiverID" json:"chats_received"`
 	ProjectStorages []ProjectStorage `gorm:"foreignKey:TeacherID" json:"project_storages"`
 	TopicApprovals []TopicApproval `gorm:"foreignKey:TeacherID" json:"topic_approvals"`
 	IndividualScores []IndividualScore `gorm:"foreignKey:StudentID" json:"individual_scores"`
