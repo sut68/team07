@@ -2,7 +2,6 @@ package progress
 
 import (
 	"net/http"
-	"time"
 	"strconv"
 
 
@@ -32,6 +31,7 @@ func AssignProGress(c * gin.Context) {
 
 	var   group_projectid = c.Query("group_project_id")
 	var   file_progress  = c.Query("file")
+	var   comment  = c.Query("comment")
 	if file_progress == ""{
 		c.JSON(http.StatusBadRequest, gin.H{"error": "file is needed"})
     	return
@@ -43,12 +43,14 @@ func AssignProGress(c * gin.Context) {
 		return
 	}
 
-	int_group_id := uint(contoint)
+
+
 
 	Progresses := []entity.Progress{
 		{	
-			GroupProjectID: 	int_group_id, 
+			GroupProjectID: 	uint(contoint), 
 			File: 				file_progress, 
+			Comment: 			comment,
 		},
 	}
 
@@ -64,15 +66,16 @@ func UpdateProGress(c * gin.Context) {
 	var prostring = c.Query("id")
 	var pro_id,_  = strconv.ParseUint(prostring, 10, 64)
 	var newfile = c.Query("file")
+	var newcomment = c.Query("comment")
 	
 	if newfile == ""{
-		c.JSON(http.StatusBadRequest, gin.H{"error": "file is needed"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "file is needed(must be valid)"})
     	return
 	}
 
 	type newUpdate struct {
     	File string
-    	Send time.Time
+		Comment string
 	}
 	
 
@@ -80,7 +83,7 @@ func UpdateProGress(c * gin.Context) {
 
 	Updates(newUpdate{
 		File: newfile,
-        Send: time.Now(),
+        Comment:  newcomment,
 	})
 	log.InsertLog(c,6)
 	c.JSON(http.StatusOK,"update ok")
