@@ -4,12 +4,12 @@ import "gorm.io/gorm"
 
 type User struct {
     gorm.Model
-    Username string `json:"username"`
-    Password string `gorm:"not null" json:"-"`
-	Firstname string `json:"firstname"`
-	Lastname  string `json:"lastname"`
-	Email     string `json:"email"`
-	Phone     string `json:"phone"`
+    Username string `json:"username" valid:"required~Username is required"`
+    Password string `gorm:"not null" json:"-" valid:"required~Password is required"`
+	Firstname string `json:"firstname" valid:"required~Firstname is required"`
+	Lastname  string `json:"lastname" valid:"required~Lastname is required"`
+	Email     string `json:"email" valid:"required~Email is required,email~Invalid email format"`
+	Phone     string `json:"phone" valid:"required~Phone is required"`
     Pass    *bool   `json:"pass"`
 
 	GenderID uint   `json:"gender_id"`

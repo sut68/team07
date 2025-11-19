@@ -44,24 +44,28 @@ func main() {
 		protected.POST("/SendChat",chat.InsertChat)
 		protected.DELETE("/DeleteChat",chat.DeleteChat)
 
-		// Route ที่ต้องการสิทธิ์เฉพาะ (Admin Only)
-
 		adminGroup := protected.Group("/admin")
 		adminGroup.Use(middleware.RoleGuard("Admin"))
 		{
+			// ถ้า API ไหนที่แอดมินเข้าถึงได้ ให้นำไปใส่ในนี้
 			adminGroup.GET("/getGender", users.GetGender)
 			adminGroup.GET("/getIssueStatus", issues.GetIssueStatus)
 		}
+		teacherOrStudentGroup := protected.Group("/groupProject")
+		teacherOrStudentGroup.Use(middleware.RoleGuard("Teacher", "Student"))
+		{
+			// ถ้า API ไหนที่ครูและนักเรียนเข้าถึงได้ ให้นำไปใส่ในนี้
 
+		}
 		teacherGroup := protected.Group("/data")
 		teacherGroup.Use(middleware.RoleGuard("Teacher"))
 		{
-
+			// ถ้า API ไหนที่ครูเข้าถึงได้ ให้นำไปใส่ในนี้
 		}
 		studentGroup := protected.Group("/student")
 		studentGroup.Use(middleware.RoleGuard("Student"))
 		{
-			
+			// ถ้า API ไหนที่นักเรียนเข้าถึงได้ ให้นำไปใส่ในนี้
 			studentGroup.GET("/getProcess", progress.GetProGressByID)
 			studentGroup.POST("/assignProgress", progress.AssignProGress)
 			studentGroup.POST("/modifyProgress", progress.UpdateProGress)
