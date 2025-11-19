@@ -3,7 +3,6 @@ package chat
 import (
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sut68/team07/backend/database"
@@ -62,13 +61,6 @@ func InsertChat(c * gin.Context){
 		return
 	}
 
-	
-	var recstr = c.Query("receiver_id")
-	rec,err := strconv.ParseUint(recstr,10,64)
-	if err != nil {
-		c.JSON(400, gin.H{"error": "Blank reciver id!"})
-		return
-	}
 
 	var message = c.Query("messege")
 	if message == "" {
@@ -81,9 +73,7 @@ func InsertChat(c * gin.Context){
 			GroupMemberID: 	uint(group), 
 			ProcessID: 		uint(pro),
 			SenderID: 		uint(sender), 
-			ReceiverID: 	uint(rec),
 			Message: 		message,		
-			SentWhen: 		time.Now(),
 		},
 	}
 

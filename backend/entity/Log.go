@@ -1,7 +1,6 @@
 package entity
 
 import (
-    "time"
     "gorm.io/gorm"
 )
 
@@ -11,8 +10,7 @@ type Log struct {
     User         *User      `gorm:"foreignKey:UserID" json:"user"`
 
     ActionTypeID uint       `json:"action_type_id"`             
-    ActionType   *ActionType `gorm:"foreignKey:ActionTypeID" json:"action_type"`
-    SentAt       time.Time  `json:"sent"`                     
+    ActionType   *ActionType `gorm:"foreignKey:ActionTypeID" json:"action_type"`                 
 }
 
 //true

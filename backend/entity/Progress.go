@@ -1,7 +1,6 @@
 package entity
 
 import (
-	"time"
 	"gorm.io/gorm"
 )
 
@@ -12,7 +11,6 @@ type Progress struct {
 	GroupProject   *GroupProject `gorm:"foreignKey:GroupProjectID" json:"group_project"`
 
 	File     string  	`json:"file"`
-	Send 	 time.Time 	`json:"send"`
 }
 
 //true

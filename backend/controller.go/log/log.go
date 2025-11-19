@@ -2,7 +2,6 @@ package log
 
 import (
 	"net/http"
-	"time"
 
 
 
@@ -27,7 +26,6 @@ func InsertLog(c * gin.Context, x uint) {
 		{	
 			UserID: 		claims.ID, 
 			ActionTypeID: 	x, 
-			SentAt: 		time.Now(),
 		},
 	}
 

@@ -49,7 +49,6 @@ func AssignProGress(c * gin.Context) {
 		{	
 			GroupProjectID: 	int_group_id, 
 			File: 				file_progress, 
-			Send: 				time.Now(),
 		},
 	}
 
