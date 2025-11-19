@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  # -------------------------------------------------------------------
+  # 1. PostgreSQL Database Service
+  # -------------------------------------------------------------------
+  db:
+    image: postgres:15-alpine 
+    container_name: dev-postgres
+    restart: always
+    env_file:
+      - ./backend/.env
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
+  # -------------------------------------------------------------------
+  # 2. Go Backend Service (Development Mode with Air)
+  # -------------------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: dev-backend
+    restart: always
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./backend:/app 
+    stdin_open: true 
+    tty: true
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}?sslmode=disable
+      PORT: 8080
+      GIN_MODE: release
+    depends_on:
+      - db
+
+  # -------------------------------------------------------------------
+  # 3. Frontend Service (Vite/Next.js/React - ใช้ 5173:5173)
+  # -------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: dev-frontend
+    restart: always
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      VITE_API_URL: http://backend:8080 
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
