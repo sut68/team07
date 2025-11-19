@@ -5,6 +5,9 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"log"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -30,8 +33,10 @@ type JwtService interface {
 	SaveRefreshToken(db *gorm.DB, tokenStr string, userID uint) error
 	CheckAndRevokeRefreshToken(db *gorm.DB, tokenStr string, userID uint) error
 	HashTokenSHA256(tokenStr string) string
-    ValidateRefreshToken(tokenStr string) (*Claims, error)
+	ValidateRefreshToken(tokenStr string) (*Claims, error)
 	GenerateRefreshToken(user *entity.User, duration time.Duration) (string, error)
+	ConsumeResetToken(db *gorm.DB, rawToken string) error
+	ValidateResetToken(db *gorm.DB, rawToken string) (uint, error)
 }
 
 type jwtServiceImpl struct{}
@@ -71,23 +76,24 @@ func (s *jwtServiceImpl) GenerateToken(user *entity.User, duration time.Duration
 }
 
 func (s *jwtServiceImpl) GenerateRefreshToken(user *entity.User, duration time.Duration) (string, error) {
-    roleName := user.Role.Role
+	roleName := user.Role.Role
 
-    claims := &Claims{
-        ID: user.ID,
-        Username: user.Username,
-        Role: roleName,
-        RegisteredClaims: jwt.RegisteredClaims{
-            ExpiresAt: jwt.NewNumericDate(time.Now().Add(duration)),
-            IssuedAt:  jwt.NewNumericDate(time.Now()),
-            Issuer:    "team07-backend",
-        },
-    }
-    token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	claims := &Claims{
+		ID:       user.ID,
+		Username: user.Username,
+		Role:     roleName,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(duration)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			Issuer:    "team07-backend",
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-    // ลงนาม Token ด้วย Refresh Secret Key
-    return token.SignedString(config.RefreshSecret()) 
+	// ลงนาม Token ด้วย Refresh Secret Key
+	return token.SignedString(config.RefreshSecret())
 }
+
 // ใช้ตรวจสอบความถูกต้องและลายเซ็นของ JWT
 func (s *jwtServiceImpl) ValidateToken(tokenStr string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenStr, &Claims{}, func(t *jwt.Token) (any, error) {
@@ -122,26 +128,26 @@ func (s *jwtServiceImpl) HashTokenSHA256(tokenStr string) string {
 
 // บันทึก Refresh Token ใหม่ลงฐานข้อมูล
 func (s *jwtServiceImpl) SaveRefreshToken(db *gorm.DB, tokenStr string, userID uint) error {
-    tokenHash := HashTokenSHA256(tokenStr)
+	tokenHash := HashTokenSHA256(tokenStr)
 
-    claims, err := s.ValidateRefreshToken(tokenStr)
-    if err != nil {
-        return fmt.Errorf("invalid token during save: %w", err)
-    }
+	claims, err := s.ValidateRefreshToken(tokenStr)
+	if err != nil {
+		return fmt.Errorf("invalid token during save: %w", err)
+	}
 
-    // สร้าง Entity และบันทึก
-    newToken := entity.RefreshToken{
-        UserID:      userID,
-        TokenHash: tokenHash,
-        ExpiresAt: claims.ExpiresAt.Unix(),
-        IsRevoked: false,
-    }
+	// สร้าง Entity และบันทึก
+	newToken := entity.RefreshToken{
+		UserID:    userID,
+		TokenHash: tokenHash,
+		ExpiresAt: claims.ExpiresAt.Unix(),
+		IsRevoked: false,
+	}
 
-    if err := db.Create(&newToken).Error; err != nil {
-        return fmt.Errorf("failed to save refresh token: %w", err)
-    }
+	if err := db.Create(&newToken).Error; err != nil {
+		return fmt.Errorf("failed to save refresh token: %w", err)
+	}
 
-    return nil
+	return nil
 }
 
 // ตรวจสอบความถูกต้อง, ลบ Token เก่า, และป้องกัน Token Replay Attack
@@ -192,22 +198,104 @@ func (s *jwtServiceImpl) revokeAllTokensForUser(db *gorm.DB, userID uint) error 
 }
 
 func (s *jwtServiceImpl) ValidateRefreshToken(tokenStr string) (*Claims, error) {
-    token, err := jwt.ParseWithClaims(tokenStr, &Claims{}, func(t *jwt.Token) (any, error) {
-        if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-            return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
-        }
-        // คืนค่า Refresh Secret Key เพื่อใช้ยืนยันลายเซ็น
-        return config.RefreshSecret(), nil
-    })
+	token, err := jwt.ParseWithClaims(tokenStr, &Claims{}, func(t *jwt.Token) (any, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
+		}
+		// คืนค่า Refresh Secret Key เพื่อใช้ยืนยันลายเซ็น
+		return config.RefreshSecret(), nil
+	})
 
-    if err != nil {
-        return nil, fmt.Errorf("invalid refresh token: %w", err)
-    }
+	if err != nil {
+		return nil, fmt.Errorf("invalid refresh token: %w", err)
+	}
 
-    claims, ok := token.Claims.(*Claims)
-    if !ok || !token.Valid {
-        return nil, fmt.Errorf("invalid claims or token not valid")
-    }
+	claims, ok := token.Claims.(*Claims)
+	if !ok || !token.Valid {
+		return nil, fmt.Errorf("invalid claims or token not valid")
+	}
 
-    return claims, nil
+	return claims, nil
+}
+
+const (
+	MinLength      = 8
+	UpperCaseRegex = `[A-Z]`
+	SymbolRegex    = `[!@#$%^&*(),.?":{}|<>]`
+)
+
+func IsStrongPassword(password string) (bool, string) {
+	if len(password) < MinLength {
+		return false, fmt.Sprintf("รหัสผ่านต้องมีอย่างน้อย %d ตัวอักษร", MinLength)
+	}
+
+	if ok, _ := regexp.MatchString(UpperCaseRegex, password); !ok {
+		return false, "รหัสผ่านต้องมีตัวอักษรพิมพ์ใหญ่ (A-Z) อย่างน้อย 1 ตัว"
+	}
+
+	if ok, _ := regexp.MatchString(SymbolRegex, password); !ok {
+		return false, "รหัสผ่านต้องมีสัญลักษณ์พิเศษ (!@#$...) อย่างน้อย 1 ตัว"
+	}
+
+	return true, ""
+}
+
+const RequiredDomain = "@sut.ac.th"
+
+func NormalizeUsername(username string) string {
+	//ตรวจสอบว่ามีสัญลักษณ์ '@' หรือไม่
+	if strings.Contains(username, "@") {
+		if strings.HasSuffix(username, RequiredDomain) {
+			return username
+		}
+		// ถ้าเป็นโดเมนอื่น (เช่น @gmail.com) อาจจะต้องปฏิเสธ หรือส่งต่อตามเดิม
+		return username
+	}
+
+	//ถ้าไม่มี @ เลย ถือว่าเป็น User Prefix
+	return username + RequiredDomain
+}
+
+// ในไฟล์ service/jwtService.go (วางต่อจากเมธอดอื่นๆ)
+
+// ConsumeResetToken ลบ Token ออกจาก DB หลังการเปลี่ยนรหัสผ่านสำเร็จ
+func (s *jwtServiceImpl) ConsumeResetToken(db *gorm.DB, rawToken string) error {
+	tokenHash := HashTokenSHA256(rawToken) // ใช้ Global/Helper Function
+
+	// ลบ Token ที่ Hash ตรงกัน
+	result := db.Where("token_hash = ?", tokenHash).Delete(&entity.ResetPasswordToken{})
+
+	if result.Error != nil {
+		return fmt.Errorf("failed to consume reset token: %w", result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("token not found or already consumed")
+	}
+
+	log.Printf("SUCCESS: Consumed Reset Token.")
+	return nil
+}
+
+// ValidateResetToken คืนค่า User ID ที่เกี่ยวข้องกับ Token
+func (s *jwtServiceImpl) ValidateResetToken(db *gorm.DB, rawToken string) (uint, error) {
+	// 1. Hash Token ที่รับเข้ามาเพื่อใช้ค้นหาใน DB
+	tokenHash := HashTokenSHA256(rawToken)
+
+	var token entity.ResetPasswordToken
+	//ค้นหา Token ใน DB โดยใช้ Hash
+	if err := db.Where("token_hash = ?", tokenHash).First(&token).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return 0, fmt.Errorf("invalid or token not found")
+		}
+		return 0, fmt.Errorf("database query error: %w", err)
+	}
+
+	//ตรวจสอบวันหมดอายุ
+	if time.Now().Unix() > token.ExpiresAt {
+		db.Delete(&token) // ลบ Token ที่หมดอายุ
+		return 0, fmt.Errorf("reset token has expired")
+	}
+
+	log.Printf("SUCCESS: Validated Reset Token for User ID %d", token.UserID)
+	return token.UserID, nil
 }

@@ -30,18 +30,28 @@ const ResetPasswordPage: React.FC = () => {
             });
         }
     }, [searchParams]);
-
+    // ส่วนการทำงานไม่ใช่ design
     const handleReset = async (e: React.FormEvent) => {
         e.preventDefault();
         setMessage(null);
-
         if (!token) {
             setMessage({ text: "Error: Missing reset token.", type: 'error' });
             return;
         }
+        
+        const hasUpperCase = /[A-Z]/.test(password);
+        const hasSymbol = /[!@#$%^&*(),.?":{}|<>]/.test(password);
 
         if (password.length < 8) {
             setMessage({ text: "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร", type: 'error' });
+            return;
+        }
+        if (!hasUpperCase) {
+            setMessage({ text: "รหัสผ่านต้องมีตัวอักษรพิมพ์ใหญ่ (A-Z) อย่างน้อย 1 ตัว", type: 'error' });
+            return;
+        }
+        if (!hasSymbol) {
+            setMessage({ text: "รหัสผ่านต้องมีสัญลักษณ์พิเศษ (!@#$...) อย่างน้อย 1 ตัว", type: 'error' });
             return;
         }
 
@@ -49,16 +59,13 @@ const ResetPasswordPage: React.FC = () => {
             setMessage({ text: "รหัสผ่านใหม่ไม่ตรงกัน", type: 'error' });
             return;
         }
-
         setIsLoading(true);
-
         try {
             const data: ResetPasswordInterface = {
-                token: token,
+                token: token!, 
                 new_password: password,
             };
 
-            // เรียก API ไปยัง Backend Go /reset-password
             const res = await ResetPassword(data); 
             
             setMessage({ 
@@ -66,7 +73,6 @@ const ResetPasswordPage: React.FC = () => {
                 type: 'success' 
             });
 
-            // Redirect ไปหน้า Login หลังจาก 5 วินาที
             setTimeout(() => {
                 router.push('/login');
             }, 5000);

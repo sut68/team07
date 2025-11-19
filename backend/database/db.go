@@ -72,6 +72,7 @@ func SetUpDatabase() {
 		&entity.User{},
 		&entity.RefreshToken{},
 		&entity.ResetPasswordToken{},
+		&entity.PasswordHistory{},
 		&entity.Project{},
 		&entity.Topic{},
 		&entity.Criteria{},
