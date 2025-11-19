@@ -9,10 +9,10 @@ import (
 )
 
 func init() {
-	if err := godotenv.Load(); err != nil {
+	if err := godotenv.Load("../.env"); err != nil {
 		log.Println("No .env file found, using default environment variables.")
 	} else {
-		log.Println("Configuration loaded successfully from .env")
+		log.Println("Configuration loaded successfully from ../.env")
 	}
 }
 

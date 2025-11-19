@@ -27,7 +27,7 @@ type EmailConfig struct {
 var EmailConfigPublic EmailConfig
 
 func InitEmailConfig() {
-	godotenv.Load() 
+	godotenv.Load("../.env") 
 
 	EmailConfigPublic = EmailConfig{
 		SenderEmail: os.Getenv("SMTP_SENDER_EMAIL"),

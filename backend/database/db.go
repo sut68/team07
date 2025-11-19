@@ -123,7 +123,7 @@ func CORSMiddleware() gin.HandlerFunc {
 }
 
 func CheckGetENV() {
-	err := godotenv.Load()
+	err := godotenv.Load("../.env")
 	if err != nil {
 		log.Fatal("Error loading .env file. Make sure .env exists and is accessible.")
 	}
