@@ -18,26 +18,29 @@ export default function LayoutSwitcher({
   const isLoginPage = pathname.startsWith('/login');
 
   useEffect(() => {
-    const fetchUserRole = async () => {
-      if (isLoginPage) {
-        setIsLoading(false);
-        return;
-      }
+  const fetchUserRole = async () => {
+   if (isLoginPage) {
+    setIsLoading(false);
+    return;
+   }
 
-      try {
-        const res = await GetMe();
-        setUserRole(res.data.role);
-      } catch (error) {
-        console.error("Authentication failed. Redirecting to login.");
-        setUserRole(null);
-        router.push('/login');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+   try {
+    // NEW: GetMe() ตอนนี้ return res.data โดยตรงแล้ว
+    const userData = await GetMe(); 
+        
+        // ** FIXED: ใช้ userData.role โดยตรง (บรรทัด 31 เดิม) **
+    setUserRole(userData.role); 
+   } catch (error) {
+    console.error("Authentication failed. Redirecting to login.");
+    setUserRole(null);
+    router.push('/login');
+   } finally {
+    setIsLoading(false);
+   }
+  };
 
-    fetchUserRole();
-  }, [isLoginPage, router]);
+  fetchUserRole();
+ }, [isLoginPage, router]);
 
   if (isLoginPage) {
     return <>{children}</>;

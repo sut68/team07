@@ -1,5 +1,6 @@
 import api from "./api";
-import type { ForgotPasswordInterface, SignInInterface,ResetPasswordInterface } from "../interfaces/Login";
+import type { ForgotPasswordInterface, SignInInterface,ResetPasswordInterface ,UserDataInterface} from "../interfaces/Login";
+import { AxiosResponse } from 'axios';
 
 async function SignIn(data: SignInInterface) {
     const res = await api.post("/login", data);
@@ -13,8 +14,9 @@ async function Logout() {
     return await api.post("/logout"); 
 }
 
-async function GetMe() {
-    return await api.get("/me");
+async function GetMe(): Promise<UserDataInterface> {
+    const res: AxiosResponse<UserDataInterface> = await api.get("/me");
+    return res.data;
 }
 
 async function ForgotPassword(data: ForgotPasswordInterface) {

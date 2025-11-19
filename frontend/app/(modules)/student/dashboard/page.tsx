@@ -11,8 +11,8 @@ export default function DashboardPage() {
     const handleTestToken = async () => {
         try {
             const res = await GetMe();
-            setStatusMessage(`สำเร็จ! Token ใช้งานได้ (${res.data.username})`);
-            console.log("Success: /me response:", res.data);
+            setStatusMessage(`สำเร็จ! Token ใช้งานได้ (${res.username})`);
+            console.log("Success: /me response:", res);
             
         } catch (error) {
             if (isAxiosError(error)) {
