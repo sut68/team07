@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { GetProgress, AddProgress } from "../../../services/progress";
+import { GetProgress, AddProgress, UpProgress } from "../../../services/progress";
 import type { FullProgress } from "../../../interfaces/Progress";
 
-type Mode = "get" | "add";
+type Mode = "get" | "add" | "update";
 
 export default function TestApiPage() {
   const [mode, setMode] = useState<Mode>("get");
@@ -13,9 +13,19 @@ export default function TestApiPage() {
   const [file, setFile] = useState("");
   const [comment, setComment] = useState("");
 
+  const [updateId, setUpdateId] = useState<number | null>(null);
+
   const [result, setResult] = useState<FullProgress[] | string>(
     "ยังไม่ได้ทดสอบ"
   );
+
+  // ดึง id จาก result ให้รองรับทั้ง id / ID / progress_id
+  const availableIds =
+    Array.isArray(result) && result.length > 0
+      ? result
+          .map((p: any) => p.id ?? p.ID ?? p.progress_id)
+          .filter((id: any) => id !== null && id !== undefined)
+      : [];
 
   const handleRun = async () => {
     try {
@@ -23,18 +33,54 @@ export default function TestApiPage() {
         const res = await GetProgress({ group_project_id: groupProjectId });
         console.log("GET RESULT:", res);
         setResult(res);
-      } else {
+        if (res.length > 0) {
+          const firstId =
+            (res[0] as any).id ??
+            (res[0] as any).ID ??
+            (res[0] as any).progress_id ??
+            null;
+          setUpdateId(firstId ?? null);
+        } else {
+          setUpdateId(null);
+        }
+      } else if (mode === "add") {
         await AddProgress({
           group_project_id: groupProjectId,
           file,
           comment,
         });
         console.log("ADD SUCCESS");
-        setResult("เพิ่ม Progress สำเร็จ (ลอง GET ดูอีกครั้ง)");
+
+        // ดึงข้อมูลใหม่หลังเพิ่ม
+        const res = await GetProgress({ group_project_id: groupProjectId });
+        setResult(res);
+        if (res.length > 0) {
+          const firstId =
+            (res[0] as any).id ??
+            (res[0] as any).ID ??
+            (res[0] as any).progress_id ??
+            null;
+          setUpdateId(firstId ?? null);
+        }
+      } else {
+        if (!updateId) {
+          setResult("กรุณาเลือก ID ที่ต้องการแก้ไข");
+          return;
+        }
+
+        await UpProgress({
+          id: updateId,
+          file,
+          comment,
+        });
+        console.log("UPDATE SUCCESS");
+
+        // ดึงข้อมูลใหม่หลังอัปเดต
+        const res = await GetProgress({ group_project_id: groupProjectId });
+        setResult(res);
       }
     } catch (err: any) {
       console.error("Axios ERROR:", err);
-      // Try to show backend message if exists
       const msg =
         err?.response?.data?.error ||
         err?.response?.data?.message ||
@@ -57,10 +103,11 @@ export default function TestApiPage() {
         >
           <option value="get">GET - GetProgress</option>
           <option value="add">POST - AddProgress</option>
+          <option value="update">POST - UpdateProgress</option>
         </select>
       </div>
 
-      {/* group_project_id input (used by both) */}
+      {/* group_project_id input (used by all) */}
       <div style={{ marginBottom: 12 }}>
         <label>กรอก group_project_id:</label>
         <input
@@ -111,6 +158,65 @@ export default function TestApiPage() {
         </>
       )}
 
+      {/* Inputs for UpdateProgress */}
+      {mode === "update" && (
+        <>
+          <div style={{ marginBottom: 12 }}>
+            <label>เลือก ID ที่ต้องการแก้ไข:</label>
+            <select
+              value={updateId ?? ""}
+              onChange={(e) =>
+                setUpdateId(e.target.value ? Number(e.target.value) : null)
+              }
+              style={{
+                padding: "8px",
+                marginLeft: "10px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+              }}
+            >
+              <option value="">-- เลือกจากข้อมูลที่ได้มา --</option>
+              {availableIds.map((id) => (
+                <option key={id} value={id}>
+                  {id}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            <label>File (ค่าใหม่):</label>
+            <input
+              value={file}
+              onChange={(e) => setFile(e.target.value)}
+              placeholder="เช่น report_updated.pdf"
+              style={{
+                padding: "8px",
+                marginLeft: "10px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+              }}
+            />
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            <label>Comment (ค่าใหม่):</label>
+            <input
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="เช่น updated submission"
+              style={{
+                padding: "8px",
+                marginLeft: "10px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+              }}
+            />
+          </div>
+          <div style={{ marginBottom: 8, fontSize: 12, color: "#666" }}>
+            * ID ที่แสดงมาจากผลลัพธ์ล่าสุดของ GetProgress() / หลัง Add / หลัง Update
+          </div>
+        </>
+      )}
+
       {/* Run button */}
       <button
         onClick={handleRun}
@@ -123,7 +229,11 @@ export default function TestApiPage() {
           cursor: "pointer",
         }}
       >
-        {mode === "get" ? "ทดสอบ GetProgress()" : "ทดสอบ AddProgress()"}
+        {mode === "get"
+          ? "ทดสอบ GetProgress()"
+          : mode === "add"
+          ? "ทดสอบ AddProgress()"
+          : "ทดสอบ UpdateProgress()"}
       </button>
 
       {/* Result Output */}
