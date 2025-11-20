@@ -25,7 +25,7 @@ func InsertMock(db *gorm.DB) {
 	log.Println("Starting database seeding (Refactored)...")
 
 	var genders, roles, accountStatuses, branch, IssueStatus, IssueType, actionType []interface{}
-	var users ,groupPro , groupMem ,rooms []interface{}
+	var users ,rooms ,groupPro, groupMem []interface{}
 
 	for i := range MockGender { genders = append(genders, &MockGender[i])}
 	for i := range MockRole {roles = append(roles, &MockRole[i])}

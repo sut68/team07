@@ -15,9 +15,9 @@ import (
 
 func main() {
 
-	database.CheckGetENV()
 	database.ConnectDatabase()
 	database.SetUpDatabase()
+	//========INSERT MOCK DATA================
 	Data := database.DB()
 	mockdata.InsertMock(Data)
 	//=========================================

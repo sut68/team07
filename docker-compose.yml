@@ -6,10 +6,8 @@ services:
   # -------------------------------------------------------------------
   db:
     image: postgres:15-alpine 
-    container_name: dev-postgres
+    container_name: capstone_postgres
     restart: always
-    env_file:
-      - ./backend/.env
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -17,50 +15,64 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:
-      - "5433:5432"
+      - "5433:5432" 
+    networks:
+      - app-network
 
   # -------------------------------------------------------------------
-  # 2. Go Backend Service (Development Mode with Air)
+  # 2. Go Backend API Service (Production Build)
   # -------------------------------------------------------------------
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: dev-backend
+    container_name: capstone_backend
     restart: always
-    ports:
-      - "8080:8080"
-    volumes:
-      - ./backend:/app 
-    stdin_open: true 
-    tty: true
-    env_file:
-      - ./backend/.env
-    environment:
-      DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}?sslmode=disable
-      PORT: 8080
-      GIN_MODE: release
     depends_on:
       - db
+    environment:
+      DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}?sslmode=disable
+      
+      SECRET_KEY: ${SECRET_KEY}
+      REFRESH_SECRET_KEY: ${REFRESH_SECRET_KEY}
+      FRONTEND_URL: ${FRONTEND_URL}
+      SMTP_SENDER_EMAIL: ${SMTP_SENDER_EMAIL}
+      SMTP_SENDER_NAME: ${SMTP_SENDER_NAME}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_USERNAME: ${SMTP_USERNAME} 
+      
+      GIN_MODE: release
+      PORT: 8080
+    ports:
+      - "8080:8080"
+    networks:
+      - app-network
 
   # -------------------------------------------------------------------
-  # 3. Frontend Service (Vite/Next.js/React - ใช้ 5173:5173)
+  # 3. Next.js Frontend Service (Production Build)
   # -------------------------------------------------------------------
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: dev-frontend
+    container_name: capstone_frontend
     restart: always
+    environment:
+      NEXT_PUBLIC_API_URL: http://backend:8080 
     ports:
       - "5173:5173"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    environment:
-      VITE_API_URL: http://backend:8080 
     depends_on:
       - backend
-
+    networks:
+      - app-network
+      
+# Volume สำหรับ Persistent Data
 volumes:
   pgdata:
+
+# Network สำหรับให้ Services คุยกัน
+networks:
+  app-network:
+    driver: bridge

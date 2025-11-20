@@ -35,6 +35,7 @@ type User struct {
 	Logs		  []Log           `gorm:"foreignKey:UserID" json:"logs"`
 	RefreshTokens  []RefreshToken `gorm:"foreignKey:UserID" json:"refresh_tokens"`
 	ResetPasswordTokens []ResetPasswordToken `gorm:"foreignKey:UserID" json:"reset_password_tokens"`
+	PasswordHistory []PasswordHistory `gorm:"foreignKey:UserID" json:"password_history"`
 	
 }
 

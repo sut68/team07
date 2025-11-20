@@ -1,14 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ResetPassword } from '../../../services/login'; 
 import { ResetPasswordInterface } from '../../../interfaces/Login'; 
 
 const originalFont = 'zzzTH'; 
 
-const ResetPasswordPage: React.FC = () => {
-    
+const ResetPasswordComponent: React.FC = () => {
     const router = useRouter(); 
     const searchParams = useSearchParams(); 
 
@@ -19,7 +18,6 @@ const ResetPasswordPage: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
-        // ดึง Token จาก URL (?token=xxx) เมื่อ Component ถูกโหลด
         const urlToken = searchParams.get('token');
         if (urlToken) {
             setToken(urlToken);
@@ -30,15 +28,16 @@ const ResetPasswordPage: React.FC = () => {
             });
         }
     }, [searchParams]);
-    // ส่วนการทำงานไม่ใช่ design
+
     const handleReset = async (e: React.FormEvent) => {
         e.preventDefault();
         setMessage(null);
+        
         if (!token) {
             setMessage({ text: "Error: Missing reset token.", type: 'error' });
             return;
         }
-        
+
         const hasUpperCase = /[A-Z]/.test(password);
         const hasSymbol = /[!@#$%^&*(),.?":{}|<>]/.test(password);
 
@@ -60,6 +59,7 @@ const ResetPasswordPage: React.FC = () => {
             return;
         }
         setIsLoading(true);
+
         try {
             const data: ResetPasswordInterface = {
                 token: token!, 
@@ -86,7 +86,6 @@ const ResetPasswordPage: React.FC = () => {
     };
 
     if (!token && !message) {
-        // แสดงสถานะ Loading เมื่อกำลังรอตรวจสอบ Token
         return (
             <div className="flex items-center justify-center min-h-screen bg-gray-100">
                 <p className="text-gray-600" style={{ fontFamily: originalFont }}>กำลังโหลด...</p>
@@ -94,7 +93,6 @@ const ResetPasswordPage: React.FC = () => {
         );
     }
     
-    // ตรวจสอบว่าลิงก์ไม่ถูกต้องตั้งแต่ต้นหรือไม่ (เช่น ไม่มี token เลย)
     const isInitialError = message && message.type === 'error' && !token;
 
     return (
@@ -174,6 +172,19 @@ const ResetPasswordPage: React.FC = () => {
                 )}
             </div>
         </div>
+    );
+};
+
+const ResetPasswordPage: React.FC = () => {
+    return (
+        // ห่อหุ้มด้วย Suspense เพื่อแก้ไขปัญหา Next.js Build Error (SSR)
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-screen bg-gray-100">
+                <p className="text-gray-600" style={{ fontFamily: originalFont }}>กำลังเตรียมหน้า...</p>
+            </div>
+        }>
+            <ResetPasswordComponent />
+        </Suspense>
     );
 };
 
