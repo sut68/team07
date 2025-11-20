@@ -27,4 +27,4 @@ async function ResetPassword(data: ResetPasswordInterface) {
     return await api.post("/reset-password", data);
 }
 
-export { SignIn, Logout, GetMe , ForgotPassword ,ResetPassword};
+export { SignIn, GetMe , ForgotPassword ,ResetPassword};

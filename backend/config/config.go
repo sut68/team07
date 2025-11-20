@@ -9,10 +9,15 @@ import (
 )
 
 func init() {
-	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found, using default environment variables.")
+	if os.Getenv("SECRET_KEY") != "" {
+        log.Println("Configuration loaded from Environment Variables (Docker/Prod).")
+        return
+    }
+
+	if err := godotenv.Load("../.env"); err != nil { 
+		log.Println("WARNING: Cannot find ../.env file. Relying on default values or system environment.")
 	} else {
-		log.Println("Configuration loaded successfully from .env")
+		log.Println("Configuration loaded successfully from ../.env (Local Dev).")
 	}
 }
 
