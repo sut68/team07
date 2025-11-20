@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	// "github.com/joho/godotenv"
+	"github.com/joho/godotenv"
 	"github.com/sut68/team07/backend/config"
 	"github.com/sut68/team07/backend/entity"
 	"gorm.io/driver/postgres"
@@ -21,40 +21,46 @@ func DB() *gorm.DB {
 }
 
 func ConnectDatabase() {
-	dsn := os.Getenv("DATABASE_URL")
-	if dsn == "" {
-		log.Println("DATABASE_URL not found, using segmented config from .env...")
-		
-		dbHost := os.Getenv("DB_HOST")
-		dbPort := os.Getenv("DB_PORT")
-		dbSSLMode := os.Getenv("DB_SSLMODE")
-		dbUser := os.Getenv("DB_USER")
-		dbPassword := os.Getenv("DB_PASSWORD")
-		dbName := os.Getenv("DB_NAME")
+    // 1. Load .env first
+    if err := godotenv.Load(); err != nil {
+        log.Println("Warning: .env file not found, using system environment variables only")
+    }
 
-		if dbUser == "" || dbHost == "" || dbName == "" {
-			log.Fatal("Critical: One or more database configuration variables (DB_HOST, DB_USER, DB_NAME) is missing in .env. Cannot connect.")
-		}
+    // 2. Now read env vars
+    dsn := os.Getenv("DATABASE_URL")
+    if dsn == "" {
+        log.Println("DATABASE_URL not found, using segmented config from .env...")
 
-		dsn = fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
-			dbHost,
-			dbUser,
-			dbPassword,
-			dbName,
-			dbPort,
-			dbSSLMode,
-		)
-	}
-	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil {
-		log.Fatal("Failed to connect to database:", err)
-	}
+        dbHost := os.Getenv("DB_HOST")
+        dbPort := os.Getenv("DB_PORT")
+        dbSSLMode := os.Getenv("DB_SSLMODE")
+        dbUser := os.Getenv("DB_USER")
+        dbPassword := os.Getenv("DB_PASSWORD")
+        dbName := os.Getenv("DB_NAME")
 
-	fmt.Println("Database connected successfully to PostgreSQL")
-	fmt.Println("DSN used (Sensitive parts hidden):", dsn)
-	
-	db = database
+        if dbUser == "" || dbHost == "" || dbName == "" {
+            log.Fatal("Critical: One or more database configuration variables (DB_HOST, DB_USER, DB_NAME) is missing in .env. Cannot connect.")
+        }
+
+        dsn = fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
+            dbHost,
+            dbUser,
+            dbPassword,
+            dbName,
+            dbPort,
+            dbSSLMode,
+        )
+    }
+
+    database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+    if err != nil {
+        log.Fatal("Failed to connect to database:", err)
+    }
+
+    fmt.Println("Database connected successfully to PostgreSQL")
+    db = database
 }
+
 
 func SetUpDatabase() {
 	// ผมเเยก AutoMigrate เพราะให้มันจัดลำดับการสร้างตารางได้ง่ายขึ้น
