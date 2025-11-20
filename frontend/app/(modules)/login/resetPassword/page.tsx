@@ -1,14 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ResetPassword } from '../../../services/login'; 
 import { ResetPasswordInterface } from '../../../interfaces/Login'; 
 
 const originalFont = 'zzzTH'; 
 
-const ResetPasswordPage: React.FC = () => {
-    
+const ResetPasswordComponent: React.FC = () => {
     const router = useRouter(); 
     const searchParams = useSearchParams(); 
 
@@ -19,7 +18,6 @@ const ResetPasswordPage: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
-        // ดึง Token จาก URL (?token=xxx) เมื่อ Component ถูกโหลด
         const urlToken = searchParams.get('token');
         if (urlToken) {
             setToken(urlToken);
@@ -34,14 +32,25 @@ const ResetPasswordPage: React.FC = () => {
     const handleReset = async (e: React.FormEvent) => {
         e.preventDefault();
         setMessage(null);
-
+        
         if (!token) {
             setMessage({ text: "Error: Missing reset token.", type: 'error' });
             return;
         }
 
+        const hasUpperCase = /[A-Z]/.test(password);
+        const hasSymbol = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
         if (password.length < 8) {
             setMessage({ text: "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร", type: 'error' });
+            return;
+        }
+        if (!hasUpperCase) {
+            setMessage({ text: "รหัสผ่านต้องมีตัวอักษรพิมพ์ใหญ่ (A-Z) อย่างน้อย 1 ตัว", type: 'error' });
+            return;
+        }
+        if (!hasSymbol) {
+            setMessage({ text: "รหัสผ่านต้องมีสัญลักษณ์พิเศษ (!@#$...) อย่างน้อย 1 ตัว", type: 'error' });
             return;
         }
 
@@ -49,16 +58,14 @@ const ResetPasswordPage: React.FC = () => {
             setMessage({ text: "รหัสผ่านใหม่ไม่ตรงกัน", type: 'error' });
             return;
         }
-
         setIsLoading(true);
 
         try {
             const data: ResetPasswordInterface = {
-                token: token,
+                token: token!, 
                 new_password: password,
             };
 
-            // เรียก API ไปยัง Backend Go /reset-password
             const res = await ResetPassword(data); 
             
             setMessage({ 
@@ -66,7 +73,6 @@ const ResetPasswordPage: React.FC = () => {
                 type: 'success' 
             });
 
-            // Redirect ไปหน้า Login หลังจาก 5 วินาที
             setTimeout(() => {
                 router.push('/login');
             }, 5000);
@@ -80,7 +86,6 @@ const ResetPasswordPage: React.FC = () => {
     };
 
     if (!token && !message) {
-        // แสดงสถานะ Loading เมื่อกำลังรอตรวจสอบ Token
         return (
             <div className="flex items-center justify-center min-h-screen bg-gray-100">
                 <p className="text-gray-600" style={{ fontFamily: originalFont }}>กำลังโหลด...</p>
@@ -88,7 +93,6 @@ const ResetPasswordPage: React.FC = () => {
         );
     }
     
-    // ตรวจสอบว่าลิงก์ไม่ถูกต้องตั้งแต่ต้นหรือไม่ (เช่น ไม่มี token เลย)
     const isInitialError = message && message.type === 'error' && !token;
 
     return (
@@ -168,6 +172,19 @@ const ResetPasswordPage: React.FC = () => {
                 )}
             </div>
         </div>
+    );
+};
+
+const ResetPasswordPage: React.FC = () => {
+    return (
+        // ห่อหุ้มด้วย Suspense เพื่อแก้ไขปัญหา Next.js Build Error (SSR)
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-screen bg-gray-100">
+                <p className="text-gray-600" style={{ fontFamily: originalFont }}>กำลังเตรียมหน้า...</p>
+            </div>
+        }>
+            <ResetPasswordComponent />
+        </Suspense>
     );
 };
 

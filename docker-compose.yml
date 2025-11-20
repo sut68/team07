@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  # -------------------------------------------------------------------
+  # 1. PostgreSQL Database Service
+  # -------------------------------------------------------------------
+  db:
+    image: postgres:15-alpine 
+    container_name: capstone_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    networks:
+      - app-network
+
+  # -------------------------------------------------------------------
+  # 2. Go Backend API Service (Production Build)
+  # -------------------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: capstone_backend
+    restart: always
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}?sslmode=disable
+      
+      SECRET_KEY: ${SECRET_KEY}
+      REFRESH_SECRET_KEY: ${REFRESH_SECRET_KEY}
+      FRONTEND_URL: ${FRONTEND_URL}
+      SMTP_SENDER_EMAIL: ${SMTP_SENDER_EMAIL}
+      SMTP_SENDER_NAME: ${SMTP_SENDER_NAME}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_USERNAME: ${SMTP_USERNAME} 
+      
+      GIN_MODE: release
+      PORT: 8080
+    ports:
+      - "8080:8080"
+    networks:
+      - app-network
+
+  # -------------------------------------------------------------------
+  # 3. Next.js Frontend Service (Production Build)
+  # -------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: capstone_frontend
+    restart: always
+    environment:
+      NEXT_PUBLIC_API_URL: http://backend:8080 
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+      
+# Volume สำหรับ Persistent Data
+volumes:
+  pgdata:
+
+# Network สำหรับให้ Services คุยกัน
+networks:
+  app-network:
+    driver: bridge

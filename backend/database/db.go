@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
+	// "github.com/joho/godotenv"
 	"github.com/sut68/team07/backend/config"
 	"github.com/sut68/team07/backend/entity"
 	"gorm.io/driver/postgres"
@@ -72,6 +72,7 @@ func SetUpDatabase() {
 		&entity.User{},
 		&entity.RefreshToken{},
 		&entity.ResetPasswordToken{},
+		&entity.PasswordHistory{},
 		&entity.Project{},
 		&entity.Topic{},
 		&entity.Criteria{},
@@ -121,9 +122,3 @@ func CORSMiddleware() gin.HandlerFunc {
 	}
 }
 
-func CheckGetENV() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file. Make sure .env exists and is accessible.")
-	}
-}

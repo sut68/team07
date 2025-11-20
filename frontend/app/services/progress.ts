@@ -12,4 +12,8 @@ async function GetProgress(payload: PickProgress): Promise<FullProgress[]> {
 }
 
 
-export {GetProgress,AssignProgress,UpdateProgress,DeleteProgress};
+async function ResetPassword(data: ResetPasswordInterface) {
+    return await api.post("/reset-password", data);
+}
+
+

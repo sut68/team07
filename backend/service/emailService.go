@@ -27,7 +27,7 @@ type EmailConfig struct {
 var EmailConfigPublic EmailConfig
 
 func InitEmailConfig() {
-	godotenv.Load() 
+	godotenv.Load("../.env") 
 
 	EmailConfigPublic = EmailConfig{
 		SenderEmail: os.Getenv("SMTP_SENDER_EMAIL"),
@@ -175,37 +175,6 @@ func SendPasswordResetEmail(recipientEmail, username, rawToken string) {
 	}
 
 	log.Printf("SUCCESS: Sent password reset email to %s", recipientEmail)
-}
-
-// คืนค่า User ID ที่เกี่ยวข้องกับ Token
-func ValidateAndConsumeResetToken(db *gorm.DB, rawToken string) (uint, error) {
-	// 1. Hash Token ที่รับเข้ามาเพื่อใช้ค้นหาใน DB
-	tokenHash := HashTokenSHA256(rawToken)
-
-	var token entity.ResetPasswordToken
-	// 2. ค้นหา Token ใน DB โดยใช้ Hash
-	if err := db.Where("token_hash = ?", tokenHash).First(&token).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return 0, fmt.Errorf("invalid or already consumed token")
-		}
-		return 0, fmt.Errorf("database query error: %w", err)
-	}
-
-	// 3. ตรวจสอบวันหมดอายุ
-	if time.Now().Unix() > token.ExpiresAt {
-		db.Delete(&token) // ลบ Token ที่หมดอายุ
-		return 0, fmt.Errorf("reset token has expired")
-	}
-
-	// 4. Token ถูกต้อง: ลบ Token ออก
-	if err := db.Delete(&token).Error; err != nil {
-		// Log error แต่ยังคงคืนค่า UserID เพราะ Token ถูกใช้แล้ว
-		log.Printf("WARNING: Failed to delete consumed reset token: %v", err)
-	}
-	
-	log.Printf("SUCCESS: Validated and consumed Reset Token for User ID %d", token.UserID)
-
-	return token.UserID, nil
 }
 
 // ส่งอีเมลแจ้งเตือนผู้ใช้ว่ารหัสผ่านได้รับการเปลี่ยนแปลงแล้ว
