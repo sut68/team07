@@ -11,11 +11,17 @@ async function GetProgress(payload: PickProgress): Promise<FullProgress[]> {
     return res.data;
 }
 
-async function AddProgress(payload: AssignProgress) {
+async function AddProgress(payload: AssignProgress) {     
     await api.post("/student/assignProgress", null, {
         params: payload,
     });
 }
 
-export {GetProgress,AddProgress};
+async function UpProgress(payload: UpdateProgress) {
+    await api.post("/student/modifyProgress", null, {
+            params: payload,
+        });
+}
+
+export {GetProgress,AddProgress,UpProgress};
 
