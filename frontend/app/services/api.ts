@@ -13,7 +13,7 @@ const api = axios.create({
 api.interceptors.request.use(config => {
     
     // ดึง csrfToken ที่ได้จากฟังก์ชัน getCSRFToken
-    const csrfToken = localStorage.getItem("csrfToken");
+    const csrfToken = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]+)/);
     
     // แนบ CSRF Token เฉพาะใน Request (POST, PUT, DELETE)
     if (
