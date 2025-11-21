@@ -19,9 +19,15 @@ async function AddProgress(payload: AssignProgress) {
 
 async function UpProgress(payload: UpdateProgress) {
     await api.post("/student/modifyProgress", null, {
-            params: payload,
-        });
+        params: payload,
+    });
 }
 
-export {GetProgress,AddProgress,UpProgress};
+async function EraseProgress(payload: DeleteProgress) {
+    await api.delete("/student/deleteProgress", {
+        params: payload,
+    });
+}
+
+export {GetProgress,AddProgress,UpProgress,EraseProgress};
 

@@ -1,10 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { GetProgress, AddProgress, UpProgress } from "../../../services/progress";
+import {
+  GetProgress,
+  AddProgress,
+  UpProgress,
+  EraseProgress,
+} from "../../../services/progress";
 import type { FullProgress } from "../../../interfaces/Progress";
 
-type Mode = "get" | "add" | "update";
+type Mode = "get" | "add" | "update" | "delete";
 
 export default function TestApiPage() {
   const [mode, setMode] = useState<Mode>("get");
@@ -14,80 +19,89 @@ export default function TestApiPage() {
   const [comment, setComment] = useState("");
 
   const [updateId, setUpdateId] = useState<number | null>(null);
+  const [delId, setDelId] = useState<number | null>(null);
 
-  const [result, setResult] = useState<FullProgress[] | string>(
-    "ยังไม่ได้ทดสอบ"
-  );
+  const [progressList, setProgressList] = useState<FullProgress[]>([]);
+  const [status, setStatus] = useState<string>("ยังไม่ได้ทดสอบ");
 
-  // ดึง id จาก result ให้รองรับทั้ง id / ID / progress_id
-  const availableIds =
-    Array.isArray(result) && result.length > 0
-      ? result
-          .map((p: any) => p.id ?? p.ID ?? p.progress_id)
-          .filter((id: any) => id !== null && id !== undefined)
-      : [];
+  // ดึง ID ให้รองรับหลายแบบ: id / ID / progress_id
+  const availableIds = Array.isArray(progressList)
+    ? (progressList as any[])
+        .map((p) => p.id ?? p.ID ?? p.progress_id)
+        .filter((id) => id !== null && id !== undefined)
+    : [];
 
-  const handleRun = async () => {
-    try {
-      if (mode === "get") {
-        const res = await GetProgress({ group_project_id: groupProjectId });
-        console.log("GET RESULT:", res);
-        setResult(res);
-        if (res.length > 0) {
-          const firstId =
-            (res[0] as any).id ??
-            (res[0] as any).ID ??
-            (res[0] as any).progress_id ??
-            null;
-          setUpdateId(firstId ?? null);
-        } else {
-          setUpdateId(null);
-        }
-      } else if (mode === "add") {
-        await AddProgress({
-          group_project_id: groupProjectId,
-          file,
-          comment,
-        });
-        console.log("ADD SUCCESS");
+  // รองรับ res เป็น [] หรือ { data: [] }
+  const extractList = (res: any): FullProgress[] => {
+    if (Array.isArray(res)) return res as FullProgress[];
+    if (Array.isArray(res?.data)) return res.data as FullProgress[];
+    console.warn("GetProgress returned unexpected shape:", res);
+    return [];
+  };
 
-        // ดึงข้อมูลใหม่หลังเพิ่ม
-        const res = await GetProgress({ group_project_id: groupProjectId });
-        setResult(res);
-        if (res.length > 0) {
-          const firstId =
-            (res[0] as any).id ??
-            (res[0] as any).ID ??
-            (res[0] as any).progress_id ??
-            null;
-          setUpdateId(firstId ?? null);
-        }
-      } else {
-        if (!updateId) {
-          setResult("กรุณาเลือก ID ที่ต้องการแก้ไข");
-          return;
-        }
+  const refreshAfterChange = (res: any) => {
+    const list = extractList(res);
+    setProgressList(list);
 
-        await UpProgress({
-          id: updateId,
-          file,
-          comment,
-        });
-        console.log("UPDATE SUCCESS");
-
-        // ดึงข้อมูลใหม่หลังอัปเดต
-        const res = await GetProgress({ group_project_id: groupProjectId });
-        setResult(res);
-      }
-    } catch (err: any) {
-      console.error("Axios ERROR:", err);
-      const msg =
-        err?.response?.data?.error ||
-        err?.response?.data?.message ||
-        "เกิดข้อผิดพลาด ดูใน Console";
-      setResult(msg);
+    if (list.length > 0) {
+      const firstId = list[0].id;
+      setUpdateId(firstId);
+      setDelId(firstId);
+    } else {
+      setUpdateId(null);
+      setDelId(null);
     }
   };
+
+  const handleRun = async () => {
+  try {
+    if (mode === "get") {
+      const list = await GetProgress({ group_project_id: groupProjectId });
+      setProgressList(list);          // ✅ this is FullProgress[]
+      setStatus(`ดึงข้อมูลสำเร็จ: ${list.length} รายการ`);
+    } else if (mode === "add") {
+      await AddProgress({
+        group_project_id: groupProjectId,
+        file,
+        comment,
+      });
+
+      const list = await GetProgress({ group_project_id: groupProjectId });
+      setProgressList(list);
+      setStatus("เพิ่มข้อมูลสำเร็จ");
+    } else if (mode === "delete") {
+      if (!delId) {
+        setStatus("กรุณาเลือก ID ที่ต้องการลบ");
+        return;
+      }
+
+      await EraseProgress({ id: delId });
+
+      const list = await GetProgress({ group_project_id: groupProjectId });
+      setProgressList(list);
+      setStatus(`ลบ Progress id=${delId} สำเร็จ`);
+    } else {
+      if (!updateId) {
+        setStatus("กรุณาเลือก ID ที่ต้องการแก้ไข");
+        return;
+      }
+
+      await UpProgress({ id: updateId, file, comment });
+
+      const list = await GetProgress({ group_project_id: groupProjectId });
+      setProgressList(list);
+      setStatus(`อัปเดต Progress id=${updateId} สำเร็จ`);
+    }
+  } catch (err: any) {
+    console.error("Axios ERROR:", err);
+    const msg =
+      err?.response?.data?.error ||
+      err?.response?.data?.message ||
+      "เกิดข้อผิดพลาด ดูใน Console";
+    setStatus(msg);
+    setProgressList([]);
+  }
+};
 
   return (
     <div style={{ padding: 20 }}>
@@ -104,6 +118,7 @@ export default function TestApiPage() {
           <option value="get">GET - GetProgress</option>
           <option value="add">POST - AddProgress</option>
           <option value="update">POST - UpdateProgress</option>
+          <option value="delete">DELETE - EraseProgress</option>
         </select>
       </div>
 
@@ -212,7 +227,40 @@ export default function TestApiPage() {
             />
           </div>
           <div style={{ marginBottom: 8, fontSize: 12, color: "#666" }}>
-            * ID ที่แสดงมาจากผลลัพธ์ล่าสุดของ GetProgress() / หลัง Add / หลัง Update
+            * ID ที่แสดงมาจากผลลัพธ์ล่าสุดของ GetProgress() / หลัง Add / หลัง
+            Update / หลัง Delete
+          </div>
+        </>
+      )}
+
+      {/* Inputs for DeleteProgress */}
+      {mode === "delete" && (
+        <>
+          <div style={{ marginBottom: 12 }}>
+            <label>เลือก ID ที่ต้องการลบ:</label>
+            <select
+              value={delId ?? ""}
+              onChange={(e) =>
+                setDelId(e.target.value ? Number(e.target.value) : null)
+              }
+              style={{
+                padding: "8px",
+                marginLeft: "10px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+              }}
+            >
+              <option value="">-- เลือกจากข้อมูลที่ได้มา --</option>
+              {availableIds.map((id) => (
+                <option key={id} value={id}>
+                  {id}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div style={{ marginBottom: 8, fontSize: 12, color: "#666" }}>
+            * ID ที่แสดงมาจากผลลัพธ์ล่าสุดของ GetProgress() / หลัง Add / หลัง
+            Update / หลัง Delete
           </div>
         </>
       )}
@@ -233,14 +281,19 @@ export default function TestApiPage() {
           ? "ทดสอบ GetProgress()"
           : mode === "add"
           ? "ทดสอบ AddProgress()"
-          : "ทดสอบ UpdateProgress()"}
+          : mode === "update"
+          ? "ทดสอบ UpdateProgress()"
+          : "ทดสอบ EraseProgress()"}
       </button>
 
-      {/* Result Output */}
+      {/* Result Output / Debug */}
       <pre style={{ marginTop: 20, background: "#f4f4f4", padding: 10 }}>
-        {typeof result === "string"
-          ? result
-          : JSON.stringify(result, null, 2)}
+        {status}
+        {"\n\n"}
+        {"availableIds = " + JSON.stringify(availableIds) + "\n\n"}
+        {progressList.length > 0
+          ? JSON.stringify(progressList, null, 2)
+          : "// ยังไม่มีข้อมูลแสดงผล"}
       </pre>
     </div>
   );

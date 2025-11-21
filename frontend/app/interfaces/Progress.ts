@@ -25,3 +25,9 @@ export interface UpdateProgress {
 export interface DeleteProgress {
     id: number;
 }
+
+export interface DisplayProgress {
+    file: string;
+    comment: string;
+    update_at: Date;
+}
