@@ -43,8 +43,12 @@ func AssignProGress(c * gin.Context) {
 		return
 	}
 
-
-
+	var group_progress [] entity.GroupProject
+	result := db.Where("id = ?", contoint).Find(&group_progress)
+	if result.RowsAffected == 0{
+		c.JSON(http.StatusBadRequest,gin.H{"error":"invalid project_id this id not appear on database"})
+		return
+	}
 
 	Progresses := []entity.Progress{
 		{	
@@ -53,6 +57,8 @@ func AssignProGress(c * gin.Context) {
 			Comment: 			comment,
 		},
 	}
+
+	
 
 	db.Create(&Progresses)
 	log.InsertLog(c,5)
@@ -73,11 +79,18 @@ func UpdateProGress(c * gin.Context) {
     	return
 	}
 
+	var group_progress [] entity.Progress
+	result := db.Where("id = ?", pro_id).Find(&group_progress)
+	if result.RowsAffected == 0{
+		c.JSON(http.StatusBadRequest,gin.H{"error":"invalid id "})
+		return
+	}
+
+
 	type newUpdate struct {
     	File string
 		Comment string
 	}
-	
 
 	db.Model(&entity.Progress{}).Where("id = ?", uint(pro_id)).
 
@@ -94,6 +107,13 @@ func DeleteProgress(c * gin.Context) {
 
 	var id_str = c.Query("id")
 	id_int,_ := strconv.ParseInt(id_str,10,64)
+
+	var group_progress [] entity.Progress
+	result := db.Where("id = ?", id_int).Find(&group_progress)
+	if result.RowsAffected == 0{
+		c.JSON(http.StatusBadRequest,gin.H{"error":"invalid id "})
+		return
+	}
 
 	db.Delete(&entity.Progress{}, id_int)
 	log.InsertLog(c,7)
