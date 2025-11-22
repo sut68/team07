@@ -8,12 +8,15 @@ const roleNavItems: { [key: string]: { name: string; href: string }[] } = {
   Teacher: [
     { name: 'Dashboard Teacher', href: '/teacher/dashboard' },
     { name: 'กำหนดการสอน', href: '/teacher/schedule' },
+
+    { name: 'Test chat', href: '/chat/chat' }, 
   ],
   Student: [
     { name: 'Dashboard Student', href: '/student/dashboard' },
     { name: 'ข้อมูลโครงการ', href: '/student/project' },
 
-    { name: '🔧 Test Axios API', href: '/student/progress' } // test axios
+    { name: 'Test Axios API', href: '/student/progress' },// test axios
+    { name: 'Test chat', href: '/chat' }, 
   ],
 };
 

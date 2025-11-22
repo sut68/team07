@@ -1,7 +1,6 @@
 package entity
 
 import (
-	"time"
 	"gorm.io/gorm"
 )
 
@@ -19,5 +18,4 @@ type Chat struct {
 
 
 	Message   string    `json:"message"`
-	SentWhen  time.Time `json:"sent_when"`
 }
