@@ -5,20 +5,20 @@ import "gorm.io/gorm"
 type User struct {
     gorm.Model
     Username string `json:"username" valid:"required~Username is required"`
-    Password string `gorm:"not null" json:"-" valid:"required~Password is required"`
+    Password string `gorm:"not null" json:"password" valid:"required~Password is required"`
 	Firstname string `json:"firstname" valid:"required~Firstname is required"`
 	Lastname  string `json:"lastname" valid:"required~Lastname is required"`
-	Email     string `json:"email" valid:"required~Email is required,email~Invalid email format"`
-	Phone     string `json:"phone" valid:"required~Phone is required"`
+	Email     string `json:"email"`
+	Phone     string `json:"phone"`
     Pass    *bool   `json:"pass"`
 
-	GenderID uint   `json:"gender_id"`
+	GenderID uint   `json:"gender_id" valid:"required~GenderID is required"`
 	Gender   *Gender `gorm:"foreignKey:GenderID" json:"gender"`
-	BranchID uint    `json:"branch_id"`
+	BranchID uint    `json:"branch_id" valid:"required~BranchID is required"`
 	Branch   *Branch `gorm:"foreignKey:BranchID" json:"branch"`
-    RoleID uint          `json:"role_id"`
+    RoleID uint          `json:"role_id" valid:"required~RoleID is required"`
     Role   *UserRole `gorm:"foreignKey:RoleID" json:"role"`
-    StatusID uint          `json:"status_id"`
+    StatusID uint          `json:"status_id" valid:"required~StatusID is required"`
     Status   *AccountStatus `gorm:"foreignKey:StatusID" json:"status"`
 
 	GroupProjects []GroupProject `gorm:"foreignKey:TeacherID" json:"group_projects"`

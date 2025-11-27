@@ -6,7 +6,7 @@ import (
 
 type IssueStatus struct {
 	gorm.Model
-	Status string `json:"status"`
+	Status string `json:"status" valid:"required~Status is required"`
 
 	IssueReports []IssueReport `gorm:"foreignKey:StatusID" json:"issue_reports"`
 }

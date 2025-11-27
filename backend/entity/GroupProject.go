@@ -6,10 +6,10 @@ import (
 
 type GroupProject struct {
 	gorm.Model
-	GroupNumber int   `json:"group_number"`
-	GroupStatus string `json:"group_status"`
-	Membership	int		`json:"membership"`	// จำนวนสมาชิกต่อกลุ่ม
-	TeacherID   uint  `json:"teacher_id"`
+	GroupNumber uint   `json:"group_number" valid:"required,range(1|40)~GroupNumber must be between 1 and 40"`
+	GroupStatus string `json:"group_status" valid:"required~GroupStatus is required"`
+	Membership	int		`json:"membership" valid:"required,range(1|5)~Membership must be between 1 and 5"`	// จำนวนสมาชิกต่อกลุ่ม
+	TeacherID   uint  `json:"teacher_id" valid:"required~TeacherID is required"`
 	Teacher     *User `gorm:"foreignKey:TeacherID" json:"teacher"`
 
 	GroupMembers []GroupMember `gorm:"foreignKey:GroupProjectID" json:"group_members"`
