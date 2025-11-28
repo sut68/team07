@@ -13,4 +13,3 @@ type Evaluation struct {
 	Criteria []Criteria `gorm:"foreignKey:EvaluationID" json:"criteria"`
 }
 
-//true

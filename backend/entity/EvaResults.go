@@ -20,4 +20,3 @@ type EvaResult struct {
 	TeacherID uint   `json:"teacher_id" valid:"required~TeacherID is required"`
 	Teacher   *User `gorm:"foreignKey:TeacherID" json:"teacher"`
 }
-//true

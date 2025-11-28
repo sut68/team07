@@ -9,4 +9,3 @@ type AppointmentType struct {
 	Appointments []Appointment `gorm:"foreignKey:AppointmentTypeID" json:"appointments"`
 	Evaluation []Evaluation  `gorm:"foreignKey:AppointmentTypeID" json:"evaluations"`
 }
-//true
