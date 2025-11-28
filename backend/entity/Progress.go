@@ -13,5 +13,3 @@ type Progress struct {
 	File     string  	`json:"file" valid:"required~File is required"`
 	Comment  string     `json:"comment" valid:"required~Comment is required"`
 }
-
-//true

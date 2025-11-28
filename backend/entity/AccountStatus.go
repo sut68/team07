@@ -8,4 +8,3 @@ type AccountStatus struct {
 
 	Users []User `gorm:"foreignKey:StatusID"`
 }
-//true

@@ -14,4 +14,3 @@ type Criteria struct {
 	Results          []EvaResult      `gorm:"foreignKey:CriteriaID" json:"results"`
 	IndividualScores []IndividualScore `gorm:"foreignKey:CriteriaID" json:"individual_scores"`
 }
-//true
