@@ -51,12 +51,14 @@ func main() {
 			adminGroup.GET("/getGender", users.GetGender)
 			adminGroup.GET("/getIssueStatus", issues.GetIssueStatus)
 		}
+		
 		teacherOrStudentGroup := protected.Group("/groupProject")
 		teacherOrStudentGroup.Use(middleware.RoleGuard("Teacher", "Student"))
 		{
 			// ถ้า API ไหนที่ครูและนักเรียนเข้าถึงได้ ให้นำไปใส่ในนี้
 
 		}
+
 		teacherGroup := protected.Group("/teacher")
 		teacherGroup.Use(middleware.RoleGuard("Teacher"))
 		{
@@ -66,9 +68,15 @@ func main() {
 			teacherGroup.GET("/rooms", appointment.ListRooms)
 			teacherGroup.GET("/appointmentTypes", appointment.ListAppointmentTypes)
 			teacherGroup.GET("/groups/search", appointment.SearchGroup)
+			teacherGroup.GET("/groups/random", appointment.GetRandomGroup)
+			teacherGroup.POST("/createAppointment", appointment.CreateAppointment)
+			teacherGroup.POST("/autoCreateAppointments", appointment.AutoCreateAppointments)
+			teacherGroup.PATCH("/updateAppointment/:id", appointment.UpdateAppointment)
+			teacherGroup.POST("/createRoom", appointment.CreateRoom)
 			teacherGroup.DELETE("/DeleteAppointments/:id", appointment.DeleteAppointment)
 			// ===========================================
 		}
+
 		studentGroup := protected.Group("/student")
 		studentGroup.Use(middleware.RoleGuard("Student"))
 		{
