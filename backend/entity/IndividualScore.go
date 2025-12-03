@@ -8,7 +8,7 @@ type IndividualScore struct {
 	CriteriaID uint      `json:"criteria_id" valid:"required~CriteriaID is required"`
 	Criteria   *Criteria  `gorm:"foreignKey:CriteriaID" json:"criteria"`
 
-	AppointmentID uint        `json:"appointment_id " valid:"required~AppointmentID is required"`
+	AppointmentID *uint        `json:"appointment_id"`
 	Appointment   *Appointment  `gorm:"foreignKey:AppointmentID" json:"appointment"`
 
 	TeacherID uint   `json:"teacher_id" valid:"required~TeacherID is required"`
@@ -17,4 +17,3 @@ type IndividualScore struct {
 	StudentID uint    `json:"student_id" valid:"required~StudentID is required"`
 	Student   *User `gorm:"foreignKey:StudentID" json:"student"`
 }
-//true

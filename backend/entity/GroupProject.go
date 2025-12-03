@@ -15,6 +15,7 @@ type GroupProject struct {
 	GroupMembers []GroupMember `gorm:"foreignKey:GroupProjectID" json:"group_members"`
 	SelectAdvisors []SelectAdvisor `gorm:"foreignKey:GroupProjectID" json:"select_advisors"`
 	Progress   []Progress    `gorm:"foreignKey:GroupProjectID" json:"progress"`
+	Appointment  []Appointment `gorm:"foreignKey:GroupProjectID" json:"appointments"`
 	TopicSelections []TopicSelection `gorm:"foreignKey:GroupProjectID" json:"topic_selections"`
 	Topic 	 []Topic        `gorm:"foreignKey:GroupProjectID" json:"topics"`
 }

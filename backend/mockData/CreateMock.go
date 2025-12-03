@@ -1,6 +1,8 @@
 package mockdata
 
 import (
+	"time"
+
 	"github.com/sut68/team07/backend/entity"
 	"github.com/sut68/team07/backend/service"
 	"gorm.io/gorm"
@@ -88,6 +90,7 @@ var MockUser = []entity.User{
 var MockGroupProject = []entity.GroupProject{
 	{Model: gorm.Model{ID: 1}, GroupNumber: 1, GroupStatus: "In Process", Membership: 5, TeacherID: 2},
 	{Model: gorm.Model{ID: 2}, GroupNumber: 2, GroupStatus: "Pending", Membership: 5, TeacherID: 3},
+	{Model: gorm.Model{ID: 3}, GroupNumber: 3, GroupStatus: "Completed", Membership: 5, TeacherID: 4},
 }
 
 var MockGroupMember = []entity.GroupMember{
@@ -95,11 +98,11 @@ var MockGroupMember = []entity.GroupMember{
 	{Model: gorm.Model{ID: 2}, Leader: false, StudentID: 8, GroupProjectID: 1},
 	{Model: gorm.Model{ID: 3}, Leader: false, StudentID: 9, GroupProjectID: 1},
 	{Model: gorm.Model{ID: 4}, Leader: true, StudentID: 11, GroupProjectID: 2},
-	{Model: gorm.Model{ID: 5}, Leader: false, StudentID: 10, GroupProjectID: 1},
+	{Model: gorm.Model{ID: 5}, Leader: false, StudentID: 10, GroupProjectID: 3},
 
 	{Model: gorm.Model{ID: 6}, Leader: true, StudentID: 11, GroupProjectID: 2},
 	{Model: gorm.Model{ID: 7}, Leader: false, StudentID: 12, GroupProjectID: 2},
-	{Model: gorm.Model{ID: 8}, Leader: false, StudentID: 13, GroupProjectID: 2},
+	{Model: gorm.Model{ID: 8}, Leader: false, StudentID: 13, GroupProjectID: 3},
 }
 
 var MockRoom = []entity.Room{
@@ -107,5 +110,42 @@ var MockRoom = []entity.Room{
 	{Model: gorm.Model{ID: 2}, Name: "B1213", Location: "เรียนรวม1", Capacity: 50},
 	{Model: gorm.Model{ID: 3}, Name: "B5201", Location: "เรียนรวม2", Capacity: 120},
 	{Model: gorm.Model{ID: 4}, Name: "B5202", Location: "เรียนรวม2", Capacity: 120},
+	{Model: gorm.Model{ID: 5}, Name: "B6501", Location: "Digitech", Capacity: 400},
+	{Model: gorm.Model{ID: 6}, Name: "B6503", Location: "Digitech", Capacity: 200},
 }
 
+var MockAppointmentType = []entity.AppointmentType{
+	{Model: gorm.Model{ID: 1}, Name: "Topic Defense"},
+	{Model: gorm.Model{ID: 2}, Name: "Progress Report"},
+	{Model: gorm.Model{ID: 3}, Name: "Final Defense"},
+}
+
+var MockEvaluation = []entity.Evaluation{
+	{Model: gorm.Model{ID: 1}, Name: "Ethics Test", TotalScore: 5, ForGroupOnly: false, AppointmentTypeID: 3},
+	{Model: gorm.Model{ID: 2}, Name: "Peer Assessment", TotalScore: 5, ForGroupOnly: false, AppointmentTypeID: 3},
+	{Model: gorm.Model{ID: 3}, Name: "Advisor Evaluation", TotalScore: 55, ForGroupOnly: true, AppointmentTypeID: 3},
+	{Model: gorm.Model{ID: 4}, Name: "Committee Evaluation", TotalScore: 35, ForGroupOnly: true, AppointmentTypeID: 3},
+}
+
+var MockCriteria = []entity.Criteria{
+	{Model: gorm.Model{ID: 1}, Name: "Ethics Exam Score", MaxScore: 5, Order: 1, EvaluationID: 1},
+	{Model: gorm.Model{ID: 2}, Name: "Collaboration & Attendance", MaxScore: 5, Order: 1, EvaluationID: 2},
+	{Model: gorm.Model{ID: 3}, Name: "System Completeness (ความสมบูรณ์ระบบ)", MaxScore: 20, Order: 1, EvaluationID: 3},
+	{Model: gorm.Model{ID: 4}, Name: "Documentation (รูปเล่ม)", MaxScore: 15, Order: 2, EvaluationID: 3},
+	{Model: gorm.Model{ID: 5}, Name: "Effort & Process (ความตั้งใจ)", MaxScore: 10, Order: 3, EvaluationID: 3},
+	{Model: gorm.Model{ID: 6}, Name: "Technique & Complexity (ความซับซ้อน)", MaxScore: 10, Order: 4, EvaluationID: 3},
+	{Model: gorm.Model{ID: 7}, Name: "Presentation Skills (การนำเสนอ)", MaxScore: 10, Order: 1, EvaluationID: 4},
+	{Model: gorm.Model{ID: 8}, Name: "Q&A (การตอบคำถาม)", MaxScore: 10, Order: 2, EvaluationID: 4},
+	{Model: gorm.Model{ID: 9}, Name: "System Demo (การสาธิตระบบ)", MaxScore: 15, Order: 3, EvaluationID: 4},
+}
+
+var MockAppointment = []entity.Appointment{
+	{
+		Model:gorm.Model{ID: 1},
+		StartDateTime:time.Date(2025, 12, 20, 9, 0, 0, 0, time.Local),DurationMin:60,AppointmentStatus: "completed",AppointmentTypeID: 3,RoomID:1,GroupProjectID:3,
+	},
+	{
+		Model:gorm.Model{ID: 2},
+		StartDateTime:time.Date(2025, 12, 25, 13, 30, 0, 0, time.Local),DurationMin:90,AppointmentStatus: "scheduled",AppointmentTypeID: 2,RoomID:3,GroupProjectID:1,
+	},
+}

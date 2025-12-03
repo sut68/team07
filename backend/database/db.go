@@ -21,46 +21,45 @@ func DB() *gorm.DB {
 }
 
 func ConnectDatabase() {
-    // 1. Load .env first
-    if err := godotenv.Load(); err != nil {
-        log.Println("Warning: .env file not found, using system environment variables only")
-    }
+	// 1. Load .env first
+	if err := godotenv.Load(); err != nil {
+		log.Println("Warning: .env file not found, using system environment variables only")
+	}
 
-    // 2. Now read env vars
-    dsn := os.Getenv("DATABASE_URL")
-    if dsn == "" {
-        log.Println("DATABASE_URL not found, using segmented config from .env...")
+	// 2. Now read env vars
+	dsn := os.Getenv("DATABASE_URL")
+	if dsn == "" {
+		log.Println("DATABASE_URL not found, using segmented config from .env...")
 
-        dbHost := os.Getenv("DB_HOST")
-        dbPort := os.Getenv("DB_PORT")
-        dbSSLMode := os.Getenv("DB_SSLMODE")
-        dbUser := os.Getenv("DB_USER")
-        dbPassword := os.Getenv("DB_PASSWORD")
-        dbName := os.Getenv("DB_NAME")
+		dbHost := os.Getenv("DB_HOST")
+		dbPort := os.Getenv("DB_PORT")
+		dbSSLMode := os.Getenv("DB_SSLMODE")
+		dbUser := os.Getenv("DB_USER")
+		dbPassword := os.Getenv("DB_PASSWORD")
+		dbName := os.Getenv("DB_NAME")
 
-        if dbUser == "" || dbHost == "" || dbName == "" {
-            log.Fatal("Critical: One or more database configuration variables (DB_HOST, DB_USER, DB_NAME) is missing in .env. Cannot connect.")
-        }
+		if dbUser == "" || dbHost == "" || dbName == "" {
+			log.Fatal("Critical: One or more database configuration variables (DB_HOST, DB_USER, DB_NAME) is missing in .env. Cannot connect.")
+		}
 
-        dsn = fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
-            dbHost,
-            dbUser,
-            dbPassword,
-            dbName,
-            dbPort,
-            dbSSLMode,
-        )
-    }
+		dsn = fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
+			dbHost,
+			dbUser,
+			dbPassword,
+			dbName,
+			dbPort,
+			dbSSLMode,
+		)
+	}
 
-    database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-    if err != nil {
-        log.Fatal("Failed to connect to database:", err)
-    }
+	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		log.Fatal("Failed to connect to database:", err)
+	}
 
-    fmt.Println("Database connected successfully to PostgreSQL")
-    db = database
+	fmt.Println("Database connected successfully to PostgreSQL")
+	db = database
 }
-
 
 func SetUpDatabase() {
 	// ผมเเยก AutoMigrate เพราะให้มันจัดลำดับการสร้างตารางได้ง่ายขึ้น
@@ -95,7 +94,6 @@ func SetUpDatabase() {
 		&entity.IssueReport{},
 		&entity.SelectAdvisor{},
 		&entity.Appointment{},
-		&entity.Schedule{},
 		&entity.Progress{},
 		&entity.Chat{},
 		&entity.Log{},
@@ -127,4 +125,3 @@ func CORSMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
-

@@ -31,7 +31,6 @@ type User struct {
 	IndividualScores []IndividualScore `gorm:"foreignKey:StudentID" json:"individual_scores"`
 	IndividualScore []IndividualScore `gorm:"foreignKey:TeacherID" json:"individual_score"`
 	EvaResults      []EvaResult      `gorm:"foreignKey:TeacherID" json:"eva_results"`
-	Schedules      []Schedule      `gorm:"foreignKey:TeacherID" json:"schedules"`
 	Logs		  []Log           `gorm:"foreignKey:UserID" json:"logs"`
 	RefreshTokens  []RefreshToken `gorm:"foreignKey:UserID" json:"refresh_tokens"`
 	ResetPasswordTokens []ResetPasswordToken `gorm:"foreignKey:UserID" json:"reset_password_tokens"`

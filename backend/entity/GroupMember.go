@@ -11,6 +11,5 @@ type GroupMember struct {
 	
 	GroupProjectID uint  `json:"group_project_id" valid:"required~GroupProjectID is required"`
 	GroupProject   *GroupProject `gorm:"foreignKey:GroupProjectID" json:"group_project"`
-	Appointment  []Appointment `gorm:"foreignKey:GroupMemberID" json:"appointments"`
 	Chats      []Chat        `gorm:"foreignKey:GroupMemberID" json:"chats"`
 }

@@ -17,11 +17,8 @@ type Appointment struct {
 	RoomID uint `json:"room_id" valid:"required~RoomID is required"`
 	Room   *Room `gorm:"foreignKey:RoomID" json:"room"`
 
-	ScheduleID uint     `json:"schedule_id" valid:"required~ScheduleID is required"`
-	Schedule   *Schedule `gorm:"foreignKey:ScheduleID" json:"schedule"`
-
-	GroupMemberID uint         `json:"group_member_id" valid:"required~GroupMemberID is required"`
-	GroupMember   *GroupMember `gorm:"foreignKey:GroupMemberID" json:"group_member"`
+	GroupProjectID uint         `json:"group_project_id" valid:"required~GroupProjectID is required"`
+	GroupProject   *GroupProject `gorm:"foreignKey:GroupProjectID" json:"group_project"`
 
 	EvaResults []EvaResult `gorm:"foreignKey:AppointmentID" json:"eva_results"`
 	IndividualScores []IndividualScore `gorm:"foreignKey:AppointmentID" json:"individual_scores"`
