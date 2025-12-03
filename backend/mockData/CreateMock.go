@@ -79,9 +79,9 @@ var MockUser = []entity.User{
 	{Model: gorm.Model{ID: 12}, Username: "B6500006@sut.ac.th", Password: jwtService.HashPassword("std678"), Firstname: "Student6", Lastname: "Kittipong", Email: "Student6@gmail.com", Phone: "0966789012", Pass: &passFalse, GenderID: 1, BranchID: 1, RoleID: 3, StatusID: 1},
 	{Model: gorm.Model{ID: 13}, Username: "B6500007@sut.ac.th", Password: jwtService.HashPassword("std901"), Firstname: "Student7", Lastname: "Maneerat", Email: "Student7@gmail.com", Phone: "0977890123", Pass: &passFalse, GenderID: 2, BranchID: 1, RoleID: 3, StatusID: 1},
 	{Model: gorm.Model{ID: 14}, Username: "B6500008@sut.ac.th", Password: jwtService.HashPassword("std234"), Firstname: "Student8", Lastname: "Phonchai", Email: "Student8@gmail.com", Phone: "0988901234", Pass: &passFalse, GenderID: 1, BranchID: 1, RoleID: 3, StatusID: 1},
-	{Model: gorm.Model{ID: 15}, Username: "B6500009@sut.ac.th", Password: jwtService.HashPassword("std567"), Firstname: "Student9", Lastname: "Nanthika", Email: "Student9@gmail.com", Phone: "0999012345", Pass: &passTrue, GenderID: 2, BranchID: 1, RoleID: 3, StatusID: 1},
-	{Model: gorm.Model{ID: 16}, Username: "B6500010@sut.ac.th", Password: jwtService.HashPassword("std890"), Firstname: "Student10", Lastname: "Worawit", Email: "Student10@gmail.com", Phone: "0800123456", Pass: &passTrue, GenderID: 1, BranchID: 1, RoleID: 3, StatusID: 1},
-	{Model: gorm.Model{ID: 17}, Username: "B6500011@sut.ac.th", Password: jwtService.HashPassword("std111"), Firstname: "Student11", Lastname: "Pannapa", Email: "Student11@gmail.com", Phone: "0811234567", Pass: &passTrue, GenderID: 2, BranchID: 1, RoleID: 3, StatusID: 2},
+	{Model: gorm.Model{ID: 15}, Username: "B6500009@sut.ac.th", Password: jwtService.HashPassword("std567"), Firstname: "Student9", Lastname: "Nanthika", Email: "Student9@gmail.com", Phone: "0999012345", Pass: &passFalse, GenderID: 2, BranchID: 1, RoleID: 3, StatusID: 1},
+	{Model: gorm.Model{ID: 16}, Username: "B6500010@sut.ac.th", Password: jwtService.HashPassword("std890"), Firstname: "Student10", Lastname: "Worawit", Email: "Student10@gmail.com", Phone: "0800123456", Pass: &passFalse, GenderID: 1, BranchID: 1, RoleID: 3, StatusID: 1},
+	{Model: gorm.Model{ID: 17}, Username: "B6500011@sut.ac.th", Password: jwtService.HashPassword("std111"), Firstname: "Student11", Lastname: "Pannapa", Email: "Student11@gmail.com", Phone: "0811234567", Pass: &passFalse, GenderID: 2, BranchID: 1, RoleID: 3, StatusID: 2},
 	{Model: gorm.Model{ID: 18}, Username: "B6500012@sut.ac.th", Password: jwtService.HashPassword("std222"), Firstname: "Student12", Lastname: "Thammarat", Email: "Student12@gmail.com", Phone: "0822345678", Pass: &passTrue, GenderID: 1, BranchID: 1, RoleID: 3, StatusID: 2},
 	{Model: gorm.Model{ID: 19}, Username: "B6500013@sut.ac.th", Password: jwtService.HashPassword("std333"), Firstname: "Student13", Lastname: "Kamonwan", Email: "Student13@gmail.com", Phone: "0833456789", Pass: &passTrue, GenderID: 2, BranchID: 1, RoleID: 3, StatusID: 2},
 	{Model: gorm.Model{ID: 20}, Username: "B6500014@sut.ac.th", Password: jwtService.HashPassword("std444"), Firstname: "Student14", Lastname: "Suphachai", Email: "Student14@gmail.com", Phone: "0844567890", Pass: &passTrue, GenderID: 1, BranchID: 1, RoleID: 3, StatusID: 2},
@@ -91,18 +91,24 @@ var MockGroupProject = []entity.GroupProject{
 	{Model: gorm.Model{ID: 1}, GroupNumber: 1, GroupStatus: "In Process", Membership: 5, TeacherID: 2},
 	{Model: gorm.Model{ID: 2}, GroupNumber: 2, GroupStatus: "Pending", Membership: 5, TeacherID: 3},
 	{Model: gorm.Model{ID: 3}, GroupNumber: 3, GroupStatus: "Completed", Membership: 5, TeacherID: 4},
+	{Model: gorm.Model{ID: 4}, GroupNumber: 4, GroupStatus: "In Process", Membership: 5, TeacherID: 5},
+	{Model: gorm.Model{ID: 5}, GroupNumber: 5, GroupStatus: "Pending", Membership: 5, TeacherID: 6},
 }
 
 var MockGroupMember = []entity.GroupMember{
 	{Model: gorm.Model{ID: 1}, Leader: true, StudentID: 7, GroupProjectID: 1},
-	{Model: gorm.Model{ID: 2}, Leader: false, StudentID: 8, GroupProjectID: 1},
+	{Model: gorm.Model{ID: 2}, Leader: true, StudentID: 8, GroupProjectID: 4},
 	{Model: gorm.Model{ID: 3}, Leader: false, StudentID: 9, GroupProjectID: 1},
 	{Model: gorm.Model{ID: 4}, Leader: true, StudentID: 11, GroupProjectID: 2},
-	{Model: gorm.Model{ID: 5}, Leader: false, StudentID: 10, GroupProjectID: 3},
+	{Model: gorm.Model{ID: 5}, Leader: true, StudentID: 10, GroupProjectID: 3},
 
-	{Model: gorm.Model{ID: 6}, Leader: true, StudentID: 11, GroupProjectID: 2},
+	{Model: gorm.Model{ID: 6}, Leader: false, StudentID: 11, GroupProjectID: 2},
 	{Model: gorm.Model{ID: 7}, Leader: false, StudentID: 12, GroupProjectID: 2},
 	{Model: gorm.Model{ID: 8}, Leader: false, StudentID: 13, GroupProjectID: 3},
+	{Model: gorm.Model{ID: 9}, Leader: false, StudentID: 14, GroupProjectID: 4},
+	{Model: gorm.Model{ID: 10}, Leader: true, StudentID: 15, GroupProjectID: 5},
+	{Model: gorm.Model{ID: 11}, Leader: false, StudentID: 16, GroupProjectID: 5},
+
 }
 
 var MockRoom = []entity.Room{
@@ -141,11 +147,11 @@ var MockCriteria = []entity.Criteria{
 
 var MockAppointment = []entity.Appointment{
 	{
-		Model:gorm.Model{ID: 1},
-		StartDateTime:time.Date(2025, 12, 20, 9, 0, 0, 0, time.Local),DurationMin:30,AppointmentStatus: "completed",AppointmentTypeID: 3,RoomID:1,TeacherID: 2,GroupProjectID:3,
+		Model:gorm.Model{ID: 1},StartDateTime:time.Date(2025, 12, 20, 9, 0, 0, 0, time.Local),
+		DurationMin:30,AppointmentStatus: "completed",AppointmentTypeID: 3,RoomID:1,TeacherID: 2,GroupProjectID:3,
 	},
 	{
-		Model:gorm.Model{ID: 2},
-		StartDateTime:time.Date(2025, 12, 25, 13, 30, 0, 0, time.Local),DurationMin:30,AppointmentStatus: "scheduled",AppointmentTypeID: 2,RoomID:3,TeacherID: 3,GroupProjectID:1,
+		Model:gorm.Model{ID: 2},StartDateTime:time.Date(2025, 12, 25, 13, 30, 0, 0, time.Local),
+		DurationMin:30,AppointmentStatus: "scheduled",AppointmentTypeID: 2,RoomID:3,TeacherID: 3,GroupProjectID:1,
 	},
 }
