@@ -142,10 +142,10 @@ var MockCriteria = []entity.Criteria{
 var MockAppointment = []entity.Appointment{
 	{
 		Model:gorm.Model{ID: 1},
-		StartDateTime:time.Date(2025, 12, 20, 9, 0, 0, 0, time.Local),DurationMin:60,AppointmentStatus: "completed",AppointmentTypeID: 3,RoomID:1,GroupProjectID:3,
+		StartDateTime:time.Date(2025, 12, 20, 9, 0, 0, 0, time.Local),DurationMin:60,AppointmentStatus: "completed",AppointmentTypeID: 3,RoomID:1,TeacherID: 1,GroupProjectID:3,
 	},
 	{
 		Model:gorm.Model{ID: 2},
-		StartDateTime:time.Date(2025, 12, 25, 13, 30, 0, 0, time.Local),DurationMin:90,AppointmentStatus: "scheduled",AppointmentTypeID: 2,RoomID:3,GroupProjectID:1,
+		StartDateTime:time.Date(2025, 12, 25, 13, 30, 0, 0, time.Local),DurationMin:90,AppointmentStatus: "scheduled",AppointmentTypeID: 2,RoomID:3,TeacherID: 2,GroupProjectID:1,
 	},
 }
