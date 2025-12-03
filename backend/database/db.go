@@ -64,43 +64,49 @@ func ConnectDatabase() {
 func SetUpDatabase() {
 	// ผมเเยก AutoMigrate เพราะให้มันจัดลำดับการสร้างตารางได้ง่ายขึ้น
 	db.AutoMigrate(
-		&entity.Gender{},
-		&entity.UserRole{},
-		&entity.AccountStatus{},
-		&entity.Branch{},
-		&entity.IssueStatus{},
-		&entity.IssueType{},
-		&entity.ActionType{},
-	)
+        &entity.Gender{},
+        &entity.UserRole{},
+        &entity.AccountStatus{},
+        &entity.Branch{},
+        &entity.IssueStatus{},
+        &entity.IssueType{},
+        &entity.ActionType{},
+        &entity.Room{},
+        &entity.AppointmentType{},
+    )
 
 	db.AutoMigrate(
-		&entity.User{},
-		&entity.RefreshToken{},
-		&entity.ResetPasswordToken{},
-		&entity.PasswordHistory{},
-		&entity.Project{},
-		&entity.Topic{},
-		&entity.Criteria{},
-		&entity.Room{},
-		&entity.AppointmentType{},
-	)
+        &entity.User{},
+        &entity.RefreshToken{},
+        &entity.ResetPasswordToken{},
+        &entity.PasswordHistory{},
+    )
 
 	db.AutoMigrate(
-		&entity.GroupProject{},
-		&entity.GroupMember{},
-		&entity.TopicSelection{},
-		&entity.TopicApproval{},
-		&entity.Evaluation{},
-		&entity.IssueReport{},
-		&entity.SelectAdvisor{},
-		&entity.Appointment{},
-		&entity.Progress{},
-		&entity.Chat{},
-		&entity.Log{},
-		&entity.IndividualScore{},
-		&entity.EvaResult{},
-		&entity.ProjectStorage{},
-	)
+        &entity.Project{},
+        &entity.GroupProject{},
+        &entity.Evaluation{},
+        &entity.Criteria{},
+        &entity.Topic{},
+    )
+
+	db.AutoMigrate(
+        &entity.GroupMember{},
+        &entity.SelectAdvisor{},
+        &entity.TopicSelection{},
+        &entity.TopicApproval{},
+        &entity.Appointment{},
+        &entity.ProjectStorage{},
+        &entity.IssueReport{},
+        &entity.Chat{},
+        &entity.Log{},
+    )
+
+	db.AutoMigrate(
+        &entity.Progress{},
+        &entity.EvaResult{},
+        &entity.IndividualScore{},
+    )
 }
 
 func CORSMiddleware() gin.HandlerFunc {

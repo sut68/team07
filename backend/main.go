@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/sut68/team07/backend/controller.go/appointment"
 	"github.com/sut68/team07/backend/controller.go/auth"
 	"github.com/sut68/team07/backend/controller.go/chat"
 	"github.com/sut68/team07/backend/controller.go/issues"
@@ -33,16 +34,15 @@ func main() {
 	r.POST("/forgot-password", authHandler.ForgotPassword)
 	r.POST("/reset-password", authHandler.ResetPassword)
 
-
 	protected := r.Group("/")
 	protected.Use(middleware.CSRFCheckMiddleware(), middleware.AuthMiddleware())
 	{
 
 		// user ทุก Role สามารถเข้าถึงได้
 		protected.GET("/me", authHandler.Me)
-		protected.GET("/GetChat",chat.GetAllChat)
-		protected.POST("/SendChat",chat.InsertChat)
-		protected.DELETE("/DeleteChat",chat.DeleteChat)
+		protected.GET("/GetChat", chat.GetAllChat)
+		protected.POST("/SendChat", chat.InsertChat)
+		protected.DELETE("/DeleteChat", chat.DeleteChat)
 
 		adminGroup := protected.Group("/admin")
 		adminGroup.Use(middleware.RoleGuard("Admin"))
@@ -51,17 +51,32 @@ func main() {
 			adminGroup.GET("/getGender", users.GetGender)
 			adminGroup.GET("/getIssueStatus", issues.GetIssueStatus)
 		}
+		
 		teacherOrStudentGroup := protected.Group("/groupProject")
 		teacherOrStudentGroup.Use(middleware.RoleGuard("Teacher", "Student"))
 		{
 			// ถ้า API ไหนที่ครูและนักเรียนเข้าถึงได้ ให้นำไปใส่ในนี้
 
 		}
-		teacherGroup := protected.Group("/data")
+
+		teacherGroup := protected.Group("/teacher")
 		teacherGroup.Use(middleware.RoleGuard("Teacher"))
 		{
-			// ถ้า API ไหนที่ครูเข้าถึงได้ ให้นำไปใส่ในนี้
+			// Appointment ================================
+			teacherGroup.GET("/listAppointments", appointment.ListAppointments)
+			teacherGroup.GET("/appointments/:id", appointment.GetAppointment)
+			teacherGroup.GET("/rooms", appointment.ListRooms)
+			teacherGroup.GET("/appointmentTypes", appointment.ListAppointmentTypes)
+			teacherGroup.GET("/groups/search", appointment.SearchGroup)
+			teacherGroup.GET("/groups/random", appointment.GetRandomGroup)
+			teacherGroup.POST("/createAppointment", appointment.CreateAppointment)
+			teacherGroup.POST("/autoCreateAppointments", appointment.AutoCreateAppointments)
+			teacherGroup.PATCH("/updateAppointment/:id", appointment.UpdateAppointment)
+			teacherGroup.POST("/createRoom", appointment.CreateRoom)
+			teacherGroup.DELETE("/DeleteAppointments/:id", appointment.DeleteAppointment)
+			// ===========================================
 		}
+
 		studentGroup := protected.Group("/student")
 		studentGroup.Use(middleware.RoleGuard("Student"))
 		{

@@ -21,6 +21,7 @@ type Claims struct {
 	ID       uint   `json:"id"`
 	Username string `json:"username"`
 	Role     string `json:"role"`
+	BranchID uint   `json:"branch_id"`
 	jwt.RegisteredClaims
 }
 
@@ -63,6 +64,7 @@ func (s *jwtServiceImpl) GenerateToken(user *entity.User, duration time.Duration
 		ID:       user.ID,
 		Username: user.Username,
 		Role:     roleName,
+		BranchID: user.BranchID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(duration)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -82,6 +84,7 @@ func (s *jwtServiceImpl) GenerateRefreshToken(user *entity.User, duration time.D
 		ID:       user.ID,
 		Username: user.Username,
 		Role:     roleName,
+		BranchID: user.BranchID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(duration)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

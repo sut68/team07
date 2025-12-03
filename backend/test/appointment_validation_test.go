@@ -15,11 +15,11 @@ func TestAppointment(t *testing.T) {
 	t.Run(`StartDateTime is required`, func(t *testing.T) {
 		appointment := &entity.Appointment{
 			StartDateTime:     time.Time{}, // ผิดตรงนี้
-			DurationMin:       60,
+			DurationMin:       30,
 			AppointmentStatus: "confirmed",
 			AppointmentTypeID: 1,
 			RoomID:            1,
-			
+			TeacherID:         1,
 			GroupProjectID:     1,
 		}
 
@@ -30,13 +30,14 @@ func TestAppointment(t *testing.T) {
 		g.Expect(err.Error()).To(Equal("StartDateTime is required"))
 	})
 
-	t.Run(`DurationMin must be between 60 and 600`, func(t *testing.T) {
+	t.Run(`DurationMin must be between 30 and 60`, func(t *testing.T) {
 		appointment := &entity.Appointment{
 			StartDateTime: time.Now().AddDate(-20, 0, 0),
 			DurationMin: 20, // ผิดตรงนี้
 			AppointmentStatus: "confirmed",
 			AppointmentTypeID: 1,
 			RoomID: 1,
+			TeacherID: 1,
 			GroupProjectID: 1,
 		}
 
@@ -44,16 +45,17 @@ func TestAppointment(t *testing.T) {
 		
 		g.Expect(ok).NotTo(BeTrue())
 		g.Expect(err).NotTo(BeNil())
-		g.Expect(err.Error()).To(Equal("DurationMin must be between 60 and 600"))
+		g.Expect(err.Error()).To(Equal("DurationMin must be between 30 and 60"))
 	})
 
 	t.Run(`AppointmentStatus is required`, func(t *testing.T) {
 		appointment := &entity.Appointment{
 			StartDateTime: time.Now().AddDate(-20, 0, 0),
-			DurationMin: 60,
+			DurationMin: 30,
 			AppointmentStatus: "", // ผิดตรงนี้
 			AppointmentTypeID: 1,
 			RoomID: 1,
+			TeacherID:         1,
 			GroupProjectID: 1,
 		}
 
@@ -67,10 +69,11 @@ func TestAppointment(t *testing.T) {
 	t.Run(`AppointmentTypeID is required`, func(t *testing.T) {
 		appointment := &entity.Appointment{
 			StartDateTime: time.Now().AddDate(-20, 0, 0),
-			DurationMin: 60,
+			DurationMin: 30,
 			AppointmentStatus: "confirmed",
 			AppointmentTypeID: 0, // ผิดตรงนี้
 			RoomID: 1,
+			TeacherID:         1,
 			GroupProjectID: 1,
 		}
 
@@ -84,10 +87,11 @@ func TestAppointment(t *testing.T) {
 	t.Run(`RoomID is required`, func(t *testing.T) {
 		appointment := &entity.Appointment{
 			StartDateTime: time.Now().AddDate(-20, 0, 0),
-			DurationMin: 60,
+			DurationMin: 30,
 			AppointmentStatus: "confirmed",
 			AppointmentTypeID: 1,
 			RoomID: 0, // ผิดตรงนี้
+			TeacherID:         1,
 			GroupProjectID: 1,
 		}
 
@@ -97,15 +101,32 @@ func TestAppointment(t *testing.T) {
 		g.Expect(err).NotTo(BeNil())
 		g.Expect(err.Error()).To(Equal("RoomID is required"))
 	})
+	t.Run(`TeacherID is required`, func(t *testing.T) {
+		appointment := &entity.Appointment{
+			StartDateTime: time.Now().AddDate(-20, 0, 0),
+			DurationMin: 30,
+			AppointmentStatus: "confirmed",
+			AppointmentTypeID: 1,
+			RoomID: 1,
+			TeacherID:         0, // ผิดตรงนี้
+			GroupProjectID: 1,
+		}
 
+		ok, err := govalidator.ValidateStruct(appointment)
+		
+		g.Expect(ok).NotTo(BeTrue())
+		g.Expect(err).NotTo(BeNil())
+		g.Expect(err.Error()).To(Equal("TeacherID is required"))
+	})
 
 	t.Run(`GroupProjectID is required`, func(t *testing.T) {
 		appointment := &entity.Appointment{
 			StartDateTime: time.Now().AddDate(-20, 0, 0),
-			DurationMin: 60,
+			DurationMin: 30,
 			AppointmentStatus: "confirmed",
 			AppointmentTypeID: 1,
 			RoomID: 1,
+			TeacherID:         1,
 			GroupProjectID: 0, // ผิดตรงนี้
 		}
 
