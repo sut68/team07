@@ -31,7 +31,6 @@ export default function LayoutSwitcher({
         // ** FIXED: ใช้ userData.role โดยตรง (บรรทัด 31 เดิม) **
     setUserRole(userData.role); 
    } catch (error) {
-    console.error("Authentication failed. Redirecting to login.");
     setUserRole(null);
     router.push('/login');
    } finally {

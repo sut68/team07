@@ -26,6 +26,7 @@ func InsertMock(db *gorm.DB) {
 
 	var genders, roles, accountStatuses, branch, IssueStatus, IssueType, actionType []interface{}
 	var users ,rooms ,groupPro, groupMem ,appointType, appointment ,evaluation,criteria[]interface{}
+	var topicSelection ,project,topic[]interface{}
 	for i := range MockGender { genders = append(genders, &MockGender[i])}
 	for i := range MockRole {roles = append(roles, &MockRole[i])}
 	for i := range MockAcountStatus {accountStatuses = append(accountStatuses, &MockAcountStatus[i])}
@@ -41,6 +42,9 @@ func InsertMock(db *gorm.DB) {
 	for i := range MockAppointment {appointment = append(appointment, &MockAppointment[i])}
 	for i := range MockEvaluation {evaluation = append(evaluation, &MockEvaluation[i])}
 	for i := range MockCriteria {criteria = append(criteria, &MockCriteria[i])}
+	for i := range MockTopics {topic = append(topic, &MockTopics[i])}
+	for i := range MockTopicSelections {topicSelection = append(topicSelection, &MockTopicSelections[i])}
+	for i := range MockProjects {project = append(project, &MockProjects[i])}
 
 	MockDataCreate := true
 	// คือ true ป้องกันการสร้างข้อมูลซ้ำ
@@ -63,6 +67,9 @@ func InsertMock(db *gorm.DB) {
 	seedGenericData(tx, appointment, "Appointment", MockDataCreate)
 	seedGenericData(tx, evaluation, "Evaluation", MockDataCreate)
 	seedGenericData(tx, criteria, "Criteria", MockDataCreate)
+	seedGenericData(tx, topic, "Topic", MockDataCreate)
+	seedGenericData(tx, topicSelection, "TopicSelection", MockDataCreate)
+	seedGenericData(tx, project, "Project", MockDataCreate)
 
 	if tx.Error != nil {
 		log.Println("Seeding failed, rolling back...")

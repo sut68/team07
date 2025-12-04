@@ -5,6 +5,7 @@ import (
 	"github.com/sut68/team07/backend/controller.go/appointment"
 	"github.com/sut68/team07/backend/controller.go/auth"
 	"github.com/sut68/team07/backend/controller.go/chat"
+	"github.com/sut68/team07/backend/controller.go/evaluation"
 	"github.com/sut68/team07/backend/controller.go/issues"
 	"github.com/sut68/team07/backend/controller.go/progress"
 	"github.com/sut68/team07/backend/controller.go/users"
@@ -51,7 +52,7 @@ func main() {
 			adminGroup.GET("/getGender", users.GetGender)
 			adminGroup.GET("/getIssueStatus", issues.GetIssueStatus)
 		}
-		
+
 		teacherOrStudentGroup := protected.Group("/groupProject")
 		teacherOrStudentGroup.Use(middleware.RoleGuard("Teacher", "Student"))
 		{
@@ -74,7 +75,9 @@ func main() {
 			teacherGroup.PATCH("/updateAppointment/:id", appointment.UpdateAppointment)
 			teacherGroup.POST("/createRoom", appointment.CreateRoom)
 			teacherGroup.DELETE("/DeleteAppointments/:id", appointment.DeleteAppointment)
-			// ===========================================
+			// Evaluation ===================================
+			teacherGroup.GET("/evaluation/projects", evaluation.ListEvaluationProjects)
+			// ===============================================
 		}
 
 		studentGroup := protected.Group("/student")

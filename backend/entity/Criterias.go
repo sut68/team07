@@ -11,6 +11,7 @@ type Criteria struct {
 	EvaluationID uint       `json:"evaluation_id" valid:"required~EvaluationID is required"`
 	Evaluation   *Evaluation `gorm:"foreignKey:EvaluationID" json:"evaluation"`
 
+	CriteriaLevel []CriteriaLevel `gorm:"foreignKey:CriteriaID" json:"criteria_level"`
 	Results          []EvaResult      `gorm:"foreignKey:CriteriaID" json:"results"`
 	IndividualScores []IndividualScore `gorm:"foreignKey:CriteriaID" json:"individual_scores"`
 }

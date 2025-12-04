@@ -87,6 +87,7 @@ func SetUpDatabase() {
         &entity.GroupProject{},
         &entity.Evaluation{},
         &entity.Criteria{},
+		&entity.CriteriaLevel{},
         &entity.Topic{},
     )
 

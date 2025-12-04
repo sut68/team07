@@ -56,8 +56,8 @@ var MockActionType = []entity.ActionType{
 }
 
 var (
-	passTrue        = true
-	passFalse       = false
+	passTrue = true
+	passFalse= false
 	passNull  *bool = nil
 )
 var jwtService = service.NewJwtService()
@@ -111,6 +111,39 @@ var MockGroupMember = []entity.GroupMember{
 
 }
 
+var MockTopics = []entity.Topic{
+	{
+		Model:gorm.Model{ID: 1},Title:"Smart Farm System",Description: "Automated IOT system for vegetable farming",Status:  "Approved",Proposer_role:  "Student",GroupProjectID: 1,
+	},
+	{
+		Model:gorm.Model{ID: 2},Title:"AI Face Recognition Attendance",Description: "Check-in system using camera and AI",Status:  "Approved",Proposer_role:  "Teacher",GroupProjectID: 2,
+	},
+	{
+		Model:gorm.Model{ID: 3},Title:"E-Commerce Mobile Application",Description: "Online shopping app with payment gateway",Status:  "Approved",Proposer_role:  "Student",GroupProjectID: 3,
+	},
+}
+
+var MockTopicSelections = []entity.TopicSelection{
+	{
+		Model:gorm.Model{ID: 1},DateSelected:time.Now().AddDate(0, -4, 0),TopicID: 1,GroupProjectID: 1,
+	},
+	{
+		Model:gorm.Model{ID: 2},DateSelected:time.Now().AddDate(0, -4, 0),TopicID: 2,GroupProjectID: 2,
+	},
+	{
+		Model:gorm.Model{ID: 3},DateSelected:time.Now().AddDate(0, -4, 0),TopicID: 3,GroupProjectID: 3,
+	},
+}
+
+var MockProjects = []entity.Project{
+	{
+		Model:gorm.Model{ID: 1},Title:"Complete Report: Smart Farm System",Abstract: "This project aims to develop an IOT solution...",Keywords: "IOT, Smart Farm, Arduino",Year: 2025,Status:"Completed",FilePath: "/uploads/projects/group1_final.pdf",SelectionID: 1,
+	},
+	{
+		Model:gorm.Model{ID: 2},Title:"Complete Report: AI Face Recognition",Abstract: "A system to automate attendance tracking...",Keywords: "AI, Computer Vision, Python",Year: 2025,Status:"Completed",FilePath: "/uploads/projects/group2_final.pdf",SelectionID: 2,
+	},
+}
+
 var MockRoom = []entity.Room{
 	{Model: gorm.Model{ID: 1}, Name: "B1212", Location: "เรียนรวม1", Capacity: 50},
 	{Model: gorm.Model{ID: 2}, Name: "B1213", Location: "เรียนรวม1", Capacity: 50},
@@ -124,25 +157,6 @@ var MockAppointmentType = []entity.AppointmentType{
 	{Model: gorm.Model{ID: 1}, Name: "Topic Defense"},
 	{Model: gorm.Model{ID: 2}, Name: "Progress Report"},
 	{Model: gorm.Model{ID: 3}, Name: "Final Defense"},
-}
-
-var MockEvaluation = []entity.Evaluation{
-	{Model: gorm.Model{ID: 1}, Name: "Ethics Test", TotalScore: 5, ForGroupOnly: false, AppointmentTypeID: 3},
-	{Model: gorm.Model{ID: 2}, Name: "Peer Assessment", TotalScore: 5, ForGroupOnly: false, AppointmentTypeID: 3},
-	{Model: gorm.Model{ID: 3}, Name: "Advisor Evaluation", TotalScore: 55, ForGroupOnly: true, AppointmentTypeID: 3},
-	{Model: gorm.Model{ID: 4}, Name: "Committee Evaluation", TotalScore: 35, ForGroupOnly: true, AppointmentTypeID: 3},
-}
-
-var MockCriteria = []entity.Criteria{
-	{Model: gorm.Model{ID: 1}, Name: "Ethics Exam Score", MaxScore: 5, Order: 1, EvaluationID: 1},
-	{Model: gorm.Model{ID: 2}, Name: "Collaboration & Attendance", MaxScore: 5, Order: 1, EvaluationID: 2},
-	{Model: gorm.Model{ID: 3}, Name: "System Completeness (ความสมบูรณ์ระบบ)", MaxScore: 20, Order: 1, EvaluationID: 3},
-	{Model: gorm.Model{ID: 4}, Name: "Documentation (รูปเล่ม)", MaxScore: 15, Order: 2, EvaluationID: 3},
-	{Model: gorm.Model{ID: 5}, Name: "Effort & Process (ความตั้งใจ)", MaxScore: 10, Order: 3, EvaluationID: 3},
-	{Model: gorm.Model{ID: 6}, Name: "Technique & Complexity (ความซับซ้อน)", MaxScore: 10, Order: 4, EvaluationID: 3},
-	{Model: gorm.Model{ID: 7}, Name: "Presentation Skills (การนำเสนอ)", MaxScore: 10, Order: 1, EvaluationID: 4},
-	{Model: gorm.Model{ID: 8}, Name: "Q&A (การตอบคำถาม)", MaxScore: 10, Order: 2, EvaluationID: 4},
-	{Model: gorm.Model{ID: 9}, Name: "System Demo (การสาธิตระบบ)", MaxScore: 15, Order: 3, EvaluationID: 4},
 }
 
 var MockAppointment = []entity.Appointment{

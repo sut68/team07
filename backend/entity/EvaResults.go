@@ -14,6 +14,9 @@ type EvaResult struct {
 	CriteriaID uint      `json:"criteria_id" valid:"required~CriteriaID is required"`
 	Criteria   *Criteria  `gorm:"foreignKey:CriteriaID" json:"criteria"`
 
+	CriteriaLevelID *uint          `json:"criteria_level_id"`
+	CriteriaLevel   *CriteriaLevel `gorm:"foreignKey:CriteriaLevelID" json:"criteria_level"`
+	
 	AppointmentID uint        `json:"appointment_id" valid:"required~AppointmentID is required"`
 	Appointment   *Appointment  `gorm:"foreignKey:AppointmentID" json:"appointment"`
 
