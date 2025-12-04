@@ -5,6 +5,7 @@ import (
 	"github.com/sut68/team07/backend/controller.go/appointment"
 	"github.com/sut68/team07/backend/controller.go/auth"
 	"github.com/sut68/team07/backend/controller.go/chat"
+	"github.com/sut68/team07/backend/controller.go/group"
 	"github.com/sut68/team07/backend/controller.go/issues"
 	"github.com/sut68/team07/backend/controller.go/progress"
 	"github.com/sut68/team07/backend/controller.go/users"
@@ -26,6 +27,10 @@ func main() {
 	service.StartCleanupWorker(database.DB())
 	r := gin.Default()
 	r.Use(database.CORSMiddleware())
+
+	// test controller Group
+	r.GET("/group", group.GetGroupProject)
+	r.POST("/addMember", group.PostGroupMember)
 
 	authHandler := auth.NewLoginHandler()
 
@@ -85,6 +90,10 @@ func main() {
 			studentGroup.POST("/assignProgress", progress.AssignProGress)
 			studentGroup.POST("/modifyProgress", progress.UpdateProGress)
 			studentGroup.DELETE("/deleteProgress", progress.DeleteProgress)
+			
+			// Group
+			// studentGroup.GET("/group", group.GetGroupProject)
+			// studentGroup.POST("/addMember", group.PostGroupMember)
 
 		}
 
