@@ -273,7 +273,8 @@ func CreateAppointment(c *gin.Context) {
 			return
 		}
 
-		if groupProject.TeacherID != claims.ID {
+		// TeacherID == nil ยังไม่มีการเลือกอาจารย์
+		if groupProject.TeacherID == nil || *groupProject.TeacherID != claims.ID {
 			c.JSON(http.StatusForbidden, gin.H{"error": "You are not the advisor of this group."})
 			return
 		}
@@ -371,9 +372,9 @@ func AutoCreateAppointments(c *gin.Context) {
 	var validSlots []time.Time
 	currentTime := req.StartDateTime
 
-	for currentTime.Add(time.Duration(req.DurationMin) * time.Minute).Before(req.EndDateTime) || 
-		currentTime.Add(time.Duration(req.DurationMin) * time.Minute).Equal(req.EndDateTime) {
-		
+	for currentTime.Add(time.Duration(req.DurationMin)*time.Minute).Before(req.EndDateTime) ||
+		currentTime.Add(time.Duration(req.DurationMin)*time.Minute).Equal(req.EndDateTime) {
+
 		startHour := currentTime.Hour()
 		startMin := currentTime.Minute()
 		slotStartMins := (startHour * 60) + startMin
@@ -389,7 +390,7 @@ func AutoCreateAppointments(c *gin.Context) {
 		db.Model(&entity.Appointment{}).
 			Where("room_id = ? AND start_date_time = ? AND appointment_status = 'scheduled'", req.RoomID, currentTime).
 			Count(&conflict)
-		
+
 		if conflict == 0 {
 			validSlots = append(validSlots, currentTime)
 		}

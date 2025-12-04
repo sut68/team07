@@ -2,75 +2,98 @@ package group
 
 import (
 	"net/http"
-	"strings"
-	"github.com/gin-gonic/gin"
 
-	// "github.com/sut68/team07/backend/config"
+	"github.com/gin-gonic/gin"
 	"github.com/sut68/team07/backend/database"
 	"github.com/sut68/team07/backend/entity"
-	// "gorm.io/gorm"
 )
 
-type Member struct {
-        GroupProjectID uint `json:"group_project_id"`
-        Leader bool `json:"leader"`
-        StudentID uint`json:"student_id"`
+// ใช้สำหรับรับค่าจากหน้าบ้าน (ตัด Leader ออก เพราะระบบจะคิดให้เอง)
+type CreateMemberInput struct {
+	GroupProjectID uint `json:"group_project_id" binding:"required"`
+	StudentID      uint `json:"student_id" binding:"required"`
 }
 
+// GET: ดึงข้อมูลกลุ่มทั้งหมด
 func GetGroupProject(c *gin.Context) {
 	db := database.DB()
-
 	var group []entity.GroupProject
-	db.Find(&group)
+	
+	// Preload เพื่อดึงข้อมูลความสัมพันธ์มาด้วย (ถ้าต้องการ)
+	db.Preload("Teacher").Find(&group)
 
 	c.JSON(http.StatusOK, &group)
 }
 
+// GET: ดึงข้อมูลสมาชิกทั้งหมด
 func GetGroupMember(c *gin.Context) {
 	db := database.DB()
-
 	var member []entity.GroupMember
-	db.Find(&member)
+	
+	// Preload ข้อมูลนักศึกษาและโปรเจค
+	db.Preload("Student").Preload("GroupProject").Find(&member)
 
 	c.JSON(http.StatusOK, &member)
 }
 
+// POST: นักศึกษากดเข้าร่วมกลุ่ม (Join Group)
 func PostGroupMember(c *gin.Context) {
-    db := database.DB()
+	db := database.DB()
 
-    // 1. รับและ Bind ข้อมูลจาก JSON Body
-    var input Member
-    
-    // *** เปลี่ยนมาใช้ c.ShouldBindJSON() แทน c.Query() และ strconv.Parse... ***
-    if err := c.ShouldBindJSON(&input); err != nil {
-        // Gin จัดการ Validation และ Type Error (เช่น ไม่ใช่ตัวเลข) อัตโนมัติ
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-        return
-    }
+	// 1. รับค่า Input
+	var input CreateMemberInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
-    // 2. สร้าง Entity สำหรับ GORM
-    addMember := entity.GroupMember{
-        // ใช้ค่าที่ Bind มาจาก JSON
-        GroupProjectID: input.GroupProjectID,
-        Leader:         input.Leader,
-        StudentID:      input.StudentID, 
-    }
+	// 2. ตรวจสอบว่ากลุ่มที่จะเข้า มีอยู่จริงหรือไม่? และดึงค่า Max Membership มา
+	var groupProject entity.GroupProject
+	if err := db.First(&groupProject, input.GroupProjectID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Project group not found"})
+		return
+	}
 
-    // 3. เรียกใช้ db.Create()
-    result := db.Create(&addMember)
-    
-    if result.Error != nil {
-        // จัดการข้อผิดพลาดจากฐานข้อมูล เช่น unique constraint
-        if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
-            // ส่ง HTTP 409 Conflict
-            c.JSON(http.StatusConflict, gin.H{"error": "This student is already a member of this group."})
-            return
-        }
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not add group member: " + result.Error.Error()})
-        return
-    }
+	// 3. เช็คว่านักศึกษาคนนี้ อยู่ในกลุ่มนี้แล้วหรือยัง? (กันข้อมูลซ้ำ)
+	var existingMember entity.GroupMember
+	if err := db.Where("student_id = ? AND group_project_id = ?", input.StudentID, input.GroupProjectID).First(&existingMember).Error; err == nil {
+		// ถ้าหาเจอ (err == nil) แสดงว่าอยู่แล้ว
+		c.JSON(http.StatusBadRequest, gin.H{"error": "This student is already in this group"})
+		return
+	}
 
-    // 4. ตอบกลับเมื่อสำเร็จ
-    // GORM จะอัปเดต addMember ด้วย ID ที่ถูกสร้างขึ้น
-    c.JSON(http.StatusCreated, addMember)
+	// 4. นับจำนวนสมาชิกปัจจุบันในกลุ่ม
+	var currentMemberCount int64
+	db.Model(&entity.GroupMember{}).Where("group_project_id = ?", input.GroupProjectID).Count(&currentMemberCount)
+
+	// 5. เช็คว่ากลุ่มเต็มหรือยัง?
+	if currentMemberCount >= int64(groupProject.Membership) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "This group is full"})
+		return
+	}
+
+	// 6. Logic กำหนด Leader: ถ้าสมาชิกปัจจุบันเป็น 0 แสดงว่าคนนี้คือคนแรก
+	isLeader := false
+	if currentMemberCount == 0 {
+		isLeader = true
+	}
+
+	// 7. สร้าง Object เพื่อเตรียมบันทึก
+	newMember := entity.GroupMember{
+		GroupProjectID: input.GroupProjectID,
+		StudentID:      input.StudentID,
+		Leader:         isLeader, // ค่าที่เราคำนวณไว้
+	}
+
+	// 8. บันทึกลงฐานข้อมูล
+	if err := db.Create(&newMember).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// 9. ส่งผลลัพธ์กลับ
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "Joined group successfully",
+		"data":    newMember,
+	})
 }

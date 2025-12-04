@@ -88,11 +88,12 @@ var MockUser = []entity.User{
 }
 
 var MockGroupProject = []entity.GroupProject{
-	{Model: gorm.Model{ID: 1}, GroupNumber: 1, GroupStatus: "In Process", Membership: 5, TeacherID: 2},
-	{Model: gorm.Model{ID: 2}, GroupNumber: 2, GroupStatus: "Pending", Membership: 5, TeacherID: 3},
-	{Model: gorm.Model{ID: 3}, GroupNumber: 3, GroupStatus: "Completed", Membership: 5, TeacherID: 4},
-	{Model: gorm.Model{ID: 4}, GroupNumber: 4, GroupStatus: "In Process", Membership: 5, TeacherID: 5},
-	{Model: gorm.Model{ID: 5}, GroupNumber: 5, GroupStatus: "Pending", Membership: 5, TeacherID: 6},
+	{Model: gorm.Model{ID: 1}, GroupNumber: 1, GroupStatus: "In Process", Membership: 5, TeacherID: nil},
+	{Model: gorm.Model{ID: 2}, GroupNumber: 2, GroupStatus: "Pending", Membership: 5, TeacherID: nil},
+	{Model: gorm.Model{ID: 3}, GroupNumber: 3, GroupStatus: "Completed", Membership: 5, TeacherID: nil},
+	{Model: gorm.Model{ID: 4}, GroupNumber: 4, GroupStatus: "In Process", Membership: 5, TeacherID: nil},
+	{Model: gorm.Model{ID: 5}, GroupNumber: 5, GroupStatus: "Pending", Membership: 5, TeacherID: nil},
+	{Model: gorm.Model{ID: 6}, GroupNumber: 6, GroupStatus: "Pending", Membership: 3, TeacherID: nil},
 }
 
 var MockGroupMember = []entity.GroupMember{
