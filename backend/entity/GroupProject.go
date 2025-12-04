@@ -8,8 +8,10 @@ type GroupProject struct {
 	gorm.Model
 	GroupNumber uint   `json:"group_number" valid:"required,range(1|40)~GroupNumber must be between 1 and 40"`
 	GroupStatus string `json:"group_status" valid:"required~GroupStatus is required"`
-	Membership	int		`json:"membership" valid:"required,range(1|5)~Membership must be between 1 and 5"`	// จำนวนสมาชิกต่อกลุ่ม
-	TeacherID   uint  `json:"teacher_id" valid:"required~TeacherID is required"`
+	Membership	int		`json:"membership" valid:"required,range(3|5)~Membership must be between 3 and 5"`	// จำนวนสมาชิกต่อกลุ่ม
+	
+	// Teacher ต้องว่าง หากยังไม้เลือกอาจารย์
+	TeacherID   *uint  `json:"teacher_id"`
 	Teacher     *User `gorm:"foreignKey:TeacherID" json:"teacher"`
 
 	GroupMembers []GroupMember `gorm:"foreignKey:GroupProjectID" json:"group_members"`
