@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sut68/team07/backend/database"
 	"github.com/sut68/team07/backend/entity"
-	"github.com/sut68/team07/backend/controller.go/log"
+	"github.com/sut68/team07/backend/controller/log"
 )
 
 func GetAllChat(c * gin.Context) {
