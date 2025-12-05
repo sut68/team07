@@ -169,4 +169,8 @@ var MockAppointment = []entity.Appointment{
 		Model:gorm.Model{ID: 2},StartDateTime:time.Date(2025, 12, 25, 13, 30, 0, 0, time.Local),
 		DurationMin:30,AppointmentStatus: "scheduled",AppointmentTypeID: 2,RoomID:3,TeacherID: 3,GroupProjectID:1,
 	},
+	{
+		Model:gorm.Model{ID: 3},StartDateTime:time.Date(2026, 1, 10, 10, 0, 0, 0, time.Local),
+		DurationMin:30,AppointmentStatus: "scheduled",AppointmentTypeID: 3,RoomID:5,TeacherID: 4,GroupProjectID:2,
+	},
 }
