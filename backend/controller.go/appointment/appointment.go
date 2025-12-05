@@ -1,6 +1,7 @@
 package appointment
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -168,67 +169,6 @@ func ListAppointmentTypes(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func SearchGroup(c *gin.Context) {
-	keyword := c.Query("keyword")
-
-	claims, _ := middleware.GetClaimsFromContext(c)
-	db := database.DB()
-
-	query := db.Select("id", "group_number", "group_status").
-		Where("group_status IN ?", []string{"Pending", "In Process"}).
-		Where("teacher_id = ?", claims.ID)
-
-	if keyword != "" {
-		query = query.Where("name_project LIKE ? OR CAST(group_number AS TEXT) LIKE ?", "%"+keyword+"%", "%"+keyword+"%")
-	}
-	var groups []entity.GroupProject
-	if err := query.Find(&groups).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	response := []gin.H{}
-	for _, g := range groups {
-		response = append(response, gin.H{
-			"id":           g.ID,
-			"group_number": g.GroupNumber,
-			"group_status": g.GroupStatus,
-		})
-	}
-	c.JSON(http.StatusOK, response)
-}
-
-func DeleteAppointment(c *gin.Context) {
-	id := c.Param("id")
-	db := database.DB()
-
-	var apt entity.Appointment
-	claims, _ := middleware.GetClaimsFromContext(c)
-
-	if err := db.Where("id = ? AND teacher_id = ?", id, claims.ID).First(&apt).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Appointment not found or permission denied"})
-		return
-	}
-	tx := db.Begin()
-
-	if err := tx.Delete(&apt).Error; err != nil {
-		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete appointment"})
-		return
-	}
-
-	if err := tx.Model(&entity.GroupProject{}).
-		Where("id = ?", apt.GroupProjectID).
-		Update("group_status", "In Process").Error; err != nil {
-
-		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to revert group status"})
-		return
-	}
-
-	tx.Commit()
-	c.JSON(http.StatusOK, gin.H{"message": "Appointment deleted successfully"})
-}
-
 func GetRandomGroup(c *gin.Context) {
 	var group entity.GroupProject
 	db := database.DB()
@@ -250,207 +190,59 @@ func GetRandomGroup(c *gin.Context) {
 	})
 }
 
-func CreateAppointment(c *gin.Context) {
+func GetMyProjectAndAppointment(c *gin.Context) {
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	db := database.DB()
+	var member entity.GroupMember
+
+	if err := db.Preload("GroupProject").
+		Preload("GroupProject.Teacher").
+		Preload("GroupProject.TopicSelections.Topic").
+		Where("student_id = ?", claims.ID).
+		First(&member).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "You do not belong to any project group."})
+		return
+	}
+
+	groupID := member.GroupProjectID
+	group := member.GroupProject
+
 	var appointment entity.Appointment
-
-	if err := c.ShouldBindJSON(&appointment); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+	apptFound := false
+	if err := db.Preload("Room").Preload("AppointmentType").
+		Where("group_project_id = ? AND appointment_status IN ?", groupID, []string{"scheduled", "completed"}).
+		Order("start_date_time DESC").
+		First(&appointment).Error; err == nil {
+		apptFound = true
 	}
 
-	claims, err := middleware.GetClaimsFromContext(c)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-		return
+	projectName := fmt.Sprintf("Group %d", group.GroupNumber)
+	if len(group.TopicSelections) > 0 && group.TopicSelections[0].Topic != nil {
+		projectName = group.TopicSelections[0].Topic.Title
 	}
-	appointment.TeacherID = claims.ID
-	db := database.DB()
 
-	if appointment.AppointmentTypeID != 3 {
-		var groupProject entity.GroupProject
-		if err := db.Select("teacher_id").First(&groupProject, appointment.GroupProjectID).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Group Project not found"})
-			return
+	response := gin.H{
+		"group_id":     group.ID,
+		"group_number": group.GroupNumber,
+		"project_name": projectName,
+		"advisor_name": group.Teacher.Firstname + " " + group.Teacher.Lastname,
+
+		"appointment": nil,
+	}
+
+	if apptFound {
+		response["appointment"] = gin.H{
+			"type":      appointment.AppointmentType.Name,
+			"date_time": appointment.StartDateTime,
+			"room":      appointment.Room.Name,
+			"location":  appointment.Room.Location,
 		}
-
-		// TeacherID == nil ยังไม่มีการเลือกอาจารย์
-		if groupProject.TeacherID == nil || *groupProject.TeacherID != claims.ID {
-			c.JSON(http.StatusForbidden, gin.H{"error": "You are not the advisor of this group."})
-			return
-		}
 	}
 
-	var existingAppt entity.Appointment
-	if tx := db.Where("group_project_id = ? AND appointment_status = 'scheduled'", appointment.GroupProjectID).
-		First(&existingAppt); tx.RowsAffected > 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "This group already has a scheduled appointment."})
-		return
-	}
-
-	var conflictAppt entity.Appointment
-	if tx := db.Where("room_id = ? AND start_date_time = ? AND appointment_status = 'scheduled'", appointment.RoomID, appointment.StartDateTime).
-		First(&conflictAppt); tx.RowsAffected > 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "The room is not available at this time."})
-		return
-	}
-
-	tx := db.Begin()
-
-	if err := tx.Create(&appointment).Error; err != nil {
-		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	if err := tx.Model(&entity.GroupProject{}).Where("id = ?", appointment.GroupProjectID).
-		Update("group_status", "Scheduled").Error; err != nil {
-		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update group status"})
-		return
-	}
-
-	tx.Commit()
-	c.JSON(http.StatusCreated, gin.H{"message": "Appointment created successfully", "data": appointment})
-}
-
-func UpdateAppointment(c *gin.Context) {
-	var payload entity.Appointment
-	id := c.Param("id")
-
-	if err := c.ShouldBindJSON(&payload); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	claims, err := middleware.GetClaimsFromContext(c)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-		return
-	}
-
-	db := database.DB()
-
-	var existingAppt entity.Appointment
-	if err := db.Where("id = ? AND teacher_id = ?", id, claims.ID).First(&existingAppt).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Appointment not found or permission denied"})
-		return
-	}
-	if err := db.Model(&existingAppt).Updates(payload).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update appointment: " + err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "Appointment updated successfully", "data": existingAppt})
-}
-
-func CreateRoom(c *gin.Context) {
-	var room entity.Room
-	if err := c.ShouldBindJSON(&room); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	db := database.DB()
-	if err := db.Create(&room).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusCreated, gin.H{"data": room})
-}
-
-func AutoCreateAppointments(c *gin.Context) {
-	var req AutoScheduleRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	claims, _ := middleware.GetClaimsFromContext(c)
-	db := database.DB()
-
-	var validSlots []time.Time
-	currentTime := req.StartDateTime
-
-	for currentTime.Add(time.Duration(req.DurationMin)*time.Minute).Before(req.EndDateTime) ||
-		currentTime.Add(time.Duration(req.DurationMin)*time.Minute).Equal(req.EndDateTime) {
-
-		startHour := currentTime.Hour()
-		startMin := currentTime.Minute()
-		slotStartMins := (startHour * 60) + startMin
-		slotEndMins := slotStartMins + req.DurationMin
-		lunchStartMins := 12 * 60
-		lunchEndMins := 13 * 60
-
-		if slotStartMins < lunchEndMins && slotEndMins > lunchStartMins {
-			currentTime = currentTime.Add(time.Duration(req.DurationMin) * time.Minute)
-			continue
-		}
-		var conflict int64
-		db.Model(&entity.Appointment{}).
-			Where("room_id = ? AND start_date_time = ? AND appointment_status = 'scheduled'", req.RoomID, currentTime).
-			Count(&conflict)
-
-		if conflict == 0 {
-			validSlots = append(validSlots, currentTime)
-		}
-
-		currentTime = currentTime.Add(time.Duration(req.DurationMin) * time.Minute)
-	}
-
-	if len(validSlots) == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "No available slots found in this range."})
-		return
-	}
-
-	var groups []entity.GroupProject
-	if err := db.Where("group_status IN ?", []string{"Pending", "In Process"}).
-		Order("RANDOM()").
-		Limit(len(validSlots)).
-		Find(&groups).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch groups"})
-		return
-	}
-
-	if len(groups) == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "No pending groups left to schedule!"})
-		return
-	}
-
-	tx := db.Begin()
-	count := 0
-
-	for i, group := range groups {
-		slotTime := validSlots[i]
-
-		appt := entity.Appointment{
-			StartDateTime:     slotTime,
-			DurationMin:       uint(req.DurationMin),
-			AppointmentStatus: "scheduled",
-			RoomID:            req.RoomID,
-			AppointmentTypeID: req.AppointmentTypeID,
-			TeacherID:         claims.ID,
-			GroupProjectID:    group.ID,
-		}
-		if err := tx.Create(&appt).Error; err != nil {
-			tx.Rollback()
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create appointments"})
-			return
-		}
-
-		if err := tx.Model(&entity.GroupProject{}).Where("id = ?", group.ID).Update("group_status", "Scheduled").Error; err != nil {
-			tx.Rollback()
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update group status"})
-			return
-		}
-		count++
-	}
-
-	tx.Commit()
-
-	c.JSON(http.StatusCreated, gin.H{
-		"message":       "Auto-scheduled successfully!",
-		"groups_booked": count,
-		"slots_found":   len(validSlots),
-	})
+	c.JSON(http.StatusOK, response)
 }

@@ -56,13 +56,17 @@ func main() {
 			// ถ้า API ไหนที่แอดมินเข้าถึงได้ ให้นำไปใส่ในนี้
 			adminGroup.GET("/getGender", users.GetGender)
 			adminGroup.GET("/getIssueStatus", issues.GetIssueStatus)
-		}
-
-		teacherOrStudentGroup := protected.Group("/groupProject")
-		teacherOrStudentGroup.Use(middleware.RoleGuard("Teacher", "Student"))
-		{
-			// ถ้า API ไหนที่ครูและนักเรียนเข้าถึงได้ ให้นำไปใส่ในนี้
-
+			// Evaluation and Appointment Admin
+			adminGroup.POST("/createAppointmentTypes", appointment.CreateAppointmentType) 
+    		adminGroup.DELETE("/deleteAppointmentTypes/:id", appointment.DeleteAppointmentType)
+			adminGroup.GET("/criteria", evaluation.ListCriteria)
+			adminGroup.GET("/criteria/:id", evaluation.GetCriteria)
+			adminGroup.POST("/createCriteria", evaluation.CreateCriteria)
+			adminGroup.PATCH("/updateCriteria/:id", evaluation.UpdateCriteria)
+			adminGroup.DELETE("/deleteCriteria/:id", evaluation.DeleteCriteria)
+			adminGroup.POST("/createCriteriaLevel", evaluation.CreateCriteriaLevel)
+			adminGroup.PATCH("/updateCriteriaLevel/:id", evaluation.UpdateCriteriaLevel)
+			adminGroup.DELETE("/deleteCriteriaLevel/:id", evaluation.DeleteCriteriaLevel)
 		}
 
 		teacherGroup := protected.Group("/teacher")
@@ -79,10 +83,15 @@ func main() {
 			teacherGroup.POST("/autoCreateAppointments", appointment.AutoCreateAppointments)
 			teacherGroup.PATCH("/updateAppointment/:id", appointment.UpdateAppointment)
 			teacherGroup.POST("/createRoom", appointment.CreateRoom)
-			teacherGroup.DELETE("/DeleteAppointments/:id", appointment.DeleteAppointment)
+			teacherGroup.DELETE("/deleteAppointment/:id", appointment.DeleteAppointment)
 			// Evaluation ===================================
 			teacherGroup.GET("/evaluation/projects", evaluation.ListEvaluationProjects)
+			teacherGroup.GET("/evaluation/form/:appointment_id", evaluation.GetEvaluationForm)
+			teacherGroup.GET("/evaluation/result/:appointment_id", evaluation.GetEvaluationResult)
+			teacherGroup.GET("/evaluation/summary/:group_project_id", evaluation.GetEvaluationSummary)
+			teacherGroup.POST("/evaluation/save", evaluation.SaveEvaluation)
 			// ===============================================
+
 		}
 
 		studentGroup := protected.Group("/student")
@@ -97,6 +106,17 @@ func main() {
 			// Group
 			// studentGroup.GET("/group", group.GetGroupProject)
 			// studentGroup.POST("/addMember", group.PostGroupMember)
+
+			// Evaluation and Appointment
+			studentGroup.GET("/myAppointment", appointment.GetMyProjectAndAppointment)
+    		studentGroup.GET("/myEvaluation", evaluation.GetMyEvaluationResult)
+
+		}
+
+		teacherOrStudentGroup := protected.Group("/groupProject")
+		teacherOrStudentGroup.Use(middleware.RoleGuard("Teacher", "Student"))
+		{
+			// ถ้า API ไหนที่ครูและนักเรียนเข้าถึงได้ ให้นำไปใส่ในนี้
 
 		}
 
