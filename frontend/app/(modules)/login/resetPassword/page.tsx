@@ -2,14 +2,15 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ResetPassword } from '../../../services/login'; 
-import { ResetPasswordInterface } from '../../../interfaces/Login'; 
+import { ResetPassword } from '../../../services/login';
+import { ResetPasswordInterface } from '../../../interfaces/Login';
+import '../../../style/resetpassword.css';
 
-const originalFont = 'zzzTH'; 
+const originalFont = 'zzzTH';
 
 const ResetPasswordComponent: React.FC = () => {
-    const router = useRouter(); 
-    const searchParams = useSearchParams(); 
+    const router = useRouter();
+    const searchParams = useSearchParams();
 
     const [token, setToken] = useState<string | null>(null);
     const [password, setPassword] = useState('');
@@ -17,14 +18,18 @@ const ResetPasswordComponent: React.FC = () => {
     const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
     const [isLoading, setIsLoading] = useState(false);
 
+    // ทดสอบโหมด: ถ้า URL มี ?test=1 จะอนุญาตไม่ต้องมี token (ใช้เพื่อทดสอบหน้า UI)
+    const testMode = typeof window !== 'undefined' && searchParams.get('test') === '1';
+
     useEffect(() => {
         const urlToken = searchParams.get('token');
         if (urlToken) {
             setToken(urlToken);
         } else {
-            setMessage({ 
-                text: "Invalid link. Missing reset token. Please request a new password reset.", 
-                type: 'error' 
+            // ถ้าไม่มี token แสดงข้อผิดพลาด (เอาโหมดทดสอบออกแล้ว)
+            setMessage({
+                text: "Invalid link. Missing reset token. Please request a new password reset.",
+                type: 'error'
             });
         }
     }, [searchParams]);
@@ -32,7 +37,7 @@ const ResetPasswordComponent: React.FC = () => {
     const handleReset = async (e: React.FormEvent) => {
         e.preventDefault();
         setMessage(null);
-        
+
         if (!token) {
             setMessage({ text: "Error: Missing reset token.", type: 'error' });
             return;
@@ -62,15 +67,15 @@ const ResetPasswordComponent: React.FC = () => {
 
         try {
             const data: ResetPasswordInterface = {
-                token: token!, 
+                token: token!,
                 new_password: password,
             };
 
-            const res = await ResetPassword(data); 
-            
-            setMessage({ 
-                text: res.data.message || "ตั้งรหัสผ่านใหม่สำเร็จ! ระบบกำลังนำกลับไปหน้า Login...", 
-                type: 'success' 
+            const res = await ResetPassword(data);
+
+            setMessage({
+                text: res.data.message || "ตั้งรหัสผ่านใหม่สำเร็จ! ระบบกำลังนำกลับไปหน้า Login...",
+                type: 'success'
             });
 
             setTimeout(() => {
@@ -87,89 +92,76 @@ const ResetPasswordComponent: React.FC = () => {
 
     if (!token && !message) {
         return (
-            <div className="flex items-center justify-center min-h-screen bg-gray-100">
-                <p className="text-gray-600" style={{ fontFamily: originalFont }}>กำลังโหลด...</p>
+            <div className="rp-fullscreen">
+                <p className="rp-loading" style={{ fontFamily: originalFont }}>กำลังโหลด...</p>
             </div>
         );
     }
-    
+
     const isInitialError = message && message.type === 'error' && !token;
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
-            <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-2xl">
-                <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center" style={{ fontFamily: originalFont }}>
-                    ตั้งรหัสผ่านใหม่
-                </h1>
+        <div className="rp-fullscreen">
+            <div className="rp-card" role="main" aria-labelledby="rp-title">
+                <div className="rp-icon" aria-hidden="true">
+                    <svg width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12.3212 10.6852L4 19L6 21M7 16L9 18M20 7.5C20 9.98528 17.9853 12 15.5 12C13.0147 12 11 9.98528 11 7.5C11 5.01472 13.0147 3 15.5 3C17.9853 3 20 5.01472 20 7.5Z" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </div>
 
-                {message && (
-                    <div className={`p-4 mb-4 rounded-lg text-center font-medium ${
-                        message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                    }`} style={{ fontFamily: originalFont }}>
-                        {message.text}
-                    </div>
-                )}
-                
-                {/* แสดง Form เฉพาะเมื่อมี Token และไม่มี Error ถาวร */}
+                <h1 id="rp-title" className="rp-title" style={{ fontFamily: originalFont }}>รีเซ็ตรหัสผ่านใหม่</h1>
+                <p className="rp-desc">รหัสผ่านใหม่ของคุณต้องแตกต่างจากรหัสผ่านที่เคยใช้มาก่อน</p>
+
+                {/* เว้นพื้นที่สำหรับข้อความผลลัพธ์ไม่ให้ layout ขยับ */}
+                <div className="rp-message-area" aria-live="polite">
+                    {message && (
+                        <div className={`rp-message ${message.type === 'success' ? 'rp-success' : 'rp-error'}`} style={{ fontFamily: originalFont }}>
+                            {message.text}
+                        </div>
+                    )}
+                </div>
+
                 {!isInitialError && (
-                    <form onSubmit={handleReset} className="space-y-6">
-                        <p className="text-sm text-gray-600 truncate" style={{ fontFamily: originalFont }}>
-                            Token: {token && token.substring(0, 8)}... (ใช้ได้ 5 นาที)
-                        </p>
-                        <div>
-                            <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="password">
-                                รหัสผ่านใหม่ (อย่างน้อย 8 ตัวอักษร)
-                            </label>
-                            <input
-                                id="password"
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150"
-                                required
-                                disabled={isLoading || message?.type === 'success'}
-                            />
-                        </div>
+                    <form onSubmit={handleReset} className="rp-form" aria-describedby="rp-desc">
+                        <label className="rp-label" htmlFor="password">ตั้งรหัสผ่าน</label>
+                        <input
+                            id="password"
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="rp-input"
+                            required
+                            disabled={isLoading || message?.type === 'success'}
+                            aria-required="true"
+                        />
+                        <p className="rp-helper">ต้องมีความยาวอย่างน้อย 8 ตัวอักษร</p>
 
-                        <div>
-                            <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="confirmPassword">
-                                ยืนยันรหัสผ่านใหม่
-                            </label>
-                            <input
-                                id="confirmPassword"
-                                type="password"
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150"
-                                required
-                                disabled={isLoading || message?.type === 'success'}
-                            />
-                        </div>
+                        <label className="rp-label" htmlFor="confirmPassword">ยืนยันรหัสผ่าน</label>
+                        <input
+                            id="confirmPassword"
+                            type="password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            className="rp-input"
+                            required
+                            disabled={isLoading || message?.type === 'success'}
+                        />
 
                         <button
                             type="submit"
-                            className={`w-full text-white font-bold py-2 px-4 rounded-lg transition duration-200 shadow-md ${
-                                isLoading || message?.type === 'success' ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
-                            }`}
+                            className={`rp-button ${isLoading || message?.type === 'success' ? 'rp-disabled' : ''}`}
                             disabled={isLoading || message?.type === 'success'}
                             style={{ fontFamily: originalFont }}
                         >
-                            {isLoading ? 'กำลังดำเนินการ...' : 'ตั้งรหัสผ่านใหม่'}
+                            {isLoading ? 'กำลังดำเนินการ...' : 'รีเซ็ตรหัสผ่าน'}
                         </button>
                     </form>
                 )}
-                
-                {isInitialError && (
-                    <div className="mt-4 text-center">
-                        <button
-                            onClick={() => router.push('/login')}
-                            className="text-blue-600 hover:text-blue-800 font-medium transition duration-150"
-                            style={{ fontFamily: originalFont }}
-                        >
-                            กลับไปหน้า Login
-                        </button>
-                    </div>
-                )}
+
+                <button className="rp-back" onClick={() => router.push('/login')} aria-label="Back to log in">
+                    <svg className="rp-back-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M15 19l-7-7 7-7" /></svg>
+                    <span>กลับไปที่หน้าเข้าสู่ระบบ</span>
+                </button>
             </div>
         </div>
     );
