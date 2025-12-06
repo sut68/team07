@@ -1,0 +1,98 @@
+import api from "./api";
+import type {
+    IEvaluationProject,
+    IEvaluationFormResponse,
+    IEvaluationResultResponse,
+    IEvaluationSummaryResponse,
+    ISaveEvaluationRequest,
+    ICreateCriteriaRequest,
+    ICreateLevelRequest
+} from "../interfaces/Evaluation";
+
+// TEACHER:
+
+async function GetEvaluationProjects(typeId?: number) {
+    const url = typeId ? `/teacher/evaluation/projects?type_id=${typeId}` : "/teacher/evaluation/projects";
+    return await api.get<IEvaluationProject[]>(url);
+}
+
+// ดึงฟอร์มประเมิน (เกณฑ์ + รายชื่อเด็ก)
+async function GetEvaluationForm(appointmentId: number | string) {
+    return await api.get<IEvaluationFormResponse>(`/teacher/evaluation/form/${appointmentId}`);
+}
+
+// ดึงคะแนนที่เคยกรอกไว้ (ดูย้อนหลัง/แก้ไข)
+async function GetEvaluationResult(appointmentId: number | string) {
+    return await api.get<IEvaluationResultResponse>(`/teacher/evaluation/result/${appointmentId}`);
+}
+
+// ดูสรุปผลคะแนนรวมของกลุ่ม (Average Calculation)
+async function GetEvaluationSummary(groupProjectId: number | string) {
+    return await api.get<IEvaluationSummaryResponse>(`/teacher/evaluation/summary/${groupProjectId}`);
+}
+
+// บันทึกคะแนน (Save)
+async function SaveEvaluation(data: ISaveEvaluationRequest) {
+    return await api.post("/teacher/evaluation/save", data);
+}
+
+// ADMIN
+
+
+// ดึงโครงสร้างเกณฑ์ทั้งหมด
+async function ListCriteria() {
+    return await api.get("/admin/criteria");
+}
+
+// ดึงรายละเอียดเกณฑ์รายตัว (เพื่อแก้ไข)
+async function GetCriteriaById(id: number | string) {
+    return await api.get(`/admin/criteria/${id}`);
+}
+
+// --- Criteria (หัวข้อคะแนน) ---
+async function CreateCriteria(data: ICreateCriteriaRequest) {
+    return await api.post("/admin/createCriteria", data);
+}
+
+async function UpdateCriteria(id: number | string, data: Partial<ICreateCriteriaRequest>) {
+    return await api.patch(`/admin/updateCriteria/${id}`, data);
+}
+
+async function DeleteCriteria(id: number | string) {
+    return await api.delete(`/admin/deleteCriteria/${id}`);
+}
+
+// --- Criteria Level (ตัวเลือก Rubric) ---
+async function CreateCriteriaLevel(data: ICreateLevelRequest) {
+    return await api.post("/admin/createCriteriaLevel", data);
+}
+
+async function UpdateCriteriaLevel(id: number | string, data: Partial<ICreateLevelRequest>) {
+    return await api.patch(`/admin/updateCriteriaLevel/${id}`, data);
+}
+
+async function DeleteCriteriaLevel(id: number | string) {
+    return await api.delete(`/admin/deleteCriteriaLevel/${id}`);
+}
+
+// student
+async function GetMyEvaluationResult() {
+    return await api.get("/student/myEvaluation");
+}
+
+export {
+    GetEvaluationProjects,
+    GetEvaluationForm,
+    GetEvaluationResult,
+    GetEvaluationSummary,
+    SaveEvaluation,
+    ListCriteria,
+    GetCriteriaById,
+    CreateCriteria,
+    UpdateCriteria,
+    DeleteCriteria,
+    CreateCriteriaLevel,
+    UpdateCriteriaLevel,
+    DeleteCriteriaLevel,
+    GetMyEvaluationResult
+};
