@@ -1,33 +1,28 @@
 import api from "./api";
-import type { FullChat,chat} from "../interfaces/Chat";
+import type { FullChat,ChatCreate,GetChat,ChatDelete} from "../interfaces/Chat";
 
 
 
 
-async function GetProgress(payload: PickProgress): Promise<FullProgress[]> {
-    const res = await api.get<FullProgress[]>("/student/getProcess", {
+async function GetAllChat(payload: GetChat): Promise<FullChat[]> {
+    const res = await api.get<FullChat[]>("/GetChat", {
         params: payload,
     });
     return res.data;
 }
 
-async function AddProgress(payload: AssignProgress) {     
-    await api.post("/student/assignProgress", null, {
+async function InsertChat(payload: ChatCreate) {     
+    await api.post("/SendChat", null, {
         params: payload,
     });
 }
 
-async function UpProgress(payload: UpdateProgress) {
-    await api.post("/student/modifyProgress", null, {
+
+async function DropChat(payload: ChatDelete) {
+    await api.delete("/DeleteChat", {
         params: payload,
     });
 }
 
-async function EraseProgress(payload: DeleteProgress) {
-    await api.delete("/student/deleteProgress", {
-        params: payload,
-    });
-}
-
-export {GetProgress,AddProgress,UpProgress,EraseProgress};
+export {GetAllChat,InsertChat,DropChat};
 

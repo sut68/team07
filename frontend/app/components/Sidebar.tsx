@@ -16,7 +16,7 @@ const roleNavItems: { [key: string]: { name: string; href: string }[] } = {
     { name: 'ข้อมูลโครงการ', href: '/student/project' },
 
     { name: 'Test Axios API', href: '/student/progress' },// test axios
-    { name: 'Test chat', href: '/student/chat' }, 
+    { name: 'Test chat', href: '/chat' }, 
   ],
 };
 
