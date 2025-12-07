@@ -64,7 +64,7 @@ export default function ChatTestPage() {
     const { group_member_id, process_id } = getIds();
     try {
       setLoading(true);
-      // ✅ Pass the ID correctly (verify your DropChat service expects 'id' or 'ID')
+      // ✅ Pass the ID correctly (verify your
       await DropChat({ id: targetId, group_member_id, process_id });
       await loadChats();
     } catch (error) {
