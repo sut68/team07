@@ -215,33 +215,33 @@ func (h *LoginHandler) Refresh(c *gin.Context) {
 	})
 }
 func setSingleCSRFToken(c *gin.Context, csrfToken string) {
-	cookieDomain := config.CookieDomain()
-	isProd := config.IsProduction()
+	//cookieDomain := config.CookieDomain()
+	//isProd := config.IsProduction()
 
 	http.SetCookie(c.Writer, &http.Cookie{
 		Name:     "csrf_token",
 		Value:    csrfToken,
 		Path:     "/",
-		Domain:   cookieDomain,
+		Domain:   "",
 		MaxAge:   int(config.RefreshTokenTTL().Seconds()),
-		Secure:   isProd,
+		Secure:   true,
 		HttpOnly: false,
 		SameSite: http.SameSiteLaxMode,
 	})
 }
 
 func setAuthCookies(c *gin.Context, accessToken, refreshToken, csrfToken string) {
-	cookieDomain := config.CookieDomain()
-	isProd := config.IsProduction()
+	//cookieDomain := config.CookieDomain()
+	//isProd := config.IsProduction()
 
 	// Access Token (HTTP-Only)
 	http.SetCookie(c.Writer, &http.Cookie{
 		Name:     "access_token",
 		Value:    accessToken,
 		Path:     "/",
-		Domain:   cookieDomain,
+		Domain:   "", // make ngrok possible
 		MaxAge:   int(config.AccessTokenTTL().Seconds()),
-		Secure:   isProd,
+		Secure:   true,
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
 	})
@@ -251,9 +251,9 @@ func setAuthCookies(c *gin.Context, accessToken, refreshToken, csrfToken string)
 		Name:     "refresh_token",
 		Value:    refreshToken,
 		Path:     "/",
-		Domain:   cookieDomain,
+		Domain:   "",
 		MaxAge:   int(config.RefreshTokenTTL().Seconds()),
-		Secure:   isProd,
+		Secure:   true,
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
 	})
