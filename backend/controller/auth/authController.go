@@ -224,7 +224,7 @@ func setSingleCSRFToken(c *gin.Context, csrfToken string) {
 		Path:     "/",
 		Domain:   "",
 		MaxAge:   int(config.RefreshTokenTTL().Seconds()),
-		Secure:   true,
+		Secure:   false,
 		HttpOnly: false,
 		SameSite: http.SameSiteLaxMode,
 	})
@@ -241,7 +241,7 @@ func setAuthCookies(c *gin.Context, accessToken, refreshToken, csrfToken string)
 		Path:     "/",
 		Domain:   "", // make ngrok possible
 		MaxAge:   int(config.AccessTokenTTL().Seconds()),
-		Secure:   true,
+		Secure:   false,
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
 	})
@@ -253,7 +253,7 @@ func setAuthCookies(c *gin.Context, accessToken, refreshToken, csrfToken string)
 		Path:     "/",
 		Domain:   "",
 		MaxAge:   int(config.RefreshTokenTTL().Seconds()),
-		Secure:   true,
+		Secure:   false,
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
 	})
