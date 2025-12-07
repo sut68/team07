@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sut68/team07/backend/config"
+	"github.com/sut68/team07/backend/controller/log"
 	"github.com/sut68/team07/backend/database"
 	"github.com/sut68/team07/backend/entity"
 	"github.com/sut68/team07/backend/middleware"
@@ -76,18 +77,18 @@ func (h *LoginHandler) Login(c *gin.Context) {
 	}
 	normalizedUsername := service.NormalizeUsername(input.Username)
 
-    var user entity.User
+	var user entity.User
 
-    // ใช้ normalizedUsername ในการค้นหา DB
-    if err := h.DB.Preload("Role").Where("username = ?", normalizedUsername).First(&user).Error; err != nil {
-        if err == gorm.ErrRecordNotFound {
-            c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found or credentials invalid"})
-            return
-        }
-        logSys.Printf("DB ERROR: Failed to query user for login: %v", err)
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal error during login"})
-        return
-    }
+	// ใช้ normalizedUsername ในการค้นหา DB
+	if err := h.DB.Preload("Role").Where("username = ?", normalizedUsername).First(&user).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found or credentials invalid"})
+			return
+		}
+		logSys.Printf("DB ERROR: Failed to query user for login: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal error during login"})
+		return
+	}
 
 	if !h.JwtService.CheckPasswordHash(input.Password, user.Password) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found or credentials invalid"})
@@ -108,7 +109,7 @@ func (h *LoginHandler) Login(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not issue refresh token"})
 		return
 	}
-
+	log.InsertLogByUserID(c, user.ID, 11)
 	//สร้าง CSRF Token
 	csrfToken := h.JwtService.HashTokenSHA256(accessToken)
 
@@ -118,9 +119,7 @@ func (h *LoginHandler) Login(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not process login"})
 		return
 	}
-
 	setAuthCookies(c, accessToken, refreshToken, csrfToken)
-
 	go service.SendLoginNotification(user.Email, user.Username, c.ClientIP())
 	c.JSON(http.StatusOK, LoginResponse{
 		ID:       user.ID,
@@ -148,7 +147,7 @@ func (h *LoginHandler) Logout(c *gin.Context) {
 
 	// Clear Cookies ทั้งหมด
 	clearAuthCookies(c)
-
+	log.InsertLog(c, 12)
 	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
 }
 
@@ -293,75 +292,74 @@ func (h *LoginHandler) ForgotPassword(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "If the email exists, a password reset link has been sent."})
 }
 
-
 func (h *LoginHandler) ResetPassword(c *gin.Context) {
-    var input ResetPasswordInput
-    if err := c.ShouldBindJSON(&input); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input format or password too short."})
-        return
-    }
+	var input ResetPasswordInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input format or password too short."})
+		return
+	}
 
-    if ok, reason := service.IsStrongPassword(input.NewPassword); !ok {
-        c.JSON(http.StatusBadRequest, gin.H{"error": reason})
-        return
-    }
+	if ok, reason := service.IsStrongPassword(input.NewPassword); !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": reason})
+		return
+	}
 
-    userID, err := h.JwtService.ValidateResetToken(h.DB, input.Token) 
-    if err != nil {
-        c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-        return
-    }
+	userID, err := h.JwtService.ValidateResetToken(h.DB, input.Token)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
 
-    // ดึงข้อมูล User เดิมเพื่อรับ Hashed Password ปัจจุบัน
-    var user entity.User
-    if err := h.DB.First(&user, userID).Error; err != nil {
-        logSys.Printf("FATAL: User not found after consuming valid reset token: %d", userID)
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal error during password update"})
-        return
-    }
-    
-    // ห้ามรหัสผ่านซ้ำกับรหัสปัจจุบัน (Strict Check)
-    if h.JwtService.CheckPasswordHash(input.NewPassword, user.Password) {
-        logSys.Printf("SECURITY VIOLATION: User %d attempted to reuse their current password.", userID)
-        c.JSON(http.StatusBadRequest, gin.H{"error": "The new password cannot be the same as your current password."})
-        return 
-    }
-    
-    //บันทึกรหัสผ่านเดิมลงใน Password History
-    oldPasswordHash := user.Password 
-    historyEntry := entity.PasswordHistory{
-        UserID: user.ID,
-        OldPasswordHash: oldPasswordHash,
-    }
-    go func() {
-        if err := h.DB.Create(&historyEntry).Error; err != nil {
-            logSys.Printf("DB HISTORY ERROR: Failed to save password history for user %d: %v", user.ID, err)
-        }
-    }()
-    
-    hashedPassword := h.JwtService.HashPassword(input.NewPassword)
+	// ดึงข้อมูล User เดิมเพื่อรับ Hashed Password ปัจจุบัน
+	var user entity.User
+	if err := h.DB.First(&user, userID).Error; err != nil {
+		logSys.Printf("FATAL: User not found after consuming valid reset token: %d", userID)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal error during password update"})
+		return
+	}
 
-    // อัปเดตรหัสผ่านผู้ใช้
-    if err := h.DB.Model(&user).Update("Password", hashedPassword).Error; err != nil {
-        logSys.Printf("ERROR: Failed to update password for user %d: %v", userID, err)
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update password"})
-        return
-    }
+	// ห้ามรหัสผ่านซ้ำกับรหัสปัจจุบัน (Strict Check)
+	if h.JwtService.CheckPasswordHash(input.NewPassword, user.Password) {
+		logSys.Printf("SECURITY VIOLATION: User %d attempted to reuse their current password.", userID)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "The new password cannot be the same as your current password."})
+		return
+	}
 
-    // ลบ Token ทันทีหลังจากที่การอัปเดต Password สำเร็จแล้ว
-    if err := h.JwtService.ConsumeResetToken(h.DB, input.Token); err != nil {
-        logSys.Printf("CRITICAL WARNING: Password reset successful, but failed to consume token for user %d: %v", userID, err)
-    }
+	//บันทึกรหัสผ่านเดิมลงใน Password History
+	oldPasswordHash := user.Password
+	historyEntry := entity.PasswordHistory{
+		UserID:          user.ID,
+		OldPasswordHash: oldPasswordHash,
+	}
+	go func() {
+		if err := h.DB.Create(&historyEntry).Error; err != nil {
+			logSys.Printf("DB HISTORY ERROR: Failed to save password history for user %d: %v", user.ID, err)
+		}
+	}()
 
-    // 8. เพิกถอน Refresh Token ทั้งหมดของ User นี้ทันที
-    if err := h.DB.Where("user_id = ?", userID).Delete(&entity.RefreshToken{}).Error; err != nil {
-        logSys.Printf("WARNING: Failed to revoke old refresh tokens after password reset for user %d: %v", userID, err)
-    }
+	hashedPassword := h.JwtService.HashPassword(input.NewPassword)
 
-    // 9. ส่งอีเมลแจ้งเตือนการเปลี่ยนรหัสผ่าน
-    go service.SendPasswordChangedNotification(user.Email, user.Username)
+	// อัปเดตรหัสผ่านผู้ใช้
+	if err := h.DB.Model(&user).Update("Password", hashedPassword).Error; err != nil {
+		logSys.Printf("ERROR: Failed to update password for user %d: %v", userID, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update password"})
+		return
+	}
 
-    c.JSON(http.StatusOK, gin.H{"message": "Password has been reset successfully. All old sessions have been revoked."})
+	// ลบ Token ทันทีหลังจากที่การอัปเดต Password สำเร็จแล้ว
+	if err := h.JwtService.ConsumeResetToken(h.DB, input.Token); err != nil {
+		logSys.Printf("CRITICAL WARNING: Password reset successful, but failed to consume token for user %d: %v", userID, err)
+	}
+
+	// 8. เพิกถอน Refresh Token ทั้งหมดของ User นี้ทันที
+	if err := h.DB.Where("user_id = ?", userID).Delete(&entity.RefreshToken{}).Error; err != nil {
+		logSys.Printf("WARNING: Failed to revoke old refresh tokens after password reset for user %d: %v", userID, err)
+	}
+
+	// 9. ส่งอีเมลแจ้งเตือนการเปลี่ยนรหัสผ่าน
+	go service.SendPasswordChangedNotification(user.Email, user.Username)
+	log.InsertLog(c, 13)
+	c.JSON(http.StatusOK, gin.H{"message": "Password has been reset successfully. All old sessions have been revoked."})
 }
 
 // clearAuthCookies

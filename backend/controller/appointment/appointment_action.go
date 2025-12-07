@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sut68/team07/backend/controller/log"
 	"github.com/sut68/team07/backend/database"
 	"github.com/sut68/team07/backend/entity"
 	"github.com/sut68/team07/backend/middleware"
@@ -68,6 +69,7 @@ func DeleteAppointment(c *gin.Context) {
 	}
 
 	tx.Commit()
+	log.InsertLog(c,14)
 	c.JSON(http.StatusOK, gin.H{"message": "Appointment deleted successfully"})
 }
 
@@ -130,6 +132,7 @@ func CreateAppointment(c *gin.Context) {
 	}
 
 	tx.Commit()
+	log.InsertLog(c,15)
 	c.JSON(http.StatusCreated, gin.H{"message": "Appointment created successfully", "data": appointment})
 }
 
@@ -159,7 +162,7 @@ func UpdateAppointment(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update appointment: " + err.Error()})
 		return
 	}
-
+	log.InsertLog(c,16)
 	c.JSON(http.StatusOK, gin.H{"message": "Appointment updated successfully", "data": existingAppt})
 }
 
@@ -175,7 +178,7 @@ func CreateRoom(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
+	log.InsertLog(c,17)
 	c.JSON(http.StatusCreated, gin.H{"data": room})
 }
 
@@ -267,7 +270,7 @@ func AutoCreateAppointments(c *gin.Context) {
 	}
 
 	tx.Commit()
-
+	log.InsertLog(c,15)
 	c.JSON(http.StatusCreated, gin.H{
 		"message":       "Auto-scheduled successfully!",
 		"groups_booked": count,

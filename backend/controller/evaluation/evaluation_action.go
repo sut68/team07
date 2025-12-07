@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sut68/team07/backend/controller/log"
 	"github.com/sut68/team07/backend/database"
 	"github.com/sut68/team07/backend/entity"
 	"github.com/sut68/team07/backend/middleware"
@@ -94,5 +95,6 @@ func SaveEvaluation(c *gin.Context) {
 	}
 
 	tx.Commit()
+	log.InsertLog(c, 20)
 	c.JSON(http.StatusOK, gin.H{"message": "Evaluation saved successfully!"})
 }

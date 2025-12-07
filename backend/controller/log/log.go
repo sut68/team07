@@ -32,3 +32,16 @@ func InsertLog(c * gin.Context, x uint) {
 	db.Create(&log)
 
 }
+
+func InsertLogByUserID(c *gin.Context, userID uint, actionTypeID uint) {
+	db := database.DB()
+
+	log := []entity.Log{
+		{
+			UserID:      userID,
+			ActionTypeID: actionTypeID,
+		},
+	}
+
+	db.Create(&log)
+}

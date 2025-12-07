@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sut68/team07/backend/controller/log"
 	"github.com/sut68/team07/backend/database"
 	"github.com/sut68/team07/backend/entity"
 	"github.com/sut68/team07/backend/middleware"
@@ -112,7 +113,7 @@ func CreateCriteria(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
+	log.InsertLog(c, 21)
 	c.JSON(http.StatusCreated, gin.H{"data": criteria, "message": "Criteria created successfully"})
 }
 
@@ -156,7 +157,7 @@ func UpdateCriteria(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
+	log.InsertLog(c, 23)
 	c.JSON(http.StatusOK, gin.H{"data": existing, "message": "Criteria updated successfully"})
 }
 
@@ -168,7 +169,7 @@ func DeleteCriteria(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
+	log.InsertLog(c, 22)
 	c.JSON(http.StatusOK, gin.H{"message": "Criteria deleted successfully"})
 }
 
@@ -199,7 +200,7 @@ func CreateCriteriaLevel(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
+	log.InsertLog(c, 24)
 	c.JSON(http.StatusCreated, gin.H{"data": level, "message": "Level added successfully"})
 }
 
@@ -231,7 +232,7 @@ func UpdateCriteriaLevel(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
+	log.InsertLog(c, 26)
 	c.JSON(http.StatusOK, gin.H{"data": existing, "message": "Level updated successfully"})
 }
 
@@ -241,5 +242,6 @@ func DeleteCriteriaLevel(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	log.InsertLog(c, 25)
 	c.JSON(http.StatusOK, gin.H{"message": "Level deleted successfully"})
 }

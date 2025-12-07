@@ -4,10 +4,10 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sut68/team07/backend/controller/log"
 	"github.com/sut68/team07/backend/database"
 	"github.com/sut68/team07/backend/entity"
 )
-
 
 func CreateAppointmentType(c *gin.Context) {
 	var appointmentType entity.AppointmentType
@@ -23,7 +23,7 @@ func CreateAppointmentType(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
+	log.InsertLog(c, 18)
 	c.JSON(http.StatusCreated, gin.H{"data": appointmentType, "message": "Created successfully"})
 }
 
@@ -35,6 +35,6 @@ func DeleteAppointmentType(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
+	log.InsertLog(c, 19)
 	c.JSON(http.StatusOK, gin.H{"message": "Deleted successfully"})
 }

@@ -53,6 +53,20 @@ var MockActionType = []entity.ActionType{
 	{Model: gorm.Model{ID: 10}, ActionType: "DeleteMessege"},
 	{Model: gorm.Model{ID: 11}, ActionType: "Login"},
 	{Model: gorm.Model{ID: 12}, ActionType: "Logout"},
+	{Model: gorm.Model{ID: 13}, ActionType: "ResetPassword"},
+	{Model: gorm.Model{ID: 14}, ActionType: "DeleteAppointment"},
+	{Model: gorm.Model{ID: 15}, ActionType: "CreateAppointment"},
+	{Model: gorm.Model{ID: 16}, ActionType: "UpdateAppointment"},
+	{Model: gorm.Model{ID: 17}, ActionType: "CreateRoom"},
+	{Model: gorm.Model{ID: 18}, ActionType: "CreateAppointmentType"},
+	{Model: gorm.Model{ID: 19}, ActionType: "DeleteAppointmentType"},
+	{Model: gorm.Model{ID: 20}, ActionType: "SaveEvaluation"},
+	{Model: gorm.Model{ID: 21}, ActionType: "CreateCriteria"},
+	{Model: gorm.Model{ID: 22}, ActionType: "DeleteCriteria"},
+	{Model: gorm.Model{ID: 23}, ActionType: "UpdateCriteria"},
+	{Model: gorm.Model{ID: 24}, ActionType: "CreateCriteriaLevel"},
+	{Model: gorm.Model{ID: 25}, ActionType: "DeleteCriteriaLevel"},
+	{Model: gorm.Model{ID: 26}, ActionType: "UpdateCriteriaLevel"},
 }
 
 var (
@@ -145,32 +159,3 @@ var MockProjects = []entity.Project{
 	},
 }
 
-var MockRoom = []entity.Room{
-	{Model: gorm.Model{ID: 1}, Name: "B1212", Location: "เรียนรวม1", Capacity: 50},
-	{Model: gorm.Model{ID: 2}, Name: "B1213", Location: "เรียนรวม1", Capacity: 50},
-	{Model: gorm.Model{ID: 3}, Name: "B5201", Location: "เรียนรวม2", Capacity: 120},
-	{Model: gorm.Model{ID: 4}, Name: "B5202", Location: "เรียนรวม2", Capacity: 120},
-	{Model: gorm.Model{ID: 5}, Name: "B6501", Location: "Digitech", Capacity: 400},
-	{Model: gorm.Model{ID: 6}, Name: "B6503", Location: "Digitech", Capacity: 200},
-}
-
-var MockAppointmentType = []entity.AppointmentType{
-	{Model: gorm.Model{ID: 1}, Name: "Topic Defense"},
-	{Model: gorm.Model{ID: 2}, Name: "Progress Report"},
-	{Model: gorm.Model{ID: 3}, Name: "Final Defense"},
-}
-
-var MockAppointment = []entity.Appointment{
-	{
-		Model:gorm.Model{ID: 1},StartDateTime:time.Date(2025, 12, 20, 9, 0, 0, 0, time.Local),
-		DurationMin:30,AppointmentStatus: "completed",AppointmentTypeID: 3,RoomID:1,TeacherID: 2,GroupProjectID:3,
-	},
-	{
-		Model:gorm.Model{ID: 2},StartDateTime:time.Date(2025, 12, 25, 13, 30, 0, 0, time.Local),
-		DurationMin:30,AppointmentStatus: "scheduled",AppointmentTypeID: 2,RoomID:3,TeacherID: 3,GroupProjectID:1,
-	},
-	{
-		Model:gorm.Model{ID: 3},StartDateTime:time.Date(2026, 1, 10, 10, 0, 0, 0, time.Local),
-		DurationMin:30,AppointmentStatus: "scheduled",AppointmentTypeID: 3,RoomID:5,TeacherID: 4,GroupProjectID:2,
-	},
-}
