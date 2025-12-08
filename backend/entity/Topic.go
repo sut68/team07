@@ -18,3 +18,4 @@ type Topic struct {
     TopicSelectionID  []TopicSelection `gorm:"foreignKey:TopicID" json:"topic_selections"`
 }
 
+//true
