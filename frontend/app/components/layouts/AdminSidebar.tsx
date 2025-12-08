@@ -95,7 +95,7 @@ export default function AdminSidebar({ children }: SidebarProps) {
         {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
       </div>
 
-      {/* Main content shifted right to avoid the fixed sidebar */}
+      {/* Main content shifted right to avoid the fixed sidebar yoyo*/}
       <main className={`main-content`} style={{ marginLeft: collapsed ? '80px' : '256px' }}>{children}</main>
     </div>
   );
