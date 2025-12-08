@@ -60,17 +60,6 @@ func main() {
 			// ถ้า API ไหนที่แอดมินเข้าถึงได้ ให้นำไปใส่ในนี้
 			adminGroup.GET("/getGender", users.GetGender)
 			adminGroup.GET("/getIssueStatus", issues.GetIssueStatus)
-			// Evaluation and Appointment Admin
-			adminGroup.POST("/createAppointmentTypes", appointment.CreateAppointmentType) 
-    		adminGroup.DELETE("/deleteAppointmentTypes/:id", appointment.DeleteAppointmentType)
-			adminGroup.GET("/criteria", evaluation.ListCriteria)
-			adminGroup.GET("/criteria/:id", evaluation.GetCriteria)
-			adminGroup.POST("/createCriteria", evaluation.CreateCriteria)
-			adminGroup.PATCH("/updateCriteria/:id", evaluation.UpdateCriteria)
-			adminGroup.DELETE("/deleteCriteria/:id", evaluation.DeleteCriteria)
-			adminGroup.POST("/createCriteriaLevel", evaluation.CreateCriteriaLevel)
-			adminGroup.PATCH("/updateCriteriaLevel/:id", evaluation.UpdateCriteriaLevel)
-			adminGroup.DELETE("/deleteCriteriaLevel/:id", evaluation.DeleteCriteriaLevel)
 			adminGroup.POST("/import-users", importuser.ImportUsersHandler)
 		}
 
@@ -95,6 +84,17 @@ func main() {
 			teacherGroup.GET("/evaluation/result/:appointment_id", evaluation.GetEvaluationResult)
 			teacherGroup.GET("/evaluation/summary/:group_project_id", evaluation.GetEvaluationSummary)
 			teacherGroup.POST("/evaluation/save", evaluation.SaveEvaluation)
+			// Evaluation and Appointment Admin
+			teacherGroup.POST("/createAppointmentTypes", appointment.CreateAppointmentType) 
+    		teacherGroup.DELETE("/deleteAppointmentTypes/:id", appointment.DeleteAppointmentType)
+			teacherGroup.GET("/criteria", evaluation.ListCriteria)
+			teacherGroup.GET("/criteria/:id", evaluation.GetCriteria)
+			teacherGroup.POST("/createCriteria", evaluation.CreateCriteria)
+			teacherGroup.PATCH("/updateCriteria/:id", evaluation.UpdateCriteria)
+			teacherGroup.DELETE("/deleteCriteria/:id", evaluation.DeleteCriteria)
+			teacherGroup.POST("/createCriteriaLevel", evaluation.CreateCriteriaLevel)
+			teacherGroup.PATCH("/updateCriteriaLevel/:id", evaluation.UpdateCriteriaLevel)
+			teacherGroup.DELETE("/deleteCriteriaLevel/:id", evaluation.DeleteCriteriaLevel)
 			// ===============================================
 
 		}
@@ -114,7 +114,7 @@ func main() {
 
 			// Evaluation and Appointment
 			studentGroup.GET("/myAppointment", appointment.GetMyProjectAndAppointment)
-    		studentGroup.GET("/myEvaluation", evaluation.GetMyEvaluationResult)
+			studentGroup.POST("/evaluation/peer", evaluation.SavePeerEvaluation)
 
 		}
 

@@ -5,6 +5,7 @@ import type {
     IEvaluationResultResponse,
     IEvaluationSummaryResponse,
     ISaveEvaluationRequest,
+    ISaveEvaluationPeerRequest,
     ICreateCriteriaRequest,
     ICreateLevelRequest
 } from "../interfaces/Evaluation";
@@ -76,8 +77,8 @@ async function DeleteCriteriaLevel(id: number | string) {
 }
 
 // student
-async function GetMyEvaluationResult() {
-    return await api.get("/student/myEvaluation");
+async function SavePeerEvaluation(data: ISaveEvaluationPeerRequest) {
+    return await api.post("/student/evaluation/peer", data);
 }
 
 export {
@@ -86,6 +87,7 @@ export {
     GetEvaluationResult,
     GetEvaluationSummary,
     SaveEvaluation,
+    SavePeerEvaluation,
     ListCriteria,
     GetCriteriaById,
     CreateCriteria,
@@ -93,6 +95,5 @@ export {
     DeleteCriteria,
     CreateCriteriaLevel,
     UpdateCriteriaLevel,
-    DeleteCriteriaLevel,
-    GetMyEvaluationResult
+    DeleteCriteriaLevel
 };
