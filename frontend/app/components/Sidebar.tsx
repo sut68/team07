@@ -4,6 +4,7 @@ const roleNavItems: { [key: string]: { name: string; href: string }[] } = {
   Admin: [
     { name: 'Dashboard Admin', href: '/admin/dashboard' },
     { name: 'จัดการผู้ใช้', href: '/admin/users' },
+    { name: 'เพิ่มผู้ใช้', href: '/admin/users/import' },
     { name: 'Test chat', href: '/chat' }, 
   ],
   Teacher: [

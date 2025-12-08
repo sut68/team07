@@ -14,6 +14,8 @@ import (
 	"github.com/sut68/team07/backend/middleware"
 	mockdata "github.com/sut68/team07/backend/mockData"
 	"github.com/sut68/team07/backend/service"
+	"github.com/sut68/team07/backend/controller/importuser"
+
 )
 
 func main() {
@@ -39,6 +41,8 @@ func main() {
 	r.POST("/refresh", authHandler.Refresh)
 	r.POST("/forgot-password", authHandler.ForgotPassword)
 	r.POST("/reset-password", authHandler.ResetPassword)
+
+	
 
 	protected := r.Group("/")
 	protected.Use(middleware.CSRFCheckMiddleware(), middleware.AuthMiddleware())
@@ -67,6 +71,7 @@ func main() {
 			adminGroup.POST("/createCriteriaLevel", evaluation.CreateCriteriaLevel)
 			adminGroup.PATCH("/updateCriteriaLevel/:id", evaluation.UpdateCriteriaLevel)
 			adminGroup.DELETE("/deleteCriteriaLevel/:id", evaluation.DeleteCriteriaLevel)
+			adminGroup.POST("/import-users", importuser.ImportUsersHandler)
 		}
 
 		teacherGroup := protected.Group("/teacher")
