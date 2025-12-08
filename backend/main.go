@@ -2,16 +2,18 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/sut68/team07/backend/controller.go/appointment"
-	"github.com/sut68/team07/backend/controller.go/auth"
-	"github.com/sut68/team07/backend/controller.go/chat"
-	"github.com/sut68/team07/backend/controller.go/issues"
-	"github.com/sut68/team07/backend/controller.go/progress"
-	"github.com/sut68/team07/backend/controller.go/users"
+	"github.com/sut68/team07/backend/controller/appointment"
+	"github.com/sut68/team07/backend/controller/auth"
+	"github.com/sut68/team07/backend/controller/chat"
+	"github.com/sut68/team07/backend/controller/issues"
+	"github.com/sut68/team07/backend/controller/progress"
+	"github.com/sut68/team07/backend/controller/users"
 	"github.com/sut68/team07/backend/database"
 	"github.com/sut68/team07/backend/middleware"
 	mockdata "github.com/sut68/team07/backend/mockData"
 	"github.com/sut68/team07/backend/service"
+	"github.com/sut68/team07/backend/controller/importuser"
+
 )
 
 func main() {
@@ -34,6 +36,8 @@ func main() {
 	r.POST("/forgot-password", authHandler.ForgotPassword)
 	r.POST("/reset-password", authHandler.ResetPassword)
 
+	
+
 	protected := r.Group("/")
 	protected.Use(middleware.CSRFCheckMiddleware(), middleware.AuthMiddleware())
 	{
@@ -50,6 +54,8 @@ func main() {
 			// ถ้า API ไหนที่แอดมินเข้าถึงได้ ให้นำไปใส่ในนี้
 			adminGroup.GET("/getGender", users.GetGender)
 			adminGroup.GET("/getIssueStatus", issues.GetIssueStatus)
+			adminGroup.POST("/import-users", importuser.ImportUsersHandler)
+
 		}
 		
 		teacherOrStudentGroup := protected.Group("/groupProject")
