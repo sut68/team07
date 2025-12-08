@@ -14,7 +14,6 @@ import (
 	"github.com/sut68/team07/backend/middleware"
 	mockdata "github.com/sut68/team07/backend/mockData"
 	"github.com/sut68/team07/backend/service"
-	"github.com/sut68/team07/backend/controller/importuser"
 
 )
 
@@ -49,10 +48,12 @@ func main() {
 	{
 
 		// user ทุก Role สามารถเข้าถึงได้
-		protected.GET("/me", authHandler.Me)
 		protected.GET("/GetChat", chat.GetAllChat)
 		protected.POST("/SendChat", chat.InsertChat)
 		protected.DELETE("/DeleteChat", chat.DeleteChat)
+		protected.GET("/getUserProfile", users.GetUserProfile)
+		protected.PATCH("/updateUserProfile", users.UpdateUserProfile)
+		protected.GET("/me", authHandler.Me)
 
 		adminGroup := protected.Group("/admin")
 		adminGroup.Use(middleware.RoleGuard("Admin"))
@@ -71,7 +72,8 @@ func main() {
 			adminGroup.POST("/createCriteriaLevel", evaluation.CreateCriteriaLevel)
 			adminGroup.PATCH("/updateCriteriaLevel/:id", evaluation.UpdateCriteriaLevel)
 			adminGroup.DELETE("/deleteCriteriaLevel/:id", evaluation.DeleteCriteriaLevel)
-			adminGroup.POST("/import-users", importuser.ImportUsersHandler)
+			adminGroup.POST("/importUsersCSV", users.ImportUsersCSV)	
+
 		}
 
 		teacherGroup := protected.Group("/teacher")
