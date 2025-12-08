@@ -15,6 +15,7 @@ async function InsertChat(payload: ChatCreate) {
     await api.post("/SendChat", null, {
         params: payload,
     });
+    console.warn("InsertChat complete",payload); /// test
 }
 
 
@@ -22,6 +23,7 @@ async function DropChat(payload: ChatDelete) {
     await api.delete("/DeleteChat", {
         params: payload,
     });
+    console.warn("delete chat complete",payload); //test
 }
 
 export {GetAllChat,InsertChat,DropChat};

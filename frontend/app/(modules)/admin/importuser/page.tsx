@@ -27,7 +27,7 @@ export default function ImportUsers() {
 
       <input
         type="file"
-        accept=".csv, .xlsx"
+        accept=".csv, .xlsx , .png"
         onChange={(e) => setFile(e.target.files?.[0] || null)}
       />
 
