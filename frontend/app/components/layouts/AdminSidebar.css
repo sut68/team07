@@ -1,0 +1,154 @@
+:root{
+  --sidebar-width: 256px; /* 16rem */
+  --sidebar-collapsed-width: 80px; /* 5rem */
+  --sidebar-bg: #ffffff;
+  --sidebar-border: #e5e7eb;
+}
+
+.app-container {
+  font-family: inherit;
+}
+
+.sidebar {
+  width: var(--sidebar-width);
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  border-right: 1px solid var(--sidebar-border);
+  background: var(--sidebar-bg);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  transition: width 200ms ease;
+}
+
+.sidebar.collapsed {
+  width: var(--sidebar-collapsed-width);
+}
+
+.sidebar-header {
+  padding: 24px 16px;
+  border-bottom: 1px solid var(--sidebar-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-link {
+  display: block;
+}
+
+.logo {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+  transition: width 200ms ease, height 200ms ease;
+}
+
+.sidebar.collapsed .logo {
+  width: 48px;
+  height: 48px;
+}
+
+.menu-wrapper {
+  height: calc(100vh - 6rem);
+  overflow: auto;
+}
+
+.toggle-area {
+  margin-top: auto;
+  padding: 12px 0;
+  display: flex;
+  justify-content: center;
+}
+
+.toggle-btn {
+  padding: 6px;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.toggle-btn:hover { background: #f3f4f6; }
+
+.main-content {
+  padding: 40px;
+  transition: margin-left 200ms ease;
+}
+
+.logout-area {
+  padding: 12px 16px;
+  border-top: 1px solid var(--sidebar-border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px 12px;
+  width: 100%;
+  text-align: left;
+}
+
+.logout-btn:hover {
+  background: #f8fafc;
+}
+
+/* Collapse handle positioned on the dividing line between sidebar and content */
+.collapse-handle {
+  position: fixed;
+  /* shift a bit left so the handle sits slightly on top of the sidebar */
+  left: calc(var(--sidebar-width) - 18px);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  background: #ffffff;
+  border: 1px solid var(--sidebar-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 30;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+
+.collapse-handle.collapsed { left: calc(var(--sidebar-collapsed-width) - 18px); }
+
+/* small tweak when sidebar collapsed to center icon inside smaller area */
+.sidebar.collapsed .logout-btn span.label { display: none; }
+
+/* make Menu take full width */
+.menu-wrapper .ant-menu { border-right: none; }
+/* Center icons when sidebar is collapsed */
+.sidebar.collapsed .menu-wrapper .ant-menu-inline .ant-menu-item {
+  justify-content: center !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+.sidebar.collapsed .menu-wrapper .ant-menu-item .anticon {
+  margin: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Hide menu title content when collapsed (extra safety) */
+.sidebar.collapsed .menu-wrapper .ant-menu-item .ant-menu-title-content {
+  display: none !important;
+}
+
+/* Center logout icon when collapsed */
+.sidebar.collapsed .logout-area { padding: 10px 0; }
+.sidebar.collapsed .logout-btn { justify-content: center; }
+.sidebar.collapsed .logout-btn .label { display: none; }
