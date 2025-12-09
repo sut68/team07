@@ -147,8 +147,3 @@
 .sidebar.collapsed .menu-wrapper .ant-menu-item .ant-menu-title-content {
   display: none !important;
 }
-
-/* Center logout icon when collapsed */
-.sidebar.collapsed .logout-area { padding: 10px 0; }
-.sidebar.collapsed .logout-btn { justify-content: center; }
-.sidebar.collapsed .logout-btn .label { display: none; }
