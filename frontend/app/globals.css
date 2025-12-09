@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600;700&display=swap');
+@import "tailwindcss";
+/* @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600;700&display=swap'); */
 
 html, body {
   font-family: 'Noto Sans Thai', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', sans-serif;
@@ -7,6 +8,7 @@ html, body {
 }
 
 * {
+    font-family: Noto Sans Thai;
     box-sizing: border-box;
     margin: 0;
     padding: 0;

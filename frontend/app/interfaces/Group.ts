@@ -19,7 +19,8 @@ export interface GroupMember {
 export interface GroupProject {
   ID: number;
   group_number: number;
-  group_status: string; // 'Pending', 'Full', etc.
+  year: number;
+  group_status: string;
   membership: number; // จำนวนที่รับ (3 หรือ 5)
   teacher_id?: number;
   teacher?: User;

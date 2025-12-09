@@ -60,7 +60,6 @@ const GroupSelectionPage = () => {
 
   // Handle: เมื่อกดปุ่มลงชื่อ
   const handleJoinRequest = async (groupId: number) => {
-    // ใช้ SweetAlert2 ถามยืนยัน
     Swal.fire({
         title: 'ยืนยันการลงชื่อ?',
         text: `คุณต้องการเข้าร่วมกลุ่มนี้ใช่หรือไม่?`,
@@ -105,14 +104,12 @@ const GroupSelectionPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 font-sans">
+    <div className="min-h-screen bg-gray-100 py-8 px-4 font-sans">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-4xl font-bold text-black mb-2">
           เลือกกลุ่มโครงงาน
         </h1>
-        <p className="text-gray-600 mb-8 text-lg">
-          กรุณาเลือกกลุ่มที่ต้องการ (สมาชิก 3-5 คน)
-        </p>
+
 
         {loading ? (
           <div className="flex justify-center mt-20 text-gray-500">
