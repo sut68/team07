@@ -31,6 +31,11 @@ export default function LayoutSwitcher({
         // NEW: GetMe() ตอนนี้ return res.data โดยตรงแล้ว
         const userData = await GetMe();
 
+
+        const user = userData.id
+
+
+
         // ** FIXED: ใช้ userData.role โดยตรง (บรรทัด 31 เดิม) **
         setUserRole(userData.role);
       } catch (error) {

@@ -59,3 +59,5 @@ export default function Sidebar({ userRole }: { userRole: string | null }) {
     </aside>
   );
 }
+
+localStorage.setItem('lastVisitedRole', userRole || '');

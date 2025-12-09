@@ -22,6 +22,7 @@ export default function ChatTestPage() {
 
   const loadChats = async () => {
     const { group_member_id, process_id } = getIds();
+
     if (!group_member_id || !process_id) {
         alert("Please enter IDs");
         return;
