@@ -28,7 +28,7 @@ const GroupCard: React.FC<GroupCardProps> = ({
   return (
     <div className="bg-white border-2 border-black rounded-lg p-3 shadow-sm flex flex-col w-full max-w-sm">
       {/* --- ส่วนหัว (Header) --- */}
-      <div className="flex justify-between items-center mb-3 pb-2 border-b-2 border-gray-200">
+      <div className="flex justify-between items-center mb-3 pb-2 border-b-2 border-gray-800">
         <div>
           <div className="text-blue-600 font-bold text-lg">
             กลุ่มที่ {group.group_number}

@@ -6,30 +6,40 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sut68/team07/backend/database"
 	"github.com/sut68/team07/backend/entity"
-    "github.com/sut68/team07/backend/middleware"
-    "gorm.io/gorm"
-
+	"github.com/sut68/team07/backend/middleware"
+	"gorm.io/gorm"
 )
 
-// ใช้สำหรับรับค่าจากหน้าบ้าน (ตัด Leader ออก เพราะระบบจะคิดให้เอง)
 type CreateMemberInput struct {
 	GroupProjectID uint `json:"group_project_id" binding:"required"`
 	// StudentID      uint `json:"student_id" binding:"required"`
 }
 
-// GET: ดึงข้อมูลกลุ่มทั้งหมด
+// GET: ดึงข้อมูลกลุ่มทั้งหมด (พร้อม Filter ปี)
 func GetGroupProject(c *gin.Context) {
-    // (Optional) ถ้าอยากให้ Login ก่อนถึงจะดูได้ ก็ใส่ Check ตรงนี้ได้เหมือนกันครับ
 	db := database.DB()
 	var group []entity.GroupProject
 	
-	// Preload เพื่อดึงข้อมูลความสัมพันธ์มาด้วย (ถ้าต้องการ)
-	db.Preload("Teacher").
-	   Preload("GroupMembers", func(db *gorm.DB) *gorm.DB {
-			return db.Order("leader desc, id asc") // (Optional) เรียงให้ Leader อยู่บนสุดเสมอ
-	   }).
-	   Preload("GroupMembers.Student").
-	   Find(&group)
+	// 1. สร้าง Query ตั้งต้น
+	query := db.Preload("Teacher").
+		Preload("GroupMembers", func(db *gorm.DB) *gorm.DB {
+			return db.Order("leader desc, id asc")
+		}).
+		Preload("GroupMembers.Student")
+
+	// 2. รับค่า year จากหน้าบ้าน (เช่น ?year=2567)
+	year := c.Query("year")
+
+	// 3. ถ้ามีการส่ง year มา ให้เพิ่มเงื่อนไข WHERE
+	if year != "" {
+		query = query.Where("year = ?", year)
+	}
+
+	// 4. สั่งค้นหา
+	if err := query.Find(&group).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
 	c.JSON(http.StatusOK, &group)
 }
@@ -38,7 +48,7 @@ func GetGroupProject(c *gin.Context) {
 func GetGroupMember(c *gin.Context) {
 	db := database.DB()
 	var member []entity.GroupMember
-	
+
 	// Preload ข้อมูลนักศึกษาและโปรเจค
 	db.Preload("Student").Preload("GroupProject").Find(&member)
 
@@ -47,15 +57,15 @@ func GetGroupMember(c *gin.Context) {
 
 // POST: นักศึกษากดเข้าร่วมกลุ่ม (Join Group)
 func PostGroupMember(c *gin.Context) {
-    // --- 1. ตรวจสอบสิทธิ์ (Authentication) ---
-    claims, err := middleware.GetClaimsFromContext(c)
-    if err != nil {
-        c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Please log in"})
-        return
-    }
+	// --- 1. ตรวจสอบสิทธิ์ (Authentication) ---
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Please log in"})
+		return
+	}
 
-    // กำหนด studentID จาก Token โดยตรง (ปลอดภัยกว่ารับจากหน้าบ้าน)
-    studentID := claims.ID 
+	// กำหนด studentID จาก Token โดยตรง
+	studentID := claims.ID
 
 	db := database.DB()
 
@@ -73,16 +83,17 @@ func PostGroupMember(c *gin.Context) {
 		return
 	}
 
-	// 4. เช็คว่านักศึกษาคนนี้ (จาก Token) อยู่ในกลุ่มนี้แล้วหรือยัง?
+	// --- 4. (แก้ไขใหม่) เช็คว่านักศึกษาคนนี้ มีกลุ่มอยู่แล้วหรือยัง (ไม่สนว่ากลุ่มไหน) ---
 	var existingMember entity.GroupMember
-	// เปลี่ยน input.StudentID เป็น studentID (ตัวแปรที่เราดึงจาก Token)
-	if err := db.Where("student_id = ? AND group_project_id = ?", studentID, input.GroupProjectID).First(&existingMember).Error; err == nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "This student is already in this group"})
+
+	// เราเช็คแค่ student_id อย่างเดียว ถ้าเจอ record แปลว่าเขามีสังกัดแล้ว
+	if err := db.Where("student_id = ?", studentID).First(&existingMember).Error; err == nil {
+		// ถ้า err == nil แสดงว่า "เจอข้อมูล" -> ห้ามเข้ากลุ่มเพิ่ม
+		c.JSON(http.StatusBadRequest, gin.H{"error": "You already have a group. Cannot join another group."})
 		return
 	}
 
-
-	// 5. นับจำนวนสมาชิกปัจจุบันในกลุ่ม
+	// 5. นับจำนวนสมาชิกปัจจุบันในกลุ่มที่จะเข้า
 	var currentMemberCount int64
 	db.Model(&entity.GroupMember{}).Where("group_project_id = ?", input.GroupProjectID).Count(&currentMemberCount)
 
@@ -101,7 +112,7 @@ func PostGroupMember(c *gin.Context) {
 	// 8. สร้าง Object เพื่อเตรียมบันทึก
 	newMember := entity.GroupMember{
 		GroupProjectID: input.GroupProjectID,
-		StudentID:      studentID, // ใช้ค่าจาก Token
+		StudentID:      studentID,
 		Leader:         isLeader,
 	}
 
@@ -116,4 +127,3 @@ func PostGroupMember(c *gin.Context) {
 		"data":    newMember,
 	})
 }
-
