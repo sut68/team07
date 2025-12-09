@@ -1,37 +1,44 @@
 import Link from 'next/link';
 
-const roleNavItems: { [key: string]: { name: string; href: string }[] } = { 
+const roleNavItems: { [key: string]: { name: string; href: string }[] } = {
   Admin: [
     { name: 'Dashboard Admin', href: '/admin/dashboard' },
     { name: 'จัดการผู้ใช้', href: '/admin/users' },
     { name: 'เพิ่มผู้ใช้', href: '/admin/importuser' },
-    { name: 'Test chat', href: '/chat' }, 
+    { name: 'Test chat', href: '/chat' },
+    { name: 'โปรไฟล์', href: '/profile' },
   ],
   Teacher: [
     { name: 'Dashboard Teacher', href: '/teacher/dashboard' },
     { name: 'กำหนดการสอน', href: '/teacher/schedule' },
 
-    { name: 'Test chat', href: '/chat' },  
+    { name: 'Test chat', href: '/chat' },
+    { name: 'โปรไฟล์', href: '/profile' },
   ],
   Student: [
     { name: 'Dashboard Student', href: '/student/dashboard' },
     { name: 'ข้อมูลโครงการ', href: '/student/project' },
 
     { name: 'Test Axios API', href: '/student/progress' },// test axios
+
     { name: 'Test chat', href: '/chat' }, 
 
     { name: 'Group', href: '/student/group'}
+
+    { name: 'Test chat', href: '/chat' },
+    { name: 'โปรไฟล์', href: '/profile' },
+
   ],
 };
 
 const logoutItem = { name: 'Logout', href: '/login' };
 
-export default function Sidebar({ userRole }: { userRole: string | null }) { 
-  const mainNavItems = roleNavItems[userRole || ''] || []; 
+export default function Sidebar({ userRole }: { userRole: string | null }) {
+  const mainNavItems = roleNavItems[userRole || ''] || [];
 
   return (
     <aside className="sidebar">
-      
+
       <div className="sidebar-header">
         CapStone Hub
       </div>
@@ -57,7 +64,7 @@ export default function Sidebar({ userRole }: { userRole: string | null }) {
           </ul>
         </nav>
       </div>
-      
+
     </aside>
   );
 }

@@ -78,13 +78,11 @@ var jwtService = service.NewJwtService()
 
 var MockUser = []entity.User{
 	{Model: gorm.Model{ID: 1}, Username: "Admin@sut.ac.th", Password: jwtService.HashPassword("adm1234"), Firstname: "Admin", Lastname: "Security", Email: "pthanathonhodon@gmail.com", Phone: "09622934415", Pass: passNull, GenderID: 1, BranchID: 1, RoleID: 1, StatusID: 1},
-
 	{Model: gorm.Model{ID: 2}, Username: "Teacher1@sut.ac.th", Password: jwtService.HashPassword("tch123"), Firstname: "Teacher1", Lastname: "One", Email: "Teacher1@gmail.com", Phone: "0884567891", Pass: passNull, GenderID: 2, BranchID: 1, RoleID: 2, StatusID: 1},
 	{Model: gorm.Model{ID: 3}, Username: "Teacher2@sut.ac.th", Password: jwtService.HashPassword("tch456"), Firstname: "Teacher2", Lastname: "Two", Email: "Teacher2@gmail.com", Phone: "0696543214", Pass: passNull, GenderID: 1, BranchID: 1, RoleID: 2, StatusID: 1},
 	{Model: gorm.Model{ID: 4}, Username: "Teacher3@sut.ac.th", Password: jwtService.HashPassword("tch789"), Firstname: "Teacher3", Lastname: "Three", Email: "Teacher3@gmail.com", Phone: "0359874658", Pass: passNull, GenderID: 1, BranchID: 1, RoleID: 2, StatusID: 1},
 	{Model: gorm.Model{ID: 5}, Username: "Teacher4@sut.ac.th", Password: jwtService.HashPassword("tch012"), Firstname: "Teacher4", Lastname: "Four", Email: "Teacher4@gmail.com", Phone: "0977890123", Pass: passNull, GenderID: 2, BranchID: 1, RoleID: 2, StatusID: 1},
 	{Model: gorm.Model{ID: 6}, Username: "Teacher5@sut.ac.th", Password: jwtService.HashPassword("tch345"), Firstname: "Teacher5", Lastname: "Five", Email: "Teacher5@gmail.com", Phone: "0988901234", Pass: passNull, GenderID: 1, BranchID: 2, RoleID: 2, StatusID: 1},
-
 	{Model: gorm.Model{ID: 7}, Username: "B6500001@sut.ac.th", Password: jwtService.HashPassword("std123"), Firstname: "Student1", Lastname: "Chanakul", Email: "Student1@gmail.com", Phone: "0911234567", Pass: &passFalse, GenderID: 2, BranchID: 1, RoleID: 3, StatusID: 1},
 	{Model: gorm.Model{ID: 8}, Username: "B6500002@sut.ac.th", Password: jwtService.HashPassword("std456"), Firstname: "Student2", Lastname: "Wattanapong", Email: "Student2@gmail.com", Phone: "0922345678", Pass: &passFalse, GenderID: 1, BranchID: 1, RoleID: 3, StatusID: 1},
 	{Model: gorm.Model{ID: 9}, Username: "B6500003@sut.ac.th", Password: jwtService.HashPassword("std789"), Firstname: "Student3", Lastname: "Sirilak", Email: "Student3@gmail.com", Phone: "0933456789", Pass: &passFalse, GenderID: 2, BranchID: 1, RoleID: 3, StatusID: 1},

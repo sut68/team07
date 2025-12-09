@@ -3,23 +3,23 @@ package entity
 import "gorm.io/gorm"
 
 type User struct {
-    gorm.Model
-    Username string `json:"username" valid:"required~Username is required"`
-    Password string `gorm:"not null" json:"password" valid:"required~Password is required"`
+	gorm.Model
+	Username  string `json:"username" valid:"required~Username is required"`
+	Password  string `gorm:"not null" json:"password" valid:"required~Password is required"`
 	Firstname string `json:"firstname" valid:"required~Firstname is required"`
 	Lastname  string `json:"lastname" valid:"required~Lastname is required"`
 	Email     string `json:"email"`
 	Phone     string `json:"phone"`
-    Pass    *bool   `json:"pass"`
+	Pass      *bool  `json:"pass"`
 
-	GenderID uint   `json:"gender_id" valid:"required~GenderID is required"`
-	Gender   *Gender `gorm:"foreignKey:GenderID" json:"gender"`
-	BranchID uint    `json:"branch_id" valid:"required~BranchID is required"`
-	Branch   *Branch `gorm:"foreignKey:BranchID" json:"branch"`
-    RoleID uint          `json:"role_id" valid:"required~RoleID is required"`
-    Role   *UserRole `gorm:"foreignKey:RoleID" json:"role"`
-    StatusID uint          `json:"status_id" valid:"required~StatusID is required"`
-    Status   *AccountStatus `gorm:"foreignKey:StatusID" json:"status"`
+	GenderID uint           `json:"gender_id" valid:"required~GenderID is required"`
+	Gender   *Gender        `gorm:"foreignKey:GenderID" json:"gender"`
+	BranchID uint           `json:"branch_id" valid:"required~BranchID is required"`
+	Branch   *Branch        `gorm:"foreignKey:BranchID" json:"branch"`
+	RoleID   uint           `json:"role_id" valid:"required~RoleID is required"`
+	Role     *UserRole      `gorm:"foreignKey:RoleID" json:"role"`
+	StatusID uint           `json:"status_id" valid:"required~StatusID is required"`
+	Status   *AccountStatus `gorm:"foreignKey:StatusID" json:"status"`
 
 	GroupProjects []GroupProject `gorm:"foreignKey:TeacherID" json:"group_projects"`
 	GroupMembers  []GroupMember  `gorm:"foreignKey:StudentID" json:"group_members"`
@@ -35,7 +35,5 @@ type User struct {
 	Logs		  []Log           `gorm:"foreignKey:UserID" json:"logs"`
 	RefreshTokens  []RefreshToken `gorm:"foreignKey:UserID" json:"refresh_tokens"`
 	ResetPasswordTokens []ResetPasswordToken `gorm:"foreignKey:UserID" json:"reset_password_tokens"`
-	PasswordHistory []PasswordHistory `gorm:"foreignKey:UserID" json:"password_history"`
-	
+	PasswordHistory     []PasswordHistory    `gorm:"foreignKey:UserID" json:"password_history"`
 }
-
