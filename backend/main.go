@@ -14,7 +14,6 @@ import (
 	"github.com/sut68/team07/backend/middleware"
 	mockdata "github.com/sut68/team07/backend/mockData"
 	"github.com/sut68/team07/backend/service"
-	"github.com/sut68/team07/backend/controller/importuser"
 
 )
 
@@ -49,10 +48,12 @@ func main() {
 	{
 
 		// user ทุก Role สามารถเข้าถึงได้
-		protected.GET("/me", authHandler.Me)
 		protected.GET("/GetChat", chat.GetAllChat)
 		protected.POST("/SendChat", chat.InsertChat)
 		protected.DELETE("/DeleteChat", chat.DeleteChat)
+		protected.GET("/getUserProfile", users.GetUserProfile)
+		protected.PATCH("/updateUserProfile", users.UpdateUserProfile)
+		protected.GET("/me", authHandler.Me)
 
 		adminGroup := protected.Group("/admin")
 		adminGroup.Use(middleware.RoleGuard("Admin"))
@@ -60,7 +61,7 @@ func main() {
 			// ถ้า API ไหนที่แอดมินเข้าถึงได้ ให้นำไปใส่ในนี้
 			adminGroup.GET("/getGender", users.GetGender)
 			adminGroup.GET("/getIssueStatus", issues.GetIssueStatus)
-			adminGroup.POST("/import-users", importuser.ImportUsersHandler)
+			
 		}
 
 		teacherGroup := protected.Group("/teacher")
