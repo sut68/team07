@@ -1,5 +1,6 @@
 "use client";
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { GetUserProfile } from '../../services/user'; // Path ของ service คุณ
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -10,13 +11,35 @@ export default function TeacherLayout({ userRole, children }: { userRole: string
     const topbarHeight = 72;
     const router = useRouter();
 
+    const [userInitial, setUserInitial] = useState("?");
+
+    useEffect(() => {
+        const fetchUserData = async () => {
+            try {
+                const res = await GetUserProfile();
+                // โครงสร้างข้อมูล: res.data.data.firstname (ตามที่คุยกันรอบก่อน)
+                if (res.status === 200 && res.data && res.data.data) {
+                    const userData = res.data.data;
+                    // ใช้ firstname เป็นหลัก ถ้าไม่มีให้ใช้ username
+                    const nameToShow = userData.firstname || userData.username || "?";
+                    // ตัดเอาตัวแรก และแปลงเป็นตัวพิมพ์ใหญ่
+                    setUserInitial(nameToShow.charAt(0).toUpperCase());
+                }
+            } catch (error) {
+                console.error("Error fetching user profile:", error);
+            }
+        };
+
+        fetchUserData();
+    }, []);
+
     const navLinkStyle: React.CSSProperties = { color: 'rgba(255,255,255,0.95)', textDecoration: 'none', fontWeight: 700 };
 
     const menuItems = [
         {
             key: 'profile',
             icon: <UserOutlined />,
-            label: <Link href="/student/profile" style={{ color: 'inherit' }}>โปรไฟล์ของฉัน</Link>,
+            label: <Link href="/profile" style={{ color: 'inherit' }}>โปรไฟล์ของฉัน</Link>,
         },
         {
             key: 'report',
@@ -90,7 +113,7 @@ export default function TeacherLayout({ userRole, children }: { userRole: string
                         )}
                     >
                         <a onClick={(e) => e.preventDefault()} style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#fff' }}>
-                            <Avatar size="large" style={{ backgroundColor: '#fff', color: '#8A011D', fontWeight: 700 }}>S</Avatar>
+                            <Avatar size="large" style={{ backgroundColor: '#fff', color: '#8A011D', fontWeight: 700 }}>{userInitial}</Avatar>
                             <DownOutlined style={{ color: '#fff' }} />
                         </a>
                     </Dropdown>

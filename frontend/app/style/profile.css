@@ -6,7 +6,7 @@
   align-items: center;
   min-height: 100vh;
   background-color: #f5f5f5; /* พื้นหลังสีเทาอ่อนเพื่อให้การ์ดเด่น */
-  font-family: 'zzzTH';
+  font-family: 'Inter', sans-serif;
   padding: 20px;
   border-radius: 16px;
 }
