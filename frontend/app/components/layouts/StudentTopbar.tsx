@@ -73,7 +73,7 @@ export default function TeacherLayout({ userRole, children }: { userRole: string
 
                 <div style={{ position: 'absolute', right: 150, display: 'flex', gap: 40, alignItems: 'center' }}>
                     <Link href="/student/progress" style={navLinkStyle}>ความคืบหน้า</Link>
-                    <Link href="/student/chat" style={navLinkStyle}>แชท</Link>
+                    <Link href="/chat" style={navLinkStyle}>แชท</Link>
                     <Link href="/student/appointments" style={navLinkStyle}>การนัดหมาย</Link>
                     <Link href="/student/projects" style={navLinkStyle}>คลังโครงงาน</Link>
                 </div>
