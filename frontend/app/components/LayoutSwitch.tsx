@@ -17,43 +17,9 @@
 //   const { userRole, isLoading } = useAuth(); // ดึงค่าจาก Context
 //   const isLoginPage = pathname.startsWith("/login");
 
-<<<<<<< HEAD
-  useEffect(() => {
-    const fetchUserRole = async () => {
-      if (isLoginPage) {
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        // NEW: GetMe() ตอนนี้ return res.data โดยตรงแล้ว
-        const userData = await GetMe();
-
-
-        const user = userData.id
-
-
-
-        // ** FIXED: ใช้ userData.role โดยตรง (บรรทัด 31 เดิม) **
-        setUserRole(userData.role);
-      } catch (error) {
-        setUserRole(null);
-        router.push('/login');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchUserRole();
-  }, [isLoginPage, router]);
-
-  if (isLoginPage) return <>{children}</>;
-  if (isLoading || !userRole) return <div style={{ padding: 20, textAlign: "center" }}>Checking authentication...</div>;
-=======
 //   if (isLoginPage) return <>{children}</>;
   
 //   if (isLoading) return <div style={{ padding: 20, textAlign: "center" }}>Loading System...</div>;
->>>>>>> main
 
 //   // Logic เลือก Layout ตาม Role
 //   if (userRole === "Admin") return <AdminSidebar>{children}</AdminSidebar>;
