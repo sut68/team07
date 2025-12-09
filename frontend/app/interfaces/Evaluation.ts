@@ -58,6 +58,18 @@ export interface ISaveEvaluationRequest {
   individual_scores: IIndividualScoreData[];
 }
 
+export interface IPeerScoreData {
+  target_student_id: number;
+  criteria_id: number;
+  criteria_level_id?: number | null;
+  score: number;
+}
+
+export interface ISaveEvaluationPeerRequest {
+  appointment_id: number;
+  scores: IPeerScoreData[];
+}
+
 export interface IEvaluationResultResponse {
   group_scores: IGroupScoreData[];
   individual_scores: IIndividualScoreData[];

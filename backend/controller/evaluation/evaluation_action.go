@@ -79,13 +79,15 @@ func SaveEvaluation(c *gin.Context) {
 
 	for _, item := range req.IndividualScores {
 		apptID := req.AppointmentID
+		teacherID := claims.ID
 		indScore := entity.IndividualScore{
-			Score:           item.Score,
-			CriteriaID:      item.CriteriaID,
-			CriteriaLevelID: item.CriteriaLevelID,
-			AppointmentID:   &apptID,
-			TeacherID:       claims.ID,
-			StudentID:       item.StudentID,
+			Score:              item.Score,
+			CriteriaID:         item.CriteriaID,
+			CriteriaLevelID:    item.CriteriaLevelID,
+			AppointmentID:      &apptID,
+			TeacherID:          &teacherID,
+			StudentEvaluatorID: nil,
+			StudentID:          item.StudentID,
 		}
 		if err := tx.Create(&indScore).Error; err != nil {
 			tx.Rollback()
@@ -97,4 +99,66 @@ func SaveEvaluation(c *gin.Context) {
 	tx.Commit()
 	log.InsertLog(c, 20)
 	c.JSON(http.StatusOK, gin.H{"message": "Evaluation saved successfully!"})
+}
+
+type PeerEvaluationRequest struct {
+	AppointmentID uint `json:"appointment_id"`
+	Scores        []struct {
+		TargetStudentID uint    `json:"target_student_id"`
+		CriteriaID      uint    `json:"criteria_id"`
+		CriteriaLevelID *uint   `json:"criteria_level_id"`
+		Score           float64 `json:"score"`
+	} `json:"scores"`
+}
+
+func SavePeerEvaluation(c *gin.Context) {
+	var req PeerEvaluationRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	evaluatorID := claims.ID
+
+	db := database.DB()
+	tx := db.Begin()
+
+	if err := tx.Where("appointment_id = ? AND student_evaluator_id = ?", req.AppointmentID, evaluatorID).
+		Delete(&entity.IndividualScore{}).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to clear old scores"})
+		return
+	}
+
+	for _, item := range req.Scores {
+		if item.TargetStudentID == evaluatorID {
+			continue
+		}
+
+		apptID := req.AppointmentID
+		score := entity.IndividualScore{
+			Score:              item.Score,
+			CriteriaID:         item.CriteriaID,
+			CriteriaLevelID:    item.CriteriaLevelID,
+			AppointmentID:      &apptID,
+			StudentID:          item.TargetStudentID,
+			StudentEvaluatorID: &evaluatorID,
+			TeacherID:          nil,
+		}
+
+		if err := tx.Create(&score).Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save score"})
+			return
+		}
+	}
+
+	tx.Commit()
+	log.InsertLog(c, 20)
+	c.JSON(http.StatusOK, gin.H{"message": "Peer evaluation saved successfully"})
 }

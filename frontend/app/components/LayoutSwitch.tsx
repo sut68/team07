@@ -1,8 +1,13 @@
 "use client";
-import { usePathname, useRouter } from 'next/navigation';
-import Sidebar from './Sidebar';
-import { useState, useEffect } from 'react';
-import { GetMe } from '../services/login';
+import dynamic from "next/dynamic";
+import { usePathname, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { GetMe } from "../services/login";
+
+// dynamic load layouts
+const AdminSidebar = dynamic(() => import("./layouts/AdminSidebar"), { ssr: false });
+const TeacherTopbar = dynamic(() => import("./layouts/TeacherTopbar"), { ssr: false });
+const StudentTopbar = dynamic(() => import("./layouts/StudentTopbar"), { ssr: false });
 
 export default function LayoutSwitcher({
   children,
@@ -11,63 +16,43 @@ export default function LayoutSwitcher({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-
   const [userRole, setUserRole] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  const isLoginPage = pathname.startsWith('/login');
+  const isLoginPage = pathname.startsWith("/login");
 
   useEffect(() => {
-  const fetchUserRole = async () => {
-   if (isLoginPage) {
-    setIsLoading(false);
-    return;
-   }
+    const fetchUserRole = async () => {
+      if (isLoginPage) {
+        setIsLoading(false);
+        return;
+      }
 
-   try {
-    // NEW: GetMe() ตอนนี้ return res.data โดยตรงแล้ว
-    const userData = await GetMe(); 
-        
+      try {
+        // NEW: GetMe() ตอนนี้ return res.data โดยตรงแล้ว
+        const userData = await GetMe();
+
         // ** FIXED: ใช้ userData.role โดยตรง (บรรทัด 31 เดิม) **
-    setUserRole(userData.role); 
-   } catch (error) {
-    setUserRole(null);
-    router.push('/login');
-   } finally {
-    setIsLoading(false);
-   }
-  };
+        setUserRole(userData.role);
+      } catch (error) {
+        setUserRole(null);
+        router.push('/login');
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  fetchUserRole();
- }, [isLoginPage, router]);
+    fetchUserRole();
+  }, [isLoginPage, router]);
 
-  if (isLoginPage) {
-    return <>{children}</>;
-  }
+  if (isLoginPage) return <>{children}</>;
+  if (isLoading || !userRole) return <div style={{ padding: 20, textAlign: "center" }}>Checking authentication...</div>;
 
-  // ถ้ากำลังโหลด หรือถูก Redirect
-  if (isLoading || !userRole) {
-    // แสดงข้อความ Loading แบบง่ายๆ
-    return <div style={{ padding: '20px', textAlign: 'center' }}>Checking authentication...</div>;
-  }
-
-  // 3. ถ้าทุกอย่างเรียบร้อย แสดง Layout ปกติ
+  if (userRole === "Admin") return <AdminSidebar>{children}</AdminSidebar>;
+  if (userRole === "Teacher") return <TeacherTopbar userRole={userRole}>{children}</TeacherTopbar>;
+  // default -> Student
   return (
-    <div className="app-container">
-      <Sidebar userRole={userRole} />
-      <main className="main-content">
-        {children}
-      </main>
-      <style jsx global>{`
-  .app-container {
-   display: flex;
-   min-height: 100vh;
-  }
-  .main-content {
-   flex-grow: 1;
-   padding: 20px;
-  }
- `}</style>
-    </div>
+    <StudentTopbar userRole={userRole}>
+      {children}
+    </StudentTopbar>
   );
 }

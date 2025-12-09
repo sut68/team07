@@ -14,7 +14,6 @@ func TestIndividual(t *testing.T) {
 		individual := &entity.IndividualScore{
 			Score: 150, // ผิดตรงนี้
 			CriteriaID: 1,
-			TeacherID: 1,
 			StudentID: 1,
 		}
 
@@ -29,7 +28,6 @@ func TestIndividual(t *testing.T) {
 		individual := &entity.IndividualScore{
 			Score: 80,
 			CriteriaID: 0, // ผิดตรงนี้
-			TeacherID: 1,
 			StudentID: 1,
 		}
 
@@ -44,7 +42,6 @@ func TestIndividual(t *testing.T) {
 		individual := &entity.IndividualScore{
 			Score: 80,
 			CriteriaID: 1,
-			TeacherID: 0, // ผิดตรงนี้
 			StudentID: 1,
 		}
 
@@ -59,7 +56,6 @@ func TestIndividual(t *testing.T) {
 		individual := &entity.IndividualScore{
 			Score: 80,
 			CriteriaID: 1,
-			TeacherID: 1,
 			StudentID: 0, // ผิดตรงนี้
 		}
 
