@@ -100,12 +100,13 @@ var MockUser = []entity.User{
 }
 
 var MockGroupProject = []entity.GroupProject{
-	{Model: gorm.Model{ID: 1}, GroupNumber: 1, GroupStatus: "In Process", Membership: 5, TeacherID: &MockUser[1].ID},
-	{Model: gorm.Model{ID: 2}, GroupNumber: 2, GroupStatus: "Pending", Membership: 5, TeacherID: nil},
-	{Model: gorm.Model{ID: 3}, GroupNumber: 3, GroupStatus: "Completed", Membership: 5, TeacherID: nil},
-	{Model: gorm.Model{ID: 4}, GroupNumber: 4, GroupStatus: "In Process", Membership: 5, TeacherID: nil},
-	{Model: gorm.Model{ID: 5}, GroupNumber: 5, GroupStatus: "Pending", Membership: 5, TeacherID: nil},
-	{Model: gorm.Model{ID: 6}, GroupNumber: 6, GroupStatus: "Pending", Membership: 3, TeacherID: nil},
+	{Model: gorm.Model{ID: 1}, GroupNumber: 1, Year: 2568, GroupStatus: "In Process", Membership: 5, TeacherID: nil},
+	{Model: gorm.Model{ID: 2}, GroupNumber: 2, Year: 2568, GroupStatus: "Pending", Membership: 5, TeacherID: nil},
+	{Model: gorm.Model{ID: 3}, GroupNumber: 3, Year: 2568, GroupStatus: "Completed", Membership: 5, TeacherID: nil},
+	{Model: gorm.Model{ID: 4}, GroupNumber: 4, Year: 2568, GroupStatus: "In Process", Membership: 5, TeacherID: nil},
+	{Model: gorm.Model{ID: 5}, GroupNumber: 5, Year: 2568, GroupStatus: "Pending", Membership: 5, TeacherID: nil},
+	{Model: gorm.Model{ID: 6}, GroupNumber: 6, Year: 2568, GroupStatus: "Pending", Membership: 3, TeacherID: nil},
+
 }
 
 var MockGroupMember = []entity.GroupMember{
@@ -121,7 +122,6 @@ var MockGroupMember = []entity.GroupMember{
 	{Model: gorm.Model{ID: 9}, Leader: false, StudentID: 14, GroupProjectID: 4},
 	{Model: gorm.Model{ID: 10}, Leader: true, StudentID: 15, GroupProjectID: 5},
 	{Model: gorm.Model{ID: 11}, Leader: false, StudentID: 16, GroupProjectID: 5},
-
 }
 
 var MockTopics = []entity.Topic{
