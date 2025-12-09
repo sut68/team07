@@ -6,10 +6,12 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Dropdown, Avatar } from 'antd';
 import { DownOutlined, UserOutlined, ExclamationCircleOutlined, LogoutOutlined } from '@ant-design/icons';
-
-export default function TeacherLayout({ userRole, children }: { userRole: string; children?: React.ReactNode }) {
+import { Logout } from '../../services/login';
+import { useAuth } from "../../(modules)/roleCheck/authContext";
+export default function StudentTopbar({ userRole, children }: { userRole: string; children?: React.ReactNode }) {
     const topbarHeight = 72;
     const router = useRouter();
+    const { logoutClient } = useAuth();
 
     const [userInitial, setUserInitial] = useState("?");
 
@@ -34,7 +36,15 @@ export default function TeacherLayout({ userRole, children }: { userRole: string
     }, []);
 
     const navLinkStyle: React.CSSProperties = { color: 'rgba(255,255,255,0.95)', textDecoration: 'none', fontWeight: 700 };
-
+    const handleLogout = async () => {
+        try {
+            await Logout();
+            logoutClient(); // 2. *** สำคัญ *** แจ้ง Client ให้ลบ State ทิ้งทันที
+            router.replace('/login');
+        } catch (error) {
+            router.replace('/login');
+        }
+    };
     const menuItems = [
         {
             key: 'profile',
@@ -55,7 +65,7 @@ export default function TeacherLayout({ userRole, children }: { userRole: string
 
     const onMenuClick = ({ key }: { key: string }) => {
         if (key === 'logout') {
-            router.push('/login');
+            handleLogout();
         }
     };
 
@@ -97,7 +107,8 @@ export default function TeacherLayout({ userRole, children }: { userRole: string
                 <div style={{ position: 'absolute', right: 150, display: 'flex', gap: 40, alignItems: 'center' }}>
                     <Link href="/student/progress" style={navLinkStyle}>ความคืบหน้า</Link>
                     <Link href="/chat" style={navLinkStyle}>แชท</Link>
-                    <Link href="/student/appointments" style={navLinkStyle}>การนัดหมาย</Link>
+                    <Link href="/student/appointment" style={navLinkStyle}>การนัดหมาย</Link>
+                    <Link href="/student/evaluation" style={navLinkStyle}>การประเมิน</Link>
                     <Link href="/student/projects" style={navLinkStyle}>คลังโครงงาน</Link>
                 </div>
                     {/* Dropdown user menu */}

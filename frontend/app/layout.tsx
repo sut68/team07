@@ -1,6 +1,7 @@
 import './globals.css';
-import LayoutSwitcher from './components/LayoutSwitch'; 
 import 'antd/dist/reset.css';
+import { AuthProvider } from '../app/(modules)/roleCheck/authContext'; 
+
 
 export default function RootLayout({
   children,
@@ -10,7 +11,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body> 
-        <LayoutSwitcher>{children}</LayoutSwitcher> 
+        <AuthProvider>
+           {children}
+        </AuthProvider>
       </body>
     </html>
   );

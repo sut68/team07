@@ -1,9 +1,9 @@
 "use client";
 
-export default function AdminDashboardPage() {
+export default function TeacherAppointmentPage() {
     return (
         <div>
-            <h1>Dashboard ผู้เรียน</h1>
+            <h1>Appointment ผู้สอน</h1>
             <p>ยินดีต้อนรับ...</p>
         </div>
     );
