@@ -18,7 +18,7 @@ export default function ProfilePage() {
         if (res.status === 200 && res.data) {
           // Backend ส่งกลับมาเป็น { data: userObject } หรือ userObject โดยตรง ให้เช็คโครงสร้าง
           // สมมติว่าส่งมาแบบ c.JSON(http.StatusOK, gin.H{"data": user})
-          setUser(res.data.data || res.data); 
+          setUser(res.data.data || res.data);
         } else {
           setError("Failed to load profile data");
         }
@@ -61,7 +61,7 @@ export default function ProfilePage() {
   return (
     <div className="profile-container">
       <div className="profile-card">
-        
+
         {/* Header Section: Theme สีแดง */}
         <div className="profile-header">
           <div className="profile-avatar">
@@ -77,9 +77,9 @@ export default function ProfilePage() {
 
         {/* Content Section: ข้อมูล */}
         <div className="profile-content">
-          
+
           <div className="section-title">ข้อมูลส่วนตัว (Personal Information)</div>
-          
+
           <div className="info-grid">
             <div className="info-item">
               <span className="info-label">รหัสนักศึกษา / Username</span>
@@ -118,6 +118,21 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
+          <button
+            onClick={() => router.push('/edit-profile')}
+            style={{
+              marginTop: '20px',
+              padding: '10px 20px',
+              background: 'white',
+              border: '1px solid #9a0120',
+              color: '#9a0120',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: 'bold'
+            }}
+          >
+            แก้ไขข้อมูลติดต่อ
+          </button>
 
         </div>
       </div>
