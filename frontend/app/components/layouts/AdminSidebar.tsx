@@ -26,7 +26,7 @@ export default function AdminSidebar({ children }: SidebarProps) {
   const pathname = usePathname() || '/';
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
-
+  
   const selectedKey = useMemo(() => {
     // Map pathname to menu key; use the first two segments
     const parts = pathname.split('/').filter(Boolean);
