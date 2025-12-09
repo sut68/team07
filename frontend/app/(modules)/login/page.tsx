@@ -6,12 +6,12 @@ import { SignIn, ForgotPassword } from '../../services/login';
 import { SignInInterface, ForgotPasswordInterface } from '../../interfaces/Login';
 import "../../style/login.css"
 import loginbg from "../../../public/image/Background.jpg"
-
+import { useAuth } from "../roleCheck/authContext";
 
 // ********* ลองเพิ่มการเชื่อมการ login ดู ส่วนdesign ยังเเย่อยู่รอคนมาทำต่อ **************
 export default function LoginPage() {
   const router = useRouter();
-
+  const { fetchUser } = useAuth();
   const [inputInfo, setInputInfo] = useState<SignInInterface>({
     username: '',
     password: ''
@@ -55,13 +55,12 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      // เรียกใช้ API Login
       const res = await SignIn(inputInfo);
-      console.log("Login API Call Successful", res.data);
-      //Response จาก Backend: { id, username, role, message }
-      const { role } = res.data;
+      console.log("Login Successful", res.data);
+      
+      await fetchUser(); 
 
-      //เก็บ Access Token และ CSRF Token 
+      const { role } = res.data;
       redirectToDashboard(role);
 
     } catch (err: any) {

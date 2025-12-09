@@ -14,10 +14,10 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
 } from '@ant-design/icons';
-
+import { Logout } from '../../services/login';
 import 'antd/dist/reset.css';
 import './AdminSidebar.css';
-
+import { useAuth } from "../../(modules)/roleCheck/authContext";
 interface SidebarProps {
   children?: ReactNode;
 }
@@ -25,6 +25,7 @@ interface SidebarProps {
 export default function AdminSidebar({ children }: SidebarProps) {
   const pathname = usePathname() || '/';
   const router = useRouter();
+  const { logoutClient } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
   
   const selectedKey = useMemo(() => {
@@ -38,18 +39,23 @@ export default function AdminSidebar({ children }: SidebarProps) {
     { key: '/admin/dashboard', icon: <HomeOutlined />, label: <span>หน้าแรก</span> },
     { key: '/admin/users', icon: <UserOutlined />, label: <span>จัดการผู้ใช้</span> },
     { key: '/admin/projects', icon: <ProjectOutlined />, label: <span>จัดการกลุ่ม</span> },
-    { key: '/admin/appointments', icon: <SettingOutlined />, label: <span>การนัดหมาย</span> },
-    { key: '/admin/evaluations', icon: <SettingOutlined />, label: <span>แบบประเมิน</span> },
     { key: '/admin/reports', icon: <BarChartOutlined />, label: <span>รายงาน</span> },
     { key: '/logout', icon: <LogoutOutlined />, label: <span>ออกจากระบบ</span> },
   ];
-
+  const handleLogout = async () => {
+      try {
+            await Logout(); // 1. แจ้ง Server ให้ลบ Cookie
+            logoutClient(); // 2. *** สำคัญ *** แจ้ง Client ให้ลบ State ทิ้งทันที
+            router.replace('/login');
+        } catch (error) {
+            router.replace('/login');
+        }
+  };
   const onMenuClick = ({ key }: { key: string }) => {
-    // For logout, you might want to run a logout action instead of navigating
-    if (key.endsWith('/logout')) {
-      // placeholder: navigate to login for now
-      router.push('/login');
-      return;
+    // แก้ตรงนี้
+    if (key.endsWith('/logout') || key === 'logout') { // เช็คเผื่อ key เปลี่ยน
+       handleLogout();
+       return;
     }
     router.push(key);
   };

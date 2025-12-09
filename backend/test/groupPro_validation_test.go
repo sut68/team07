@@ -13,9 +13,10 @@ func TestGroupPro(t *testing.T) {
 
 	// --- 1. กรณีข้อมูลถูกต้องครบถ้วน (Happy Path) ---
 	t.Run(`Valid GroupProject`, func(t *testing.T) {
-		id := uint(1) // สร้างตัวแปรเพื่อทำ Pointer
+		id := uint(2) // สร้างตัวแปรเพื่อทำ Pointer
 		groupProject := &entity.GroupProject{
 			GroupNumber: 1,
+			Year: 2560,
 			GroupStatus: "Pending",
 			Membership:  3,
 			TeacherID:   &id, // ใส่ค่าอาจารย์ (pointer)
@@ -31,6 +32,7 @@ func TestGroupPro(t *testing.T) {
 	t.Run(`TeacherID can be null`, func(t *testing.T) {
 		groupProject := &entity.GroupProject{
 			GroupNumber: 1,
+			Year: 2560,
 			GroupStatus: "Pending",
 			Membership:  3,
 			TeacherID:   nil, // เป็นค่าว่าง
@@ -47,6 +49,7 @@ func TestGroupPro(t *testing.T) {
 	t.Run(`GroupNumber must be between 1 and 40`, func(t *testing.T) {
 		groupProject := &entity.GroupProject{
 			GroupNumber: 50, // ผิดตรงนี้ (>40)
+			Year: 2560,
 			GroupStatus: "In Process",
 			Membership:  5,
 			TeacherID:   nil,
@@ -62,6 +65,7 @@ func TestGroupPro(t *testing.T) {
 	t.Run(`GroupStatus is required`, func(t *testing.T) {
 		groupProject := &entity.GroupProject{
 			GroupNumber: 10,
+			Year: 2568,
 			GroupStatus: "", // ผิดตรงนี้ (ว่าง)
 			Membership:  5,
 			TeacherID:   nil,
@@ -77,6 +81,7 @@ func TestGroupPro(t *testing.T) {
 	t.Run(`Membership must be between 3 and 5`, func(t *testing.T) {
 		groupProject := &entity.GroupProject{
 			GroupNumber: 25,
+			Year: 2568,
 			GroupStatus: "In Process",
 			Membership:  10, // ผิดตรงนี้ (>5)
 			TeacherID:   nil,
@@ -87,5 +92,21 @@ func TestGroupPro(t *testing.T) {
 		g.Expect(ok).NotTo(BeTrue())
 		g.Expect(err).NotTo(BeNil())
 		g.Expect(err.Error()).To(Equal("Membership must be between 3 and 5"))
+	})
+
+		t.Run(`Year must be between 2560 and 99999`, func(t *testing.T) {
+		groupProject := &entity.GroupProject{
+			GroupNumber: 25,
+			Year: 2460, // ผิดตรงนี้ (<2560)
+			GroupStatus: "In Process",
+			Membership:  5, 
+			TeacherID:   nil,
+		}
+
+		ok, err := govalidator.ValidateStruct(groupProject)
+
+		g.Expect(ok).NotTo(BeTrue())
+		g.Expect(err).NotTo(BeNil())
+		g.Expect(err.Error()).To(Equal("Year must be between 2560 and 99999"))
 	})
 }

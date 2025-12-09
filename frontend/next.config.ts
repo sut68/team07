@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   experimental: {
     // Your ngrok allowed origins
     // @ts-expect-error valid option
-    allowedDevOrigins: ["localhost:3000", "postaxillary-jaida-spinnable.ngrok-free.dev"],
+    allowedDevOrigins: ["localhost:3000", "postaxillary-jaida-spinnable.ngrok-free.dev","http://26.177.218.219:5173"],
   },
   
 
