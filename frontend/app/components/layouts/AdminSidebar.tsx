@@ -26,7 +26,7 @@ export default function AdminSidebar({ children }: SidebarProps) {
   const pathname = usePathname() || '/';
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
-
+  
   const selectedKey = useMemo(() => {
     // Map pathname to menu key; use the first two segments
     const parts = pathname.split('/').filter(Boolean);
@@ -41,6 +41,7 @@ export default function AdminSidebar({ children }: SidebarProps) {
     { key: '/admin/appointments', icon: <SettingOutlined />, label: <span>การนัดหมาย</span> },
     { key: '/admin/evaluations', icon: <SettingOutlined />, label: <span>แบบประเมิน</span> },
     { key: '/admin/reports', icon: <BarChartOutlined />, label: <span>รายงาน</span> },
+    { key: '/logout', icon: <LogoutOutlined />, label: <span>ออกจากระบบ</span> },
   ];
 
   const onMenuClick = ({ key }: { key: string }) => {
@@ -74,13 +75,6 @@ export default function AdminSidebar({ children }: SidebarProps) {
           />
         </div>
 
-        {/* Logout area at bottom inside sidebar */}
-        <div className="logout-area">
-          <button className="logout-btn" onClick={() => router.push('/login')}>
-            <LogoutOutlined />
-            <span className="label">ออกจากระบบ</span>
-          </button>
-        </div>
       </aside>
 
       {/* Collapse handle on dividing line */}

@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Dropdown, Avatar } from 'antd';
 import { DownOutlined, UserOutlined, ExclamationCircleOutlined, LogoutOutlined } from '@ant-design/icons';
 
-export default function TeacherLayout({ userRole, children }: { userRole: string; children?: React.ReactNode }) {
+export default function StudentTopbar({ userRole, children }: { userRole: string; children?: React.ReactNode }) {
     const topbarHeight = 72;
     const router = useRouter();
 
