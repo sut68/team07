@@ -31,8 +31,8 @@ func main() {
 	r.Use(database.CORSMiddleware())
 
 	// test controller Group
-	r.GET("/group", group.GetGroupProject)
-	r.POST("/addMember", group.PostGroupMember)
+	// r.GET("/group", group.GetGroupProject)
+	// r.POST("/addMember", group.PostGroupMember)
 
 	authHandler := auth.NewLoginHandler()
 
@@ -110,8 +110,8 @@ func main() {
 			studentGroup.DELETE("/deleteProgress", progress.DeleteProgress)
 			
 			// Group
-			// studentGroup.GET("/group", group.GetGroupProject)
-			// studentGroup.POST("/addMember", group.PostGroupMember)
+			studentGroup.GET("/group", group.GetGroupProject)
+			studentGroup.POST("/addMember", group.PostGroupMember)
 
 			// Evaluation and Appointment
 			studentGroup.GET("/myAppointment", appointment.GetMyProjectAndAppointment)

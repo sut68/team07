@@ -2,11 +2,12 @@
 
 import { useState } from 'react';
 import { isAxiosError } from 'axios';
+import CheckRole from '../../roleCheck/protectRollback';
 
 export default function DashboardPage() {
     const role = "Admin";
     const [statusMessage, setStatusMessage] = useState("คลิกปุ่มเพื่อทดสอบ Token");
-
+    CheckRole();
     
     return (
         <div>
