@@ -37,9 +37,9 @@ export default function AdminSidebar({ children }: SidebarProps) {
 
   const items = [
     { key: '/admin/dashboard', icon: <HomeOutlined />, label: <span>หน้าแรก</span> },
-    { key: '/admin/users', icon: <UserOutlined />, label: <span>จัดการผู้ใช้</span> },
-    { key: '/admin/projects', icon: <ProjectOutlined />, label: <span>จัดการกลุ่ม</span> },
-    { key: '/admin/reports', icon: <BarChartOutlined />, label: <span>รายงาน</span> },
+    { key: '/admin/users-manage', icon: <UserOutlined />, label: <span>จัดการผู้ใช้</span> },
+    { key: '/admin/group', icon: <ProjectOutlined />, label: <span>จัดการกลุ่ม</span> },
+    { key: '/admin/issue', icon: <BarChartOutlined />, label: <span>จัดการปัญหา</span> },
     { key: '/logout', icon: <LogoutOutlined />, label: <span>ออกจากระบบ</span> },
   ];
   const handleLogout = async () => {

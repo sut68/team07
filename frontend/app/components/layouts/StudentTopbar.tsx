@@ -96,8 +96,8 @@ export default function StudentTopbar({ userRole, children }: { userRole: string
                 <nav style={{ position: 'absolute', left: 150, display: 'flex', gap: 40 }}>
                     <Link href="/student/dashboard" style={navLinkStyle}>หน้าหลัก</Link>
                     <Link href="/student/group" style={navLinkStyle}>กลุ่มของฉัน</Link>
-                    <Link href="/student/advisors" style={navLinkStyle}>เลือกที่ปรึกษา</Link>
-                    <Link href="/student/projects" style={navLinkStyle}>หัวข้อโครงงาน</Link>
+                    <Link href="/student/selectAdvisor" style={navLinkStyle}>เลือกที่ปรึกษา</Link>
+                    <Link href="/student/topic" style={navLinkStyle}>หัวข้อโครงงาน</Link>
                 </nav>
 
                 <Link href="/student/dashboard" aria-label="หน้าหลัก" className="topbar-logo" style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -107,9 +107,10 @@ export default function StudentTopbar({ userRole, children }: { userRole: string
                 <div style={{ position: 'absolute', right: 150, display: 'flex', gap: 40, alignItems: 'center' }}>
                     <Link href="/student/progress" style={navLinkStyle}>ความคืบหน้า</Link>
                     <Link href="/chat" style={navLinkStyle}>แชท</Link>
+                    {/* <Link href="/student/chat" style={navLinkStyle}>แชท</Link> */}
                     <Link href="/student/appointment" style={navLinkStyle}>การนัดหมาย</Link>
                     <Link href="/student/evaluation" style={navLinkStyle}>การประเมิน</Link>
-                    <Link href="/student/projects" style={navLinkStyle}>คลังโครงงาน</Link>
+                    <Link href="/student/storage" style={navLinkStyle}>คลังโครงงาน</Link>
                 </div>
                     {/* Dropdown user menu */}
                 <div style={{ position: 'absolute', right: 30 }}>
