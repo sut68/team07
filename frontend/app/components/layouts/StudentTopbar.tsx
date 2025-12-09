@@ -95,7 +95,7 @@ export default function StudentTopbar({ userRole, children }: { userRole: string
             >
                 <nav style={{ position: 'absolute', left: 150, display: 'flex', gap: 40 }}>
                     <Link href="/student/dashboard" style={navLinkStyle}>หน้าหลัก</Link>
-                    <Link href="/student/groups" style={navLinkStyle}>กลุ่มของฉัน</Link>
+                    <Link href="/student/group" style={navLinkStyle}>กลุ่มของฉัน</Link>
                     <Link href="/student/advisors" style={navLinkStyle}>เลือกที่ปรึกษา</Link>
                     <Link href="/student/projects" style={navLinkStyle}>หัวข้อโครงงาน</Link>
                 </nav>

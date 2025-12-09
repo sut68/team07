@@ -3,10 +3,10 @@ import api from "./api"; // import ตัว axios ที่คุณตั้�
 import { GroupProject } from "../interfaces/Group"; 
 
 // ดึงข้อมูลกลุ่มทั้งหมด
-export const GetGroupProjects = async () => {
+export const GetGroupProjects = async (year?: number) => {
     // URL ต้องตรงกับที่ Backend router ตั้งไว้ (จาก GroupController.GetGroupProject)
-    // ผมสมมติว่าเป็น "/groupProject" ตาม Convention
-    return await api.get<GroupProject[]>("/student/group"); 
+    const url = year ? `/groupProject?year=${year}` : "/student/group";
+    return await api.get<GroupProject[]>(url); 
 };
 
 // กดเข้าร่วมกลุ่ม
