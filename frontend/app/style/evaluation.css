@@ -1,0 +1,118 @@
+/* การ์ดเมนู */
+.menuCard {
+    background: white;
+    border-radius: 16px;
+    padding: 30px;
+    border: 1px solid #eee;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    transition: all 0.2s ease;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    height: 100%;
+}
+
+.menuCard:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(154, 1, 32, 0.15); /* เงาสีแดง */
+    border-color: #9a0120;
+}
+
+.iconWrapper {
+    width: 80px;
+    height: 80px;
+    background: #fff0f2;
+    color: #9a0120;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    margin-bottom: 20px;
+}
+
+.cardTitle {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.cardDesc {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.container {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+
+.header {
+    background: #333;
+    color: white;
+    padding: 20px 30px;
+}
+
+.friendRow {
+    padding: 24px;
+    border-bottom: 1px solid #eee;
+    transition: background 0.2s;
+}
+
+.friendRow:last-child {
+    border-bottom: none;
+}
+
+.friendRow:hover {
+    background-color: #fafafa;
+}
+
+.avatar {
+    width: 50px;
+    height: 50px;
+    background: #9a0120;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.radioLabel {
+    display: block;
+    padding: 8px 0;
+    font-size: 0.95rem;
+    color: #444;
+}
+
+/* ปุ่มกด */
+.submitBtn {
+    background-color: #9a0120;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 30px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.submitBtn:hover {
+    background-color: #b90226;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(154, 1, 32, 0.2);
+}
+
+.submitBtn:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
