@@ -102,7 +102,7 @@ func GetEvaluationForm(c *gin.Context) {
 		return
 	}
 
-	if appointment.AppointmentTypeID == 3 {
+	if appointment.AppointmentTypeID != 3 { 
 		if appointment.GroupProject.TeacherID == nil || *appointment.GroupProject.TeacherID != claims.ID {
 			c.JSON(http.StatusForbidden, gin.H{"error": "Only advisor can evaluate this section."})
 			return
@@ -126,7 +126,6 @@ func GetEvaluationForm(c *gin.Context) {
 	individualCriteria := []gin.H{}
 
 	for _, cri := range formCriteria {
-
 		levels := []gin.H{}
 		for _, lvl := range cri.CriteriaLevel {
 			levels = append(levels, gin.H{
