@@ -67,15 +67,14 @@ async function DeleteAppointment(id: number | string) {
     return await api.delete(`/teacher/deleteAppointment/${id}`);
 }
 
-// ADMIN
 // สร้างประเภทนัดหมายใหม่
 async function CreateAppointmentType(data: { name: string }) {
-    return await api.post("/admin/appointmentTypes", data);
+    return await api.post("/teacher/appointmentTypes", data);
 }
 
 // ลบประเภทนัดหมาย
 async function DeleteAppointmentType(id: number | string) {
-    return await api.delete(`/admin/appointmentTypes/${id}`);
+    return await api.delete(`/teacher/appointmentTypes/${id}`);
 }
 
 // student

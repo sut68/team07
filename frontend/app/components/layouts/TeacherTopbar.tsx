@@ -116,7 +116,7 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
                         menu={{ items: menuItems, onClick: onMenuClick }}
                         placement="bottomRight"
                         trigger={['click']}
-                        dropdownRender={(menuNode) => (
+                        popupRender={(menuNode) => (
                             <div style={{ minWidth: 220, fontSize: 14, padding: 25 }}>
                                 {menuNode}
                             </div>
