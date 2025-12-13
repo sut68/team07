@@ -2,6 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import { Spin } from 'antd';
 import { CalendarOutlined, ClockCircleOutlined, EnvironmentOutlined, BellOutlined } from '@ant-design/icons';
+import dayjs from 'dayjs';
+import 'dayjs/locale/th';
 import { GetMyProjectAndAppointment } from '../../../services/appointment';
 import '../../../style/appointment.css';
 
@@ -72,9 +74,7 @@ export default function StudentAppointmentPage() {
                                     <div className="detail-text">
                                         <div className="label">วันที่สอบ</div>
                                         <div className="value">
-                                            {new Date(apt.date_time).toLocaleDateString('th-TH', { 
-                                                weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' 
-                                            })}
+                                            {dayjs(apt.date_time).locale('th').format('ddddที่ D MMMM YYYY')}
                                         </div>
                                     </div>
                                 </div>
@@ -87,7 +87,7 @@ export default function StudentAppointmentPage() {
                                     <div className="detail-text">
                                         <div className="label">เวลา</div>
                                         <div className="value">
-                                            {new Date(apt.date_time).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.
+                                            {dayjs(apt.date_time).format('HH:mm')} น.
                                         </div>
                                         <div className="sub-value">ระยะเวลาประมาณ 30 นาที</div>
                                     </div>

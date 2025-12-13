@@ -8,11 +8,6 @@
   animation: fadeIn 0.5s ease;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
 /* --- Header Section --- */
 .page-header {
   display: flex;
@@ -64,26 +59,6 @@
   border-color: #9a0120;
   color: #9a0120;
   background: #fff5f6;
-}
-
-.btn-primary {
-  background-color: #9a0120;
-  color: white;
-  border: none;
-  padding: 0 20px;
-  height: 40px;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: background 0.2s;
-}
-
-.btn-primary:hover {
-  background-color: #7d0019;
-  box-shadow: 0 4px 12px rgba(154, 1, 32, 0.3);
 }
 
 /* --- Calendar Container --- */

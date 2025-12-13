@@ -53,34 +53,6 @@
   font-size: 0.75rem;
 }
 
-/* ปุ่มหลัก (Primary Button) */
-.btn-primary {
-  background-color: #9a0120;
-  color: white;
-  border: none;
-  padding: 10px 24px;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.2s;
-  box-shadow: 0 4px 6px rgba(154, 1, 32, 0.2);
-}
-
-.btn-primary:hover {
-  background-color: #7d0019;
-  transform: translateY(-1px);
-}
-
-.btn-primary:disabled {
-  background-color: #cbd5e1;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
 /* ปุ่มย้อนกลับ */
 .btn-back {
   background: transparent;
