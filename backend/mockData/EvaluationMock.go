@@ -4,51 +4,49 @@ import (
 	"time"
 
 	"github.com/sut68/team07/backend/entity"
-	"gorm.io/gorm"
 )
 
 var MockRoom = []entity.Room{
-	{Model: gorm.Model{ID: 1}, Name: "B1212", Location: "เรียนรวม1", Capacity: 50},
-	{Model: gorm.Model{ID: 2}, Name: "B1213", Location: "เรียนรวม1", Capacity: 50},
-	{Model: gorm.Model{ID: 3}, Name: "B5201", Location: "เรียนรวม2", Capacity: 120},
-	{Model: gorm.Model{ID: 4}, Name: "B5202", Location: "เรียนรวม2", Capacity: 120},
-	{Model: gorm.Model{ID: 5}, Name: "B6501", Location: "Digitech", Capacity: 400},
-	{Model: gorm.Model{ID: 6}, Name: "B6503", Location: "Digitech", Capacity: 200},
+	{Name: "B1212", Location: "เรียนรวม1", Capacity: 50},
+	{Name: "B1213", Location: "เรียนรวม1", Capacity: 50},
+	{Name: "B5201", Location: "เรียนรวม2", Capacity: 120},
+	{Name: "B5202", Location: "เรียนรวม2", Capacity: 120},
+	{Name: "B6501", Location: "Digitech", Capacity: 400},
+	{Name: "B6503", Location: "Digitech", Capacity: 200},
 }
 
 var MockAppointmentType = []entity.AppointmentType{
-	{Model: gorm.Model{ID: 1}, Name: "Topic Defense"},
-	{Model: gorm.Model{ID: 2}, Name: "Progress Report"},
-	{Model: gorm.Model{ID: 3}, Name: "Final Defense"},
+	{Name: "Topic Defense"},
+	{Name: "Progress Report"},
+	{Name: "Final Defense"},
 }
 
 var MockAppointment = []entity.Appointment{
 	{
-		Model: gorm.Model{ID: 1}, StartDateTime: time.Date(2025, 12, 20, 9, 0, 0, 0, time.Local),
+		StartDateTime: time.Date(2025, 12, 20, 9, 0, 0, 0, time.Local),
 		DurationMin: 30, AppointmentStatus: "completed", AppointmentTypeID: 3, RoomID: 1, TeacherID: 2, GroupProjectID: 3,
 	},
 	{
-		Model: gorm.Model{ID: 2}, StartDateTime: time.Date(2025, 12, 25, 13, 30, 0, 0, time.Local),
+		StartDateTime: time.Date(2025, 12, 25, 13, 30, 0, 0, time.Local),
 		DurationMin: 30, AppointmentStatus: "scheduled", AppointmentTypeID: 2, RoomID: 3, TeacherID: 3, GroupProjectID: 1,
 	},
 	{
-		Model: gorm.Model{ID: 3}, StartDateTime: time.Date(2026, 1, 10, 10, 0, 0, 0, time.Local),
+		StartDateTime: time.Date(2026, 1, 10, 10, 0, 0, 0, time.Local),
 		DurationMin: 30, AppointmentStatus: "scheduled", AppointmentTypeID: 3, RoomID: 5, TeacherID: 4, GroupProjectID: 2,
 	},
 }
 
 var MockEvaluation = []entity.Evaluation{
-	{Model: gorm.Model{ID: 1}, Name: "Ethics Test", TotalScore: 5, ForGroupOnly: false, AppointmentTypeID: 3},
-	{Model: gorm.Model{ID: 2}, Name: "Peer Assessment", TotalScore: 5, ForGroupOnly: false, AppointmentTypeID: 3},
-	{Model: gorm.Model{ID: 3}, Name: "Advisor Evaluation", TotalScore: 55, ForGroupOnly: true, AppointmentTypeID: 3},
-	{Model: gorm.Model{ID: 4}, Name: "Committee Evaluation", TotalScore: 35, ForGroupOnly: true, AppointmentTypeID: 3},
+	{Name: "Ethics Test", TotalScore: 5, ForGroupOnly: false, AppointmentTypeID: 3},
+	{Name: "Peer Assessment", TotalScore: 5, ForGroupOnly: false, AppointmentTypeID: 3},
+	{Name: "Advisor Evaluation", TotalScore: 55, ForGroupOnly: true, AppointmentTypeID: 3},
+	{Name: "Committee Evaluation", TotalScore: 35, ForGroupOnly: true, AppointmentTypeID: 3},
 }
 
 var MockCriteria = []entity.Criteria{
 
 	// 1. Ethics Test (5%) - รายบุคคล
 	{
-		Model:        gorm.Model{ID: 1},
 		Name:         "Ethics Exam Score (คะแนนสอบจริยธรรม)",
 		MaxScore:     5,
 		Order:        1,
@@ -63,7 +61,6 @@ var MockCriteria = []entity.Criteria{
 
 	// 2. Peer Assessment (5%) - รายบุคคล
 	{
-		Model:        gorm.Model{ID: 2},
 		Name:         "Collaboration & Attendance (ความร่วมมือ)",
 		MaxScore:     5,
 		Order:        1,
@@ -77,7 +74,6 @@ var MockCriteria = []entity.Criteria{
 	},
 	// 3. Advisor Evaluation (55%) - รายกลุ่ม
 	{
-		Model:        gorm.Model{ID: 3},
 		Name:         "System Completeness (ความสมบูรณ์ระบบ)",
 		MaxScore:     20,
 		Order:        1,
@@ -90,7 +86,6 @@ var MockCriteria = []entity.Criteria{
 		},
 	},
 	{
-		Model:        gorm.Model{ID: 4},
 		Name:         "Documentation (รูปเล่ม)",
 		MaxScore:     15,
 		Order:        2,
@@ -102,7 +97,6 @@ var MockCriteria = []entity.Criteria{
 		},
 	},
 	{
-		Model:        gorm.Model{ID: 5},
 		Name:         "Effort & Process (ความตั้งใจ)",
 		MaxScore:     10,
 		Order:        3,
@@ -114,7 +108,6 @@ var MockCriteria = []entity.Criteria{
 		},
 	},
 	{
-		Model:        gorm.Model{ID: 6},
 		Name:         "Technique & Complexity (ความซับซ้อน)",
 		MaxScore:     10,
 		Order:        4,
@@ -127,7 +120,6 @@ var MockCriteria = []entity.Criteria{
 	},
 	// 4. Committee Evaluation (35%) - รายกลุ่ม (สอบ Final)
 	{
-		Model:        gorm.Model{ID: 7},
 		Name:         "Presentation Skills (การนำเสนอ)",
 		MaxScore:     10,
 		Order:        1,
@@ -139,7 +131,6 @@ var MockCriteria = []entity.Criteria{
 		},
 	},
 	{
-		Model:        gorm.Model{ID: 8},
 		Name:         "Q&A (การตอบคำถาม)",
 		MaxScore:     10,
 		Order:        2,
@@ -151,7 +142,6 @@ var MockCriteria = []entity.Criteria{
 		},
 	},
 	{
-		Model:        gorm.Model{ID: 9},
 		Name:         "System Demo (การสาธิตระบบ)",
 		MaxScore:     15,
 		Order:        3,

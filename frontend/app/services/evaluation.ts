@@ -37,43 +37,40 @@ async function SaveEvaluation(data: ISaveEvaluationRequest) {
     return await api.post("/teacher/evaluation/save", data);
 }
 
-// ADMIN
-
-
 // ดึงโครงสร้างเกณฑ์ทั้งหมด
 async function ListCriteria() {
-    return await api.get("/admin/criteria");
+    return await api.get("/teacher/criteria");
 }
 
 // ดึงรายละเอียดเกณฑ์รายตัว (เพื่อแก้ไข)
 async function GetCriteriaById(id: number | string) {
-    return await api.get(`/admin/criteria/${id}`);
+    return await api.get(`/teacher/criteria/${id}`);
 }
 
 // --- Criteria (หัวข้อคะแนน) ---
 async function CreateCriteria(data: ICreateCriteriaRequest) {
-    return await api.post("/admin/createCriteria", data);
+    return await api.post("/teacher/createCriteria", data);
 }
 
 async function UpdateCriteria(id: number | string, data: Partial<ICreateCriteriaRequest>) {
-    return await api.patch(`/admin/updateCriteria/${id}`, data);
+    return await api.patch(`/teacher/updateCriteria/${id}`, data);
 }
 
 async function DeleteCriteria(id: number | string) {
-    return await api.delete(`/admin/deleteCriteria/${id}`);
+    return await api.delete(`/teacher/deleteCriteria/${id}`);
 }
 
 // --- Criteria Level (ตัวเลือก Rubric) ---
 async function CreateCriteriaLevel(data: ICreateLevelRequest) {
-    return await api.post("/admin/createCriteriaLevel", data);
+    return await api.post("/teacher/createCriteriaLevel", data);
 }
 
 async function UpdateCriteriaLevel(id: number | string, data: Partial<ICreateLevelRequest>) {
-    return await api.patch(`/admin/updateCriteriaLevel/${id}`, data);
+    return await api.patch(`/teacher/updateCriteriaLevel/${id}`, data);
 }
 
 async function DeleteCriteriaLevel(id: number | string) {
-    return await api.delete(`/admin/deleteCriteriaLevel/${id}`);
+    return await api.delete(`/teacher/deleteCriteriaLevel/${id}`);
 }
 
 // student

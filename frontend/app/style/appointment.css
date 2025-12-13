@@ -1,0 +1,235 @@
+/* Container หลัก: การ์ดสีขาว ลอยเด่น */
+.cardContainer {
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08); /* เงานุ่มๆ */
+  border: 1px solid #eaeaea;
+  overflow: hidden; /* เพื่อให้ Header ไม่ล้นขอบมน */
+  transition: transform 0.2s ease;
+  font-family: 'Inter', sans-serif;
+}
+
+/* ส่วนหัวการ์ด: สีแดงธีม SUT */
+.header {
+  background: linear-gradient(135deg, #8A011D 0%, #680012 100%);
+  padding: 24px 30px;
+  color: white;
+  border-bottom: 4px solid rgba(0, 0, 0, 0.1);
+}
+
+.headerTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.headerSubtitle {
+  font-size: 0.95rem;
+  opacity: 0.9;
+  margin-top: 4px;
+  font-weight: 300;
+}
+
+/* ป้ายสถานะ (Badge) */
+.statusBadge {
+  background-color: rgba(255, 255, 255, 0.2);
+  padding: 6px 16px;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(4px);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ส่วนเนื้อหาข้อมูล */
+.content {
+  padding: 32px;
+}
+
+.label {
+  font-size: 0.85rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.value {
+  font-size: 1.15rem;
+  color: #333;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.valueHighlight {
+  color: #8A011D; /* เน้นสีแดง */
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+
+/* เส้นคั่น */
+.divider {
+  height: 1px;
+  background-color: #f0f0f0;
+  margin: 24px 0;
+}
+
+/* กรณีไม่มีนัดหมาย (Empty State) */
+.emptyState {
+  background-color: #fff1f2; /* พื้นแดงอ่อนๆ */
+  border: 2px dashed #fecdd3;
+  border-radius: 12px;
+  color: #9f1239;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  text-align: center;
+}
+
+:root {
+  --primary-color: #9a0120;
+  --primary-hover: #b90226;
+  --bg-color: #f8fafc;
+  --border-color: #e2e8f0;
+}
+
+/* --- Calendar Container --- */
+.calendar-container {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  height: 800px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header ของปฏิทิน */
+.calendar-header {
+  padding: 20px;
+  background: white;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Grid ปฏิทิน */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: 80px repeat(7, 1fr); /* เวลา + 7 วัน */
+  overflow-y: auto;
+  flex: 1;
+}
+
+.time-col {
+  border-right: 1px solid var(--border-color);
+  background: #fdfdfd;
+}
+
+.day-col {
+  border-right: 1px solid #f1f5f9;
+  position: relative;
+  min-width: 120px;
+}
+
+.time-slot {
+  height: 60px; /* สูงช่องละ 1 ชม. */
+  border-bottom: 1px dashed #f1f5f9;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  display: flex;
+  justify-content: center;
+  align-items: start;
+  padding-top: 4px;
+}
+
+/* Slot ที่กดจองได้ */
+.clickable-slot {
+  height: 60px;
+  border-bottom: 1px dashed #f1f5f9;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.clickable-slot:hover {
+  background-color: #fff1f2; /* แดงอ่อนๆ ตอน hover */
+}
+
+/* Slot พักเที่ยง */
+.lunch-break {
+  background-color: #f1f5f9;
+  background-image: repeating-linear-gradient(
+    45deg,
+    #e2e8f0,
+    #e2e8f0 10px,
+    #f1f5f9 10px,
+    #f1f5f9 20px
+  );
+  cursor: not-allowed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+/* แถบเหตุการณ์ (Event Bar) */
+.event-item {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  overflow: hidden;
+  transition: transform 0.1s;
+  z-index: 10;
+}
+.event-item:hover {
+  transform: scale(1.02);
+  z-index: 20;
+}
+
+/* สีของ Event */
+.event-mine {
+  background-color: #9a0120; /* สีแดงธีมเรา */
+  border-left: 3px solid #600010;
+}
+.event-public {
+  background-color: #ea580c; /* สีส้ม (สอบจบ) */
+  border-left: 3px solid #9a3412;
+}
+
+/* --- Modal Styles --- */
+.custom-modal-header {
+  background: var(--primary-color);
+  padding: 16px 24px;
+  color: white;
+  border-radius: 12px 12px 0 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.mode-switch-btn {
+  border: 1px solid var(--border-color);
+  background: white;
+  color: #64748b;
+  font-weight: 500;
+}
+.mode-switch-btn.active {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}

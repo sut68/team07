@@ -94,8 +94,9 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
             >
                 <nav style={{ position: 'absolute', left: 200, display: 'flex', gap: 40 }}>
                     <Link href="/teacher/dashboard" style={navLinkStyle}>หน้าหลัก</Link>
-                    <Link href="/teacher/groups" style={navLinkStyle}>กลุ่มในที่ปรึกษา</Link>
-                    <Link href="/teacher/projects" style={navLinkStyle}>หัวข้อโครงงาน</Link>
+                    <Link href="/teacher/advisory" style={navLinkStyle}>ที่ปรึกษาของฉัน</Link>
+                    <Link href="/teacher/group" style={navLinkStyle}>กลุ่มในที่ปรึกษา</Link>
+                    <Link href="/teacher/topic" style={navLinkStyle}>หัวข้อโครงงาน</Link>
                 </nav>
 
                 <Link href="/teacher/dashboard" aria-label="หน้าหลัก" className="topbar-logo" style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -104,9 +105,10 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
 
                 <div style={{ position: 'absolute', right: 200, display: 'flex', gap: 40, alignItems: 'center' }}>
                     <Link href="/chat" style={navLinkStyle}>แชท</Link>
+                    <Link href="/teacher/progress" style={navLinkStyle}>ความคืบหน้า</Link>
                     <Link href="/teacher/appointment" style={navLinkStyle}>การนัดหมาย</Link>
                     <Link href="/teacher/evaluation" style={navLinkStyle}>การประเมิน</Link>
-                    <Link href="/teacher/projects" style={navLinkStyle}>คลังโครงงาน</Link>
+                    <Link href="/teacher/storage" style={navLinkStyle}>คลังโครงงาน</Link>
                 </div>
                 {/* Dropdown user menu */}
                 <div style={{ position: 'absolute', right: 30 }}>
@@ -114,7 +116,7 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
                         menu={{ items: menuItems, onClick: onMenuClick }}
                         placement="bottomRight"
                         trigger={['click']}
-                        dropdownRender={(menuNode) => (
+                        popupRender={(menuNode) => (
                             <div style={{ minWidth: 220, fontSize: 14, padding: 25 }}>
                                 {menuNode}
                             </div>
