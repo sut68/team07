@@ -7,6 +7,7 @@ import (
 	"github.com/sut68/team07/backend/controller/chat"
 	"github.com/sut68/team07/backend/controller/evaluation"
 	"github.com/sut68/team07/backend/controller/group"
+	"github.com/sut68/team07/backend/controller/importuser"
 	"github.com/sut68/team07/backend/controller/issues"
 	"github.com/sut68/team07/backend/controller/progress"
 	"github.com/sut68/team07/backend/controller/users"
@@ -14,7 +15,6 @@ import (
 	"github.com/sut68/team07/backend/middleware"
 	mockdata "github.com/sut68/team07/backend/mockData"
 	"github.com/sut68/team07/backend/service"
-
 )
 
 func main() {
@@ -41,8 +41,6 @@ func main() {
 	r.POST("/forgot-password", authHandler.ForgotPassword)
 	r.POST("/reset-password", authHandler.ResetPassword)
 
-	
-
 	protected := r.Group("/")
 	protected.Use(middleware.CSRFCheckMiddleware(), middleware.AuthMiddleware())
 	{
@@ -61,7 +59,8 @@ func main() {
 			// ถ้า API ไหนที่แอดมินเข้าถึงได้ ให้นำไปใส่ในนี้
 			adminGroup.GET("/getGender", users.GetGender)
 			adminGroup.GET("/getIssueStatus", issues.GetIssueStatus)
-			
+			adminGroup.POST("/importUsersCSV", importuser.ImportUsersHandler)
+
 		}
 
 		teacherGroup := protected.Group("/teacher")
@@ -86,8 +85,8 @@ func main() {
 			teacherGroup.GET("/evaluation/summary/:group_project_id", evaluation.GetEvaluationSummary)
 			teacherGroup.POST("/evaluation/save", evaluation.SaveEvaluation)
 			// Evaluation and Appointment Admin
-			teacherGroup.POST("/createAppointmentTypes", appointment.CreateAppointmentType) 
-    		teacherGroup.DELETE("/deleteAppointmentTypes/:id", appointment.DeleteAppointmentType)
+			teacherGroup.POST("/createAppointmentTypes", appointment.CreateAppointmentType)
+			teacherGroup.DELETE("/deleteAppointmentTypes/:id", appointment.DeleteAppointmentType)
 			teacherGroup.GET("/criteria", evaluation.ListCriteria)
 			teacherGroup.GET("/criteria/:id", evaluation.GetCriteria)
 			teacherGroup.POST("/createCriteria", evaluation.CreateCriteria)
@@ -108,7 +107,7 @@ func main() {
 			studentGroup.POST("/assignProgress", progress.AssignProGress)
 			studentGroup.POST("/modifyProgress", progress.UpdateProGress)
 			studentGroup.DELETE("/deleteProgress", progress.DeleteProgress)
-			
+
 			// Group
 			studentGroup.GET("/group", group.GetGroupProject)
 			studentGroup.POST("/addMember", group.PostGroupMember)
