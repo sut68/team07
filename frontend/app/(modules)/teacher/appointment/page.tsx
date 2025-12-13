@@ -1,12 +1,15 @@
 "use client";
 import React, { useEffect, useState } from 'react';
-import { Button, Spin, message, Tooltip } from 'antd';
+import { Button, Tooltip, Spin, message } from 'antd';
 import { PlusOutlined, SettingOutlined, AppstoreAddOutlined } from '@ant-design/icons';
+
 import '../../../style/appointment.css';
+
 import CalendarView from '../../../components/appointment/calendarView';
 import AppointmentModal from '../../../components/appointment/bookingModal';
 import RoomConfig from '../../../components/appointment/roomConfig';
 import TypeManager from '../../../components/appointment/typeManager';
+
 import { GetListAppointments, GetRooms, GetAppointmentTypes } from '../../../services/appointment';
 
 export default function TeacherAppointmentPage() {
@@ -46,36 +49,43 @@ export default function TeacherAppointmentPage() {
     }, []);
 
     return (
-        <div className="p-6 max-w-7xl mx-auto animate-fade-in">
-            <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-800 border-l-8 border-[#9a0120] pl-4">
-                        ระบบนัดหมายสอบ
-                    </h1>
-                    <p className="text-gray-500 pl-6 mt-1">จัดการตารางสอบรายบุคคลและแบบอัตโนมัติ</p>
+        <div className="appointment-page">
+            
+            {/* Header: Title & Actions */}
+            <header className="page-header">
+                <div className="header-title">
+                    <h1>ระบบนัดหมายสอบ</h1>
+                    <p>จัดการตารางสอบรายบุคคล (Advisor) และแบบอัตโนมัติ (Final Defense)</p>
                 </div>
                 
-                <div className="flex gap-2">
+                <div className="header-actions">
                     <Tooltip title="จัดการห้องสอบ">
-                        <Button icon={<AppstoreAddOutlined />} onClick={() => setShowRoomModal(true)} />
+                        <button className="btn-icon" onClick={() => setShowRoomModal(true)}>
+                            <AppstoreAddOutlined />
+                        </button>
                     </Tooltip>
+                    
                     <Tooltip title="จัดการประเภทนัดหมาย">
-                        <Button icon={<SettingOutlined />} onClick={() => setShowTypeModal(true)} />
+                        <button className="btn-icon" onClick={() => setShowTypeModal(true)}>
+                            <SettingOutlined />
+                        </button>
                     </Tooltip>
-                    <Button 
-                        type="primary" 
-                        icon={<PlusOutlined />} 
-                        className="bg-[#9a0120] hover:bg-[#b90226] ml-2"
+
+                    <button 
+                        className="btn-primary"
                         onClick={() => { setSelectedAppt(null); setShowBookingModal(true); }}
                     >
-                        สร้างนัดหมาย
-                    </Button>
+                        <PlusOutlined /> สร้างนัดหมาย
+                    </button>
                 </div>
-            </div>
+            </header>
 
-            <div className="calendarContainer">
+            {/* Content: Calendar Grid */}
+            <div className="calendar-wrapper">
                 {loading ? (
-                    <div className="flex justify-center items-center h-96"><Spin size="large" /></div>
+                    <div className="loading-container">
+                        <Spin size="large" />
+                    </div>
                 ) : (
                     <CalendarView 
                         appointments={appointments} 
@@ -84,7 +94,7 @@ export default function TeacherAppointmentPage() {
                 )}
             </div>
 
-            {/* Modals */}
+            {/* Modals (Logic เดิม) */}
             <AppointmentModal
                 visible={showBookingModal}
                 onClose={() => setShowBookingModal(false)}
