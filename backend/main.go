@@ -117,8 +117,8 @@ func main() {
 
 			// Evaluation and Appointment
 			studentGroup.GET("/myAppointment", appointment.GetMyProjectAndAppointment)
+			studentGroup.GET("/evaluation/form", evaluation.GetStudentEvaluationForm)
 			studentGroup.POST("/evaluation/peer", evaluation.SavePeerEvaluation)
-
 		}
 
 		teacherOrStudentGroup := protected.Group("/groupProject")

@@ -21,6 +21,9 @@ async function GetEvaluationProjects(typeId?: number) {
 async function GetEvaluationForm(appointmentId: number | string) {
     return await api.get<IEvaluationFormResponse>(`/teacher/evaluation/form/${appointmentId}`);
 }
+async function GetStudentEvaluationForm() {
+    return await api.get<IEvaluationFormResponse>(`/student/evaluation/form`);
+}
 
 // ดึงคะแนนที่เคยกรอกไว้ (ดูย้อนหลัง/แก้ไข)
 async function GetEvaluationResult(appointmentId: number | string) {
@@ -92,5 +95,6 @@ export {
     DeleteCriteria,
     CreateCriteriaLevel,
     UpdateCriteriaLevel,
-    DeleteCriteriaLevel
+    DeleteCriteriaLevel,
+    GetStudentEvaluationForm
 };

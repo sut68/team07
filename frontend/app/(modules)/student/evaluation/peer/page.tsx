@@ -3,8 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { message, Spin, Empty } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
-import { SavePeerEvaluation } from '../../../../services/evaluation';
-import { GetMyProjectAndAppointment } from '../../../../services/appointment';
+import { SavePeerEvaluation ,GetStudentEvaluationForm } from '../../../../services/evaluation';
 import type { ISaveEvaluationPeerRequest } from '../../../../interfaces/Evaluation';
 import '../../../../style/evaluation.css';
 
@@ -26,11 +25,11 @@ export default function PeerEvaluationPage() {
     useEffect(() => {
         const initData = async () => {
             try {
-                const res = await GetMyProjectAndAppointment();
+                const res = await GetStudentEvaluationForm();
                 if (res.status === 200 && res.data) {
                     
-                    if(res.data.appointment) {
-                        setAppointmentId(res.data.appointment.id);
+                    if (res.data.students) {
+                        setMembers(res.data.students);
                     }
                 }
             } catch (error) {

@@ -102,7 +102,7 @@ func GetEvaluationForm(c *gin.Context) {
 		return
 	}
 
-	if appointment.AppointmentTypeID != 3 { 
+	if appointment.AppointmentTypeID != 3 {
 		if appointment.GroupProject.TeacherID == nil || *appointment.GroupProject.TeacherID != claims.ID {
 			c.JSON(http.StatusForbidden, gin.H{"error": "Only advisor can evaluate this section."})
 			return
@@ -180,6 +180,117 @@ func GetEvaluationForm(c *gin.Context) {
 	})
 }
 
+func GetStudentEvaluationForm(c *gin.Context) {
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	db := database.DB()
+
+	// Find student's group
+	var member entity.GroupMember
+	if err := db.Preload("GroupProject").
+		Where("student_id = ?", claims.ID).
+		First(&member).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "You do not belong to any project group."})
+		return
+	}
+
+	// Find active appointment
+	var appointment entity.Appointment
+	if err := db.Preload("GroupProject.GroupMembers.Student").
+		Preload("AppointmentType").
+		Preload("GroupProject.TopicSelections.Topic").
+		Where("group_project_id = ? AND appointment_status IN ?", member.GroupProjectID, []string{"scheduled", "completed"}).
+		Order("start_date_time DESC").
+		First(&appointment).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "No active appointment found"})
+		return
+	}
+
+	var formCriteria []entity.Criteria
+
+	if err := db.
+		Preload("CriteriaLevel").
+		Preload("Evaluation").
+		Joins("JOIN evaluations ON evaluations.id = criteria.evaluation_id").
+		Where("evaluations.appointment_type_id = ?", appointment.AppointmentTypeID).
+		Order("criteria.order ASC").
+		Find(&formCriteria).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Criteria not found"})
+		return
+	}
+
+	groupCriteria := []gin.H{}
+	individualCriteria := []gin.H{}
+
+	for _, cri := range formCriteria {
+		levels := []gin.H{}
+		for _, lvl := range cri.CriteriaLevel {
+			levels = append(levels, gin.H{
+				"id":          lvl.ID,
+				"description": lvl.Description,
+				"score":       lvl.Score,
+			})
+		}
+
+		data := gin.H{
+			"id":        cri.ID,
+			"name":      cri.Name,
+			"max_score": cri.MaxScore,
+			"levels":    levels,
+		}
+
+		if cri.Evaluation.ForGroupOnly {
+			groupCriteria = append(groupCriteria, data)
+		} else {
+			individualCriteria = append(individualCriteria, data)
+		}
+	}
+
+	students := []gin.H{}
+	for _, member := range appointment.GroupProject.GroupMembers {
+		if member.Student != nil {
+			// Filter out the current student if needed?
+			// Usually peer evaluation includes others.
+			// But let's return all and let frontend filter.
+
+			rawCode := strings.Split(member.Student.Username, "@")[0]
+			displayCode := strings.ToUpper(rawCode)
+			students = append(students, gin.H{
+				"id":         member.Student.ID,
+				"student_id": member.Student.ID,
+				"code":       displayCode,
+				"firstname":  member.Student.Firstname,
+				"lastname":   member.Student.Lastname,
+				"name":       member.Student.Firstname + " " + member.Student.Lastname,
+			})
+		}
+	}
+
+	projectName := fmt.Sprintf("Group %d", appointment.GroupProject.GroupNumber)
+	if len(appointment.GroupProject.TopicSelections) > 0 {
+		if appointment.GroupProject.TopicSelections[0].Topic != nil {
+			projectName = appointment.GroupProject.TopicSelections[0].Topic.Title
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"appointment": gin.H{ // Wrap in appointment object to match frontend expectation?
+			"id": appointment.ID,
+		},
+		"appointment_id":      appointment.ID,
+		"project_id":          appointment.GroupProjectID,
+		"project_name":        projectName,
+		"eval_type":           appointment.AppointmentType.Name,
+		"group_criteria":      groupCriteria,
+		"individual_criteria": individualCriteria,
+		"students":            students,
+	})
+}
+
 func GetEvaluationResult(c *gin.Context) {
 	appointmentID := c.Param("appointment_id")
 
@@ -233,7 +344,7 @@ func GetEvaluationResult(c *gin.Context) {
 
 func GetEvaluationSummary(c *gin.Context) {
 	projectID := c.Param("group_project_id")
-	
+
 	_, err := middleware.GetClaimsFromContext(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
@@ -257,10 +368,10 @@ func GetEvaluationSummary(c *gin.Context) {
 	for _, res := range groupResults {
 		evalName := res.Criteria.Evaluation.Name
 		teacherID := res.TeacherID
-		
+
 		if groupScoresMap[evalName] == nil {
 			groupScoresMap[evalName] = make(map[uint]float64)
-			maxScoreMap[evalName] = res.Criteria.Evaluation.TotalScore 
+			maxScoreMap[evalName] = res.Criteria.Evaluation.TotalScore
 		}
 		groupScoresMap[evalName][teacherID] += res.Score
 	}
@@ -303,7 +414,7 @@ func GetEvaluationSummary(c *gin.Context) {
 	for _, res := range indResults {
 		sID := res.StudentID
 		evalName := res.Criteria.Evaluation.Name
-		
+
 		if studentScores[sID] == nil {
 			studentScores[sID] = make(map[string][]float64)
 			if res.Student != nil {
@@ -321,10 +432,14 @@ func GetEvaluationSummary(c *gin.Context) {
 
 		for evalName, scores := range evals {
 			sum := 0.0
-			for _, s := range scores { sum += s }
+			for _, s := range scores {
+				sum += s
+			}
 			avg := 0.0
-			if len(scores) > 0 { avg = sum / float64(len(scores)) }
-			
+			if len(scores) > 0 {
+				avg = sum / float64(len(scores))
+			}
+
 			myTotalIndScore += avg
 
 			evalList = append(evalList, gin.H{
@@ -335,18 +450,18 @@ func GetEvaluationSummary(c *gin.Context) {
 		}
 
 		individualSummary = append(individualSummary, gin.H{
-			"student_id":   sID,
-			"student_name": studentDetails[sID],
-			"scores":       evalList,
+			"student_id":       sID,
+			"student_name":     studentDetails[sID],
+			"scores":           evalList,
 			"total_individual": fmt.Sprintf("%.2f", myTotalIndScore),
-			"grand_total": fmt.Sprintf("%.2f", totalGroupScore + myTotalIndScore),
+			"grand_total":      fmt.Sprintf("%.2f", totalGroupScore+myTotalIndScore),
 		})
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"project_id":        projectID,
-		"group_total_score": fmt.Sprintf("%.2f", totalGroupScore),
-		"group_details":     groupSummary,
+		"project_id":         projectID,
+		"group_total_score":  fmt.Sprintf("%.2f", totalGroupScore),
+		"group_details":      groupSummary,
 		"individual_details": individualSummary,
 	})
 }
