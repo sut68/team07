@@ -1,261 +1,1113 @@
-/* การ์ดเมนู */
-.menuCard {
-    background: white;
-    border-radius: 16px;
-    padding: 30px;
-    border: 1px solid #eee;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-    transition: all 0.2s ease;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    height: 100%;
+/* =========================================
+   1. GLOBAL LAYOUT & THEME
+   ========================================= */
+.eval-page {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: #f8fafc;
+  min-height: 100vh;
+  padding-bottom: 60px;
 }
 
-.menuCard:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 30px rgba(154, 1, 32, 0.15); /* เงาสีแดง */
-    border-color: #9a0120;
-}
-
-.iconWrapper {
-    width: 80px;
-    height: 80px;
-    background: #fff0f2;
-    color: #9a0120;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2rem;
-    margin-bottom: 20px;
-}
-
-.cardTitle {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 8px;
-}
-
-.cardDesc {
-    font-size: 0.9rem;
-    color: #666;
-}
-
-.container {
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-    overflow: hidden;
-}
-
-.header {
-    background: #333;
-    color: white;
-    padding: 20px 30px;
-}
-
-.friendRow {
-    padding: 24px;
-    border-bottom: 1px solid #eee;
-    transition: background 0.2s;
-}
-
-.friendRow:last-child {
-    border-bottom: none;
-}
-
-.friendRow:hover {
-    background-color: #fafafa;
-}
-
-.avatar {
-    width: 50px;
-    height: 50px;
-    background: #9a0120;
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 1.2rem;
-}
-
-.radioLabel {
-    display: block;
-    padding: 8px 0;
-    font-size: 0.95rem;
-    color: #444;
-}
-
-/* ปุ่มกด */
-.submitBtn {
-    background-color: #9a0120;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 12px 30px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.submitBtn:hover {
-    background-color: #b90226;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(154, 1, 32, 0.2);
-}
-
-.submitBtn:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-}
-
-/* --- Global Theme --- */
-.container {
-  max-width: 1200px;
+.eval-container {
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 0 24px;
 }
 
-/* --- Project Card (Dashboard) --- */
-.projectCard {
+/* --- Sticky Action Bar (แถบบันทึกด้านบน) --- */
+.action-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
   background: white;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  padding: 20px;
-  transition: all 0.2s ease;
+  padding: 16px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  border-bottom: 1px solid #eaeaea;
+  margin-bottom: 32px;
+}
+
+.project-title h1 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.project-meta {
+  font-size: 0.85rem;
+  color: #64748b;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.tag-badge {
+  background: #f1f5f9;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  color: #475569;
+  font-size: 0.75rem;
+}
+
+/* ปุ่มหลัก (Primary Button) */
+.btn-primary {
+  background-color: #9a0120;
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+  box-shadow: 0 4px 6px rgba(154, 1, 32, 0.2);
+}
+
+.btn-primary:hover {
+  background-color: #7d0019;
+  transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
+  background-color: #cbd5e1;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ปุ่มย้อนกลับ */
+.btn-back {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #64748b;
+  font-size: 1.2rem;
+  padding: 8px;
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+.btn-back:hover {
+  background: #f1f5f9;
+  color: #333;
+}
+
+/* หัวข้อ Section */
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 40px 0 20px 0;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.section-header h2 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #9a0120;
+  margin: 0;
+}
+
+/* =========================================
+   2. GROUP ASSESSMENT (CARD GRID)
+   ========================================= */
+.group-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 24px;
+}
+
+.criteria-card {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  padding: 24px;
+  transition: all 0.2s;
+}
+
+.criteria-card:hover {
+  border-color: #9a0120;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+}
+
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.score-pill {
+  background: #fff1f2;
+  color: #9a0120;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+}
+
+/* ตัวเลือก Radio แบบ Custom */
+.rubric-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rubric-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.rubric-item:hover {
+  background-color: #f8fafc;
+}
+
+.rubric-item.active {
+  background-color: #fff1f2;
+  border-color: #9a0120;
+  color: #881337;
+  font-weight: 600;
+}
+
+.comment-box {
+  width: 100%;
+  margin-top: 16px;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fcfcfc;
+  font-family: inherit;
+  resize: vertical;
+}
+
+/* =========================================
+   3. INDIVIDUAL ASSESSMENT (MATRIX TABLE)
+   ========================================= */
+.matrix-container {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+  overflow: hidden; /* เพื่อให้มุมโค้งไม่ขาด */
+}
+
+.matrix-scroll-wrapper {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.eval-table {
+  width: 100%;
+  border-collapse: separate; /* สำคัญมากสำหรับ Sticky */
+  border-spacing: 0;
+}
+
+.eval-table th, 
+.eval-table td {
+  padding: 16px;
+  border-bottom: 1px solid #f1f5f9;
+  border-right: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+/* --- Sticky Header (หัวตาราง) --- */
+.eval-table thead th {
+  background: #f8fafc;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  color: #475569;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  box-shadow: 0 1px 0 #e2e8f0; /* เส้นขอบล่าง */
+}
+
+.th-criteria {
+  min-width: 180px;
+}
+.th-criteria span {
+  display: block;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-weight: 400;
+  margin-top: 4px;
+}
+
+/* --- Sticky First Column (ชื่อนักศึกษา) --- */
+.col-student {
+  position: sticky;
+  left: 0;
+  background: white;
+  z-index: 15;
+  border-right: 2px solid #e2e8f0; /* เส้นแบ่งชัดเจน */
+  min-width: 250px;
+  text-align: left !important;
+}
+
+/* มุมซ้ายบนสุด (ทับซ้อน) */
+.eval-table thead th.col-student {
+  z-index: 30;
+  background: #f1f5f9;
+}
+
+/* --- Master Row (Apply All) --- */
+.row-master {
+  background-color: #fff7ed;
+}
+.row-master td {
+  border-bottom: 2px solid #fdba74;
+}
+.row-master .col-student {
+  background-color: #fff7ed;
+  color: #c2410c;
+  font-weight: 700;
+  border-bottom: 2px solid #fdba74;
+}
+
+/* --- Student Info --- */
+.student-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.avatar {
+  width: 36px;
+  height: 36px;
+  background: #f1f5f9;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+.std-name {
+  font-weight: 600;
+  color: #334155;
+  display: block;
+}
+.std-code {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+/* --- Score Buttons (ปุ่มคะแนน) --- */
+.score-group {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.score-btn {
+  width: 36px;
+  height: 36px;
+  border: 1px solid #cbd5e1;
+  background: white;
+  border-radius: 8px;
+  color: #64748b;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.1s;
+}
+
+.score-btn:hover {
+  border-color: #9a0120;
+  color: #9a0120;
+  background: #fff1f2;
+}
+
+.score-btn.active {
+  background: #9a0120;
+  color: white;
+  border-color: #9a0120;
+  transform: scale(1.1);
+  box-shadow: 0 4px 10px rgba(154, 1, 32, 0.3);
+  font-weight: 700;
+}
+
+/* ปุ่ม Apply All สีส้ม */
+.row-master .score-btn {
+  border-color: #fdba74;
+  color: #c2410c;
+}
+.row-master .score-btn:hover {
+  background: #ffedd5;
+}
+.row-master .score-btn:active {
+  background: #fb923c;
+  color: white;
+}
+
+
+/* ... (ต่อจากโค้ดเดิม) ... */
+
+/* =========================================
+   4. SUMMARY PAGE (หน้าสรุปผล)
+   ========================================= */
+.summary-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+/* การ์ดคะแนนรวมกลุ่ม (ใบใหญ่) */
+.score-overview-card {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  padding: 40px;
+  text-align: center;
+  margin-bottom: 40px;
   position: relative;
   overflow: hidden;
 }
 
-.projectCard:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-  border-color: #9a0120;
-}
-
-.cardStripe {
+.score-overview-card::before {
+  content: '';
   position: absolute;
-  left: 0;
   top: 0;
-  bottom: 0;
-  width: 6px;
-}
-.stripePending { background-color: #f97316; } /* สีส้ม */
-.stripeGraded { background-color: #16a34a; } /* สีเขียว */
-
-.projectInfo h3 {
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin: 0 0 4px 0;
+  left: 0;
+  width: 100%;
+  height: 6px;
+  background: linear-gradient(90deg, #9a0120, #e11d48);
 }
 
-.projectInfo p {
-  font-size: 0.9rem;
-  color: #64748b;
-  margin: 0;
-}
-
-/* --- Evaluation Form Page --- */
-.formHeader {
-  background: linear-gradient(135deg, #9a0120 0%, #7d0019 100%);
-  color: white;
-  padding: 32px;
-  border-radius: 16px 16px 0 0;
-}
-
-.sectionTitle {
-  font-size: 1.25rem;
-  font-weight: 700;
+.big-score-icon {
+  width: 80px;
+  height: 80px;
+  background: #fff1f2;
   color: #9a0120;
-  border-left: 5px solid #9a0120;
-  padding-left: 16px;
-  margin: 40px 0 24px 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  margin: 0 auto 24px auto;
 }
 
-/* Rubric Styles */
-.rubricBox {
-  background-color: #f8fafc;
+.big-score-value {
+  font-size: 4rem;
+  font-weight: 800;
+  color: #1a1a1a;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.big-score-label {
+  font-size: 1.1rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* Grid รายชื่อนักศึกษา */
+.student-score-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.student-score-card {
+  background: white;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 20px;
+  padding: 24px;
+  transition: transform 0.2s;
 }
 
-.rubricOption {
+.student-score-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+  border-color: #cbd5e1;
+}
+
+.student-header {
   display: flex;
   justify-content: space-between;
-  width: 100%;
-  font-size: 1rem;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.student-total {
+  text-align: right;
+}
+.student-total .label {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.student-total .value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #9a0120;
+}
+
+.score-breakdown {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.breakdown-item {
+  background: #f8fafc;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+.breakdown-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  display: block;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.breakdown-value {
+  font-weight: 600;
   color: #334155;
 }
 
-/* Individual Score Table */
-.scoreTableContainer {
-  overflow-x: auto;
+/* =========================================
+   5. CRITERIA MANAGER (MODAL)
+   ========================================= */
+/* จัดการ List ใน Modal */
+.manager-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
-}
-
-.scoreTable {
-  width: 100%;
-  border-collapse: collapse;
+  border-radius: 8px;
   background: white;
+  margin-bottom: 8px;
+  transition: border-color 0.2s;
 }
 
-.scoreTable th {
+.manager-list-item:hover {
+  border-color: #94a3b8;
+}
+
+.item-info h4 {
+  margin: 0;
+  font-size: 1rem;
+  color: #333;
+}
+.item-meta {
+  font-size: 0.85rem;
+  color: #64748b;
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.manager-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Style สำหรับ Collapse Header ของ Antd ให้สวยขึ้น */
+.custom-collapse-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding-right: 12px;
+}
+
+.criteria-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.level-badge {
+  background: #f0f9ff;
+  color: #0284c7;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: 1px solid #bae6fd;
+}
+
+
+/* =========================================
+   6. DASHBOARD PAGE (หน้าหลักประเมินผล)
+   ========================================= */
+
+/* Header เฉพาะหน้า Dashboard */
+.dash-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  background: white;
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+}
+
+.dash-title h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 8px 0;
+  border-left: 5px solid #9a0120;
+  padding-left: 16px;
+}
+.dash-title p {
+  margin: 0 0 0 21px;
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+/* ปุ่ม Config สีขาวขอบเทา */
+.btn-config {
+  background: white;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-config:hover {
+  border-color: #9a0120;
+  color: #9a0120;
+  background: #fff1f2;
+}
+
+/* --- Tabs Styling --- */
+.tabs-wrapper {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.tab-btn {
+  padding: 12px 24px;
+  background: transparent;
+  border: none;
+  font-size: 1rem;
+  color: #64748b;
+  cursor: pointer;
+  font-weight: 500;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s;
+}
+
+.tab-btn:hover {
+  color: #9a0120;
+}
+
+.tab-btn.active {
+  color: #9a0120;
+  border-bottom-color: #9a0120;
+  font-weight: 700;
+}
+
+/* --- Project Grid & Cards --- */
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 24px;
+}
+
+.project-card {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+}
+
+.project-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  border-color: #fca5a5;
+}
+
+/* แถบสีสถานะด้านบนการ์ด */
+.status-bar {
+  height: 6px;
+  width: 100%;
+}
+.status-bar.pending { background-color: #fbbf24; } /* เหลือง (รอตรวจ) */
+.status-bar.graded { background-color: #22c55e; }  /* เขียว (ตรวจแล้ว) */
+
+.card-body {
+  padding: 20px;
+  flex: 1;
+}
+
+.card-top-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.group-tag {
   background: #f1f5f9;
   color: #475569;
-  font-weight: 600;
-  padding: 16px;
-  text-align: left;
-  border-bottom: 2px solid #e2e8f0;
-  white-space: nowrap;
-}
-
-.scoreTable td {
-  padding: 16px;
-  border-bottom: 1px solid #f1f5f9;
-  vertical-align: middle;
-}
-
-.masterRow {
-  background-color: #fff7ed; /* สีส้มอ่อน */
-  border-bottom: 2px solid #fdba74;
-}
-
-.masterLabel {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.8rem;
   font-weight: 700;
-  color: #c2410c;
+  text-transform: uppercase;
+}
+
+.project-name {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 8px 0;
+  line-height: 1.4;
+}
+
+.member-count {
+  font-size: 0.9rem;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Footer ของการ์ด (ปุ่มกด) */
+.card-actions {
+  padding: 16px 20px;
+  border-top: 1px solid #f1f5f9;
+  background: #fafafa;
+  display: flex;
+  gap: 10px;
+}
+
+.btn-card {
+  flex: 1;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-card.eval {
+  background: #9a0120;
+  color: white;
+}
+.btn-card.eval:hover {
+  background: #7d0019;
+}
+
+.btn-card.edit {
+  background: white;
+  border: 1px solid #cbd5e1;
+  color: #64748b;
+}
+.btn-card.edit:hover {
+  border-color: #9a0120;
+  color: #9a0120;
+}
+
+.btn-icon-only {
+  padding: 10px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #64748b;
+}
+.btn-icon-only:hover {
+  border-color: #9a0120;
+  color: #9a0120;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 60px;
+  color: #94a3b8;
+  grid-column: 1 / -1;
+}
+
+/* --- Global Theme & Layout --- */
+.student-page {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: #f8fafc;
+  min-height: 100vh;
+  padding-bottom: 60px;
+}
+
+.student-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+/* Header Title Style */
+.page-title-box {
+  margin-bottom: 32px;
+  border-left: 6px solid #9a0120;
+  padding-left: 20px;
+}
+
+.page-title-box h1 {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #1a1a1a;
+  margin: 0 0 8px 0;
+}
+
+.page-title-box p {
+  color: #64748b;
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* --- Appointment Card (หน้าดูนัดหมาย) --- */
+.appt-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  position: relative;
+}
+
+.appt-header {
+  background: linear-gradient(135deg, #9a0120 0%, #be123c 100%);
+  padding: 24px 32px;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.appt-info h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+  color: white;
+}
+.appt-info p {
+  opacity: 0.9;
+  margin: 0;
+  font-weight: 300;
+}
+
+.status-badge {
+  background: rgba(255,255,255,0.2);
+  padding: 6px 16px;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1px solid rgba(255,255,255,0.3);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-/* Summary Page */
-.summaryCard {
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  padding: 32px;
-  text-align: center;
-  border: 1px solid #e2e8f0;
+.appt-body {
+  padding: 40px 32px;
 }
 
-.bigScore {
-  font-size: 3.5rem;
-  font-weight: 800;
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 32px;
+}
+
+.detail-item {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.icon-circle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.icon-date { background: #fff1f2; color: #9a0120; }
+.icon-time { background: #fff7ed; color: #ea580c; }
+.icon-loc { background: #f0f9ff; color: #0284c7; }
+
+.detail-text .label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.detail-text .value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #334155;
+}
+.detail-text .sub-value {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+.appt-footer {
+  margin-top: 32px;
+  padding: 20px;
+  background: #f8fafc;
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid #f1f5f9;
+}
+
+/* Empty State */
+.empty-state-card {
+  text-align: center;
+  padding: 80px 20px;
+  border: 2px dashed #e2e8f0;
+  border-radius: 16px;
+  background: #fdfdfd;
+}
+
+/* --- Peer Evaluation (หน้าประเมินเพื่อน) --- */
+.peer-form-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.peer-header {
+  margin-bottom: 24px;
+}
+
+.friend-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 16px;
+  transition: border-color 0.2s;
+}
+
+.friend-card:hover {
+  border-color: #9a0120;
+}
+
+.friend-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.friend-avatar {
+  width: 48px;
+  height: 48px;
+  background: #f1f5f9;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #64748b;
+  font-size: 1.2rem;
+}
+
+.rubric-choices {
+  display: grid;
+  gap: 12px;
+}
+
+.rubric-radio {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.rubric-radio:hover {
+  background: #f8fafc;
+}
+
+.rubric-radio.selected {
+  background: #fff1f2;
+  border-color: #9a0120;
   color: #9a0120;
-  line-height: 1;
+  font-weight: 600;
+}
+
+.radio-circle {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #cbd5e1;
+  border-radius: 50%;
+  margin-right: 12px;
+  position: relative;
+}
+
+.rubric-radio.selected .radio-circle {
+  border-color: #9a0120;
+}
+
+.rubric-radio.selected .radio-circle::after {
+  content: '';
+  width: 10px;
+  height: 10px;
+  background: #9a0120;
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.action-footer {
+  position: sticky;
+  bottom: 0;
+  background: white;
+  padding: 16px 24px;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
+}
+
+/* ปุ่มกด (Reused) */
+.btn-back {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  padding: 8px 16px;
+  border-radius: 8px;
+}
+.btn-back:hover {
+  background: #f1f5f9;
+}
+
+.btn-submit {
+  background: #9a0120;
+  color: white;
+  border: none;
+  padding: 12px 32px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-submit:hover {
+  background: #7d0019;
+}
+.btn-submit:disabled {
+  background: #cbd5e1;
+  cursor: not-allowed;
+}
+
+/* --- Student Hub (หน้าเมนูรวม) --- */
+.hub-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+.menu-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 32px;
+  text-align: center;
+  transition: all 0.2s;
+  cursor: pointer;
+  text-decoration: none;
+  display: block;
+}
+
+.menu-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  border-color: #fca5a5;
+}
+
+.menu-icon {
+  width: 80px;
+  height: 80px;
+  background: #fff1f2;
+  color: #9a0120;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin: 0 auto 20px auto;
+}
+
+.menu-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 8px;
+}
+
+.menu-desc {
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+.menu-card.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+.menu-card.disabled .menu-icon {
+  background: #f5f5f5;
+  color: #999;
 }
