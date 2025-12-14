@@ -21,6 +21,8 @@ func ListEvaluationProjects(c *gin.Context) {
 	}
 
 	typeIDStr := c.Query("type_id")
+	mode := c.Query("mode")
+
 	var filterTypeID int
 	if typeIDStr != "" {
 		filterTypeID, _ = strconv.Atoi(typeIDStr)
@@ -28,14 +30,23 @@ func ListEvaluationProjects(c *gin.Context) {
 
 	db := database.DB()
 	var projects []entity.GroupProject
-
-	if err := db.
-		Preload("TopicSelections", func(db *gorm.DB) *gorm.DB {
-			return db.Order("created_at DESC")
+	query := db.Preload("TopicSelections", func(db *gorm.DB) *gorm.DB {
+		return db.Order("created_at DESC")
+	}).Preload("TopicSelections.Topic").
+		Preload("Appointment", func(db *gorm.DB) *gorm.DB {
+			return db.Order("start_date_time DESC")
 		}).
-		Preload("TopicSelections.Topic").
-		Where("teacher_id = ?", claims.ID).
-		Find(&projects).Error; err != nil {
+		Preload("GroupMembers") // Preload members to fix count issue
+
+	if mode == "committee" {
+		query = query.Joins("JOIN appointments ON appointments.group_project_id = group_projects.id").
+			Where("appointments.appointment_type_id = ?", 3).
+			Group("group_projects.id")
+	} else {
+		query = query.Where("teacher_id = ?", claims.ID)
+	}
+
+	if err := query.Find(&projects).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -69,12 +80,29 @@ func ListEvaluationProjects(c *gin.Context) {
 			statusText = "Graded"
 		}
 
+		var appointmentID uint
+		for _, apt := range p.Appointment {
+			if apt.AppointmentStatus == "scheduled" || apt.AppointmentStatus == "completed" {
+				if mode == "committee" {
+					if apt.AppointmentTypeID == 3 {
+						appointmentID = apt.ID
+						break
+					}
+				} else {
+					appointmentID = apt.ID
+					break
+				}
+			}
+		}
+
 		item := gin.H{
-			"id":           p.ID,
-			"group_number": p.GroupNumber,
-			"project_name": projectName,
-			"status":       statusText,
-			"is_graded":    isGraded,
+			"id":             p.ID,
+			"group_number":   p.GroupNumber,
+			"project_name":   projectName,
+			"status":         statusText,
+			"is_graded":      isGraded,
+			"appointment_id": appointmentID,
+			"students":       p.GroupMembers,
 		}
 		response = append(response, item)
 	}
@@ -109,15 +137,41 @@ func GetEvaluationForm(c *gin.Context) {
 		}
 	}
 
+	isAdvisor := appointment.GroupProject.TeacherID != nil && *appointment.GroupProject.TeacherID == claims.ID
+
 	var formCriteria []entity.Criteria
 
-	if err := db.
+	criteriaQuery := db.
 		Preload("CriteriaLevel").
 		Preload("Evaluation").
 		Joins("JOIN evaluations ON evaluations.id = criteria.evaluation_id").
-		Where("evaluations.appointment_type_id = ?", appointment.AppointmentTypeID).
-		Order("criteria.order ASC").
-		Find(&formCriteria).Error; err != nil {
+		Order("criteria.order ASC")
+
+	if appointment.EvaluationID != nil {
+		criteriaQuery = criteriaQuery.Where("evaluations.id = ?", *appointment.EvaluationID)
+	} else {
+		// Fallback Logic
+		criteriaQuery = criteriaQuery.Where("evaluations.appointment_type_id = ?", appointment.AppointmentTypeID)
+
+		var allowedEvaluations []string
+		if appointment.AppointmentTypeID == 3 {
+			if isAdvisor {
+				allowedEvaluations = []string{"Ethics Test", "Advisor Evaluation", "Committee Evaluation"}
+			} else {
+				allowedEvaluations = []string{"Committee Evaluation"}
+			}
+		}
+
+		if len(allowedEvaluations) > 0 {
+			criteriaQuery = criteriaQuery.Where("evaluations.name IN ?", allowedEvaluations)
+		}
+
+		if evalName := c.Query("evaluation_name"); evalName != "" {
+			criteriaQuery = criteriaQuery.Where("evaluations.name = ?", evalName)
+		}
+	}
+
+	if err := criteriaQuery.Find(&formCriteria).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Criteria not found"})
 		return
 	}
@@ -467,30 +521,30 @@ func GetEvaluationSummary(c *gin.Context) {
 }
 
 func GetStudentEvaluationResult(c *gin.Context) {
-    claims, err := middleware.GetClaimsFromContext(c)
-    if err != nil {
-        c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-        return
-    }
-    studentID := claims.ID
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	studentID := claims.ID
 
-    db := database.DB()
-    var indScores []entity.IndividualScore
-    if err := db.Where("student_id = ?", studentID).Find(&indScores).Error; err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch scores"})
-        return
-    }
+	db := database.DB()
+	var indScores []entity.IndividualScore
+	if err := db.Where("student_id = ?", studentID).Find(&indScores).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch scores"})
+		return
+	}
 
-    var totalScore float64 = 0
-    count := 0
-    for _, s := range indScores {
-        totalScore += s.Score
-        count++
-    }
+	var totalScore float64 = 0
+	count := 0
+	for _, s := range indScores {
+		totalScore += s.Score
+		count++
+	}
 
-    c.JSON(http.StatusOK, gin.H{
-        "total_score": totalScore,
-        "average_score": totalScore / float64(count), 
-        "status": "completed",
-    })
+	c.JSON(http.StatusOK, gin.H{
+		"total_score":   totalScore,
+		"average_score": totalScore / float64(count),
+		"status":        "completed",
+	})
 }

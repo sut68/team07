@@ -50,6 +50,7 @@ export interface ICreateAppointmentRequest {
   appointment_type_id: number;
   room_id: number;
   group_project_id: number;
+  evaluation_id?: number;
 }
 
 export interface IAutoScheduleRequest {

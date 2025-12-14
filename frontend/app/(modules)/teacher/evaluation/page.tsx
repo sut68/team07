@@ -12,8 +12,6 @@ import {
 } from '@ant-design/icons';
 import { GetEvaluationProjects } from '../../../services/evaluation';
 import CriteriaManager from '../../../components/evaluation/criteriaManager';
-
-// ใช้ไฟล์ CSS เดียวกับหน้าอื่น
 import '../../../style/evaluation.css';
 
 export default function TeacherEvaluationDashboard() {
@@ -27,10 +25,9 @@ export default function TeacherEvaluationDashboard() {
     const fetchData = async () => {
         setLoading(true);
         try {
-            // Logic: Advisor = type undefined (หรือตาม API กำหนด), Committee = type 3
-            const typeId = activeTab === 'committee' ? 3 : undefined; 
+            const mode = activeTab;
             
-            const res = await GetEvaluationProjects(typeId);
+            const res = await GetEvaluationProjects(undefined, mode);
             
             // กรองข้อมูลซ้ำ (เผื่อ API ส่งมาเบิ้ล)
             const uniqueProjects = Array.from(new Map(res.data.map((item: any) => [item.id, item])).values());
@@ -78,7 +75,7 @@ export default function TeacherEvaluationDashboard() {
                         className={`tab-btn ${activeTab === 'committee' ? 'active' : ''}`}
                         onClick={() => setActiveTab('committee')}
                     >
-                        <CheckCircleOutlined /> สอบกรรมการ (Final Defense)
+                        <CheckCircleOutlined /> สอบโครงงาน (Project Exam)
                     </button>
                 </div>
 
@@ -113,11 +110,17 @@ export default function TeacherEvaluationDashboard() {
 
                                 <div className="card-actions">
                                     {/* ปุ่มประเมิน */}
-                                    <Link href={`/teacher/evaluation/form/${proj.id}`} style={{flex: 1, display: 'flex'}}>
-                                        <button className={`btn-card ${proj.is_graded ? 'edit' : 'eval'}`}>
-                                            <EditOutlined /> {proj.is_graded ? 'แก้ไขคะแนน' : 'ประเมินผล'}
+                                    {proj.appointment_id ? (
+                                        <Link href={`/teacher/evaluation/form/${proj.appointment_id}`} style={{flex: 1, display: 'flex'}}>
+                                            <button className={`btn-card ${proj.is_graded ? 'edit' : 'eval'}`}>
+                                                <EditOutlined /> {proj.is_graded ? 'แก้ไขคะแนน' : 'ประเมินผล'}
+                                            </button>
+                                        </Link>
+                                    ) : (
+                                        <button className="btn-card" disabled style={{flex: 1, opacity: 0.5, cursor: 'not-allowed'}}>
+                                            <ClockCircleOutlined /> ยังไม่มีนัดหมาย
                                         </button>
-                                    </Link>
+                                    )}
 
                                     {/* ปุ่มดูสรุป (แสดงเฉพาะตอนตรวจแล้ว) */}
                                     {proj.is_graded && (

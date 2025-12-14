@@ -25,6 +25,15 @@ export default function BookingModal({ visible, onClose, onSuccess, rooms, types
     const [loading, setLoading] = useState(false);
     const [mode, setMode] = useState<'manual' | 'auto'>('manual');
     const [groups, setGroups] = useState<any[]>([]);
+    const [evaluations, setEvaluations] = useState<any[]>([]); // Store available evaluations
+
+    // Mock evaluations data (In real app, fetch from API based on type)
+    const mockEvaluations = [
+        { id: 1, name: "Ethics Test", type_id: 3 },
+        { id: 2, name: "Peer Assessment", type_id: 3 }, // Usually not for teacher
+        { id: 3, name: "Advisor Evaluation", type_id: 3 },
+        { id: 4, name: "Committee Evaluation", type_id: 3 },
+    ];
 
     const handleSearch = async (value: string) => {
         // if (!value) return; // Allow empty search to get all advised groups
@@ -38,9 +47,23 @@ export default function BookingModal({ visible, onClose, onSuccess, rooms, types
     };
 
     // เมื่อเปลี่ยนประเภทการสอบ ให้โหลดกลุ่มใหม่ตามเงื่อนไข
-    const handleTypeChange = () => {
+    const handleTypeChange = (value: any) => {
+        const typeId = Number(value);
         handleSearch("");
         form.setFieldValue('group_id', undefined); // เคลียร์ค่ากลุ่มที่เลือกไว้
+        form.setFieldValue('evaluation_id', undefined); // Clear evaluation
+
+        // Filter evaluations based on type
+        // Only for Final Defense (Type 3) and Manual mode (Advisor)
+        if (typeId === 3 && mode === 'manual') {
+             // Filter: Advisor can select Ethics or Advisor Eval
+             // Committee Eval is auto for Committee mode (but here we are in Advisor booking?)
+             // User said: "Advisor... select Final Defense... select Evaluation Type"
+             const available = mockEvaluations.filter(e => e.type_id === 3 && (e.name === "Ethics Test" || e.name === "Advisor Evaluation"));
+             setEvaluations(available);
+        } else {
+            setEvaluations([]);
+        }
     };
 
     useEffect(() => {
@@ -114,7 +137,8 @@ export default function BookingModal({ visible, onClose, onSuccess, rooms, types
                     appointment_status: "scheduled",
                     appointment_type_id: values.type_id,
                     room_id: values.room_id,
-                    group_project_id: values.group_id
+                    group_project_id: values.group_id,
+                    evaluation_id: values.evaluation_id
                 };
 
                 if (initialData) {
@@ -254,6 +278,18 @@ export default function BookingModal({ visible, onClose, onSuccess, rooms, types
                                 ))}
                         </Select>
                     </Form.Item>
+
+                    {evaluations.length > 0 && (
+                        <Form.Item name="evaluation_id" label="แบบประเมิน" rules={[{ required: true }]}>
+                            <Select placeholder="เลือกแบบประเมิน">
+                                {evaluations.map(e => (
+                                    <Option key={e.id} value={e.id}>
+                                        {e.name}
+                                    </Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
+                    )}
 
                 </div>
 

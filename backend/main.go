@@ -14,9 +14,9 @@ import (
 	"github.com/sut68/team07/backend/middleware"
 	mockdata "github.com/sut68/team07/backend/mockData"
 	"github.com/sut68/team07/backend/service"
-
 )
-func InsertDataOpen(){
+
+func InsertDataOpen() {
 	Data := database.DB()
 	mockdata.InsertMock(Data)
 }
@@ -25,7 +25,7 @@ func main() {
 	database.ConnectDatabase()
 	database.SetUpDatabase()
 	//========INSERT MOCK DATA================ ถ้าอยากสร้างข้อมูลปลอมให้เอา comment ออก
-	// InsertDataOpen()
+	//InsertDataOpen()
 	//=========================================
 	service.InitEmailConfig()
 	service.StartCleanupWorker(database.DB())
@@ -42,8 +42,6 @@ func main() {
 	r.POST("/refresh", authHandler.Refresh)
 	r.POST("/forgot-password", authHandler.ForgotPassword)
 	r.POST("/reset-password", authHandler.ResetPassword)
-
-	
 
 	protected := r.Group("/")
 	protected.Use(middleware.CSRFCheckMiddleware(), middleware.AuthMiddleware())
@@ -63,7 +61,7 @@ func main() {
 			// ถ้า API ไหนที่แอดมินเข้าถึงได้ ให้นำไปใส่ในนี้
 			adminGroup.GET("/getGender", users.GetGender)
 			adminGroup.GET("/getIssueStatus", issues.GetIssueStatus)
-			
+
 		}
 
 		teacherGroup := protected.Group("/teacher")
@@ -88,8 +86,8 @@ func main() {
 			teacherGroup.GET("/evaluation/summary/:group_project_id", evaluation.GetEvaluationSummary)
 			teacherGroup.POST("/evaluation/save", evaluation.SaveEvaluation)
 			// Evaluation and Appointment Admin
-			teacherGroup.POST("/createAppointmentTypes", appointment.CreateAppointmentType) 
-    		teacherGroup.DELETE("/deleteAppointmentTypes/:id", appointment.DeleteAppointmentType)
+			teacherGroup.POST("/createAppointmentTypes", appointment.CreateAppointmentType)
+			teacherGroup.DELETE("/deleteAppointmentTypes/:id", appointment.DeleteAppointmentType)
 			teacherGroup.GET("/criteria", evaluation.ListCriteria)
 			teacherGroup.GET("/criteria/:id", evaluation.GetCriteria)
 			teacherGroup.POST("/createCriteria", evaluation.CreateCriteria)
@@ -110,7 +108,7 @@ func main() {
 			studentGroup.POST("/assignProgress", progress.AssignProGress)
 			studentGroup.POST("/modifyProgress", progress.UpdateProGress)
 			studentGroup.DELETE("/deleteProgress", progress.DeleteProgress)
-			
+
 			// Group
 			studentGroup.GET("/group", group.GetGroupProject)
 			studentGroup.POST("/addMember", group.PostGroupMember)

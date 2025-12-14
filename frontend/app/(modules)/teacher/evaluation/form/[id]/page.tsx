@@ -25,10 +25,23 @@ export default function EvaluationFormPage() {
     const [indScores, setIndScores] = useState<Record<string, any>>({});
     const [comments, setComments] = useState<Record<number, string>>({});
 
+    const [evalType, setEvalType] = useState<string | null>(null);
+    const [showSelector, setShowSelector] = useState(false);
+
     useEffect(() => {
         const init = async () => {
             try {
                 const formRes = await GetEvaluationForm(appointmentId);
+                
+                const allCriteria = [...(formRes.data.group_criteria || []), ...(formRes.data.individual_criteria || [])];
+                const hasEthics = allCriteria.some((c: any) => c.name && c.name.includes("Ethics"));
+                const hasAdvisor = allCriteria.some((c: any) => c.name && c.name.includes("Advisor"));
+                const hasCommittee = allCriteria.some((c: any) => c.name && c.name.includes("Committee"));
+                
+                if ((hasEthics && hasAdvisor) || (hasAdvisor && hasCommittee) || (hasEthics && hasCommittee)) {
+                    setShowSelector(true);
+                }
+
                 setFormData(formRes.data);
 
                 try {
@@ -61,6 +74,20 @@ export default function EvaluationFormPage() {
         };
         init();
     }, [appointmentId]);
+
+    const handleSelectType = async (type: string) => {
+        setLoading(true);
+        setShowSelector(false);
+        setEvalType(type);
+        try {
+            const res = await GetEvaluationForm(appointmentId, type);
+            setFormData(res.data);
+        } catch (error) {
+            message.error("Failed to load selected form");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleGroupChange = (criteriaId: number, score: number, levelId: number) => {
         setGroupScores(prev => ({ ...prev, [criteriaId]: { score, levelId } }));
@@ -115,6 +142,30 @@ export default function EvaluationFormPage() {
     };
 
     if (loading) return <div style={{display:'flex', justifyContent:'center', marginTop: 100}}><Spin size="large" /></div>;
+
+    if (showSelector) {
+        return (
+            <div className="eval-page" style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh'}}>
+                <div style={{textAlign: 'center', background: 'white', padding: 40, borderRadius: 16, boxShadow: '0 4px 12px rgba(0,0,0,0.1)'}}>
+                    <h2 style={{marginBottom: 24}}>เลือกประเภทการประเมิน (Select Evaluation Type)</h2>
+                    <div style={{display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap'}}>
+                        <button className="btn-primary" onClick={() => handleSelectType("Ethics Test")}>
+                            Ethics Test (สอบจริยธรรม)
+                        </button>
+                        <button className="btn-primary" style={{background: '#0f172a'}} onClick={() => handleSelectType("Advisor Evaluation")}>
+                            Advisor Evaluation (ประเมินโดยที่ปรึกษา)
+                        </button>
+                        <button className="btn-primary" style={{background: '#b91c1c'}} onClick={() => handleSelectType("Committee Evaluation")}>
+                            Committee Evaluation (ประเมินโดยกรรมการ)
+                        </button>
+                    </div>
+                    <button className="btn-back" style={{marginTop: 24}} onClick={() => router.back()}>
+                        ยกเลิก
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="eval-page">

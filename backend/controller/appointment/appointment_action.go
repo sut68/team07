@@ -108,6 +108,11 @@ func CreateAppointment(c *gin.Context) {
 			c.JSON(http.StatusForbidden, gin.H{"error": "You are not the advisor of this group."})
 			return
 		}
+	} else {
+		if appointment.EvaluationID == nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Evaluation Type is required for Final Defense"})
+			return
+		}
 	}
 
 	var existingAppt entity.Appointment
@@ -263,6 +268,13 @@ func AutoCreateAppointments(c *gin.Context) {
 			TeacherID:         claims.ID,
 			GroupProjectID:    group.ID,
 		}
+
+		// Auto-assign Committee Evaluation (ID 4) for Final Defense (Type 3)
+		if req.AppointmentTypeID == 3 {
+			evalID := uint(4)
+			appt.EvaluationID = &evalID
+		}
+
 		if err := tx.Create(&appt).Error; err != nil {
 			tx.Rollback()
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create appointments"})
