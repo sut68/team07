@@ -34,6 +34,9 @@ async function GetEvaluationResult(appointmentId: number | string) {
 async function GetEvaluationSummary(groupProjectId: number | string) {
     return await api.get<IEvaluationSummaryResponse>(`/teacher/evaluation/summary/${groupProjectId}`);
 }
+async function GetStudentEvaluationResult() {
+    return await api.get<IEvaluationResultResponse>(`/student/evaluation/result`);
+}
 
 // บันทึกคะแนน (Save)
 async function SaveEvaluation(data: ISaveEvaluationRequest) {
@@ -96,5 +99,6 @@ export {
     CreateCriteriaLevel,
     UpdateCriteriaLevel,
     DeleteCriteriaLevel,
-    GetStudentEvaluationForm
+    GetStudentEvaluationForm,
+    GetStudentEvaluationResult
 };

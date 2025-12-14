@@ -6,6 +6,7 @@ import dayjs from 'dayjs';
 import 'dayjs/locale/th';
 import { GetMyProjectAndAppointment } from '../../../services/appointment';
 import '../../../style/appointment.css';
+import '../../../globals.css';
 
 export default function StudentAppointmentPage() {
     const [data, setData] = useState<any>(null);

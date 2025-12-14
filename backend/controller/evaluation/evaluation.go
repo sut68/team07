@@ -465,3 +465,32 @@ func GetEvaluationSummary(c *gin.Context) {
 		"individual_details": individualSummary,
 	})
 }
+
+func GetStudentEvaluationResult(c *gin.Context) {
+    claims, err := middleware.GetClaimsFromContext(c)
+    if err != nil {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+        return
+    }
+    studentID := claims.ID
+
+    db := database.DB()
+    var indScores []entity.IndividualScore
+    if err := db.Where("student_id = ?", studentID).Find(&indScores).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch scores"})
+        return
+    }
+
+    var totalScore float64 = 0
+    count := 0
+    for _, s := range indScores {
+        totalScore += s.Score
+        count++
+    }
+
+    c.JSON(http.StatusOK, gin.H{
+        "total_score": totalScore,
+        "average_score": totalScore / float64(count), 
+        "status": "completed",
+    })
+}

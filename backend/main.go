@@ -118,6 +118,7 @@ func main() {
 			// Evaluation and Appointment
 			studentGroup.GET("/myAppointment", appointment.GetMyProjectAndAppointment)
 			studentGroup.GET("/evaluation/form", evaluation.GetStudentEvaluationForm)
+			studentGroup.GET("/evaluation/result", evaluation.GetStudentEvaluationResult)
 			studentGroup.POST("/evaluation/peer", evaluation.SavePeerEvaluation)
 		}
 

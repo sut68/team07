@@ -210,7 +210,7 @@
   padding: 24px 32px;
   color: white;
   display: flex;
-  border-radius: 8px;
+  border-radius: 12px;
   justify-content: space-between;
   align-items: center;
 }
@@ -224,7 +224,7 @@
 .appt-info p {
   opacity: 0.9;
   margin: 0;
-  font-weight: 300;
+  font-weight: 600;
 }
 
 .status-badge {
@@ -307,4 +307,37 @@
   border: 2px dashed #e2e8f0;
   border-radius: 16px;
   background: #fdfdfd;
+}
+
+.student-page {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: #f8fafc;
+  min-height: 100vh;
+  padding-bottom: 60px;
+}
+
+.student-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+/* Header Title Style */
+.page-title-box {
+  margin-bottom: 32px;
+  border-left: 6px solid #9a0120;
+  padding-left: 20px;
+}
+
+.page-title-box h1 {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #1a1a1a;
+  margin: 0 0 8px 0;
+}
+
+.page-title-box p {
+  color: #64748b;
+  font-size: 1rem;
+  margin: 0;
 }

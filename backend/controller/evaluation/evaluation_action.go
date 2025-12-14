@@ -112,53 +112,70 @@ type PeerEvaluationRequest struct {
 }
 
 func SavePeerEvaluation(c *gin.Context) {
-	var req PeerEvaluationRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+    var req PeerEvaluationRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
 
-	claims, err := middleware.GetClaimsFromContext(c)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-		return
-	}
-	evaluatorID := claims.ID
+    claims, err := middleware.GetClaimsFromContext(c)
+    if err != nil {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+        return
+    }
+    evaluatorID := claims.ID
 
-	db := database.DB()
-	tx := db.Begin()
+    db := database.DB()
+    tx := db.Begin()
 
-	if err := tx.Where("appointment_id = ? AND student_evaluator_id = ?", req.AppointmentID, evaluatorID).
-		Delete(&entity.IndividualScore{}).Error; err != nil {
-		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to clear old scores"})
-		return
-	}
+    for _, item := range req.Scores {
+        if item.TargetStudentID == evaluatorID {
+            continue
+        }
 
-	for _, item := range req.Scores {
-		if item.TargetStudentID == evaluatorID {
-			continue
-		}
+        var apptIDPtr *uint
+        if req.AppointmentID > 0 {
+            apptID := req.AppointmentID
+            apptIDPtr = &apptID
+        }
 
-		apptID := req.AppointmentID
-		score := entity.IndividualScore{
-			Score:              item.Score,
-			CriteriaID:         item.CriteriaID,
-			CriteriaLevelID:    item.CriteriaLevelID,
-			AppointmentID:      &apptID,
-			StudentID:          item.TargetStudentID,
-			StudentEvaluatorID: &evaluatorID,
-			TeacherID:          nil,
-		}
+        var existingScore entity.IndividualScore
+        result := tx.Where("student_evaluator_id = ? AND student_id = ? AND criteria_id = ?", 
+                           evaluatorID, item.TargetStudentID, item.CriteriaID).
+                           Find(&existingScore)
 
-		if err := tx.Create(&score).Error; err != nil {
-			tx.Rollback()
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save score"})
-			return
-		}
-	}
+        if result.Error != nil {
+            tx.Rollback()
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+            return
+        }
 
-	tx.Commit()
-	log.InsertLog(c, 20)
-	c.JSON(http.StatusOK, gin.H{"message": "Peer evaluation saved successfully"})
+        if result.RowsAffected > 0 {
+            existingScore.Score = item.Score
+            existingScore.AppointmentID = apptIDPtr
+            if err := tx.Save(&existingScore).Error; err != nil {
+                tx.Rollback()
+                c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update score"})
+                return
+            }
+        } else {
+            newScore := entity.IndividualScore{
+                Score:              item.Score,
+                CriteriaID:         item.CriteriaID,
+                CriteriaLevelID:    item.CriteriaLevelID,
+                AppointmentID:      apptIDPtr,
+                StudentID:          item.TargetStudentID,
+                StudentEvaluatorID: &evaluatorID,
+                TeacherID:          nil,
+            }
+            if err := tx.Create(&newScore).Error; err != nil {
+                tx.Rollback()
+                c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create score"})
+                return
+            }
+        }
+    }
+
+    tx.Commit()
+    c.JSON(http.StatusOK, gin.H{"message": "Peer evaluation saved successfully"})
 }
