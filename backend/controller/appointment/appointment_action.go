@@ -13,13 +13,21 @@ import (
 
 func SearchGroup(c *gin.Context) {
 	keyword := c.Query("keyword")
+	typeID := c.Query("type_id")
+	mode := c.Query("mode")
 
 	claims, _ := middleware.GetClaimsFromContext(c)
 	db := database.DB()
 
-	query := db.Select("id", "group_number", "group_status").
-		Where("group_status IN ?", []string{"Pending", "In Process"}).
-		Where("teacher_id = ?", claims.ID)
+	query := db.Select("id", "group_number", "group_status")
+
+	if mode == "manual" {
+		query = query.Where("teacher_id = ?", claims.ID)
+	} else if typeID == "3" {
+		query = query.Where("group_status IN ?", []string{"Pending", "In Process"})
+	} else {
+		query = query.Where("teacher_id = ?", claims.ID)
+	}
 
 	if keyword != "" {
 		query = query.Where("name_project LIKE ? OR CAST(group_number AS TEXT) LIKE ?", "%"+keyword+"%", "%"+keyword+"%")
@@ -69,7 +77,7 @@ func DeleteAppointment(c *gin.Context) {
 	}
 
 	tx.Commit()
-	log.InsertLog(c,14)
+	log.InsertLog(c, 14)
 	c.JSON(http.StatusOK, gin.H{"message": "Appointment deleted successfully"})
 }
 
@@ -132,7 +140,7 @@ func CreateAppointment(c *gin.Context) {
 	}
 
 	tx.Commit()
-	log.InsertLog(c,15)
+	log.InsertLog(c, 15)
 	c.JSON(http.StatusCreated, gin.H{"message": "Appointment created successfully", "data": appointment})
 }
 
@@ -162,7 +170,7 @@ func UpdateAppointment(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update appointment: " + err.Error()})
 		return
 	}
-	log.InsertLog(c,16)
+	log.InsertLog(c, 16)
 	c.JSON(http.StatusOK, gin.H{"message": "Appointment updated successfully", "data": existingAppt})
 }
 
@@ -178,7 +186,7 @@ func CreateRoom(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	log.InsertLog(c,17)
+	log.InsertLog(c, 17)
 	c.JSON(http.StatusCreated, gin.H{"data": room})
 }
 
@@ -270,7 +278,7 @@ func AutoCreateAppointments(c *gin.Context) {
 	}
 
 	tx.Commit()
-	log.InsertLog(c,15)
+	log.InsertLog(c, 15)
 	c.JSON(http.StatusCreated, gin.H{
 		"message":       "Auto-scheduled successfully!",
 		"groups_booked": count,

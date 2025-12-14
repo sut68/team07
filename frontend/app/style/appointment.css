@@ -74,11 +74,13 @@
 /* --- The Timetable Grid (หัวใจสำคัญ) --- */
 .timetable-container {
   display: grid;
-  /* Col 1 = เวลา (60px), Col 2-8 = 7 วัน */
   grid-template-columns: 60px repeat(7, 1fr);
-  /* Row 1 = Header, Row 2-12 = 08:00 - 18:00 */
-  grid-template-rows: 50px repeat(11, 1fr); 
-  height: 800px;
+
+  grid-template-rows:
+    50px
+    repeat(12, 60px);
+
+  height: auto;
   overflow-y: auto;
 }
 
@@ -104,19 +106,17 @@
   border-bottom-color: #9a0120;
 }
 
-/* Time Label (08:00, 09:00...) */
 .time-label {
   display: flex;
-  align-items: start;
+  align-items: flex-start;
   justify-content: center;
-  padding-top: 8px;
+  padding-top: 4px;
   font-size: 0.75rem;
   color: #94a3b8;
   border-right: 1px solid #e2e8f0;
   background: white;
-  position: relative;
-  top: -10px; /* ขยับให้ตรงเส้น */
 }
+
 
 /* Grid Cells (ช่องตาราง) */
 .grid-cell {
@@ -130,56 +130,85 @@
   background-color: #fafafa;
 }
 
-/* พักเที่ยง 12:00 */
-.lunch-break-row {
-  background-color: #f1f5f9;
-  background-image: repeating-linear-gradient(45deg, #e2e8f0 0, #e2e8f0 1px, #f1f5f9 0, #f1f5f9 50%);
-  background-size: 10px 10px;
+.lunch-break-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
   pointer-events: none;
+  z-index: 3;
+
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  letter-spacing: 0.05em;
+
+  background: rgba(241, 245, 249, 0.85);
 }
 
-/* --- Appointment Card (ตัวนัดหมายที่ลอยบนตาราง) --- */
+/* --- Appointment Block (แนว timetable) --- */
 .appt-card {
   position: absolute;
-  left: 4px;
-  right: 4px;
-  /* Top/Height จะถูกคำนวณใน React inline style */
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-size: 0.8rem;
+  left: 2px;
+  right: 2px;
+
+  padding: 4px 8px;
+  border-radius: 4px;        /* สี่เหลี่ยม */
+  font-size: 0.75rem;
   cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  transition: transform 0.2s, z-index 0.2s;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  z-index: 5;
   overflow: hidden;
-  z-index: 1;
+  white-space: nowrap;
 }
 
+
+/* hover เบา ๆ */
 .appt-card:hover {
-  transform: scale(1.02);
-  z-index: 10;
-  box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+  filter: brightness(0.97);
 }
 
-/* สีตามประเภท */
+/* Manual */
 .appt-manual {
-  background-color: #fff1f2; /* แดงอ่อน */
-  border-left: 4px solid #9a0120;
-  color: #881337;
+  background: #fee2e2;
+  border-left: 4px solid #dc2626;
+  color: #7f1d1d;
 }
 
+
+/* Auto */
 .appt-auto {
-  background-color: #fff7ed; /* ส้มอ่อน */
+  background: #ffedd5;
   border-left: 4px solid #ea580c;
-  color: #9a3412;
+  color: #7c1212;
+}
+
+
+.appt-time {
+  font-weight: 600;
+  font-size: 0.7rem;
+  opacity: 0.85;
 }
 
 .appt-title {
   font-weight: 700;
-  display: block;
-  white-space: nowrap;
+  font-size: 0.75rem;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+
+/* ห้อง */
+.appt-room {
+  font-size: 0.65rem;
+  opacity: 0.7;
+  margin-top: 2px;
+}
+
 
 .appt-time {
   font-size: 0.7rem;

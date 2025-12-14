@@ -6,6 +6,8 @@ import dayjs from 'dayjs';
 import {
     SearchGroup, GetRandomGroup, CreateAppointment, AutoCreateAppointments, UpdateAppointment, DeleteAppointment
 } from '../../services/appointment';
+import isoWeek from 'dayjs/plugin/isoWeek';
+dayjs.extend(isoWeek);
 
 const { Option } = Select;
 
@@ -23,6 +25,23 @@ export default function BookingModal({ visible, onClose, onSuccess, rooms, types
     const [loading, setLoading] = useState(false);
     const [mode, setMode] = useState<'manual' | 'auto'>('manual');
     const [groups, setGroups] = useState<any[]>([]);
+
+    const handleSearch = async (value: string) => {
+        // if (!value) return; // Allow empty search to get all advised groups
+        try {
+            const typeId = form.getFieldValue('type_id');
+            const res = await SearchGroup(value, typeId, mode);
+            setGroups(res.data);
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    // เมื่อเปลี่ยนประเภทการสอบ ให้โหลดกลุ่มใหม่ตามเงื่อนไข
+    const handleTypeChange = () => {
+        handleSearch("");
+        form.setFieldValue('group_id', undefined); // เคลียร์ค่ากลุ่มที่เลือกไว้
+    };
 
     useEffect(() => {
         if (visible) {
@@ -53,19 +72,11 @@ export default function BookingModal({ visible, onClose, onSuccess, rooms, types
                     duration_auto: 30,
                     time_range: [dayjs().hour(9).minute(0), dayjs().hour(10).minute(0)]
                 });
+                // Load default groups (advised by me)
+                handleSearch("");
             }
         }
     }, [visible, initialData, form]);
-
-    const handleSearch = async (value: string) => {
-        if (!value) return;
-        try {
-            const res = await SearchGroup(value);
-            setGroups(res.data);
-        } catch (e) {
-            console.error(e);
-        }
-    };
 
     const handleRandom = async () => {
         setLoading(true);
@@ -173,22 +184,45 @@ export default function BookingModal({ visible, onClose, onSuccess, rooms, types
         >
             {/* Mode Switcher */}
             {!initialData && (
-                <div className="flex bg-gray-100 p-1 rounded-lg mb-6">
+                <div className="flex bg-gray-100 p-3 rounded-xl mb-6 gap-3">
                     <button
                         type="button"
-                        onClick={() => setMode('manual')}
-                        className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${mode === 'manual' ? 'bg-white text-[#9a0120] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                        onClick={() => {
+                            setMode('manual');
+                            form.setFieldValue('type_id', undefined);
+                            form.setFieldValue('group_id', undefined);
+                        }}
+                        className={`flex-1 h-10 text-lg font-semibold rounded-xl transition-all 
+                        flex items-center justify-center gap-3
+                        ${mode === 'manual'
+                                ? 'bg-white text-[#9a0120] shadow-md'
+                                : 'text-gray-500 hover:text-gray-700'
+                            }`}
                     >
-                        <UserOutlined /> เลือกเอง (Manual)
+                        <UserOutlined style={{ fontSize: 20 }} />
+                        นัดหมายเฉพาะที่ปรึกษา
                     </button>
+
                     <button
                         type="button"
-                        onClick={() => setMode('auto')}
-                        className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${mode === 'auto' ? 'bg-white text-purple-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                        onClick={() => {
+                            setMode('auto');
+                            const finalType = types.find(t => t.id === 3 || t.name === "Final Defense");
+                            if (finalType) form.setFieldValue('type_id', finalType.id);
+                            form.setFieldValue('group_id', undefined);
+                        }}
+                        className={`flex-1 h-10 text-lg font-semibold rounded-xl transition-all 
+                            flex items-center justify-center gap-3
+                            ${mode === 'auto'
+                                ? 'bg-white text-purple-600 shadow-md'
+                                : 'text-gray-500 hover:text-gray-700'
+                            }`}
                     >
-                        <RobotOutlined /> จัดออโต้ (Auto)
+                        <RobotOutlined style={{ fontSize: 20 }} />
+                        นัดหมายสอบจบ
                     </button>
                 </div>
+
             )}
 
             <Form form={form} layout="vertical" onFinish={handleSubmit}>
@@ -206,9 +240,13 @@ export default function BookingModal({ visible, onClose, onSuccess, rooms, types
                     </Form.Item>
 
                     <Form.Item name="type_id" label="ประเภทการสอบ" rules={[{ required: true }]}>
-                        <Select placeholder="เลือกประเภท">
+                        <Select placeholder="เลือกประเภท" onChange={handleTypeChange}>
                             {types
                                 ?.filter(t => t?.id != null)
+                                .filter(t => {
+                                    if (mode === 'auto') return t.id === 3 || t.name === "Final Defense";
+                                    return true;
+                                })
                                 .map(t => (
                                     <Option key={t.id} value={t.id}>
                                         {t.name}
@@ -228,11 +266,26 @@ export default function BookingModal({ visible, onClose, onSuccess, rooms, types
                                 <DatePicker className="w-full" format="DD/MM/YYYY" />
                             </Form.Item>
                             <Form.Item name="time_range" label="ช่วงเวลา" rules={[{ required: true }]}>
-                                <TimePicker.RangePicker className="w-full" format="HH:mm" minuteStep={15} />
+                                <TimePicker.RangePicker
+                                    className="w-full"
+                                    format="HH:mm"
+                                    minuteStep={30}
+                                    hideDisabledOptions
+                                    disabledTime={() => ({
+                                        disabledHours: () => Array.from({ length: 24 }, (_, i) => i).filter(h => h < 9 || h > 20),
+                                    })}
+                                />
                             </Form.Item>
                         </div>
                         <div className="flex gap-2 items-end">
-                            <Form.Item name="group_id" label="กลุ่มโครงงาน" className="flex-1 mb-0" rules={[{ required: true }]}>
+                            <Form.Item
+                                name="group_id"
+                                label="กลุ่มโครงงาน"
+                                className="flex-1 mb-0"
+                                labelCol={{ span: 24 }}
+                                wrapperCol={{ span: 24 }}
+                                rules={[{ required: true }]}
+                            >
                                 <Select
                                     showSearch
                                     placeholder="พิมพ์ชื่อ/รหัสกลุ่ม..."
@@ -250,13 +303,32 @@ export default function BookingModal({ visible, onClose, onSuccess, rooms, types
                                 </Select>
                             </Form.Item>
 
-                            <Button onClick={handleRandom} icon={<DeploymentUnitOutlined />}>สุ่ม</Button>
+                            <Form.Item className="mb-0">
+                                <Button
+                                    onClick={handleRandom}
+                                    icon={<DeploymentUnitOutlined />}
+                                >
+                                    สุ่ม
+                                </Button>
+                            </Form.Item>
                         </div>
+
                     </>
                 ) : (
                     <div className="bg-purple-50 p-4 rounded-lg border border-purple-100">
                         <Form.Item name="date_range" label="ช่วงเวลาที่ต้องการ (เริ่ม - จบ)" rules={[{ required: true }]}>
-                            <DatePicker.RangePicker showTime format="DD/MM/YYYY HH:mm" className="w-full" />
+                            <DatePicker.RangePicker
+                                showTime={{
+                                    format: 'HH:mm',
+                                    minuteStep: 30,
+                                    hideDisabledOptions: true,
+                                    disabledTime: () => ({
+                                        disabledHours: () => Array.from({ length: 24 }, (_, i) => i).filter(h => h < 9 || h > 20),
+                                    }),
+                                }}
+                                format="DD/MM/YYYY HH:mm"
+                                className="w-full"
+                            />
                         </Form.Item>
                         <Form.Item name="duration_auto" label="เวลาต่อกลุ่ม (นาที)" rules={[{ required: true }]}>
                             <Select>
