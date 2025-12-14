@@ -1,6 +1,6 @@
 "use client";
 import RoleGuard from "../roleCheck/roleGuard";
-import StudentTopbar from "../../components/layouts/StudentTopbar"; 
+import StudentTopbar from "../../components/layouts/StudentTopbar";
 
 export default function StudentLayout({
   children,
@@ -8,10 +8,10 @@ export default function StudentLayout({
   children: React.ReactNode;
 }) {
   return (
-    <RoleGuard allowedRoles={["Student"]}>
-      <StudentTopbar userRole="Student">
-          {children}
-      </StudentTopbar>
-    </RoleGuard>
+    <StudentTopbar userRole="Student">
+      <RoleGuard allowedRoles={["Student"]}>
+        {children}
+      </RoleGuard>
+    </StudentTopbar>
   );
 }

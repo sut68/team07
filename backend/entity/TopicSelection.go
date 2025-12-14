@@ -15,6 +15,6 @@ type TopicSelection struct {
 	GroupProject   *GroupProject `gorm:"foreignKey:GroupProjectID" json:"group_project"`
 
 	Project  []Project `gorm:"foreignKey:SelectionID" json:"projects"`
-	TopicApproval  []TopicApproval `gorm:"foreignKey:SelectionID" json:"topic_approvals"`
+
 }
-//true
+ 

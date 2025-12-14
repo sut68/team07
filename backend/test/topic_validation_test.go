@@ -14,6 +14,8 @@ func TestTopic(t *testing.T) {
 	t.Run(`Title is required`, func(t *testing.T) {
 		topic := &entity.Topic{
 			Title:          "", // ผิดตรงนี้
+			Objective:      "Objective",
+			Scope:          "Scope",
 			Description:    "Description about the topic",
 			Status:         "Pending",
 			Proposer_role:  "Student",
@@ -26,9 +28,45 @@ func TestTopic(t *testing.T) {
 		g.Expect(err.Error()).To(Equal("Title is required"))
 	})
 
+	t.Run(`Objective is required`, func(t *testing.T) {
+		topic := &entity.Topic{
+			Title:          "System Analysis Topic",
+			Objective:      "", // ผิดตรงนี้
+			Scope:          "Scope",
+			Description:    "Description about the topic",
+			Status:         "Pending",
+			Proposer_role:  "Student",
+			GroupProjectID: 1,
+		}
+
+		ok, err := govalidator.ValidateStruct(topic)
+		g.Expect(ok).NotTo(BeTrue())
+		g.Expect(err).NotTo(BeNil())
+		g.Expect(err.Error()).To(Equal("Objective is required"))
+	})
+
+	t.Run(`Scope is required`, func(t *testing.T) {
+		topic := &entity.Topic{
+			Title:          "System Analysis Topic",
+			Objective:      "Objective",
+			Scope:          "", // ผิดตรงนี้
+			Description:    "Description about the topic",
+			Status:         "Pending",
+			Proposer_role:  "Student",
+			GroupProjectID: 1,
+		}
+
+		ok, err := govalidator.ValidateStruct(topic)
+		g.Expect(ok).NotTo(BeTrue())
+		g.Expect(err).NotTo(BeNil())
+		g.Expect(err.Error()).To(Equal("Scope is required"))
+	})
+
 	t.Run(`Description is required`, func(t *testing.T) {
 		topic := &entity.Topic{
 			Title:          "System Analysis Topic",
+			Objective:      "Objective",
+			Scope:          "Scope",
 			Description:    "", // ผิดตรงนี้
 			Status:         "Pending",
 			Proposer_role:  "Student",
@@ -44,6 +82,8 @@ func TestTopic(t *testing.T) {
 	t.Run(`Status is required`, func(t *testing.T) {
 		topic := &entity.Topic{
 			Title:          "System Analysis Topic",
+			Objective:      "Objective",
+			Scope:          "Scope",
 			Description:    "Description about the topic",
 			Status:         "", // ผิดตรงนี้
 			Proposer_role:  "Student",
@@ -59,6 +99,8 @@ func TestTopic(t *testing.T) {
 	t.Run(`ProposerRole is required`, func(t *testing.T) {
 		topic := &entity.Topic{
 			Title:          "System Analysis Topic",
+			Objective:      "Objective",
+			Scope:          "Scope",
 			Description:    "Description about the topic",
 			Status:         "Pending",
 			Proposer_role:  "", // ผิดตรงนี้
@@ -74,6 +116,8 @@ func TestTopic(t *testing.T) {
 	t.Run(`GroupProjectID is required`, func(t *testing.T) {
 		topic := &entity.Topic{
 			Title:          "System Analysis Topic",
+			Objective:      "Objective",
+			Scope:          "Scope",
 			Description:    "Description about the topic",
 			Status:         "Pending",
 			Proposer_role:  "Student",

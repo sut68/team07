@@ -3,9 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { GetUserProfile } from '../../services/user'; // Path ของ service คุณ
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Dropdown, Avatar } from 'antd';
-import { DownOutlined, UserOutlined, ExclamationCircleOutlined, LogoutOutlined } from '@ant-design/icons';
+import { DownOutlined, UserOutlined, ExclamationCircleOutlined, LogoutOutlined, BellOutlined } from '@ant-design/icons';
 import { Logout } from '../../services/login';
 import { useAuth } from "../../(modules)/roleCheck/authContext";
 export default function StudentTopbar({ userRole, children }: { userRole: string; children?: React.ReactNode }) {
@@ -36,11 +36,23 @@ export default function StudentTopbar({ userRole, children }: { userRole: string
     }, []);
 
     const navLinkStyle: React.CSSProperties = { color: 'rgba(255,255,255,0.95)', textDecoration: 'none', fontWeight: 700 };
+    const pathname = usePathname() || '';
+
+    const getNavStyle = (href: string): React.CSSProperties => {
+        const isActive = pathname === href || (href !== '/' && pathname.startsWith(href));
+        return {
+            ...navLinkStyle,
+            color: navLinkStyle.color,
+            paddingBottom: isActive ? 6 : 0,
+            borderBottom: isActive ? '3px solid #ffffffff' : '3px solid transparent',
+            transition: 'border-color 150ms ease, padding-bottom 150ms ease',
+        };
+    };
     const handleLogout = async () => {
         try {
             await Logout();
+            router.replace('/login'); // เปลี่ยนหน้าก่อน
             logoutClient(); // 2. *** สำคัญ *** แจ้ง Client ให้ลบ State ทิ้งทันที
-            router.replace('/login');
         } catch (error) {
             router.replace('/login');
         }
@@ -93,32 +105,33 @@ export default function StudentTopbar({ userRole, children }: { userRole: string
                 }}
                 role="banner"
             >
-                <nav style={{ position: 'absolute', left: 150, display: 'flex', gap: 40 }}>
-                    <Link href="/student/dashboard" style={navLinkStyle}>หน้าหลัก</Link>
-                    <Link href="/student/group" style={navLinkStyle}>กลุ่มของฉัน</Link>
-                    <Link href="/student/selectAdvisor" style={navLinkStyle}>เลือกที่ปรึกษา</Link>
-                    <Link href="/student/topic" style={navLinkStyle}>หัวข้อโครงงาน</Link>
+                <nav style={{ position: 'absolute', left: 100, display: 'flex', gap: 40 }}>
+                    <Link href="/student/dashboard" style={getNavStyle('/student/dashboard')}>หน้าหลัก</Link>
+                    <Link href="/student/group" style={getNavStyle('/student/group')}>กลุ่มของฉัน</Link>
+                    <Link href="/student/selectAdvisor" style={getNavStyle('/student/selectAdvisor')}>เลือกที่ปรึกษา</Link>
+                    <Link href="/student/topic" style={getNavStyle('/student/topic')}>หัวข้อโครงงาน</Link>
+                    <Link href="/student/progress" style={getNavStyle('/student/progress')}>ความคืบหน้า</Link>
                 </nav>
 
                 <Link href="/student/dashboard" aria-label="หน้าหลัก" className="topbar-logo" style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
                     <Image src="/image/logo1.png" alt="SUT" width={90} height={38} priority />
                 </Link>
 
-                <div style={{ position: 'absolute', right: 150, display: 'flex', gap: 40, alignItems: 'center' }}>
-                    <Link href="/student/progress" style={navLinkStyle}>ความคืบหน้า</Link>
-                    <Link href="/chat" style={navLinkStyle}>แชท</Link>
+                <div style={{ position: 'absolute', right: 200, display: 'flex', gap: 40, alignItems: 'center' }}>
+                    <Link href="/chat" style={getNavStyle('/chat')}>แชท</Link>
                     {/* <Link href="/student/chat" style={navLinkStyle}>แชท</Link> */}
-                    <Link href="/student/appointment" style={navLinkStyle}>การนัดหมาย</Link>
-                    <Link href="/student/evaluation" style={navLinkStyle}>การประเมิน</Link>
-                    <Link href="/student/storage" style={navLinkStyle}>คลังโครงงาน</Link>
+                    <Link href="/student/appointment" style={getNavStyle('/student/appointment')}>การนัดหมาย</Link>
+                    <Link href="/student/evaluation" style={getNavStyle('/student/evaluation')}>การประเมิน</Link>
+                    <Link href="/student/storage" style={getNavStyle('/student/storage')}>คลังโครงงาน</Link>
                 </div>
-                    {/* Dropdown user menu */}
-                <div style={{ position: 'absolute', right: 30 }}>
+                
+                <div style={{ position: 'absolute', right: 30, display: 'flex', alignItems: 'center', gap: 16 }}>
+                    <BellOutlined style={{ fontSize: '20px', cursor: 'pointer', color: '#fff' }} />
                     <Dropdown
                         menu={{ items: menuItems, onClick: onMenuClick }}
                         placement="bottomRight"
                         trigger={['click']}
-                        dropdownRender={(menuNode) => (
+                        popupRender={(menuNode) => (
                             <div style={{ minWidth: 220, fontSize: 14, padding: 25 }}>
                                 {menuNode}
                             </div>
