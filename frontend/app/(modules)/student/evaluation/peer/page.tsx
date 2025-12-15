@@ -13,6 +13,7 @@ const rubric = [
     { value: 4, label: "4 - บ่อยครั้ง (Often)" },
     { value: 3, label: "3 - บางครั้ง (Sometimes)" },
     { value: 1, label: "1 - น้อยมาก (Rarely)" },
+    { value: 0, label: "0 - มึงมันไร้ค่า (Priceless)" }
 ];
 
 export default function PeerEvaluationPage() {

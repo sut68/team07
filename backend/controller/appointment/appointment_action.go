@@ -69,7 +69,7 @@ func DeleteAppointment(c *gin.Context) {
 
 	if err := tx.Model(&entity.GroupProject{}).
 		Where("id = ?", apt.GroupProjectID).
-		Update("group_status", "In Process").Error; err != nil {
+		Update("group_status", "Pending").Error; err != nil {
 
 		tx.Rollback()
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to revert group status"})
@@ -118,7 +118,7 @@ func CreateAppointment(c *gin.Context) {
 	var existingAppt entity.Appointment
 	if tx := db.Where("group_project_id = ? AND appointment_status = 'scheduled'", appointment.GroupProjectID).
 		First(&existingAppt); tx.RowsAffected > 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "This group already has a scheduled appointment."})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "กลุ่มนี้มีการนัดหมายที่ยังไม่เสร็จสิ้นอยู่ กรุณายกเลิกหรือลบนัดเดิมก่อนจึงจะสร้างนัดใหม่ได้"})
 		return
 	}
 
@@ -134,13 +134,6 @@ func CreateAppointment(c *gin.Context) {
 	if err := tx.Create(&appointment).Error; err != nil {
 		tx.Rollback()
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	if err := tx.Model(&entity.GroupProject{}).Where("id = ?", appointment.GroupProjectID).
-		Update("group_status", "Scheduled").Error; err != nil {
-		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update group status"})
 		return
 	}
 
@@ -281,11 +274,6 @@ func AutoCreateAppointments(c *gin.Context) {
 			return
 		}
 
-		if err := tx.Model(&entity.GroupProject{}).Where("id = ?", group.ID).Update("group_status", "Scheduled").Error; err != nil {
-			tx.Rollback()
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update group status"})
-			return
-		}
 		count++
 	}
 

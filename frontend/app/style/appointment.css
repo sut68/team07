@@ -234,6 +234,14 @@
   position: relative;
 }
 
+.student-appt-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  position: relative;
+}
 .appt-header {
   background: linear-gradient(135deg, #9a0120 0%, #be123c 100%);
   padding: 24px 32px;

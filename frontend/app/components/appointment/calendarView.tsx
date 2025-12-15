@@ -68,7 +68,7 @@ export default function CalendarView({ appointments, onSelect, currentDate }: Ca
                         />
                     ))}
 
-                    {/* ✅ ใส่ข้อความแค่ครั้งเดียว */}
+                    {/* ใส่ข้อความแค่ครั้งเดียว */}
                     {hour === 12 && (
                         <div
                             key={`lunch-${hour}`}
@@ -89,9 +89,6 @@ export default function CalendarView({ appointments, onSelect, currentDate }: Ca
             {/* ===== Appointments ===== */}
             {appointments.map((appt) => {
                 const start = dayjs(appt.start_date_time);
-                
-                // กรองเฉพาะนัดหมายที่อยู่ในสัปดาห์ที่เลือก
-                // startOfWeek คือ Sunday. Monday is +1, Sunday is +7
                 const weekStart = startOfWeek.add(1, 'day').startOf('day');
                 const weekEnd = startOfWeek.add(7, 'day').endOf('day');
 
@@ -101,9 +98,6 @@ export default function CalendarView({ appointments, onSelect, currentDate }: Ca
 
                 const startHour = start.hour();
 
-                // คำนวณ column (Monday=0 -> col 2)
-                // day() returns 0 (Sun) to 6 (Sat).
-                // We want Mon(1)->0, ..., Sat(6)->5, Sun(0)->6
                 const dayIndex = (start.day() + 6) % 7;
                 const gridColumn = dayIndex + 2;
                 const gridRow = (startHour - START_HOUR) + 2;

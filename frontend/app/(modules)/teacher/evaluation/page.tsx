@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Spin, Tag, Tooltip } from 'antd';
+import { Spin, Tag, Tooltip, Modal, message } from 'antd';
 import { 
   EditOutlined, 
   CheckCircleOutlined, 
@@ -10,28 +10,37 @@ import {
   BarChartOutlined,
   TeamOutlined
 } from '@ant-design/icons';
+import { useRouter } from 'next/navigation';
 import { GetEvaluationProjects } from '../../../services/evaluation';
 import CriteriaManager from '../../../components/evaluation/criteriaManager';
 import '../../../style/evaluation.css';
 
+const LABEL_MAP: Record<string, string> = {
+  "Advisor Evaluation": "Advisor Evaluation (ที่ปรึกษา)",
+  "Ethics Test": "Ethics Test (จริยธรรม)",
+  "Committee Evaluation": "Committee Evaluation (กรรมการ)",
+};
+
 export default function TeacherEvaluationDashboard() {
+    const router = useRouter();
+
     const [projects, setProjects] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    
-    // 'advisor' = กลุ่มที่ปรึกษา, 'committee' = สอบกรรมการ
+
     const [activeTab, setActiveTab] = useState<'advisor' | 'committee'>('advisor');
     const [showCriteriaManager, setShowCriteriaManager] = useState(false);
+
+    // 🔽 modal state
+    const [openSelect, setOpenSelect] = useState(false);
+    const [selectedProject, setSelectedProject] = useState<any>(null);
 
     const fetchData = async () => {
         setLoading(true);
         try {
-            const mode = activeTab;
-            
-            const res = await GetEvaluationProjects(undefined, mode);
-            
-            // กรองข้อมูลซ้ำ (เผื่อ API ส่งมาเบิ้ล)
-            const uniqueProjects = Array.from(new Map(res.data.map((item: any) => [item.id, item])).values());
-            
+            const res = await GetEvaluationProjects(undefined, activeTab);
+            const uniqueProjects = Array.from(
+                new Map(res.data.map((item: any) => [item.id, item])).values()
+            );
             setProjects(uniqueProjects);
         } catch (error) {
             console.error(error);
@@ -44,15 +53,35 @@ export default function TeacherEvaluationDashboard() {
         fetchData();
     }, [activeTab]);
 
+    // 🔽 เลือกประเภทการประเมิน
+    const handleSelectEvaluation = (type: string) => {
+        const appt = selectedProject?.appointments?.find(
+            (a: any) => a.evaluation_name === type
+        );
+
+        if (!appt) {
+            message.warning("ยังไม่มีนัดหมายสำหรับการประเมินประเภทนี้");
+            return;
+        }
+
+        setOpenSelect(false);
+        router.push(
+            `/teacher/evaluation/form/${appt.id}?evalType=${encodeURIComponent(type)}`
+        );
+    };
+
     return (
         <div className="eval-page">
-            <div className="eval-container animate-fade-in" style={{paddingTop: 32}}>
+            <div className="eval-container animate-fade-in" style={{ paddingTop: 32 }}>
             
-                {/* 1. Header & Global Actions */}
+                {/* Header */}
                 <header className="dash-header">
                     <div className="dash-title">
                         <h1>การประเมินผล (Evaluation)</h1>
-                        <p>จัดการคะแนนโครงงาน • {activeTab === 'advisor' ? 'กลุ่มที่ปรึกษา' : 'สอบกรรมการ'}</p>
+                        <p>
+                          จัดการคะแนนโครงงาน • 
+                          {activeTab === 'advisor' ? ' กลุ่มที่ปรึกษา' : ' สอบกรรมการ'}
+                        </p>
                     </div>
 
                     <button 
@@ -63,30 +92,31 @@ export default function TeacherEvaluationDashboard() {
                     </button>
                 </header>
 
-                {/* 2. Tabs Switcher */}
+                {/* Tabs */}
                 <div className="tabs-wrapper">
                     <button 
                         className={`tab-btn ${activeTab === 'advisor' ? 'active' : ''}`}
                         onClick={() => setActiveTab('advisor')}
                     >
-                        <TeamOutlined /> กลุ่มที่ปรึกษา (Advisor)
+                        <TeamOutlined /> สำหรับที่ปรึกษา
                     </button>
                     <button 
                         className={`tab-btn ${activeTab === 'committee' ? 'active' : ''}`}
                         onClick={() => setActiveTab('committee')}
                     >
-                        <CheckCircleOutlined /> สอบโครงงาน (Project Exam)
+                        <CheckCircleOutlined /> สอบจบโครงงาน
                     </button>
                 </div>
 
-                {/* 3. Content Grid */}
+                {/* Content */}
                 {loading ? (
-                    <div className="flex justify-center h-64 items-center"><Spin size="large" /></div>
+                    <div className="flex justify-center h-64 items-center">
+                        <Spin size="large" />
+                    </div>
                 ) : projects.length > 0 ? (
                     <div className="project-grid">
                         {projects.map((proj) => (
                             <div key={proj.id} className="project-card">
-                                {/* แถบสีสถานะ */}
                                 <div className={`status-bar ${proj.is_graded ? "graded" : "pending"}`} />
                                 
                                 <div className="card-body">
@@ -104,25 +134,23 @@ export default function TeacherEvaluationDashboard() {
                                     </h3>
 
                                     <div className="member-count">
-                                        <TeamOutlined /> {proj.students ? proj.students.length : 0} สมาชิก
+                                        <TeamOutlined /> {proj.students?.length || 0} สมาชิก
                                     </div>
                                 </div>
 
                                 <div className="card-actions">
-                                    {/* ปุ่มประเมิน */}
-                                    {proj.appointment_id ? (
-                                        <Link href={`/teacher/evaluation/form/${proj.appointment_id}`} style={{flex: 1, display: 'flex'}}>
-                                            <button className={`btn-card ${proj.is_graded ? 'edit' : 'eval'}`}>
-                                                <EditOutlined /> {proj.is_graded ? 'แก้ไขคะแนน' : 'ประเมินผล'}
-                                            </button>
-                                        </Link>
-                                    ) : (
-                                        <button className="btn-card" disabled style={{flex: 1, opacity: 0.5, cursor: 'not-allowed'}}>
-                                            <ClockCircleOutlined /> ยังไม่มีนัดหมาย
-                                        </button>
-                                    )}
+                                    {/* 🔽 ประเมิน (เปิด modal) */}
+                                    <button
+                                        className={`btn-card ${proj.is_graded ? 'edit' : 'eval'}`}
+                                        style={{ flex: 1 }}
+                                        onClick={() => {
+                                            setSelectedProject(proj);
+                                            setOpenSelect(true);
+                                        }}
+                                    >
+                                        <EditOutlined /> {proj.is_graded ? 'แก้ไขคะแนน' : 'ประเมินผล'}
+                                    </button>
 
-                                    {/* ปุ่มดูสรุป (แสดงเฉพาะตอนตรวจแล้ว) */}
                                     {proj.is_graded && (
                                         <Link href={`/teacher/evaluation/summary/${proj.id}`}>
                                             <Tooltip title="ดูสรุปผลคะแนน">
@@ -138,17 +166,49 @@ export default function TeacherEvaluationDashboard() {
                     </div>
                 ) : (
                     <div className="empty-state">
-                        <TeamOutlined style={{fontSize: 48, marginBottom: 16, opacity: 0.5}} />
-                        <h3>ไม่พบกลุ่มโครงงานในหมวดนี้</h3>
-                        <p>ลองเปลี่ยนแท็บ หรือตรวจสอบรายชื่อกลุ่มอีกครั้ง</p>
+                        <TeamOutlined style={{ fontSize: 48, marginBottom: 16, opacity: 0.5 }} />
+                        <h3>ไม่พบกลุ่มโครงงาน</h3>
+                        <p>ลองเปลี่ยนแท็บ หรือตรวจสอบข้อมูลอีกครั้ง</p>
                     </div>
                 )}
 
-                {/* Modal ตั้งค่าเกณฑ์ (เรียกใช้ครั้งเดียวที่นี่) */}
                 <CriteriaManager 
                     visible={showCriteriaManager} 
                     onClose={() => setShowCriteriaManager(false)} 
                 />
+
+                {/* 🔽 Modal เลือกประเภทการประเมิน */}
+                <Modal
+                    open={openSelect}
+                    footer={null}
+                    onCancel={() => setOpenSelect(false)}
+                    centered
+                    width={520}
+                >
+                    <div className="eval-page" style={{ padding: 24 }}>
+                        <h2 style={{ textAlign: "center", marginBottom: 24 }}>
+                            เลือกประเภทการประเมิน
+                        </h2>
+
+                        <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
+                            {selectedProject?.available_evaluations?.map((type: string) => (
+                                <button
+                                    key={type}
+                                    className="btn-primary"
+                                    onClick={() => handleSelectEvaluation(type)}
+                                >
+                                    {LABEL_MAP[type] || type}
+                                </button>
+                            ))}
+                        </div>
+
+                        <div style={{ textAlign: "center", marginTop: 24 }}>
+                            <button className="btn-back" onClick={() => setOpenSelect(false)}>
+                                ยกเลิก
+                            </button>
+                        </div>
+                    </div>
+                </Modal>
             </div>
         </div>
     );

@@ -25,18 +25,17 @@ export default function BookingModal({ visible, onClose, onSuccess, rooms, types
     const [loading, setLoading] = useState(false);
     const [mode, setMode] = useState<'manual' | 'auto'>('manual');
     const [groups, setGroups] = useState<any[]>([]);
-    const [evaluations, setEvaluations] = useState<any[]>([]); // Store available evaluations
+    const [evaluations, setEvaluations] = useState<any[]>([]);
 
     // Mock evaluations data (In real app, fetch from API based on type)
     const mockEvaluations = [
         { id: 1, name: "Ethics Test", type_id: 3 },
-        { id: 2, name: "Peer Assessment", type_id: 3 }, // Usually not for teacher
+        { id: 2, name: "Peer Assessment", type_id: 3 },
         { id: 3, name: "Advisor Evaluation", type_id: 3 },
         { id: 4, name: "Committee Evaluation", type_id: 3 },
     ];
 
     const handleSearch = async (value: string) => {
-        // if (!value) return; // Allow empty search to get all advised groups
         try {
             const typeId = form.getFieldValue('type_id');
             const res = await SearchGroup(value, typeId, mode);
@@ -46,20 +45,14 @@ export default function BookingModal({ visible, onClose, onSuccess, rooms, types
         }
     };
 
-    // เมื่อเปลี่ยนประเภทการสอบ ให้โหลดกลุ่มใหม่ตามเงื่อนไข
     const handleTypeChange = (value: any) => {
         const typeId = Number(value);
         handleSearch("");
-        form.setFieldValue('group_id', undefined); // เคลียร์ค่ากลุ่มที่เลือกไว้
-        form.setFieldValue('evaluation_id', undefined); // Clear evaluation
+        form.setFieldValue('group_id', undefined);
+        form.setFieldValue('evaluation_id', undefined);
 
-        // Filter evaluations based on type
-        // Only for Final Defense (Type 3) and Manual mode (Advisor)
         if (typeId === 3 && mode === 'manual') {
-             // Filter: Advisor can select Ethics or Advisor Eval
-             // Committee Eval is auto for Committee mode (but here we are in Advisor booking?)
-             // User said: "Advisor... select Final Defense... select Evaluation Type"
-             const available = mockEvaluations.filter(e => e.type_id === 3 && (e.name === "Ethics Test" || e.name === "Advisor Evaluation"));
+             const available = mockEvaluations.filter(e => e.type_id === 3 && (e.name === "Ethics Test" || e.name === "Peer Assessment" || e.name === "Advisor Evaluation"));
              setEvaluations(available);
         } else {
             setEvaluations([]);
@@ -95,7 +88,6 @@ export default function BookingModal({ visible, onClose, onSuccess, rooms, types
                     duration_auto: 30,
                     time_range: [dayjs().hour(9).minute(0), dayjs().hour(10).minute(0)]
                 });
-                // Load default groups (advised by me)
                 handleSearch("");
             }
         }

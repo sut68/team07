@@ -140,6 +140,8 @@ func GetEvaluationForm(c *gin.Context) {
 	isAdvisor := appointment.GroupProject.TeacherID != nil && *appointment.GroupProject.TeacherID == claims.ID
 
 	var formCriteria []entity.Criteria
+	allowedEvaluations := []string{}
+	selectedEvaluationName := ""
 
 	criteriaQuery := db.
 		Preload("CriteriaLevel").
@@ -149,31 +151,78 @@ func GetEvaluationForm(c *gin.Context) {
 
 	if appointment.EvaluationID != nil {
 		criteriaQuery = criteriaQuery.Where("evaluations.id = ?", *appointment.EvaluationID)
+		var evaluation entity.Evaluation
+		if err := db.First(&evaluation, *appointment.EvaluationID).Error; err == nil {
+			allowedEvaluations = []string{evaluation.Name}
+			selectedEvaluationName = evaluation.Name
+		}
 	} else {
 		// Fallback Logic
 		criteriaQuery = criteriaQuery.Where("evaluations.appointment_type_id = ?", appointment.AppointmentTypeID)
 
-		var allowedEvaluations []string
 		if appointment.AppointmentTypeID == 3 {
 			if isAdvisor {
-				allowedEvaluations = []string{"Ethics Test", "Advisor Evaluation", "Committee Evaluation"}
+				allowedEvaluations = []string{"Advisor Evaluation", "Ethics Test"}
 			} else {
 				allowedEvaluations = []string{"Committee Evaluation"}
 			}
 		}
 
-		if len(allowedEvaluations) > 0 {
-			criteriaQuery = criteriaQuery.Where("evaluations.name IN ?", allowedEvaluations)
+		reqEvalName := strings.TrimSpace(c.Query("evaluation_name"))
+		if reqEvalName != "" {
+			if len(allowedEvaluations) > 0 {
+				allowed := false
+				for _, name := range allowedEvaluations {
+					if name == reqEvalName {
+						allowed = true
+						break
+					}
+				}
+				if !allowed {
+					c.JSON(http.StatusForbidden, gin.H{"error": "Evaluation not allowed for this appointment"})
+					return
+				}
+			}
+			selectedEvaluationName = reqEvalName
 		}
 
-		if evalName := c.Query("evaluation_name"); evalName != "" {
-			criteriaQuery = criteriaQuery.Where("evaluations.name = ?", evalName)
+		if selectedEvaluationName == "" && len(allowedEvaluations) > 0 {
+			selectedEvaluationName = allowedEvaluations[0]
+		}
+
+		if selectedEvaluationName != "" {
+			criteriaQuery = criteriaQuery.Where("evaluations.name = ?", selectedEvaluationName)
 		}
 	}
 
 	if err := criteriaQuery.Find(&formCriteria).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Criteria not found"})
 		return
+	}
+
+	if selectedEvaluationName == "" && len(formCriteria) > 0 && formCriteria[0].Evaluation != nil {
+		selectedEvaluationName = formCriteria[0].Evaluation.Name
+	}
+
+	availableEvaluations := []string{}
+	if len(allowedEvaluations) > 0 {
+		var evalNames []string
+		if err := db.Model(&entity.Evaluation{}).
+			Where("appointment_type_id = ?", appointment.AppointmentTypeID).
+			Pluck("name", &evalNames).Error; err == nil {
+			for _, allowedName := range allowedEvaluations {
+				for _, existing := range evalNames {
+					if allowedName == existing {
+						availableEvaluations = append(availableEvaluations, allowedName)
+						break
+					}
+				}
+			}
+		}
+	}
+
+	if len(availableEvaluations) == 0 && selectedEvaluationName != "" {
+		availableEvaluations = append(availableEvaluations, selectedEvaluationName)
 	}
 
 	groupCriteria := []gin.H{}
@@ -224,13 +273,15 @@ func GetEvaluationForm(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"appointment_id":      appointment.ID,
-		"project_id":          appointment.GroupProjectID,
-		"project_name":        projectName,
-		"eval_type":           appointment.AppointmentType.Name,
-		"group_criteria":      groupCriteria,
-		"individual_criteria": individualCriteria,
-		"students":            students,
+		"appointment_id":        appointment.ID,
+		"project_id":            appointment.GroupProjectID,
+		"project_name":          projectName,
+		"eval_type":             appointment.AppointmentType.Name,
+		"current_evaluation":    selectedEvaluationName,
+		"available_evaluations": availableEvaluations,
+		"group_criteria":        groupCriteria,
+		"individual_criteria":   individualCriteria,
+		"students":              students,
 	})
 }
 
@@ -307,9 +358,6 @@ func GetStudentEvaluationForm(c *gin.Context) {
 	students := []gin.H{}
 	for _, member := range appointment.GroupProject.GroupMembers {
 		if member.Student != nil {
-			// Filter out the current student if needed?
-			// Usually peer evaluation includes others.
-			// But let's return all and let frontend filter.
 
 			rawCode := strings.Split(member.Student.Username, "@")[0]
 			displayCode := strings.ToUpper(rawCode)
@@ -332,7 +380,7 @@ func GetStudentEvaluationForm(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"appointment": gin.H{ // Wrap in appointment object to match frontend expectation?
+		"appointment": gin.H{
 			"id": appointment.ID,
 		},
 		"appointment_id":      appointment.ID,

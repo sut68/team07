@@ -115,7 +115,6 @@ var MockGroupMember = []entity.GroupMember{
 	{Leader: true, StudentID: 11, GroupProjectID: 2},
 	{Leader: true, StudentID: 10, GroupProjectID: 3},
 
-	{Leader: false, StudentID: 11, GroupProjectID: 2},
 	{Leader: false, StudentID: 12, GroupProjectID: 2},
 	{Leader: false, StudentID: 13, GroupProjectID: 3},
 	{Leader: false, StudentID: 14, GroupProjectID: 4},

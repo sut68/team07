@@ -31,6 +31,8 @@ export interface IEvaluationFormResponse {
   project_id: number;
   project_name: string;
   eval_type: string;
+  current_evaluation?: string;
+  available_evaluations?: string[];
   
   group_criteria: ICriteriaForm[];
   individual_criteria: ICriteriaForm[];
@@ -56,6 +58,7 @@ export interface ISaveEvaluationRequest {
   appointment_id: number;
   group_scores: IGroupScoreData[];
   individual_scores: IIndividualScoreData[];
+  evaluation_name?: string;
 }
 
 export interface IPeerScoreData {
