@@ -74,11 +74,13 @@
 /* --- The Timetable Grid (หัวใจสำคัญ) --- */
 .timetable-container {
   display: grid;
-  /* Col 1 = เวลา (60px), Col 2-8 = 7 วัน */
   grid-template-columns: 60px repeat(7, 1fr);
-  /* Row 1 = Header, Row 2-12 = 08:00 - 18:00 */
-  grid-template-rows: 50px repeat(11, 1fr); 
-  height: 800px;
+
+  grid-template-rows:
+    50px
+    repeat(12, 60px);
+
+  height: auto;
   overflow-y: auto;
 }
 
@@ -104,19 +106,17 @@
   border-bottom-color: #9a0120;
 }
 
-/* Time Label (08:00, 09:00...) */
 .time-label {
   display: flex;
-  align-items: start;
+  align-items: flex-start;
   justify-content: center;
-  padding-top: 8px;
+  padding-top: 4px;
   font-size: 0.75rem;
   color: #94a3b8;
   border-right: 1px solid #e2e8f0;
   background: white;
-  position: relative;
-  top: -10px; /* ขยับให้ตรงเส้น */
 }
+
 
 /* Grid Cells (ช่องตาราง) */
 .grid-cell {
@@ -130,56 +130,85 @@
   background-color: #fafafa;
 }
 
-/* พักเที่ยง 12:00 */
-.lunch-break-row {
-  background-color: #f1f5f9;
-  background-image: repeating-linear-gradient(45deg, #e2e8f0 0, #e2e8f0 1px, #f1f5f9 0, #f1f5f9 50%);
-  background-size: 10px 10px;
+.lunch-break-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
   pointer-events: none;
+  z-index: 3;
+
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  letter-spacing: 0.05em;
+
+  background: rgba(241, 245, 249, 0.85);
 }
 
-/* --- Appointment Card (ตัวนัดหมายที่ลอยบนตาราง) --- */
+/* --- Appointment Block (แนว timetable) --- */
 .appt-card {
   position: absolute;
-  left: 4px;
-  right: 4px;
-  /* Top/Height จะถูกคำนวณใน React inline style */
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-size: 0.8rem;
+  left: 2px;
+  right: 2px;
+
+  padding: 4px 8px;
+  border-radius: 4px;        /* สี่เหลี่ยม */
+  font-size: 0.75rem;
   cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  transition: transform 0.2s, z-index 0.2s;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  z-index: 5;
   overflow: hidden;
-  z-index: 1;
+  white-space: nowrap;
 }
 
+
+/* hover เบา ๆ */
 .appt-card:hover {
-  transform: scale(1.02);
-  z-index: 10;
-  box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+  filter: brightness(0.97);
 }
 
-/* สีตามประเภท */
+/* Manual */
 .appt-manual {
-  background-color: #fff1f2; /* แดงอ่อน */
-  border-left: 4px solid #9a0120;
-  color: #881337;
+  background: #fee2e2;
+  border-left: 4px solid #dc2626;
+  color: #7f1d1d;
 }
 
+
+/* Auto */
 .appt-auto {
-  background-color: #fff7ed; /* ส้มอ่อน */
+  background: #ffedd5;
   border-left: 4px solid #ea580c;
-  color: #9a3412;
+  color: #7c1212;
+}
+
+
+.appt-time {
+  font-weight: 600;
+  font-size: 0.7rem;
+  opacity: 0.85;
 }
 
 .appt-title {
   font-weight: 700;
-  display: block;
-  white-space: nowrap;
+  font-size: 0.75rem;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+
+/* ห้อง */
+.appt-room {
+  font-size: 0.65rem;
+  opacity: 0.7;
+  margin-top: 2px;
+}
+
 
 .appt-time {
   font-size: 0.7rem;
@@ -193,4 +222,159 @@
   align-items: center;
   height: 400px;
   color: #9a0120;
+}
+
+/* --- Appointment Card (หน้าดูนัดหมาย) --- */
+.appt-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  position: relative;
+}
+
+.student-appt-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  position: relative;
+}
+.appt-header {
+  background: linear-gradient(135deg, #9a0120 0%, #be123c 100%);
+  padding: 24px 32px;
+  color: white;
+  display: flex;
+  border-radius: 12px;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.appt-info h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+  color: white;
+}
+.appt-info p {
+  opacity: 0.9;
+  margin: 0;
+  font-weight: 600;
+}
+
+.status-badge {
+  background: rgba(255,255,255,0.2);
+  padding: 6px 16px;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1px solid rgba(255,255,255,0.3);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.appt-body {
+  padding: 40px 32px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 32px;
+}
+
+.detail-item {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.icon-circle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.icon-date { background: #fff1f2; color: #9a0120; }
+.icon-time { background: #fff7ed; color: #ea580c; }
+.icon-loc { background: #f0f9ff; color: #0284c7; }
+
+.detail-text .label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.detail-text .value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #334155;
+}
+.detail-text .sub-value {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+.appt-footer {
+  margin-top: 32px;
+  padding: 20px;
+  background: #f8fafc;
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid #f1f5f9;
+}
+
+/* Empty State */
+.empty-state-card {
+  text-align: center;
+  padding: 80px 20px;
+  border: 2px dashed #e2e8f0;
+  border-radius: 16px;
+  background: #fdfdfd;
+}
+
+.student-page {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: #f8fafc;
+  min-height: 100vh;
+  padding-bottom: 60px;
+}
+
+.student-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+/* Header Title Style */
+.page-title-box {
+  margin-bottom: 32px;
+  border-left: 6px solid #9a0120;
+  padding-left: 20px;
+}
+
+.page-title-box h1 {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #1a1a1a;
+  margin: 0 0 8px 0;
+}
+
+.page-title-box p {
+  color: #64748b;
+  font-size: 1rem;
+  margin: 0;
 }

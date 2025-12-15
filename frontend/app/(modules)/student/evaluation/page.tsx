@@ -1,6 +1,7 @@
+"use client";
 import React from 'react';
 import Link from 'next/link';
-import { UsergroupAddOutlined, BarChartOutlined } from '@ant-design/icons';
+import { UsergroupAddOutlined, BarChartOutlined, TrophyOutlined } from '@ant-design/icons';
 import '../../../style/evaluation.css';
 
 export default function StudentEvaluationHub() {
@@ -26,16 +27,16 @@ export default function StudentEvaluationHub() {
                         </p>
                     </Link>
 
-                    {/* 2. ดูผลคะแนน (Disabled) */}
-                    <div className="menu-card disabled">
-                        <div className="menu-icon">
-                            <BarChartOutlined />
+                    {/* 2. ดูผลคะแนน (เปิดใช้งานแล้ว!) */}
+                    <Link href="/student/evaluation/result" className="menu-card">
+                        <div className="menu-icon" style={{background: '#fff7ed', color: '#ea580c'}}>
+                            <TrophyOutlined />
                         </div>
                         <h2 className="menu-title">ผลคะแนนของฉัน</h2>
                         <p className="menu-desc">
-                            ประกาศผลคะแนนสอบ (ยังไม่เปิดให้ใช้งาน)
+                            ดูสรุปคะแนนรวมที่ได้รับจากการประเมิน
                         </p>
-                    </div>
+                    </Link>
 
                 </div>
             </div>

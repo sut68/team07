@@ -19,7 +19,6 @@ func TestTopic(t *testing.T) {
 			Description:    "Description about the topic",
 			Status:         "Pending",
 			Proposer_role:  "Student",
-			GroupProjectID: 1,
 		}
 
 		ok, err := govalidator.ValidateStruct(topic)
@@ -36,7 +35,6 @@ func TestTopic(t *testing.T) {
 			Description:    "Description about the topic",
 			Status:         "Pending",
 			Proposer_role:  "Student",
-			GroupProjectID: 1,
 		}
 
 		ok, err := govalidator.ValidateStruct(topic)
@@ -53,7 +51,6 @@ func TestTopic(t *testing.T) {
 			Description:    "Description about the topic",
 			Status:         "Pending",
 			Proposer_role:  "Student",
-			GroupProjectID: 1,
 		}
 
 		ok, err := govalidator.ValidateStruct(topic)
@@ -70,7 +67,6 @@ func TestTopic(t *testing.T) {
 			Description:    "", // ผิดตรงนี้
 			Status:         "Pending",
 			Proposer_role:  "Student",
-			GroupProjectID: 1,
 		}
 
 		ok, err := govalidator.ValidateStruct(topic)
@@ -87,7 +83,6 @@ func TestTopic(t *testing.T) {
 			Description:    "Description about the topic",
 			Status:         "", // ผิดตรงนี้
 			Proposer_role:  "Student",
-			GroupProjectID: 1,
 		}
 
 		ok, err := govalidator.ValidateStruct(topic)
@@ -104,7 +99,6 @@ func TestTopic(t *testing.T) {
 			Description:    "Description about the topic",
 			Status:         "Pending",
 			Proposer_role:  "", // ผิดตรงนี้
-			GroupProjectID: 1,
 		}
 
 		ok, err := govalidator.ValidateStruct(topic)
@@ -113,20 +107,4 @@ func TestTopic(t *testing.T) {
 		g.Expect(err.Error()).To(Equal("ProposerRole is required"))
 	})
 
-	t.Run(`GroupProjectID is required`, func(t *testing.T) {
-		topic := &entity.Topic{
-			Title:          "System Analysis Topic",
-			Objective:      "Objective",
-			Scope:          "Scope",
-			Description:    "Description about the topic",
-			Status:         "Pending",
-			Proposer_role:  "Student",
-			GroupProjectID: 0, // ผิดตรงนี้
-		}
-
-		ok, err := govalidator.ValidateStruct(topic)
-		g.Expect(ok).NotTo(BeTrue())
-		g.Expect(err).NotTo(BeNil())
-		g.Expect(err.Error()).To(Equal("GroupProjectID is required"))
-	})
 }

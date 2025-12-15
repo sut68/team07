@@ -14,7 +14,7 @@ type Topic struct {
     FileAttachment string `json:"file_attachment,omitempty"`
     Proposer_role string `json:"proposer_role" valid:"required~ProposerRole is required"`
 
-	GroupProjectID *uint `json:"group_project_id" valid:"required~GroupProjectID is required"`
+	GroupProjectID *uint `json:"group_project_id"`
 	GroupProject   *GroupProject `gorm:"foreignKey:GroupProjectID" json:"group_project"`
 
     TopicApproval []TopicApproval `gorm:"foreignKey:TopicID" json:"topic_approvals"`

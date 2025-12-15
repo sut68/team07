@@ -6,7 +6,6 @@ import dayjs from 'dayjs';
 import 'dayjs/locale/th';
 import { GetMyProjectAndAppointment } from '../../../services/appointment';
 import '../../../style/appointment.css';
-
 export default function StudentAppointmentPage() {
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -49,7 +48,7 @@ export default function StudentAppointmentPage() {
 
                 {apt ? (
                     // --- Case: มีนัดหมาย ---
-                    <div className="appt-card">
+                    <div className="student-appt-card">
                         
                         {/* Header สีแดง */}
                         <div className="appt-header">

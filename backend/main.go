@@ -16,7 +16,8 @@ import (
 	mockdata "github.com/sut68/team07/backend/mockData"
 	"github.com/sut68/team07/backend/service"
 )
-func InsertDataOpen(){
+
+func InsertDataOpen() {
 	Data := database.DB()
 	mockdata.InsertMock(Data)
 }
@@ -25,7 +26,7 @@ func main() {
 	database.ConnectDatabase()
 	database.SetUpDatabase()
 	//========INSERT MOCK DATA================ ถ้าอยากสร้างข้อมูลปลอมให้เอา comment ออก
-	InsertDataOpen()
+	//InsertDataOpen()
 	//=========================================
 	service.InitEmailConfig()
 	service.StartCleanupWorker(database.DB())
@@ -116,8 +117,9 @@ func main() {
 
 			// Evaluation and Appointment
 			studentGroup.GET("/myAppointment", appointment.GetMyProjectAndAppointment)
+			studentGroup.GET("/evaluation/form", evaluation.GetStudentEvaluationForm)
+			studentGroup.GET("/evaluation/result", evaluation.GetStudentEvaluationResult)
 			studentGroup.POST("/evaluation/peer", evaluation.SavePeerEvaluation)
-
 		}
 
 		teacherOrStudentGroup := protected.Group("/groupProject")
