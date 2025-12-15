@@ -177,6 +177,8 @@
 
 .matrix-scroll-wrapper {
   overflow-x: auto;
+  overflow-y: auto;
+  max-height: 65vh;
   max-width: 100%;
 }
 

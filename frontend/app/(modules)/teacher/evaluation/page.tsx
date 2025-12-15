@@ -13,6 +13,8 @@ import {
 import { useRouter } from 'next/navigation';
 import { GetEvaluationProjects } from '../../../services/evaluation';
 import CriteriaManager from '../../../components/evaluation/criteriaManager';
+import AdvisorProjectCard from '../../../components/evaluation/AdvisorProjectCard';
+import CommitteeProjectCard from '../../../components/evaluation/CommitteeProjectCard';
 import '../../../style/evaluation.css';
 
 const LABEL_MAP: Record<string, string> = {
@@ -30,7 +32,6 @@ export default function TeacherEvaluationDashboard() {
     const [activeTab, setActiveTab] = useState<'advisor' | 'committee'>('advisor');
     const [showCriteriaManager, setShowCriteriaManager] = useState(false);
 
-    // 🔽 modal state
     const [openSelect, setOpenSelect] = useState(false);
     const [selectedProject, setSelectedProject] = useState<any>(null);
 
@@ -53,9 +54,9 @@ export default function TeacherEvaluationDashboard() {
         fetchData();
     }, [activeTab]);
 
-    // 🔽 เลือกประเภทการประเมิน
-    const handleSelectEvaluation = (type: string) => {
-        const appt = selectedProject?.appointments?.find(
+    const handleSelectEvaluation = (type: string, project?: any) => {
+        const targetProject = project || selectedProject;
+        const appt = targetProject?.appointments?.find(
             (a: any) => a.evaluation_name === type
         );
 
@@ -66,8 +67,13 @@ export default function TeacherEvaluationDashboard() {
 
         setOpenSelect(false);
         router.push(
-            `/teacher/evaluation/form/${appt.id}?evalType=${encodeURIComponent(type)}`
+            `/teacher/evaluation/form/${appt.id}?evalType=${encodeURIComponent(type)}&mode=advisor`
         );
+    };
+
+    const handleProjectClick = (proj: any) => {
+        setSelectedProject(proj);
+        setOpenSelect(true);
     };
 
     return (
@@ -116,52 +122,18 @@ export default function TeacherEvaluationDashboard() {
                 ) : projects.length > 0 ? (
                     <div className="project-grid">
                         {projects.map((proj) => (
-                            <div key={proj.id} className="project-card">
-                                <div className={`status-bar ${proj.is_graded ? "graded" : "pending"}`} />
-                                
-                                <div className="card-body">
-                                    <div className="card-top-row">
-                                        <span className="group-tag">Group {proj.group_number}</span>
-                                        {proj.is_graded ? (
-                                            <Tag color="success" icon={<CheckCircleOutlined />}>ตรวจแล้ว</Tag>
-                                        ) : (
-                                            <Tag color="warning" icon={<ClockCircleOutlined />}>รอตรวจ</Tag>
-                                        )}
-                                    </div>
-
-                                    <h3 className="project-name">
-                                        {proj.project_name || "โครงงานคอมพิวเตอร์"}
-                                    </h3>
-
-                                    <div className="member-count">
-                                        <TeamOutlined /> {proj.students?.length || 0} สมาชิก
-                                    </div>
-                                </div>
-
-                                <div className="card-actions">
-                                    {/* 🔽 ประเมิน (เปิด modal) */}
-                                    <button
-                                        className={`btn-card ${proj.is_graded ? 'edit' : 'eval'}`}
-                                        style={{ flex: 1 }}
-                                        onClick={() => {
-                                            setSelectedProject(proj);
-                                            setOpenSelect(true);
-                                        }}
-                                    >
-                                        <EditOutlined /> {proj.is_graded ? 'แก้ไขคะแนน' : 'ประเมินผล'}
-                                    </button>
-
-                                    {proj.is_graded && (
-                                        <Link href={`/teacher/evaluation/summary/${proj.id}`}>
-                                            <Tooltip title="ดูสรุปผลคะแนน">
-                                                <button className="btn-icon-only">
-                                                    <BarChartOutlined />
-                                                </button>
-                                            </Tooltip>
-                                        </Link>
-                                    )}
-                                </div>
-                            </div>
+                            activeTab === 'advisor' ? (
+                                <AdvisorProjectCard 
+                                    key={proj.id} 
+                                    project={proj} 
+                                    onEvaluate={handleProjectClick} 
+                                />
+                            ) : (
+                                <CommitteeProjectCard 
+                                    key={proj.id} 
+                                    project={proj} 
+                                />
+                            )
                         ))}
                     </div>
                 ) : (
@@ -182,16 +154,19 @@ export default function TeacherEvaluationDashboard() {
                     open={openSelect}
                     footer={null}
                     onCancel={() => setOpenSelect(false)}
+                    closable={false}
                     centered
                     width={520}
                 >
-                    <div className="eval-page" style={{ padding: 24 }}>
+                    <div style={{ padding: 24 }}>
                         <h2 style={{ textAlign: "center", marginBottom: 24 }}>
                             เลือกประเภทการประเมิน
                         </h2>
 
                         <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
-                            {selectedProject?.available_evaluations?.map((type: string) => (
+                            {selectedProject?.available_evaluations
+                                ?.filter((type: string) => type !== "Peer Assessment" && type !== "Committee Evaluation")
+                                ?.map((type: string) => (
                                 <button
                                     key={type}
                                     className="btn-primary"

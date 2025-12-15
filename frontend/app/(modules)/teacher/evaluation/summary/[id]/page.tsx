@@ -68,19 +68,42 @@ export default function EvaluationSummaryPage() {
                                         <span className="std-code">{std.student_code}</span>
                                     </div>
                                 </div>
-                                <div className="student-total">
-                                    <span className="label">Total</span>
-                                    <span className="value">{std.grand_total}</span>
+                                <div className="student-total" style={{display: 'flex', gap: '16px'}}>
+                                    <div style={{textAlign: 'right'}}>
+                                        <span className="label" style={{display: 'block', fontSize: '0.75rem', color: '#64748b'}}>Total</span>
+                                        <span className="value" style={{fontSize: '1.1rem', fontWeight: 700}}>{std.grand_total}</span>
+                                    </div>
+                                    <div style={{textAlign: 'right', borderLeft: '1px solid #e2e8f0', paddingLeft: '16px'}}>
+                                        <span className="label" style={{display: 'block', fontSize: '0.75rem', color: '#64748b'}}>Grade</span>
+                                        <span className="value" style={{fontSize: '1.1rem', fontWeight: 700, color: '#9a0120'}}>{std.grade}</span>
+                                    </div>
                                 </div>
                             </div>
                             
                             <div className="score-breakdown">
-                                {std.scores.map((s: any, idx: number) => (
-                                    <div key={idx} className="breakdown-item">
-                                        <span className="breakdown-label">{s.evaluation_name}</span>
-                                        <span className="breakdown-value">{s.average_score}</span>
+                                {data.group_details?.length > 0 && (
+                                    <div style={{marginBottom: 12}}>
+                                        <div style={{fontSize: '0.8rem', color: '#94a3b8', marginBottom: 4, fontWeight: 600}}>คะแนนกลุ่ม (Group Scores)</div>
+                                        {data.group_details.map((g: any, idx: number) => (
+                                            <div key={`g-${idx}`} className="breakdown-item">
+                                                <span className="breakdown-label">{g.evaluation_name}</span>
+                                                <span className="breakdown-value">{g.average_score}</span>
+                                            </div>
+                                        ))}
                                     </div>
-                                ))}
+                                )}
+
+                                {std.scores?.length > 0 && (
+                                    <div>
+                                        <div style={{fontSize: '0.8rem', color: '#94a3b8', marginBottom: 4, fontWeight: 600}}>คะแนนรายบุคคล (Individual Scores)</div>
+                                        {std.scores.map((s: any, idx: number) => (
+                                            <div key={`s-${idx}`} className="breakdown-item">
+                                                <span className="breakdown-label">{s.evaluation_name}</span>
+                                                <span className="breakdown-value">{s.average_score}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     ))}

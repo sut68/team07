@@ -5,6 +5,8 @@ export interface IEvaluationProject {
   project_name: string;
   status: "Pending" | "Graded";
   is_graded: boolean;
+  available_evaluations?: string[];
+  appointments?: any[];
 }
 
 export interface IRubricLevel {

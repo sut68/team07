@@ -17,6 +17,7 @@ export default function EvaluationFormPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const evalTypeFromUrl = searchParams.get('evalType');
+    const modeFromUrl = searchParams.get('mode');
     const appointmentId = Number(params.id);
 
     const [formData, setFormData] = useState<IEvaluationFormResponse | null>(null);
@@ -42,7 +43,7 @@ export default function EvaluationFormPage() {
     const loadForm = async (evaluationName?: string) => {
         setLoading(true);
         try {
-            const formRes = await GetEvaluationForm(appointmentId, evaluationName);
+            const formRes = await GetEvaluationForm(appointmentId, evaluationName, modeFromUrl || undefined);
             setFormData(formRes.data);
             
             const options = formRes.data.available_evaluations ?? [];
