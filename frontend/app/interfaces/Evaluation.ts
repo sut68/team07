@@ -37,6 +37,7 @@ export interface IEvaluationFormResponse {
   group_criteria: ICriteriaForm[];
   individual_criteria: ICriteriaForm[];
   students: IStudentForm[];
+  existing_scores?: Record<string, number>;
 }
 
 
@@ -71,6 +72,7 @@ export interface IPeerScoreData {
 export interface ISaveEvaluationPeerRequest {
   appointment_id: number;
   scores: IPeerScoreData[];
+
 }
 
 export interface IEvaluationResultResponse {

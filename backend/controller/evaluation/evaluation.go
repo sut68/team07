@@ -379,6 +379,16 @@ func GetStudentEvaluationForm(c *gin.Context) {
 		}
 	}
 
+	// Fetch existing peer evaluation scores
+	var existingScores []entity.IndividualScore
+	db.Where("appointment_id = ? AND student_evaluator_id = ?", appointment.ID, claims.ID).
+		Find(&existingScores)
+
+	scoresMap := make(map[uint]float64)
+	for _, s := range existingScores {
+		scoresMap[s.StudentID] = s.Score
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"appointment": gin.H{
 			"id": appointment.ID,
@@ -390,6 +400,7 @@ func GetStudentEvaluationForm(c *gin.Context) {
 		"group_criteria":      groupCriteria,
 		"individual_criteria": individualCriteria,
 		"students":            students,
+		"existing_scores":     scoresMap,
 	})
 }
 

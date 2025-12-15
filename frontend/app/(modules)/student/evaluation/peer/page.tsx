@@ -20,7 +20,7 @@ export default function PeerEvaluationPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [members, setMembers] = useState<any[]>([]);
-    const [appointmentId] = useState<number | null>(null);
+    const [appointmentId, setAppointmentId] = useState<number | null>(null);
     const [scores, setScores] = useState<Record<number, number>>({});
     const [submitting, setSubmitting] = useState(false);
 
@@ -40,6 +40,18 @@ export default function PeerEvaluationPage() {
                             (s: any) => s.student_id !== myId
                         );
                         setMembers(filtered);
+                    }
+
+                    if (res.data.appointment_id) {
+                        setAppointmentId(res.data.appointment_id);
+                    }
+
+                    if (res.data.existing_scores) {
+                        const loadedScores: Record<number, number> = {};
+                        Object.entries(res.data.existing_scores).forEach(([key, value]) => {
+                            loadedScores[Number(key)] = Number(value);
+                        });
+                        setScores(loadedScores);
                     }
                 }
             } catch (error) {
