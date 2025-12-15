@@ -2,9 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Dropdown, Avatar } from 'antd';
-import { DownOutlined, UserOutlined, ExclamationCircleOutlined, LogoutOutlined } from '@ant-design/icons';
+import { DownOutlined, UserOutlined, ExclamationCircleOutlined, LogoutOutlined, BellOutlined } from '@ant-design/icons';
 import { GetUserProfile } from '../../services/user'; // Path ของ service คุณ
 import { Logout } from '../../services/login';
 import { useAuth } from "../../(modules)/roleCheck/authContext";
@@ -16,6 +16,18 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
     const [userInitial, setUserInitial] = useState("?");
     const { logoutClient } = useAuth();
     const navLinkStyle: React.CSSProperties = { color: 'rgba(255,255,255,0.95)', textDecoration: 'none', fontWeight: 700 };
+    const pathname = usePathname() || '';
+
+    const getNavStyle = (href: string): React.CSSProperties => {
+        const isActive = pathname === href || (href !== '/' && pathname.startsWith(href));
+        return {
+            ...navLinkStyle,
+            color: navLinkStyle.color,
+            paddingBottom: isActive ? 6 : 0,
+            borderBottom: isActive ? '3px solid #ffffffff' : '3px solid transparent',
+            transition: 'border-color 150ms ease, padding-bottom 150ms ease',
+        };
+    };
 
     const menuItems = [
         {
@@ -37,8 +49,8 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
     const handleLogout = async () => {
         try {
             await Logout(); // 1. แจ้ง Server ให้ลบ Cookie
+            router.replace('/login'); // เปลี่ยนหน้าก่อน
             logoutClient(); // 2. *** สำคัญ *** แจ้ง Client ให้ลบ State ทิ้งทันที
-            router.replace('/login');
         } catch (error) {
             router.replace('/login');
         }
@@ -92,11 +104,12 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
                 }}
                 role="banner"
             >
-                <nav style={{ position: 'absolute', left: 200, display: 'flex', gap: 40 }}>
-                    <Link href="/teacher/dashboard" style={navLinkStyle}>หน้าหลัก</Link>
-                    <Link href="/teacher/advisory" style={navLinkStyle}>ที่ปรึกษาของฉัน</Link>
-                    <Link href="/teacher/group" style={navLinkStyle}>กลุ่มในที่ปรึกษา</Link>
-                    <Link href="/teacher/topic" style={navLinkStyle}>หัวข้อโครงงาน</Link>
+                <nav style={{ position: 'absolute', left: 120, display: 'flex', gap: 40 }}>
+                    <Link href="/teacher/dashboard" style={getNavStyle('/teacher/dashboard')}>หน้าหลัก</Link>
+                    <Link href="/teacher/advisor" style={getNavStyle('/teacher/advisor')}>ที่ปรึกษาของฉัน</Link>
+                    <Link href="/teacher/group" style={getNavStyle('/teacher/group')}>กลุ่มในที่ปรึกษา</Link>
+                    <Link href="/teacher/topic" style={getNavStyle('/teacher/topic')}>หัวข้อโครงงาน</Link>
+                    <Link href="/chat" style={getNavStyle('/chat')}>แชท</Link>
                 </nav>
 
                 <Link href="/teacher/dashboard" aria-label="หน้าหลัก" className="topbar-logo" style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -104,14 +117,14 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
                 </Link>
 
                 <div style={{ position: 'absolute', right: 200, display: 'flex', gap: 40, alignItems: 'center' }}>
-                    <Link href="/chat" style={navLinkStyle}>แชท</Link>
-                    <Link href="/teacher/progress" style={navLinkStyle}>ความคืบหน้า</Link>
-                    <Link href="/teacher/appointment" style={navLinkStyle}>การนัดหมาย</Link>
-                    <Link href="/teacher/evaluation" style={navLinkStyle}>การประเมิน</Link>
-                    <Link href="/teacher/storage" style={navLinkStyle}>คลังโครงงาน</Link>
+                    <Link href="/teacher/progress" style={getNavStyle('/teacher/progress')}>ความคืบหน้า</Link>
+                    <Link href="/teacher/appointment" style={getNavStyle('/teacher/appointment')}>การนัดหมาย</Link>
+                    <Link href="/teacher/evaluation" style={getNavStyle('/teacher/evaluation')}>การประเมิน</Link>
+                    <Link href="/teacher/storage" style={getNavStyle('/teacher/storage')}>คลังโครงงาน</Link>
                 </div>
-                {/* Dropdown user menu */}
-                <div style={{ position: 'absolute', right: 30 }}>
+
+                <div style={{ position: 'absolute', right: 30, display: 'flex', alignItems: 'center', gap: 16 }}>
+                    <BellOutlined style={{ fontSize: '20px', cursor: 'pointer', color: '#fff' }} />
                     <Dropdown
                         menu={{ items: menuItems, onClick: onMenuClick }}
                         placement="bottomRight"

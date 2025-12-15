@@ -28,8 +28,8 @@ export default function RoleGuard({ children, allowedRoles }: RoleGuardProps) {
         intervalRef.current = setInterval(() => {
           setCountdown((prev) => {
             if (prev <= 1) {
-                if (intervalRef.current) clearInterval(intervalRef.current);
-                return 0;
+              if (intervalRef.current) clearInterval(intervalRef.current);
+              return 0;
             }
             return prev - 1;
           });
@@ -54,7 +54,7 @@ export default function RoleGuard({ children, allowedRoles }: RoleGuardProps) {
     // หยุด Timer ทั้งหมดทันที
     if (timerRef.current) clearTimeout(timerRef.current);
     if (intervalRef.current) clearInterval(intervalRef.current);
-    
+
     // พาผู้ใช้ย้อนกลับไปหน้าก่อนหน้านี้
     router.back();
   };
@@ -87,18 +87,18 @@ export default function RoleGuard({ children, allowedRoles }: RoleGuardProps) {
           }
           extra={[
             // ปุ่มไป Login (Primary)
-            <Button 
-              key="login" 
-              type="primary" 
-              danger 
+            <Button
+              key="login"
+              type="primary"
+              danger
               onClick={() => router.push('/login')}
             >
               ไปหน้า Login
             </Button>,
-            
+
             // ปุ่มยกเลิก/ย้อนกลับ (Secondary)
-            <Button 
-              key="cancel" 
+            <Button
+              key="cancel"
               onClick={handleCancel}
             >
               ยกเลิก (ย้อนกลับ)

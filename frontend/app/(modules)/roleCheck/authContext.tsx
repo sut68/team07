@@ -8,7 +8,7 @@ interface AuthContextType {
   userRole: string | null;
   isLoading: boolean;
   user: any;
-  fetchUser: () => Promise<void>; 
+  fetchUser: () => Promise<void>;
   logoutClient: () => void;
 }
 
@@ -16,8 +16,8 @@ const AuthContext = createContext<AuthContextType>({
   userRole: null,
   isLoading: true,
   user: null,
-  fetchUser: async () => {},
-  logoutClient: () => {},
+  fetchUser: async () => { },
+  logoutClient: () => { },
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -47,6 +47,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // 3. ฟังก์ชันสำหรับเคลียร์ค่าตอนกด Logout (เพื่อให้ค่าหายไปทันทีไม่ต้องรอ Server)
   const logoutClient = useCallback(() => {
+    setIsLoading(true); // ป้องกันไม่ให้หน้า RoleCheck เด้งขึ้นมา
     setUser(null);
     setUserRole(null);
     router.refresh();

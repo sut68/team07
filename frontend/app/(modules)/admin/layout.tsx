@@ -8,10 +8,10 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <RoleGuard allowedRoles={["Admin"]}>
-      <AdminSidebar>
-          {children}
-      </AdminSidebar>
-    </RoleGuard>
+    <AdminSidebar>
+      <RoleGuard allowedRoles={["Admin"]}>
+        {children}
+      </RoleGuard>
+    </AdminSidebar>
   );
 }
