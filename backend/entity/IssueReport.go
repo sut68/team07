@@ -9,7 +9,7 @@ import (
 type IssueReport struct {
 	gorm.Model
 	Detail     string    `json:"detail" valid:"required~Detail is required"`
-	ReportDate time.Time `json:"report_date " valid:"required~ReportDate is required"`
+	ReportDate time.Time `json:"report_date" valid:"required~ReportDate is required"`
 
 	StatusID uint         `json:"status_id" valid:"required~StatusID is required"`
 	Status   *IssueStatus `gorm:"foreignKey:StatusID" json:"status"`

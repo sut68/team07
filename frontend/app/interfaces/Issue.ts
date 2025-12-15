@@ -6,12 +6,12 @@ import { UserProfileInterface } from "../interfaces/Users";
 
 export interface IssueTypeInterface {
     ID: number;
-    Type: string;
+    type: string;
 }
 
 export interface IssueStatusInterface {
     ID: number;
-    Status: string;
+    status: string;
 }
 
 export interface IssueReportInterface {
@@ -29,6 +29,8 @@ export interface IssueReportInterface {
     user_id?: number;
     user?: UserProfileInterface; // ✅ แก้มาใช้ Interface ของคุณ
 }
+
+
 
 export interface CreateIssueInterface {
     detail: string;

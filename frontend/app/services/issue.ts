@@ -17,8 +17,20 @@ async function CreateIssue(data: CreateIssueInterface) {
     return await api.post("/issues", data);
 }
 
+async function GetMyIssues() {
+    return await api.get("/issues/my");
+}
+
+// PATCH: อัปเดตสถานะ (Admin Only)
+async function UpdateIssueStatus(id: number, statusID: number) {
+    // ส่งเป็น JSON object { "status_id": ... }
+    return await api.patch(`/admin/issues/${id}`, { status_id: statusID });
+}
+
 export {
     GetIssues,
     GetIssueById,
-    CreateIssue
+    CreateIssue,
+    GetMyIssues,
+    UpdateIssueStatus
 };
