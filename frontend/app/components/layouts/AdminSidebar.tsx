@@ -27,7 +27,7 @@ export default function AdminSidebar({ children }: SidebarProps) {
   const router = useRouter();
   const { logoutClient } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
-  
+
   const selectedKey = useMemo(() => {
     // Map pathname to menu key; use the first two segments
     const parts = pathname.split('/').filter(Boolean);
@@ -43,19 +43,18 @@ export default function AdminSidebar({ children }: SidebarProps) {
     { key: '/logout', icon: <LogoutOutlined />, label: <span>ออกจากระบบ</span> },
   ];
   const handleLogout = async () => {
-      try {
-            await Logout(); // 1. แจ้ง Server ให้ลบ Cookie
-            logoutClient(); // 2. *** สำคัญ *** แจ้ง Client ให้ลบ State ทิ้งทันที
-            router.replace('/login');
-        } catch (error) {
-            router.replace('/login');
-        }
+    try {
+      await Logout(); // 1. แจ้ง Server ให้ลบ Cookie
+      logoutClient(); // 2. *** สำคัญ *** แจ้ง Client ให้ลบ State ทิ้งทันที
+      router.replace('/login');
+    } catch (error) {
+      router.replace('/login');
+    }
   };
   const onMenuClick = ({ key }: { key: string }) => {
-    // แก้ตรงนี้
-    if (key.endsWith('/logout') || key === 'logout') { // เช็คเผื่อ key เปลี่ยน
-       handleLogout();
-       return;
+    if (key === '/logout') {
+      handleLogout();
+      return;
     }
     router.push(key);
   };
@@ -66,7 +65,7 @@ export default function AdminSidebar({ children }: SidebarProps) {
       <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
         <div className="sidebar-header">
           <Link href="/admin/dashboard" className="logo-link">
-            <img src="/image/logo.png" alt="Admin logo" className={`logo`} />
+            <img src="/image/logo1.png" alt="Admin logo" className={`logo`} />
           </Link>
         </div>
 

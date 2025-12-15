@@ -14,8 +14,8 @@ type TopicApproval struct {
     TeacherID uint    `json:"teacher_id" valid:"required~TeacherID is required"`
     Teacher   *User `gorm:"foreignKey:TeacherID" json:"teacher"`
 
-    SelectionID uint          `json:"selection_id" valid:"required~SelectionID is required"`
-    TopicSelection *TopicSelection `gorm:"foreignKey:SelectionID" json:"topic_selection"`
+    TopicID uint          `json:"topic_id" valid:"required~TopicID is required"`
+    Topic   *Topic `gorm:"foreignKey:TopicID" json:"topic"`
+
 }
 
-//true

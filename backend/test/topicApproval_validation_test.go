@@ -18,7 +18,7 @@ func TestTopicApproval(t *testing.T) {
 			Comment:      "Good Job",
 			ApprovalDate: time.Now().AddDate(-20, 0, 0),
 			TeacherID:    1,
-			SelectionID:  1,
+			TopicID:      1,
 		}
 
 		ok, err := govalidator.ValidateStruct(topicApproval)
@@ -33,7 +33,7 @@ func TestTopicApproval(t *testing.T) {
 			Comment:      "", // ผิดตรงนี้
 			ApprovalDate: time.Now().AddDate(-20, 0, 0),
 			TeacherID:    1,
-			SelectionID:  1,
+			TopicID:      1,
 		}
 
 		ok, err := govalidator.ValidateStruct(topicApproval)
@@ -48,7 +48,7 @@ func TestTopicApproval(t *testing.T) {
 			Comment:      "Good Job",
 			ApprovalDate: time.Time{}, // ผิดตรงนี้
 			TeacherID:    1,
-			SelectionID:  1,
+			TopicID:      1,
 		}
 
 		ok, err := govalidator.ValidateStruct(topicApproval)
@@ -63,7 +63,7 @@ func TestTopicApproval(t *testing.T) {
 			Comment:      "Good Job",
 			ApprovalDate: time.Now().AddDate(-20, 0, 0),
 			TeacherID:    0, // ผิดตรงนี้
-			SelectionID:  1,
+			TopicID:      1,
 		}
 
 		ok, err := govalidator.ValidateStruct(topicApproval)
@@ -72,18 +72,18 @@ func TestTopicApproval(t *testing.T) {
 		g.Expect(err.Error()).To(Equal("TeacherID is required"))
 	})
 
-	t.Run(`SelectionID is required`, func(t *testing.T) {
+	t.Run(`TopicID is required`, func(t *testing.T) {
 		topicApproval := &entity.TopicApproval{
 			Status:       "Approved",
 			Comment:      "Good Job",
 			ApprovalDate: time.Now().AddDate(-20, 0, 0),
 			TeacherID:    1,
-			SelectionID:  0, // ผิดตรงนี้
+			TopicID:      0, // ผิดตรงนี้
 		}
 
 		ok, err := govalidator.ValidateStruct(topicApproval)
 		g.Expect(ok).NotTo(BeTrue())
 		g.Expect(err).NotTo(BeNil())
-		g.Expect(err.Error()).To(Equal("SelectionID is required"))
+		g.Expect(err.Error()).To(Equal("TopicID is required"))
 	})
 }

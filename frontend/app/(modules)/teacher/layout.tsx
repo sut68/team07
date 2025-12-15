@@ -1,4 +1,3 @@
-"use client";
 import RoleGuard from "../roleCheck/roleGuard";
 import TeacherTopbar from "../../components/layouts/TeacherTopbar"; 
 
@@ -8,10 +7,10 @@ export default function TeacherLayout({
   children: React.ReactNode;
 }) {
   return (
-    <RoleGuard allowedRoles={["Teacher"]}>
-      <TeacherTopbar userRole="Student">
+    <TeacherTopbar userRole="Teacher">
+      <RoleGuard allowedRoles={["Teacher"]}>
           {children}
-      </TeacherTopbar>
-    </RoleGuard>
+      </RoleGuard>
+    </TeacherTopbar>
   );
 }

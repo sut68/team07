@@ -1,8 +1,11 @@
-:root{
-  --sidebar-width: 256px; /* 16rem */
-  --sidebar-collapsed-width: 80px; /* 5rem */
-  --sidebar-bg: #ffffff;
+:root {
+  --sidebar-width: 256px;
+  /* 16rem */
+  --sidebar-collapsed-width: 80px;
+  /* 5rem */
+  --sidebar-bg: #8A011D;
   --sidebar-border: #e5e7eb;
+  --sidebar-text: #ffffff;
 }
 
 .app-container {
@@ -17,10 +20,31 @@
   top: 0;
   border-right: 1px solid var(--sidebar-border);
   background: var(--sidebar-bg);
+  color: var(--sidebar-text);
   z-index: 20;
   display: flex;
   flex-direction: column;
   transition: width 200ms ease;
+}
+
+/* Override Ant Menu Colors */
+.sidebar .ant-menu {
+  background: transparent;
+  color: var(--sidebar-text);
+}
+
+.sidebar .ant-menu-item {
+  color: var(--sidebar-text) !important;
+  font-weight: 600 !important;
+}
+
+.sidebar .ant-menu-item-selected {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  color: #fff !important;
+}
+
+.sidebar .ant-menu-item:hover {
+  color: #fff !important;
 }
 
 .sidebar.collapsed {
@@ -40,20 +64,22 @@
 }
 
 .logo {
-  width: 100px;
-  height: 100px;
+  width: 128px;
+  height: 128px;
   object-fit: contain;
   transition: width 200ms ease, height 200ms ease;
 }
 
 .sidebar.collapsed .logo {
-  width: 48px;
-  height: 48px;
+  width: 64px;
+  height: 64px;
 }
 
 .menu-wrapper {
-  height: calc(100vh - 6rem);
-  overflow: auto;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: auto;
 }
 
 .toggle-area {
@@ -71,7 +97,9 @@
   cursor: pointer;
 }
 
-.toggle-btn:hover { background: #f3f4f6; }
+.toggle-btn:hover {
+  background: #f3f4f6;
+}
 
 .main-content {
   padding: 40px;
@@ -119,16 +147,23 @@
   justify-content: center;
   cursor: pointer;
   z-index: 30;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
 
-.collapse-handle.collapsed { left: calc(var(--sidebar-collapsed-width) - 18px); }
+.collapse-handle.collapsed {
+  left: calc(var(--sidebar-collapsed-width) - 18px);
+}
 
 /* small tweak when sidebar collapsed to center icon inside smaller area */
-.sidebar.collapsed .logout-btn span.label { display: none; }
+.sidebar.collapsed .logout-btn span.label {
+  display: none;
+}
 
 /* make Menu take full width */
-.menu-wrapper .ant-menu { border-right: none; }
+.menu-wrapper .ant-menu {
+  border-right: none;
+}
+
 /* Center icons when sidebar is collapsed */
 .sidebar.collapsed .menu-wrapper .ant-menu-inline .ant-menu-item {
   justify-content: center !important;
