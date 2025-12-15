@@ -207,6 +207,8 @@ export default function BookingModal({ visible, onClose, onSuccess, rooms, types
                             setMode('manual');
                             form.setFieldValue('type_id', undefined);
                             form.setFieldValue('group_id', undefined);
+                            form.setFieldValue('evaluation_id', undefined);
+                            setEvaluations([]);
                         }}
                         className={`flex-1 h-10 text-lg font-semibold rounded-xl transition-all 
                         flex items-center justify-center gap-3
@@ -226,6 +228,8 @@ export default function BookingModal({ visible, onClose, onSuccess, rooms, types
                             const finalType = types.find(t => t.id === 3 || t.name === "Final Defense");
                             if (finalType) form.setFieldValue('type_id', finalType.id);
                             form.setFieldValue('group_id', undefined);
+                            form.setFieldValue('evaluation_id', undefined);
+                            setEvaluations([]);
                         }}
                         className={`flex-1 h-10 text-lg font-semibold rounded-xl transition-all 
                             flex items-center justify-center gap-3

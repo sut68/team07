@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { Spin } from 'antd';
-import { CalendarOutlined, ClockCircleOutlined, EnvironmentOutlined, BellOutlined } from '@ant-design/icons';
+import { CalendarOutlined, ClockCircleOutlined, EnvironmentOutlined, BellOutlined, FileTextOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import 'dayjs/locale/th';
 import { GetMyProjectAndAppointment } from '../../../services/appointment';
@@ -103,6 +103,19 @@ export default function StudentAppointmentPage() {
                                         <div className="sub-value">{apt.location}</div>
                                     </div>
                                 </div>
+
+                                {/* Evaluation Type */}
+                                {apt.evaluation_name && (
+                                    <div className="detail-item">
+                                        <div className="icon-circle" style={{backgroundColor: '#f3e8ff', color: '#9333ea'}}>
+                                            <FileTextOutlined />
+                                        </div>
+                                        <div className="detail-text">
+                                            <div className="label">ประเภทการประเมิน</div>
+                                            <div className="value">{apt.evaluation_name}</div>
+                                        </div>
+                                    </div>
+                                )}
 
                             </div>
 

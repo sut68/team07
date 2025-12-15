@@ -76,6 +76,39 @@ export default function StudentResultPage() {
                                     <div className="mini-score-label">เกรด (Grade)</div>
                                 </div>
                             </div>
+
+                            {(result.group_details?.length > 0 || result.individual_details?.length > 0) && (
+                                <>
+                                    <div className="result-divider" style={{margin: '24px 0'}} />
+                                    <div style={{textAlign: 'left', width: '100%'}}>
+                                        <h3 style={{fontSize: '1.1rem', fontWeight: 600, marginBottom: 16, color: '#333'}}>รายละเอียดคะแนน (Score Breakdown)</h3>
+                                        
+                                        {result.group_details?.length > 0 && (
+                                            <div style={{marginBottom: 16}}>
+                                                <h4 style={{fontSize: '0.95rem', color: '#64748b', marginBottom: 8}}>คะแนนกลุ่ม (Group Scores)</h4>
+                                                {result.group_details.map((item: any, idx: number) => (
+                                                    <div key={idx} style={{display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px dashed #e2e8f0'}}>
+                                                        <span>{item.evaluation_name}</span>
+                                                        <span style={{fontWeight: 600}}>{item.score}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {result.individual_details?.length > 0 && (
+                                            <div>
+                                                <h4 style={{fontSize: '0.95rem', color: '#64748b', marginBottom: 8}}>คะแนนรายบุคคล (Individual Scores)</h4>
+                                                {result.individual_details.map((item: any, idx: number) => (
+                                                    <div key={idx} style={{display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px dashed #e2e8f0'}}>
+                                                        <span>{item.evaluation_name}</span>
+                                                        <span style={{fontWeight: 600}}>{item.score}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </>
+                            )}
                         </div>
                     ) : (
                         <div className="empty-state-card">

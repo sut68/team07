@@ -25,10 +25,14 @@ async function GetEvaluationProjects(typeId?: number, mode?: 'advisor' | 'commit
 }
 
 // ดึงฟอร์มประเมิน (เกณฑ์ + รายชื่อเด็ก)
-async function GetEvaluationForm(appointmentId: number | string, evaluationName?: string) {
+async function GetEvaluationForm(appointmentId: number | string, evaluationName?: string, mode?: string) {
     let url = `/teacher/evaluation/form/${appointmentId}`;
-    if (evaluationName) {
-        url += `?evaluation_name=${encodeURIComponent(evaluationName)}`;
+    const params = new URLSearchParams();
+    if (evaluationName) params.append("evaluation_name", evaluationName);
+    if (mode) params.append("mode", mode);
+
+    if (params.toString()) {
+        url += `?${params.toString()}`;
     }
     return await api.get<IEvaluationFormResponse>(url);
 }
