@@ -1,7 +1,5 @@
 "use client";
 import React from 'react';
-import { Tag, Empty } from 'antd';
-import { CalendarOutlined, ClockCircleOutlined, EnvironmentOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import 'dayjs/locale/th';
 
@@ -10,62 +8,112 @@ interface CalendarViewProps {
     onSelect: (appt: any) => void;
 }
 
+// สร้าง Time Slots 08:00 - 18:00
+const TIME_SLOTS = Array.from({ length: 11 }, (_, i) => i + 8); // [8, 9, ..., 18]
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const DAYS_TH = ['จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์', 'อาทิตย์'];
+
 export default function CalendarView({ appointments, onSelect }: CalendarViewProps) {
-    if (appointments.length === 0) {
-        return (
-            <div className="flex flex-col items-center justify-center h-64 text-gray-400 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
-                <CalendarOutlined style={{ fontSize: 48, marginBottom: 16 }} />
-                <p>ยังไม่มีนัดหมายในขณะนี้</p>
-            </div>
-        );
-    }
+    
+    // Helper: คำนวณตำแหน่ง CSS (Top) และความสูง (Height)
+    const getStyle = (appt: any) => {
+        const start = dayjs(appt.start_date_time);
+        const startHour = start.hour();
+        const startMin = start.minute();
+        const duration = appt.duration_min;
 
+        // คำนวณ Top: เริ่มที่ 8 โมง = 0px. 1 ชม. = 100% ของ Row ความสูง
+        // เราใช้ Grid Row แทน: Row เริ่มที่ 2 (เพราะ Row 1 คือ Header)
+        // สูตร: (Hour - 8) + 2
+        const gridRowStart = (startHour - 8) + 2;
+        
+        // Offset ละเอียดระดับนาที (ถ้าอยากเป๊ะมากต้องใช้ absolute top % แต่ Grid ง่ายกว่า)
+        // เพื่อความง่ายและ Design ที่ Clean: เราจะวางลงใน Slot หลัก แล้วขยับ margin-top เอา
+        const topOffset = (startMin / 60) * 100; // % ของความสูงช่อง
+        
+        // ความสูง: 1 ชม (60นาที) = 100% ความสูงช่อง
+        const heightPercent = (duration / 60) * 100;
+
+        return {
+            top: `${topOffset}%`,
+            height: `${heightPercent}%`,
+            gridRowStart: gridRowStart,
+            zIndex: 5
+        };
+    };
+
+    // Helper: หา Appointment ในวันนั้นๆ และเวลานั้นๆ
+    // *แต่แบบ Grid เรา map appt โดยตรงเลยดีกว่า ไม่ต้อง loop slot*
+    
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto max-h-[600px] p-2">
-            {appointments.map((appt) => (
-                <div 
-                    key={appt.id} 
-                    className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md hover:border-red-200 transition cursor-pointer relative overflow-hidden group"
-                    onClick={() => onSelect(appt)}
-                >
-                    {/* แถบสีด้านซ้าย */}
-                    <div className={`absolute top-0 left-0 w-1.5 h-full ${appt.type_name.includes('Final') ? 'bg-orange-500' : 'bg-[#9a0120]'}`}></div>
-                    
-                    <div className="pl-4">
-                        <div className="flex justify-between items-start mb-3">
-                            <Tag color={appt.type_name.includes('Final') ? 'orange' : 'red'} className="m-0">
-                                {appt.type_name}
-                            </Tag>
-                            <span className="text-xs text-gray-400 font-mono">#{appt.id}</span>
-                        </div>
-                        
-                        <h3 className="font-bold text-gray-800 text-lg mb-2 line-clamp-1" title={appt.group_name}>
-                            {appt.group_name || `Group ${appt.group_number}`}
-                        </h3>
-                        
-                        <div className="text-sm text-gray-600 space-y-1.5">
-                            <div className="flex items-center gap-2">
-                                <CalendarOutlined className="text-gray-400"/>
-                                <span>{dayjs(appt.start_date_time).locale('th').format('DD MMM BBBB')}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <ClockCircleOutlined className="text-gray-400"/>
-                                <span>
-                                    {dayjs(appt.start_date_time).format('HH:mm')} - {dayjs(appt.start_date_time).add(appt.duration_min, 'minute').format('HH:mm')}
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <EnvironmentOutlined className="text-gray-400"/>
-                                <span>{appt.room_name} ({appt.location})</span>
-                            </div>
-                        </div>
-
-                        <div className="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-400 flex justify-between">
-                            <span>ผู้สร้าง: {appt.teacher_name}</span>
-                        </div>
-                    </div>
+        <div className="timetable-container">
+            {/* 1. Header Row (มุมซ้ายบนว่าง) */}
+            <div className="time-col-header"></div> 
+            {DAYS_TH.map((day, index) => (
+                <div key={day} className={`day-header ${dayjs().day() === index + 1 ? 'today' : ''}`}>
+                    {day}
+                    <span style={{fontSize: '0.8rem', fontWeight: 'normal'}}>
+                        {/* โชว์วันที่ (สมมติเป็นสัปดาห์ปัจจุบัน) */}
+                        {dayjs().startOf('week').add(index + 1, 'day').format('DD/MM')}
+                    </span>
                 </div>
             ))}
+
+            {/* 2. Grid Content */}
+            {TIME_SLOTS.map((hour) => (
+                <React.Fragment key={hour}>
+                    {/* Time Label Column */}
+                    <div className="time-label" style={{ gridRow: (hour - 8) + 2 }}>
+                        {`${hour.toString().padStart(2, '0')}:00`}
+                    </div>
+
+                    {/* 7 Columns for Days */}
+                    {DAYS.map((_, dayIndex) => (
+                        <div 
+                            key={`${hour}-${dayIndex}`} 
+                            className={`grid-cell ${hour === 12 ? 'lunch-break-row' : ''}`}
+                            style={{ 
+                                gridRow: (hour - 8) + 2,
+                                gridColumn: dayIndex + 2 
+                            }}
+                        />
+                    ))}
+                </React.Fragment>
+            ))}
+
+            {/* 3. Appointments Layer (Overlay) */}
+            {appointments.map((appt) => {
+                const start = dayjs(appt.start_date_time);
+                
+                let dayIndex: number = start.day(); 
+                if (dayIndex === 0) dayIndex = 7;
+                const gridColumn = dayIndex + 1;
+
+                const style = getStyle(appt);
+
+                return (
+                    <div
+                        key={appt.id}
+                        className={`appt-card ${appt.type_name?.includes('Final') ? 'appt-auto' : 'appt-manual'}`}
+                        style={{
+                            gridColumn: gridColumn,
+                            gridRow: style.gridRowStart,
+                            marginTop: `${(dayjs(appt.start_date_time).minute() / 60) * 50}px`, // 50px คือความสูงคร่าวๆของ row
+                            height: `${(appt.duration_min / 60) * 100}%`, // ปรับความสูงตาม duration
+                            position: 'relative', // Override absolute ให้มันอยู่ใน Grid cell ได้ (หรือจะใช้ absolute ก็ได้ถ้า parent relative)
+                        }}
+                        onClick={() => onSelect(appt)}
+                    >
+                        <span className="appt-time">
+                            {dayjs(appt.start_date_time).format('HH:mm')} - {dayjs(appt.start_date_time).add(appt.duration_min, 'minute').format('HH:mm')}
+                        </span>
+                        <span className="appt-title">
+                            {appt.group_name || `Group ${appt.group_number}`}
+                        </span>
+                        <div style={{fontSize: '0.7rem', opacity: 0.7}}>{appt.room_name}</div>
+                    </div>
+                );
+            })}
         </div>
     );
 }
