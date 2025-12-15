@@ -131,7 +131,10 @@ func CreateAppointment(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "The room is not available at this time."})
 		return
 	}
-
+	if appointment.StartDateTime.Before(time.Now()) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ไม่สามารถสร้างนัดหมายย้อนหลังได้"})
+		return
+	}
 	tx := db.Begin()
 
 	if err := tx.Create(&appointment).Error; err != nil {
@@ -198,17 +201,27 @@ func AutoCreateAppointments(c *gin.Context) {
 		return
 	}
 
+	if req.StartDateTime.Before(time.Now()) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ไม่สามารถสร้างนัดหมายย้อนหลังได้"})
+		return
+	}
+
 	claims, _ := middleware.GetClaimsFromContext(c)
 	db := database.DB()
 
 	var validSlots []time.Time
 	currentTime := req.StartDateTime
 
+	// Create a location for Thailand (UTC+7)
+	loc := time.FixedZone("ICT", 7*60*60)
+
 	for currentTime.Add(time.Duration(req.DurationMin)*time.Minute).Before(req.EndDateTime) ||
 		currentTime.Add(time.Duration(req.DurationMin)*time.Minute).Equal(req.EndDateTime) {
 
-		startHour := currentTime.Hour()
-		startMin := currentTime.Minute()
+		// Convert to local time for lunch check
+		localTime := currentTime.In(loc)
+		startHour := localTime.Hour()
+		startMin := localTime.Minute()
 		slotStartMins := (startHour * 60) + startMin
 		slotEndMins := slotStartMins + req.DurationMin
 		lunchStartMins := 12 * 60
@@ -235,8 +248,14 @@ func AutoCreateAppointments(c *gin.Context) {
 		return
 	}
 
+	// Filter out groups that already have a scheduled appointment of the same type
+	subQuery := db.Model(&entity.Appointment{}).
+		Select("group_project_id").
+		Where("appointment_status = ? AND appointment_type_id = ?", "scheduled", req.AppointmentTypeID)
+
 	var groups []entity.GroupProject
 	if err := db.Where("group_status IN ?", []string{"Pending", "In Process"}).
+		Where("id NOT IN (?)", subQuery).
 		Order("RANDOM()").
 		Limit(len(validSlots)).
 		Find(&groups).Error; err != nil {
