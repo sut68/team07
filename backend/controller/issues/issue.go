@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sut68/team07/backend/database"
 	"github.com/sut68/team07/backend/entity"
+	"github.com/sut68/team07/backend/middleware"
 )
 
 // CreateIssueInput ใช้สำหรับรับค่าจากหน้าบ้าน
@@ -44,11 +45,10 @@ func CreateIssue(c *gin.Context) {
 	}
 
 	// 4. สร้าง Object IssueReport
-	// สมมติให้ StatusID = 1 คือ "รอการแก้ไข" หรือ "Pending" (ขึ้นอยู่กับ Mock Data ของคุณ)
 	issue := entity.IssueReport{
 		Detail:     input.Detail,
 		ReportDate: time.Now(), // ใช้วันเวลาปัจจุบัน
-		StatusID:   1,          // Default Status (เช่น 1 = Pending)
+		StatusID:   3,          // Default Status 3 = Pending
 		TypeID:     input.TypeID,
 		UserID:     input.UserID,
 	}
@@ -95,6 +95,73 @@ func GetIssueReportByID(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, issue)
+}
+
+// GET: /issues/my ดึงรายการแจ้งปัญหา "เฉพาะของตัวเอง"
+func GetMyIssues(c *gin.Context) {
+	db := database.DB()
+	var issues []entity.IssueReport
+
+	// 1. ดึง UserID จาก Token (ที่ Login เข้ามา)
+	// สมมติว่า middleware คุณเก็บ userId ไว้ใน key "userId" หรือดึงผ่าน Helper
+	// ถ้าใช้ pattern เดียวกับ GetUserProfile ก่อนหน้านี้:
+	// (ต้อง import middleware ด้วยนะครับ)
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Invalid Token"})
+		return
+	}
+	userId := claims.ID // ดึง ID จาก Claims
+
+	// ค้นหา Issue โดยใส่เงื่อนไข WHERE user_id = ?
+	if err := db.Preload("User").Preload("Status").Preload("Type").
+		Where("user_id = ?", userId). // ใช้ userId ที่ได้จาก Token
+		Find(&issues).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, issues)
+}
+
+// struct สำหรับรับค่า status_id
+type UpdateIssueStatusInput struct {
+	StatusID uint `json:"status_id" binding:"required"`
+}
+
+// PATCH: อัปเดตสถานะรายการแจ้งปัญหา
+func UpdateIssueStatus(c *gin.Context) {
+	db := database.DB()
+	id := c.Param("id")
+
+	// 1. รับค่า StatusID ใหม่
+	var input UpdateIssueStatusInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// 2. ค้นหา Issue ที่จะอัปเดต
+	var issue entity.IssueReport
+	if err := db.First(&issue, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Issue not found"})
+		return
+	}
+
+	// 3. ตรวจสอบว่า StatusID มีอยู่จริงไหม (กันใส่เลขมั่ว)
+	var status entity.IssueStatus
+	if err := db.First(&status, input.StatusID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Status not found"})
+		return
+	}
+
+	// 4. อัปเดตสถานะ
+	if err := db.Model(&issue).Update("status_id", input.StatusID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Status updated successfully", "data": issue})
 }
 
 func GetIssueStatus(c *gin.Context) {

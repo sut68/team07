@@ -1,0 +1,155 @@
+.dashboard-container {
+    padding: 20px;
+    background-color: #f5f5f5;
+    min-height: 100vh;
+    font-family: 'Inter', sans-serif;
+    border-radius: 16px;
+}
+
+.dashboard-header {
+    margin-bottom: 20px;
+}
+
+.dashboard-header h1 {
+    margin: 0;
+    color: #9a0120;
+    font-size: 1.8rem;
+}
+
+.dashboard-header p {
+    color: #666;
+    margin-top: 5px;
+}
+
+/* --- Layout 70-30 --- */
+.dashboard-layout {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start; /* ให้ยืดตาม content ของตัวเอง */
+}
+
+/* ส่วน 70% */
+.section-main {
+    flex: 7; /* กินพื้นที่ 7 ส่วน */
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    padding: 20px;
+    overflow: hidden;
+}
+
+/* ส่วน 30% */
+.section-side {
+    flex: 3; /* กินพื้นที่ 3 ส่วน */
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    padding: 20px;
+    min-height: 200px; /* สูงขั้นต่ำเผื่อไม่มีเนื้อหา */
+}
+
+/* --- Table Styles --- */
+.admin-table {
+    width: 100%;
+    border-collapse: separate; /* เปลี่ยนเป็น separate เพื่อให้ทำมุมมนได้ */
+    border-spacing: 0 8px; /* เว้นระยะห่างระหว่างแถว */
+    margin-top: 10px;
+}
+
+.admin-table th {
+    text-align: left;
+    padding: 15px;
+    color: #666;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border-bottom: none; /* เอาเส้นเดิมออก */
+}
+
+.admin-table td {
+    padding: 15px;
+    background-color: white; /* ใส่สีพื้นหลังให้แถว */
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+    color: #333;
+    vertical-align: middle; /* จัดกึ่งกลางแนวตั้ง */
+}
+
+.admin-table td:first-child {
+    border-left: 1px solid #eee;
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+}
+
+.admin-table td:last-child {
+    border-right: 1px solid #eee;
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+.admin-table tr:hover td {
+    background-color: #fafafa;
+    transform: translateY(-1px); /* ขยับขึ้นนิดนึงให้ดูมีมิติ */
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+}
+
+.col-detail {
+    max-width: 250px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #555;
+}
+
+.status-select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.status-select {
+    width: 100%;
+    padding: 6px 10px; /* เพิ่มพื้นที่ */
+    border-radius: 20px; /* มุมมนสวยงาม */
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+    cursor: pointer;
+    appearance: none; /* ลบลูกศรเดิมของ Browser */
+    -webkit-appearance: none;
+    text-align: center;
+    /* สร้างลูกศรเองเพื่อให้ควบคุมตำแหน่งได้ */
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center; /* ขยับลูกศรมาซ้ายหน่อย */
+    background-size: 10px;
+    padding-right: 25px; /* เผื่อที่ให้ลูกศร */
+}
+
+/* Status Badge (Reuse style) */
+.status-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.status-pending { background-color: #fff7e6; color: #d46b08; border: 1px solid #ffd591; }
+.status-completed { background-color: #f6ffed; color: #389e0d; border: 1px solid #b7eb8f; }
+.status-in-progress { background-color: #e6f7ff; color: #096dd9; border: 1px solid #91d5ff; }
+
+.status-select:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(154, 1, 32, 0.2);
+}
+
+/* Responsive: มือถือให้เรียงลงมา */
+@media (max-width: 900px) {
+    .dashboard-layout {
+        flex-direction: column;
+    }
+    .section-main, .section-side {
+        width: 100%;
+        flex: none;
+    }
+}

@@ -63,7 +63,7 @@ func main() {
 			adminGroup.GET("/getGender", users.GetGender)
 			adminGroup.GET("/getIssueStatus", issues.GetIssueStatus)
 			adminGroup.POST("/importUsersCSV", importuser.ImportUsersHandler)
-
+			adminGroup.PATCH("/issues/:id", issues.UpdateIssueStatus)
 		}
 
 		teacherGroup := protected.Group("/teacher")
@@ -127,6 +127,17 @@ func main() {
 		{
 			// ถ้า API ไหนที่ครูและนักเรียนเข้าถึงได้ ให้นำไปใส่ในนี้
 
+		}
+
+		//สร้าง Group สำหรับ Issues โดยเฉพาะ
+		issueGroup := protected.Group("/issues")
+		// อนุญาตให้ Admin, Teacher, Student เข้าถึงได้
+		issueGroup.Use(middleware.RoleGuard("Admin", "Teacher", "Student"))
+		{
+			issueGroup.GET("", issues.GetIssueReports)        // GET /issues (List)
+			issueGroup.POST("", issues.CreateIssue)           // POST /issues (Create)
+			issueGroup.GET("/:id", issues.GetIssueReportByID) // GET /issues/:id (Get By ID)
+			issueGroup.GET("/my", issues.GetMyIssues)         // GET /issues/my (Get My Issues)
 		}
 
 		protected.POST("/logout", authHandler.Logout)

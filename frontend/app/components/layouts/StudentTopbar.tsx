@@ -66,7 +66,7 @@ export default function StudentTopbar({ userRole, children }: { userRole: string
         {
             key: 'report',
             icon: <ExclamationCircleOutlined />,
-            label: <Link href="/student/report-issue" style={{ color: 'inherit' }}>รายงานปัญหา</Link>,
+            label: <Link href="/student/issueReport" style={{ color: 'inherit' }}>รายงานปัญหา</Link>,
         },
         {
             key: 'logout',
