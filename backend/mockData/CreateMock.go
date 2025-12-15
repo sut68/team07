@@ -124,12 +124,12 @@ var MockGroupMember = []entity.GroupMember{
 }
 
 var MockTopics = []entity.Topic{
-	{Title:"Smart Farm System",Description: "Automated IOT system for vegetable farming",Status:  "Approved",Proposer_role:  "Student",GroupProjectID: 1,},
-	{Title:"AI Face Recognition Attendance",Description: "Check-in system using camera and AI",Status:  "Approved",Proposer_role:  "Teacher",GroupProjectID: 2,},
-	{Title:"E-Commerce Mobile Application",Description: "Online shopping app with payment gateway",Status:  "Approved",Proposer_role:  "Student",GroupProjectID: 3,},
-	{Title:"Renewable Energy System",Description: "Solar and wind energy hybrid system",Status:  "Pending",Proposer_role:  "Teacher",GroupProjectID: 4,},
-	{Title:"Health Monitoring Wearable",Description: "Fitness tracker with health analytics",Status:  "Pending",Proposer_role:  "Student",GroupProjectID: 5,},
-	{Title:"Smart Home Automation",Description: "IoT system for home device control",Status:  "Pending",Proposer_role:  "Teacher",GroupProjectID: 6,},
+	{Title:"Smart Farm System",Description: "Automated IOT system for vegetable farming",Status:  "Approved",Proposer_role:  "Student",GroupProjectID: Uint(1),},
+	{Title:"AI Face Recognition Attendance",Description: "Check-in system using camera and AI",Status:  "Approved",Proposer_role:  "Teacher",GroupProjectID: Uint(2),},
+	{Title:"E-Commerce Mobile Application",Description: "Online shopping app with payment gateway",Status:  "Approved",Proposer_role:  "Student",GroupProjectID: Uint(3),},
+	{Title:"Renewable Energy System",Description: "Solar and wind energy hybrid system",Status:  "Pending",Proposer_role:  "Teacher",GroupProjectID: Uint(4),},
+	{Title:"Health Monitoring Wearable",Description: "Fitness tracker with health analytics",Status:  "Pending",Proposer_role:  "Student",GroupProjectID: Uint(5),},
+	{Title:"Smart Home Automation",Description: "IoT system for home device control",Status:  "Pending",Proposer_role:  "Teacher",GroupProjectID: Uint(6),},
 }
 
 var MockTopicSelections = []entity.TopicSelection{

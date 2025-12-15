@@ -19,21 +19,6 @@ var MockAppointmentType = []entity.AppointmentType{
 	{Name: "Final Defense"},
 }
 
-// var MockAppointment = []entity.Appointment{
-// 	{
-// 		StartDateTime: time.Date(2025, 12, 20, 9, 0, 0, 0, time.Local),
-// 		DurationMin: 30, AppointmentStatus: "completed", AppointmentTypeID: 3, RoomID: 1, TeacherID: 2, GroupProjectID: 3,
-// 	},
-// 	{
-// 		StartDateTime: time.Date(2025, 12, 25, 13, 30, 0, 0, time.Local),
-// 		DurationMin: 30, AppointmentStatus: "scheduled", AppointmentTypeID: 2, RoomID: 3, TeacherID: 3, GroupProjectID: 1,
-// 	},
-// 	{
-// 		StartDateTime: time.Date(2026, 1, 10, 10, 0, 0, 0, time.Local),
-// 		DurationMin: 30, AppointmentStatus: "scheduled", AppointmentTypeID: 3, RoomID: 5, TeacherID: 4, GroupProjectID: 2,
-// 	},
-// }
-
 var MockEvaluation = []entity.Evaluation{
 	{Name: "Ethics Test", TotalScore: 5, ForGroupOnly: false, AppointmentTypeID: 3},
 	{Name: "Peer Assessment", TotalScore: 5, ForGroupOnly: false, AppointmentTypeID: 3},
