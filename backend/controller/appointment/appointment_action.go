@@ -109,10 +109,13 @@ func CreateAppointment(c *gin.Context) {
 			return
 		}
 	} else {
-		if appointment.EvaluationID == nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Evaluation Type is required for Final Defense"})
+		// Auto-assign Committee Evaluation (ID 4) for Final Defense (Type 3)
+		var committeeEval entity.Evaluation
+		if err := db.Where("name = ?", "Committee Evaluation").First(&committeeEval).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Committee Evaluation not found"})
 			return
 		}
+		appointment.EvaluationID = &committeeEval.ID
 	}
 
 	var existingAppt entity.Appointment
@@ -262,10 +265,14 @@ func AutoCreateAppointments(c *gin.Context) {
 			GroupProjectID:    group.ID,
 		}
 
-		// Auto-assign Committee Evaluation (ID 4) for Final Defense (Type 3)
 		if req.AppointmentTypeID == 3 {
-			evalID := uint(4)
-			appt.EvaluationID = &evalID
+			var committeeEval entity.Evaluation
+			if err := db.Where("name = ?", "Committee Evaluation").First(&committeeEval).Error; err == nil {
+				appt.EvaluationID = &committeeEval.ID
+			} else {
+				evalID := uint(4)
+				appt.EvaluationID = &evalID
+			}
 		}
 
 		if err := tx.Create(&appt).Error; err != nil {

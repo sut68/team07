@@ -318,7 +318,7 @@ func GetEvaluationForm(c *gin.Context) {
 			"levels":    levels,
 		}
 
-		if cri.Evaluation.ForGroupOnly {
+		if cri.Evaluation.ForGroupOnly || cri.IsGroup {
 			groupCriteria = append(groupCriteria, data)
 		} else {
 			individualCriteria = append(individualCriteria, data)
@@ -422,7 +422,7 @@ func GetStudentEvaluationForm(c *gin.Context) {
 			"levels":    levels,
 		}
 
-		if cri.Evaluation.ForGroupOnly {
+		if cri.Evaluation.ForGroupOnly || cri.IsGroup {
 			groupCriteria = append(groupCriteria, data)
 		} else {
 			individualCriteria = append(individualCriteria, data)

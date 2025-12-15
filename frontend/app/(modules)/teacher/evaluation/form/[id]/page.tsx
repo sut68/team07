@@ -1,12 +1,13 @@
 "use client";
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter ,useSearchParams} from 'next/navigation';
-import { message, Spin } from 'antd';
+import { message, Spin, Tooltip } from 'antd';
 import { 
   SaveOutlined, 
   ArrowLeftOutlined, 
   AppstoreOutlined, 
-  UsergroupAddOutlined 
+  UsergroupAddOutlined,
+  InfoCircleOutlined
 } from '@ant-design/icons';
 import { GetEvaluationForm, GetEvaluationResult, SaveEvaluation } from '../../../../../services/evaluation';
 import type { IEvaluationFormResponse } from '../../../../../interfaces/Evaluation';
@@ -276,8 +277,19 @@ export default function EvaluationFormPage() {
                                             <th className="col-student">รายชื่อนักศึกษา</th>
                                             {formData?.individual_criteria?.map((cri: any) => (
                                                 <th key={cri.id} className="th-criteria">
-                                                    {cri.name}
-                                                    <span>(เต็ม {cri.max_score})</span>
+                                                    <div style={{display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center'}}>
+                                                        {cri.name}
+                                                        <Tooltip title={
+                                                            <div style={{textAlign: 'left'}}>
+                                                                {cri.levels.map((l: any) => (
+                                                                    <div key={l.id}><b>{l.score}</b> : {l.description}</div>
+                                                                ))}
+                                                            </div>
+                                                        }>
+                                                            <InfoCircleOutlined style={{color: '#1890ff', cursor: 'pointer'}}/>
+                                                        </Tooltip>
+                                                    </div>
+                                                    <span style={{fontSize: '0.85em', color: '#666'}}>(เต็ม {cri.max_score})</span>
                                                 </th>
                                             ))}
                                         </tr>

@@ -17,16 +17,12 @@ import (
 	"github.com/sut68/team07/backend/service"
 )
 
-func InsertDataOpen() {
-	Data := database.DB()
-	mockdata.InsertMock(Data)
-}
 func main() {
 
 	database.ConnectDatabase()
 	database.SetUpDatabase()
 	//========INSERT MOCK DATA================ ถ้าอยากสร้างข้อมูลปลอมให้เอา comment ออก
-	//InsertDataOpen()
+	// InsertDataOpen()
 	//=========================================
 	service.InitEmailConfig()
 	service.StartCleanupWorker(database.DB())
@@ -133,4 +129,10 @@ func main() {
 	}
 
 	r.Run(":8080")
+}
+
+
+func InsertDataOpen() {
+	Data := database.DB()
+	mockdata.InsertMock(Data)
 }
