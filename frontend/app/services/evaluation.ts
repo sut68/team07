@@ -12,14 +12,29 @@ import type {
 
 // TEACHER:
 
-async function GetEvaluationProjects(typeId?: number) {
-    const url = typeId ? `/teacher/evaluation/projects?type_id=${typeId}` : "/teacher/evaluation/projects";
+async function GetEvaluationProjects(typeId?: number, mode?: 'advisor' | 'committee') {
+    let url = "/teacher/evaluation/projects";
+    const params = new URLSearchParams();
+    if (typeId) params.append("type_id", typeId.toString());
+    if (mode) params.append("mode", mode);
+    
+    if (params.toString()) {
+        url += `?${params.toString()}`;
+    }
     return await api.get<IEvaluationProject[]>(url);
 }
 
 // ดึงฟอร์มประเมิน (เกณฑ์ + รายชื่อเด็ก)
-async function GetEvaluationForm(appointmentId: number | string) {
-    return await api.get<IEvaluationFormResponse>(`/teacher/evaluation/form/${appointmentId}`);
+async function GetEvaluationForm(appointmentId: number | string, evaluationName?: string) {
+    let url = `/teacher/evaluation/form/${appointmentId}`;
+    if (evaluationName) {
+        url += `?evaluation_name=${encodeURIComponent(evaluationName)}`;
+    }
+    return await api.get<IEvaluationFormResponse>(url);
+}
+
+async function GetStudentEvaluationForm() {
+    return await api.get<IEvaluationFormResponse>(`/student/evaluation/form`);
 }
 
 // ดึงคะแนนที่เคยกรอกไว้ (ดูย้อนหลัง/แก้ไข)
@@ -30,6 +45,9 @@ async function GetEvaluationResult(appointmentId: number | string) {
 // ดูสรุปผลคะแนนรวมของกลุ่ม (Average Calculation)
 async function GetEvaluationSummary(groupProjectId: number | string) {
     return await api.get<IEvaluationSummaryResponse>(`/teacher/evaluation/summary/${groupProjectId}`);
+}
+async function GetStudentEvaluationResult() {
+    return await api.get<IEvaluationResultResponse>(`/student/evaluation/result`);
 }
 
 // บันทึกคะแนน (Save)
@@ -92,5 +110,7 @@ export {
     DeleteCriteria,
     CreateCriteriaLevel,
     UpdateCriteriaLevel,
-    DeleteCriteriaLevel
+    DeleteCriteriaLevel,
+    GetStudentEvaluationForm,
+    GetStudentEvaluationResult
 };

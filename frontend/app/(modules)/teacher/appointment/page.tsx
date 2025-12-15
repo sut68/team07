@@ -1,7 +1,9 @@
 "use client";
 import React, { useEffect, useState } from 'react';
-import { Button, Tooltip, Spin, message } from 'antd';
-import { PlusOutlined, SettingOutlined, AppstoreAddOutlined } from '@ant-design/icons';
+import { Button, Tooltip, Spin, message, DatePicker } from 'antd';
+import { PlusOutlined, SettingOutlined, AppstoreAddOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons';
+import dayjs from 'dayjs';
+import 'dayjs/locale/th';
 
 import '../../../style/appointment.css';
 
@@ -17,6 +19,7 @@ export default function TeacherAppointmentPage() {
     const [rooms, setRooms] = useState<any[]>([]);
     const [types, setTypes] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [currentDate, setCurrentDate] = useState(dayjs());
 
     // Modal States
     const [showBookingModal, setShowBookingModal] = useState(false);
@@ -59,6 +62,24 @@ export default function TeacherAppointmentPage() {
                 </div>
                 
                 <div className="header-actions">
+                    <div style={{ display: 'flex', alignItems: 'center', marginRight: 16, gap: 4 }}>
+                        <Button icon={<LeftOutlined />} onClick={() => setCurrentDate(prev => prev.subtract(1, 'week'))} />
+                        <DatePicker 
+                            value={currentDate} 
+                            onChange={(date) => setCurrentDate(date || dayjs())} 
+                            picker="week"
+                            allowClear={false}
+                            format={(value) => {
+                                const start = value.startOf('week').add(1, 'day');
+                                const end = value.add(1, 'week').startOf('week');
+                                return `${start.format('DD/MM')} - ${end.format('DD/MM')}`;
+                            }}
+                            style={{ width: 140 }}
+                        />
+                        <Button icon={<RightOutlined />} onClick={() => setCurrentDate(prev => prev.add(1, 'week'))} />
+                        <Button onClick={() => setCurrentDate(dayjs())}>วันนี้</Button>
+                    </div>
+
                     <Tooltip title="จัดการห้องสอบ">
                         <button className="btn-icon" onClick={() => setShowRoomModal(true)}>
                             <AppstoreAddOutlined />
@@ -90,6 +111,7 @@ export default function TeacherAppointmentPage() {
                     <CalendarView 
                         appointments={appointments} 
                         onSelect={(appt) => { setSelectedAppt(appt); setShowBookingModal(true); }} 
+                        currentDate={currentDate}
                     />
                 )}
             </div>

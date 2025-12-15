@@ -13,13 +13,21 @@ import (
 
 func SearchGroup(c *gin.Context) {
 	keyword := c.Query("keyword")
+	typeID := c.Query("type_id")
+	mode := c.Query("mode")
 
 	claims, _ := middleware.GetClaimsFromContext(c)
 	db := database.DB()
 
-	query := db.Select("id", "group_number", "group_status").
-		Where("group_status IN ?", []string{"Pending", "In Process"}).
-		Where("teacher_id = ?", claims.ID)
+	query := db.Select("id", "group_number", "group_status")
+
+	if mode == "manual" {
+		query = query.Where("teacher_id = ?", claims.ID)
+	} else if typeID == "3" {
+		query = query.Where("group_status IN ?", []string{"Pending", "In Process"})
+	} else {
+		query = query.Where("teacher_id = ?", claims.ID)
+	}
 
 	if keyword != "" {
 		query = query.Where("name_project LIKE ? OR CAST(group_number AS TEXT) LIKE ?", "%"+keyword+"%", "%"+keyword+"%")
@@ -61,7 +69,7 @@ func DeleteAppointment(c *gin.Context) {
 
 	if err := tx.Model(&entity.GroupProject{}).
 		Where("id = ?", apt.GroupProjectID).
-		Update("group_status", "In Process").Error; err != nil {
+		Update("group_status", "Pending").Error; err != nil {
 
 		tx.Rollback()
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to revert group status"})
@@ -69,7 +77,7 @@ func DeleteAppointment(c *gin.Context) {
 	}
 
 	tx.Commit()
-	log.InsertLog(c,14)
+	log.InsertLog(c, 14)
 	c.JSON(http.StatusOK, gin.H{"message": "Appointment deleted successfully"})
 }
 
@@ -100,12 +108,17 @@ func CreateAppointment(c *gin.Context) {
 			c.JSON(http.StatusForbidden, gin.H{"error": "You are not the advisor of this group."})
 			return
 		}
+	} else {
+		if appointment.EvaluationID == nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Evaluation Type is required for Final Defense"})
+			return
+		}
 	}
 
 	var existingAppt entity.Appointment
 	if tx := db.Where("group_project_id = ? AND appointment_status = 'scheduled'", appointment.GroupProjectID).
 		First(&existingAppt); tx.RowsAffected > 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "This group already has a scheduled appointment."})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "กลุ่มนี้มีการนัดหมายที่ยังไม่เสร็จสิ้นอยู่ กรุณายกเลิกหรือลบนัดเดิมก่อนจึงจะสร้างนัดใหม่ได้"})
 		return
 	}
 
@@ -124,15 +137,8 @@ func CreateAppointment(c *gin.Context) {
 		return
 	}
 
-	if err := tx.Model(&entity.GroupProject{}).Where("id = ?", appointment.GroupProjectID).
-		Update("group_status", "Scheduled").Error; err != nil {
-		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update group status"})
-		return
-	}
-
 	tx.Commit()
-	log.InsertLog(c,15)
+	log.InsertLog(c, 15)
 	c.JSON(http.StatusCreated, gin.H{"message": "Appointment created successfully", "data": appointment})
 }
 
@@ -162,7 +168,7 @@ func UpdateAppointment(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update appointment: " + err.Error()})
 		return
 	}
-	log.InsertLog(c,16)
+	log.InsertLog(c, 16)
 	c.JSON(http.StatusOK, gin.H{"message": "Appointment updated successfully", "data": existingAppt})
 }
 
@@ -178,7 +184,7 @@ func CreateRoom(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	log.InsertLog(c,17)
+	log.InsertLog(c, 17)
 	c.JSON(http.StatusCreated, gin.H{"data": room})
 }
 
@@ -255,22 +261,24 @@ func AutoCreateAppointments(c *gin.Context) {
 			TeacherID:         claims.ID,
 			GroupProjectID:    group.ID,
 		}
+
+		// Auto-assign Committee Evaluation (ID 4) for Final Defense (Type 3)
+		if req.AppointmentTypeID == 3 {
+			evalID := uint(4)
+			appt.EvaluationID = &evalID
+		}
+
 		if err := tx.Create(&appt).Error; err != nil {
 			tx.Rollback()
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create appointments"})
 			return
 		}
 
-		if err := tx.Model(&entity.GroupProject{}).Where("id = ?", group.ID).Update("group_status", "Scheduled").Error; err != nil {
-			tx.Rollback()
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update group status"})
-			return
-		}
 		count++
 	}
 
 	tx.Commit()
-	log.InsertLog(c,15)
+	log.InsertLog(c, 15)
 	c.JSON(http.StatusCreated, gin.H{
 		"message":       "Auto-scheduled successfully!",
 		"groups_booked": count,
