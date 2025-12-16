@@ -124,13 +124,41 @@ var MockGroupMember = []entity.GroupMember{
 }
 
 var MockTopics = []entity.Topic{
-	{Title:"Smart Farm System",Description: "Automated IOT system for vegetable farming",Status:  "Approved",Proposer_role:  "Student",GroupProjectID: Uint(1),},
-	{Title:"AI Face Recognition Attendance",Description: "Check-in system using camera and AI",Status:  "Approved",Proposer_role:  "Teacher",GroupProjectID: Uint(2),},
-	{Title:"E-Commerce Mobile Application",Description: "Online shopping app with payment gateway",Status:  "Approved",Proposer_role:  "Student",GroupProjectID: Uint(3),},
-	{Title:"Renewable Energy System",Description: "Solar and wind energy hybrid system",Status:  "Pending",Proposer_role:  "Teacher",GroupProjectID: Uint(4),},
-	{Title:"Health Monitoring Wearable",Description: "Fitness tracker with health analytics",Status:  "Pending",Proposer_role:  "Student",GroupProjectID: Uint(5),},
-	{Title:"Smart Home Automation",Description: "IoT system for home device control",Status:  "Pending",Proposer_role:  "Teacher",GroupProjectID: Uint(6),},
+	{
+		Title:       "Smart Farm System",
+		Objective:   "Develop an automated IoT system to monitor and control environmental parameters for vegetable farming.",
+		Scope:       "Sensor network, data collection, irrigation control, web dashboard",
+		Description: "Automated IoT system for vegetable farming",
+		Status:      "Approved",
+
+		ProposerRole:   "Student",
+		GroupProjectID: Uint(1),
+		TeacherID:      Uint(2),
+	},
+	{
+		Title:       "AI Face Recognition Attendance",
+		Objective:   "Build an attendance system using face recognition to automate check-in/out.",
+		Scope:       "Face detection, recognition model, camera integration, attendance DB",
+		Description: "Check-in system using camera and AI",
+		Status:      "Approved",
+
+		ProposerRole:   "Teacher",
+		GroupProjectID: nil,          // อาจารย์เพิ่มก่อน ยังไม่มีกลุ่ม
+		TeacherID:      Uint(2),
+	},
+	{
+		Title:       "E-Commerce Mobile Application",
+		Objective:   "Create a mobile shopping app with product listing, cart and payment integration.",
+		Scope:       "Mobile frontend, backend API, payment gateway, order management",
+		Description: "Online shopping app with payment gateway",
+		Status:      "Approved",
+
+		ProposerRole:   "Student",
+		GroupProjectID: Uint(3),
+		TeacherID:      Uint(2),
+	},
 }
+
 
 var MockTopicSelections = []entity.TopicSelection{
 	{DateSelected:time.Now().AddDate(0, -4, 0),TopicID: 1,GroupProjectID: 1,},

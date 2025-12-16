@@ -10,6 +10,7 @@ import (
 	"github.com/sut68/team07/backend/controller/importuser"
 	"github.com/sut68/team07/backend/controller/issues"
 	"github.com/sut68/team07/backend/controller/progress"
+	"github.com/sut68/team07/backend/controller/topic"
 	"github.com/sut68/team07/backend/controller/users"
 	"github.com/sut68/team07/backend/database"
 	"github.com/sut68/team07/backend/middleware"
@@ -28,6 +29,7 @@ func main() {
 	service.StartCleanupWorker(database.DB())
 	r := gin.Default()
 	r.Use(database.CORSMiddleware())
+	r.Static("/uploads", "./uploads")
 
 	authHandler := auth.NewLoginHandler()
 
@@ -112,7 +114,13 @@ func main() {
 			teacherGroup.POST("/createCriteriaLevel", evaluation.CreateCriteriaLevel)
 			teacherGroup.PATCH("/updateCriteriaLevel/:id", evaluation.UpdateCriteriaLevel)
 			teacherGroup.DELETE("/deleteCriteriaLevel/:id", evaluation.DeleteCriteriaLevel)
-			// ===============================================
+			// == Topic ===========================
+			teacherGroup.PATCH("/topics/:id/approval", topic.ApproveTopic)
+			teacherGroup.GET("/topics", topic.ListTopics)
+			teacherGroup.GET("/topics/:id", topic.GetTopic)
+			teacherGroup.POST("/topics", topic.CreateTopic)
+			teacherGroup.PATCH("/topics/:id", topic.UpdateTopic)
+			teacherGroup.DELETE("/topics/:id", topic.DeleteTopic)
 
 		}
 
@@ -140,6 +148,11 @@ func main() {
 		teacherOrStudentGroup.Use(middleware.RoleGuard("Teacher", "Student"))
 		{
 			// ถ้า API ไหนที่ครูและนักเรียนเข้าถึงได้ ให้นำไปใส่ในนี้
+			teacherOrStudentGroup.GET("/topics", topic.ListTopics)
+			teacherOrStudentGroup.GET("/topics/:id", topic.GetTopic)
+			teacherOrStudentGroup.POST("/topics", topic.CreateTopic)
+			teacherOrStudentGroup.PATCH("/topics/:id", topic.UpdateTopic)
+			teacherOrStudentGroup.DELETE("/topics/:id", topic.DeleteTopic)
 
 		}
 
