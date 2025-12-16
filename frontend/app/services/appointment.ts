@@ -83,6 +83,8 @@ async function DeleteAppointmentType(id: number | string) {
 // student
 
 async function GetMyProjectAndAppointment() {
+    const w = await api.get("/student/myAppointment")
+    console.log("my appt: ", w)
     return await api.get("/student/myAppointment");
 }
 

@@ -223,7 +223,7 @@ func GetMyProjectAndAppointment(c *gin.Context) {
 	var appointment entity.Appointment
 	apptFound := false
 	if err := db.Preload("Room").Preload("AppointmentType").Preload("Evaluation").
-		Where("group_project_id = ? AND appointment_status IN ?", groupID, []string{"scheduled", "completed"}).
+		Where("group_project_id = ? AND appointment_status IN ?", groupID, []string{"scheduled", "completed", "Scheduled", "Completed"}).
 		Order("start_date_time DESC").
 		First(&appointment).Error; err == nil {
 		apptFound = true
