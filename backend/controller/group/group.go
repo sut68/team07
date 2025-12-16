@@ -19,7 +19,7 @@ type CreateMemberInput struct {
 func GetGroupProject(c *gin.Context) {
 	db := database.DB()
 	var group []entity.GroupProject
-	
+
 	// 1. สร้าง Query ตั้งต้น
 	query := db.Preload("Teacher").
 		Preload("GroupMembers", func(db *gorm.DB) *gorm.DB {
@@ -27,7 +27,7 @@ func GetGroupProject(c *gin.Context) {
 		}).
 		Preload("GroupMembers.Student")
 
-	// 2. รับค่า year จากหน้าบ้าน (เช่น ?year=2567)
+	// 2. รับค่า year
 	year := c.Query("year")
 
 	// 3. ถ้ามีการส่ง year มา ให้เพิ่มเงื่อนไข WHERE
@@ -42,6 +42,25 @@ func GetGroupProject(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, &group)
+}
+
+// GET: ดึงปีการศึกษาทั้งหมดที่มีในระบบ
+func GetAcademicYears(c *gin.Context) {
+	db := database.DB()
+	var years []int
+
+	// ดึงเฉพาะ column year ที่ไม่ซ้ำกัน และเรียงจากมากไปน้อย
+	result := db.Model(&entity.GroupProject{}).
+		Distinct("year").
+		Order("year desc").
+		Pluck("year", &years)
+
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, years)
 }
 
 // GET: ดึงข้อมูลสมาชิกทั้งหมด
@@ -64,15 +83,33 @@ func PostGroupMember(c *gin.Context) {
 		return
 	}
 
-	// กำหนด studentID จาก Token โดยตรง
 	studentID := claims.ID
-
 	db := database.DB()
 
 	// 2. รับค่า Input (เหลือแค่ Group ID)
 	var input CreateMemberInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// เช็คว่าผ่านเกณไหม
+	var user entity.User
+	if err := db.First(&user, studentID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบข้อมูลนักศึกษา"})
+		return
+	}
+
+	// เงื่อนไขที่ 1: Pass ต้องเป็น false
+	// (ต้องเช็ค nil ก่อนเพื่อกัน panic กรณีข้อมูลเป็น null)
+	if user.Pass == nil || *user.Pass { // *user.Pass == True
+		c.JSON(http.StatusBadRequest, gin.H{"error": "คุณไม่ผ่านเกณฑ์เข้าร่วมกลุ่ม"}) // (Pass ไม่ใช่ False)
+		return
+	}
+
+	// เงื่อนไขที่ 2: StatusID เป็น 2 (Inactive)
+	if user.StatusID != 1 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "สถานะบัญชีของคุณไม่ถูกต้อง"}) // (ต้องเป็น Active)
 		return
 	}
 
@@ -83,13 +120,20 @@ func PostGroupMember(c *gin.Context) {
 		return
 	}
 
-	// --- 4. (แก้ไขใหม่) เช็คว่านักศึกษาคนนี้ มีกลุ่มอยู่แล้วหรือยัง (ไม่สนว่ากลุ่มไหน) ---
-	var existingMember entity.GroupMember
+	// --- 4. เช็คว่านักศึกษาคนนี้ มีกลุ่มอยู่ใน "ปีการศึกษาเดียวกัน" หรือยัง? ---
+	var existingCount int64
+	err = db.Table("group_members").
+		Joins("JOIN group_projects ON group_members.group_project_id = group_projects.id").
+		Where("group_members.student_id = ? AND group_projects.year = ?", studentID, groupProject.Year).
+		Count(&existingCount).Error
 
-	// เราเช็คแค่ student_id อย่างเดียว ถ้าเจอ record แปลว่าเขามีสังกัดแล้ว
-	if err := db.Where("student_id = ?", studentID).First(&existingMember).Error; err == nil {
-		// ถ้า err == nil แสดงว่า "เจอข้อมูล" -> ห้ามเข้ากลุ่มเพิ่ม
-		c.JSON(http.StatusBadRequest, gin.H{"error": "You already have a group. Cannot join another group."})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if existingCount > 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "เคุณมีกลุ่มในปีการศึกษานี้อยู่แล้ว"})
 		return
 	}
 
@@ -103,7 +147,7 @@ func PostGroupMember(c *gin.Context) {
 		return
 	}
 
-	// 7. Logic กำหนด Leader: ถ้าสมาชิกปัจจุบันเป็น 0 แสดงว่าคนนี้คือคนแรก
+	// 7. Logic กำหนด Leader
 	isLeader := false
 	if currentMemberCount == 0 {
 		isLeader = true

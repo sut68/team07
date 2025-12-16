@@ -30,10 +30,6 @@ func main() {
 	r := gin.Default()
 	r.Use(database.CORSMiddleware())
 
-	// test controller Group
-	// r.GET("/group", group.GetGroupProject)
-	// r.POST("/addMember", group.PostGroupMember)
-
 	authHandler := auth.NewLoginHandler()
 
 	r.POST("/login", authHandler.Login)
@@ -55,13 +51,32 @@ func main() {
 		protected.PATCH("/updateUserProfile", users.UpdateUserProfile)
 		protected.GET("/me", authHandler.Me)
 
+		// Group
+		protected.GET("/academicYears", group.GetAcademicYears)
+		r.GET("/group", group.GetGroupProject)
+		// r.POST("/addMember", group.PostGroupMember)
+
 		adminGroup := protected.Group("/admin")
 		adminGroup.Use(middleware.RoleGuard("Admin"))
 		{
 			// ถ้า API ไหนที่แอดมินเข้าถึงได้ ให้นำไปใส่ในนี้
 			adminGroup.GET("/getGender", users.GetGender)
 			adminGroup.GET("/getIssueStatus", issues.GetIssueStatus)
-			
+
+			// Group
+			adminGroup.GET("/studentCount", group.GetEligibleStudentCount)
+    		adminGroup.POST("/generateGroups", group.GenerateGroups)
+
+			adminGroup.GET("/group/:id", group.GetGroupDetailById)
+			adminGroup.GET("/students/search", group.SearchAvailableStudents)
+			adminGroup.POST("/group/addMember", group.AddMemberToGroup)
+			adminGroup.POST("/group/removeMember", group.RemoveMemberFromGroup)
+			adminGroup.POST("/group/changeLeader", group.ChangeLeader)
+			adminGroup.DELETE("/group/:id", group.DeleteGroup)
+
+			adminGroup.GET("/teachers/search", group.GetAllTeachers)
+			adminGroup.POST("/group/updateAdvisor", group.UpdateGroupAdvisor)
+					
 		}
 
 		teacherGroup := protected.Group("/teacher")
@@ -110,7 +125,7 @@ func main() {
 			studentGroup.DELETE("/deleteProgress", progress.DeleteProgress)
 			
 			// Group
-			studentGroup.GET("/group", group.GetGroupProject)
+			// studentGroup.GET("/group", group.GetGroupProject)
 			studentGroup.POST("/addMember", group.PostGroupMember)
 
 			// Evaluation and Appointment
