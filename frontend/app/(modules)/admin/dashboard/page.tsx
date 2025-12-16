@@ -73,7 +73,7 @@ export default function AdminDashboardPage() {
                                         <th style={{width: '120px'}}>ประเภท</th>
                                         <th>รายละเอียด</th>
                                         <th style={{width: '150px'}}>ผู้แจ้ง</th>
-                                        <th style={{width: '140px'}}>สถานะ</th> {/* ปรับขนาดคอลัมน์ */}
+                                        <th style={{width: '140px'}}>สถานะ</th> 
                                     </tr>
                                 </thead>
                                 <tbody>

@@ -58,8 +58,17 @@ export default function LoginPage() {
     try {
       const res = await SignIn(inputInfo);
       console.log("Login Successful", res.data);
-      
-      await fetchUser(); 
+
+      if (res.data) {
+        // Backend ส่งมาเป็น int ต้องแปลงเป็น string ก่อนเก็บ
+        localStorage.setItem("user_id", String(res.data.id));
+
+        // เก็บ role และ username ไว้ด้วยเผื่อใช้แสดงผล
+        localStorage.setItem("role", res.data.role);
+        localStorage.setItem("username", res.data.username);
+      }
+
+      await fetchUser();
 
       const { role } = res.data;
       redirectToDashboard(role);
@@ -126,7 +135,7 @@ export default function LoginPage() {
               role={error ? 'alert' : undefined}
               aria-live="polite"
               style={{
-                minHeight: 36,           
+                minHeight: 36,
                 marginBottom: 12,
                 color: error ? 'red' : 'transparent',
                 textAlign: 'center',
@@ -266,7 +275,7 @@ export default function LoginPage() {
 
               {/* แสดงข้อความแจ้งเตือน */}
               {forgotMessage && <p style={{ color: forgotMessage.includes("ส่งลิงก์รีเซ็ต") ? '#2ecc71' : '#e74c3c', textAlign: 'center', marginBottom: '15px', fontWeight: 'bold', }}>{forgotMessage}</p>}
-              <label htmlFor="email" style={{ display: 'block', fontSize: '0.9rem', color: '#666', marginBottom: '10px' , fontFamily: originalFont}}>อีเมล</label>
+              <label htmlFor="email" style={{ display: 'block', fontSize: '0.9rem', color: '#666', marginBottom: '10px', fontFamily: originalFont }}>อีเมล</label>
               <input
                 type="email"
                 placeholder="กรอกอีเมลของคุณ"

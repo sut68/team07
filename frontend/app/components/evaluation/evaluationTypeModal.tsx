@@ -26,7 +26,7 @@ export default function EvaluationTypeModal({
 
   const handleSelect = (type: string) => {
     const appt = project.appointments?.find(
-      (a: any) => a.evaluation_type === type
+      (a: any) => (a.evaluation_name || a.evaluation_type) === type
     );
 
     if (!appt) {
@@ -40,6 +40,15 @@ export default function EvaluationTypeModal({
     );
   };
 
+  // ✅ ดึงประเภทการประเมินจาก appointments โดยตรง
+  const evaluations: string[] = Array.from(
+    new Set(
+      project.appointments?.map(
+        (a: any) => a.evaluation_name || a.evaluation_type
+      )
+    )
+  );
+
   return (
     <Modal
       open={open}
@@ -48,32 +57,41 @@ export default function EvaluationTypeModal({
       centered
       width={520}
     >
-      <div
-        className="eval-page"
-        style={{ padding: 24 }}
-      >
+      <div className="eval-page" style={{ padding: 24 }}>
         <h2 style={{ textAlign: "center", marginBottom: 24 }}>
           เลือกประเภทการประเมิน
         </h2>
 
-        <div
-          style={{
-            display: "flex",
-            gap: 16,
-            justifyContent: "center",
-            flexWrap: "wrap",
-          }}
-        >
-          {project.available_evaluations?.map((type: string) => (
-            <button
-              key={type}
-              className="btn-primary"
-              onClick={() => handleSelect(type)}
-            >
-              {LABEL_MAP[type] || type}
-            </button>
-          ))}
-        </div>
+        {evaluations.length === 0 ? (
+          <div
+            style={{
+              textAlign: "center",
+              color: "#888",
+              padding: "24px 0",
+            }}
+          >
+            ยังไม่มีการนัดหมายเพื่อประเมิน
+          </div>
+        ) : (
+          <div
+            style={{
+              display: "flex",
+              gap: 16,
+              justifyContent: "center",
+              flexWrap: "wrap",
+            }}
+          >
+            {evaluations.map((type) => (
+              <button
+                key={type}
+                className="btn-primary"
+                onClick={() => handleSelect(type)}
+              >
+                {LABEL_MAP[type] || type}
+              </button>
+            ))}
+          </div>
+        )}
 
         <div style={{ textAlign: "center", marginTop: 24 }}>
           <button className="btn-back" onClick={onClose}>

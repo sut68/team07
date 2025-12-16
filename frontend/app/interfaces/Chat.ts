@@ -1,27 +1,56 @@
+
 export interface FullChat {
-  id: number;
-  group_member_id: number;
-  process_id: number;
-  sender_id: number;
-  messege: string;
-  created_at: Date;
-  updated_at: Date;
+    id: number;
+    
+ 
+    group_project_id: number;
+    
+    process_id: number;
+    sender_id: number;
+    
+
+    message: string; 
+    
+    created_at: string;
+    updated_at: string;
+    
+    deleted_at: string | null; 
+
+
 }
+
 
 export interface ChatCreate {
-  group_member_id: number;
-  process_id: number;
-  sender_id: number;
-  messege: string;
+
+    group_project_id: number; 
+    
+    process_id: number;
+    sender_id: number;
+    
+ 
+    message: string; 
 }
+
+export interface ProcessInterface {
+    id: number;
+    file: string;
+    group_project_id: number; 
+    
+    updated_at: string; 
+  
+    comment?: string; 
+}
+
 
 export interface GetChat {
-  process_id: number;
-  group_member_id: number;
+    process_id: number;
+    group_project_id: number;
 }
 
+
 export interface ChatDelete {
-  id: number;
-  group_member_id: number;
-  process_id: number;
+    id: number;
+
+    group_project_id: number;
+    process_id: number;
 }
