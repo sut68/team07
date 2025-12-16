@@ -91,22 +91,22 @@ export default function ChatTestPage() {
   const handlePaste = (e: React.ClipboardEvent) => {
     const items = e.clipboardData.items;
     
-    // Loop through clipboard items to find an image
+
     for (const item of items) {
       if (item.type.startsWith("image/")) {
-        e.preventDefault(); // Stop pasting the binary text name
+        e.preventDefault(); 
         
         const blob = item.getAsFile();
         if (!blob) return;
 
-        // Convert image to Base64 String
+
         const reader = new FileReader();
         reader.onload = (event) => {
           const base64 = event.target?.result as string;
-          setMessage(base64); // Store the image data as the message
+          setMessage(base64); 
         };
         reader.readAsDataURL(blob);
-        return; // Stop after finding the first image
+        return; 
       }
     }
   };

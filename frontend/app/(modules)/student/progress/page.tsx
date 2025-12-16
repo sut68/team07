@@ -22,279 +22,329 @@ export default function TestApiPage() {
   const [delId, setDelId] = useState<number | null>(null);
 
   const [progressList, setProgressList] = useState<FullProgress[]>([]);
-  const [status, setStatus] = useState<string>("ยังไม่ได้ทดสอบ");
+  const [status, setStatus] = useState<string>("Waiting for action...");
+  const [isError, setIsError] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // ดึง ID ให้รองรับหลายแบบ: id / ID / progress_id
+  // Helper to extract IDs
   const availableIds = Array.isArray(progressList)
     ? (progressList as any[])
         .map((p) => p.id ?? p.ID ?? p.progress_id)
         .filter((id) => id !== null && id !== undefined)
     : [];
 
-  // รองรับ res เป็น [] หรือ { data: [] }
-  const extractList = (res: any): FullProgress[] => {
-    if (Array.isArray(res)) return res as FullProgress[];
-    if (Array.isArray(res?.data)) return res.data as FullProgress[];
-    console.warn("GetProgress returned unexpected shape:", res);
-    return [];
-  };
-
-  const refreshAfterChange = (res: any) => {
-    const list = extractList(res);
-    setProgressList(list);
-
-    if (list.length > 0) {
-      const firstId = list[0].id;
-      setUpdateId(firstId);
-      setDelId(firstId);
-    } else {
-      setUpdateId(null);
-      setDelId(null);
-    }
-  };
-
   const handleRun = async () => {
-  try {
-    if (mode === "get") {
-      const list = await GetProgress({ group_project_id: groupProjectId });
-      setProgressList(list);          // ✅ this is FullProgress[]
-      setStatus(`ดึงข้อมูลสำเร็จ: ${list.length} รายการ`);
-    } else if (mode === "add") {
-      await AddProgress({
-        group_project_id: groupProjectId,
-        file,
-        comment,
-      });
+    setIsLoading(true);
+    setIsError(false);
+    setStatus("Processing...");
 
-      const list = await GetProgress({ group_project_id: groupProjectId });
-      setProgressList(list);
-      setStatus("เพิ่มข้อมูลสำเร็จ");
-    } else if (mode === "delete") {
-      if (!delId) {
-        setStatus("กรุณาเลือก ID ที่ต้องการลบ");
-        return;
+    try {
+      let list: FullProgress[] = [];
+
+      if (mode === "get") {
+        list = await GetProgress({ group_project_id: groupProjectId });
+        setStatus(`✅ Fetch Success: Retrieved ${list.length} records`);
+      } 
+      else if (mode === "add") {
+        await AddProgress({
+          group_project_id: groupProjectId,
+          file,
+          comment,
+        });
+        list = await GetProgress({ group_project_id: groupProjectId });
+        setStatus("✅ Create Success: New progress added.");
+      } 
+      else if (mode === "delete") {
+        if (!delId) throw new Error("Please select an ID to delete.");
+        await EraseProgress({ id: delId });
+        list = await GetProgress({ group_project_id: groupProjectId });
+        setStatus(`✅ Delete Success: Removed ID ${delId}`);
+      } 
+      else {
+        if (!updateId) throw new Error("Please select an ID to update.");
+        await UpProgress({ id: updateId, file, comment });
+        list = await GetProgress({ group_project_id: groupProjectId });
+        setStatus(`✅ Update Success: Modified ID ${updateId}`);
       }
 
-      await EraseProgress({ id: delId });
-
-      const list = await GetProgress({ group_project_id: groupProjectId });
       setProgressList(list);
-      setStatus(`ลบ Progress id=${delId} สำเร็จ`);
-    } else {
-      if (!updateId) {
-        setStatus("กรุณาเลือก ID ที่ต้องการแก้ไข");
-        return;
-      }
 
-      await UpProgress({ id: updateId, file, comment });
-
-      const list = await GetProgress({ group_project_id: groupProjectId });
-      setProgressList(list);
-      setStatus(`อัปเดต Progress id=${updateId} สำเร็จ`);
+    } catch (err: any) {
+      console.error("Axios ERROR:", err);
+      setIsError(true);
+      const msg =
+        err?.response?.data?.error ||
+        err?.response?.data?.message ||
+        err?.message ||
+        "Unknown Error occurred";
+      setStatus(`❌ Error: ${msg}`);
+      // Don't clear list on error so user can still see previous data
+    } finally {
+      setIsLoading(false);
     }
-  } catch (err: any) {
-    console.error("Axios ERROR:", err);
-    const msg =
-      err?.response?.data?.error ||
-      err?.response?.data?.message ||
-      "เกิดข้อผิดพลาด ดูใน Console";
-    setStatus(msg);
-    setProgressList([]);
-  }
-};
+  };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h1>🚀 Test Axios Page</h1>
+    <div style={styles.pageContainer}>
+      <h1 style={styles.pageTitle}>🚀 Progress API Inspector</h1>
+      
+      <div style={styles.mainGrid}>
+        
+        {/* LEFT PANEL: Controls */}
+        <div style={styles.controlPanel}>
+          
+          {/* 1. Mode Tabs */}
+          <div style={styles.tabContainer}>
+            <button onClick={() => setMode("get")} style={mode === "get" ? styles.tabActive : styles.tab}>GET</button>
+            <button onClick={() => setMode("add")} style={mode === "add" ? styles.tabActive : styles.tab}>POST</button>
+            <button onClick={() => setMode("update")} style={mode === "update" ? styles.tabActive : styles.tab}>PATCH</button>
+            <button onClick={() => setMode("delete")} style={mode === "delete" ? styles.tabActive : styles.tab}>DELETE</button>
+          </div>
 
-      {/* Mode selector */}
-      <div style={{ marginBottom: 16 }}>
-        <label>เลือกโหมดทดสอบ: </label>
-        <select
-          value={mode}
-          onChange={(e) => setMode(e.target.value as Mode)}
-          style={{ padding: 6, marginLeft: 8 }}
-        >
-          <option value="get">GET - GetProgress</option>
-          <option value="add">POST - AddProgress</option>
-          <option value="update">POST - UpdateProgress</option>
-          <option value="delete">DELETE - EraseProgress</option>
-        </select>
+          <div style={styles.formContent}>
+            <h3 style={styles.sectionTitle}>
+              {mode === "get" && "🔍 Fetch Data"}
+              {mode === "add" && "✨ Add New Progress"}
+              {mode === "update" && "✏️ Edit Progress"}
+              {mode === "delete" && "🗑️ Remove Progress"}
+            </h3>
+
+            {/* Global Input */}
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>Group Project ID</label>
+              <input
+                type="number"
+                value={groupProjectId}
+                onChange={(e) => setGroupProjectId(Number(e.target.value))}
+                placeholder="e.g. 1"
+                style={styles.input}
+              />
+            </div>
+
+            {/* Dynamic Inputs */}
+            {mode === "add" && (
+              <>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>File Path / URL</label>
+                  <input value={file} onChange={(e) => setFile(e.target.value)} placeholder="e.g. report.pdf" style={styles.input} />
+                </div>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Comment</label>
+                  <input value={comment} onChange={(e) => setComment(e.target.value)} placeholder="e.g. First Draft" style={styles.input} />
+                </div>
+              </>
+            )}
+
+            {mode === "update" && (
+              <>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Target ID</label>
+                  <select value={updateId ?? ""} onChange={(e) => setUpdateId(Number(e.target.value))} style={styles.select}>
+                    <option value="">-- Select ID --</option>
+                    {availableIds.map((id) => <option key={id} value={id}>{id}</option>)}
+                  </select>
+                </div>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>New File</label>
+                  <input value={file} onChange={(e) => setFile(e.target.value)} placeholder="Updated file..." style={styles.input} />
+                </div>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>New Comment</label>
+                  <input value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Updated comment..." style={styles.input} />
+                </div>
+              </>
+            )}
+
+            {mode === "delete" && (
+              <div style={styles.inputGroup}>
+                <label style={styles.label}>Target ID to Delete</label>
+                <select value={delId ?? ""} onChange={(e) => setDelId(Number(e.target.value))} style={styles.select}>
+                  <option value="">-- Select ID --</option>
+                  {availableIds.map((id) => <option key={id} value={id}>{id}</option>)}
+                </select>
+              </div>
+            )}
+
+            <button onClick={handleRun} disabled={isLoading} style={styles.runButton}>
+              {isLoading ? "Running..." : "EXECUTE REQUEST"}
+            </button>
+          </div>
+        </div>
+
+        {/* RIGHT PANEL: Console / Results */}
+        <div style={styles.resultPanel}>
+          {/* Status Banner */}
+          <div style={{...styles.statusBanner, backgroundColor: isError ? "#fee2e2" : "#dcfce7", color: isError ? "#991b1b" : "#166534" }}>
+            <span style={{ fontWeight: "bold" }}>STATUS:</span> {status}
+          </div>
+
+          {/* JSON Viewer */}
+          <div style={styles.jsonContainer}>
+            <div style={styles.jsonHeader}>
+              <span>📦 Response Payload</span>
+              <span style={{ fontSize: 12, opacity: 0.7 }}>{progressList.length} Items</span>
+            </div>
+            <pre style={styles.jsonCode}>
+              {progressList.length > 0
+                ? JSON.stringify(progressList, null, 2)
+                : "// No data loaded yet.\n// Run a GET request to see data here."}
+            </pre>
+          </div>
+        </div>
+
       </div>
-
-      {/* group_project_id input (used by all) */}
-      <div style={{ marginBottom: 12 }}>
-        <label>กรอก group_project_id:</label>
-        <input
-          type="number"
-          value={groupProjectId}
-          onChange={(e) => setGroupProjectId(Number(e.target.value))}
-          placeholder="เช่น 1"
-          style={{
-            padding: "8px",
-            marginLeft: "10px",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-          }}
-        />
-      </div>
-
-      {/* Extra inputs for AddProgress */}
-      {mode === "add" && (
-        <>
-          <div style={{ marginBottom: 12 }}>
-            <label>File:</label>
-            <input
-              value={file}
-              onChange={(e) => setFile(e.target.value)}
-              placeholder="เช่น report.pdf"
-              style={{
-                padding: "8px",
-                marginLeft: "10px",
-                border: "1px solid #ccc",
-                borderRadius: "4px",
-              }}
-            />
-          </div>
-          <div style={{ marginBottom: 12 }}>
-            <label>Comment:</label>
-            <input
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="เช่น first submission"
-              style={{
-                padding: "8px",
-                marginLeft: "10px",
-                border: "1px solid #ccc",
-                borderRadius: "4px",
-              }}
-            />
-          </div>
-        </>
-      )}
-
-      {/* Inputs for UpdateProgress */}
-      {mode === "update" && (
-        <>
-          <div style={{ marginBottom: 12 }}>
-            <label>เลือก ID ที่ต้องการแก้ไข:</label>
-            <select
-              value={updateId ?? ""}
-              onChange={(e) =>
-                setUpdateId(e.target.value ? Number(e.target.value) : null)
-              }
-              style={{
-                padding: "8px",
-                marginLeft: "10px",
-                border: "1px solid #ccc",
-                borderRadius: "4px",
-              }}
-            >
-              <option value="">-- เลือกจากข้อมูลที่ได้มา --</option>
-              {availableIds.map((id) => (
-                <option key={id} value={id}>
-                  {id}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div style={{ marginBottom: 12 }}>
-            <label>File (ค่าใหม่):</label>
-            <input
-              value={file}
-              onChange={(e) => setFile(e.target.value)}
-              placeholder="เช่น report_updated.pdf"
-              style={{
-                padding: "8px",
-                marginLeft: "10px",
-                border: "1px solid #ccc",
-                borderRadius: "4px",
-              }}
-            />
-          </div>
-          <div style={{ marginBottom: 12 }}>
-            <label>Comment (ค่าใหม่):</label>
-            <input
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="เช่น updated submission"
-              style={{
-                padding: "8px",
-                marginLeft: "10px",
-                border: "1px solid #ccc",
-                borderRadius: "4px",
-              }}
-            />
-          </div>
-          <div style={{ marginBottom: 8, fontSize: 12, color: "#666" }}>
-            * ID ที่แสดงมาจากผลลัพธ์ล่าสุดของ GetProgress() / หลัง Add / หลัง
-            Update / หลัง Delete
-          </div>
-        </>
-      )}
-
-      {/* Inputs for DeleteProgress */}
-      {mode === "delete" && (
-        <>
-          <div style={{ marginBottom: 12 }}>
-            <label>เลือก ID ที่ต้องการลบ:</label>
-            <select
-              value={delId ?? ""}
-              onChange={(e) =>
-                setDelId(e.target.value ? Number(e.target.value) : null)
-              }
-              style={{
-                padding: "8px",
-                marginLeft: "10px",
-                border: "1px solid #ccc",
-                borderRadius: "4px",
-              }}
-            >
-              <option value="">-- เลือกจากข้อมูลที่ได้มา --</option>
-              {availableIds.map((id) => (
-                <option key={id} value={id}>
-                  {id}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div style={{ marginBottom: 8, fontSize: 12, color: "#666" }}>
-            * ID ที่แสดงมาจากผลลัพธ์ล่าสุดของ GetProgress() / หลัง Add / หลัง
-            Update / หลัง Delete
-          </div>
-        </>
-      )}
-
-      {/* Run button */}
-      <button
-        onClick={handleRun}
-        style={{
-          padding: "10px 20px",
-          backgroundColor: "#0070f3",
-          color: "white",
-          borderRadius: "5px",
-          border: "none",
-          cursor: "pointer",
-        }}
-      >
-        {mode === "get"
-          ? "ทดสอบ GetProgress()"
-          : mode === "add"
-          ? "ทดสอบ AddProgress()"
-          : mode === "update"
-          ? "ทดสอบ UpdateProgress()"
-          : "ทดสอบ EraseProgress()"}
-      </button>
-
-      {/* Result Output / Debug */}
-      <pre style={{ marginTop: 20, background: "#f4f4f4", padding: 10 }}>
-        {status}
-        {"\n\n"}
-        {"availableIds = " + JSON.stringify(availableIds) + "\n\n"}
-        {progressList.length > 0
-          ? JSON.stringify(progressList, null, 2)
-          : "// ยังไม่มีข้อมูลแสดงผล"}
-      </pre>
     </div>
   );
 }
+
+// --- Styles (CSS-in-JS) ---
+const styles: { [key: string]: React.CSSProperties } = {
+  pageContainer: {
+    padding: "40px",
+    maxWidth: "1200px",
+    margin: "0 auto",
+    fontFamily: "'Inter', system-ui, sans-serif",
+    backgroundColor: "#f8f9fa",
+    minHeight: "100vh",
+  },
+  pageTitle: {
+    fontSize: "24px",
+    fontWeight: "800",
+    color: "#1f2937",
+    marginBottom: "24px",
+    borderLeft: "6px solid #8A011D", // SUT Brand Color
+    paddingLeft: "12px",
+  },
+  mainGrid: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1.5fr", // Left 40%, Right 60%
+    gap: "24px",
+    alignItems: "start",
+  },
+  // Left Panel
+  controlPanel: {
+    backgroundColor: "#ffffff",
+    borderRadius: "12px",
+    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+    overflow: "hidden",
+  },
+  tabContainer: {
+    display: "flex",
+    backgroundColor: "#f3f4f6",
+    borderBottom: "1px solid #e5e7eb",
+  },
+  tab: {
+    flex: 1,
+    padding: "12px",
+    border: "none",
+    backgroundColor: "transparent",
+    cursor: "pointer",
+    fontWeight: "600",
+    color: "#6b7280",
+    transition: "all 0.2s",
+    borderBottom: "3px solid transparent",
+  },
+  tabActive: {
+    flex: 1,
+    padding: "12px",
+    border: "none",
+    backgroundColor: "#fff",
+    cursor: "pointer",
+    fontWeight: "bold",
+    color: "#8A011D",
+    borderBottom: "3px solid #8A011D",
+  },
+  formContent: {
+    padding: "24px",
+  },
+  sectionTitle: {
+    fontSize: "16px",
+    fontWeight: "700",
+    marginBottom: "20px",
+    color: "#374151",
+    borderBottom: "1px solid #eee",
+    paddingBottom: "10px",
+  },
+  inputGroup: {
+    marginBottom: "16px",
+  },
+  label: {
+    display: "block",
+    fontSize: "12px",
+    fontWeight: "600",
+    color: "#4b5563",
+    marginBottom: "6px",
+    textTransform: "uppercase",
+  },
+  input: {
+    width: "100%",
+    padding: "10px",
+    borderRadius: "6px",
+    border: "1px solid #d1d5db",
+    fontSize: "14px",
+    outline: "none",
+    transition: "border-color 0.2s",
+  },
+  select: {
+    width: "100%",
+    padding: "10px",
+    borderRadius: "6px",
+    border: "1px solid #d1d5db",
+    fontSize: "14px",
+    backgroundColor: "#fff",
+  },
+  runButton: {
+    width: "100%",
+    padding: "12px",
+    marginTop: "10px",
+    backgroundColor: "#8A011D",
+    color: "white",
+    border: "none",
+    borderRadius: "8px",
+    fontWeight: "bold",
+    cursor: "pointer",
+    boxShadow: "0 2px 4px rgba(138, 1, 29, 0.3)",
+    transition: "opacity 0.2s",
+  },
+  // Right Panel
+  resultPanel: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "16px",
+  },
+  statusBanner: {
+    padding: "12px 16px",
+    borderRadius: "8px",
+    fontSize: "14px",
+    border: "1px solid rgba(0,0,0,0.05)",
+  },
+  jsonContainer: {
+    backgroundColor: "#1e1e1e", // Dark Terminal Background
+    borderRadius: "12px",
+    overflow: "hidden",
+    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+    minHeight: "400px",
+    display: "flex",
+    flexDirection: "column",
+  },
+  jsonHeader: {
+    backgroundColor: "#2d2d2d",
+    color: "#e5e7eb",
+    padding: "8px 16px",
+    fontSize: "12px",
+    fontWeight: "bold",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  jsonCode: {
+    margin: 0,
+    padding: "16px",
+    color: "#4ade80", // Matrix Green
+    fontSize: "13px",
+    fontFamily: "'Fira Code', 'Consolas', monospace",
+    overflow: "auto",
+    maxHeight: "600px",
+    lineHeight: "1.5",
+  },
+};
