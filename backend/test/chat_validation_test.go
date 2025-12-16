@@ -12,7 +12,7 @@ func TestChat(t *testing.T) {
 
 	t.Run(`Message is required`, func(t *testing.T) {
 		chat := &entity.Chat{
-			GroupMemberID: 1,
+			GroupProjectID: 1,
 			ProcessID: 1,
 			SenderID: 1,
 			Message: "", // ผิดตรงนี้
@@ -27,7 +27,7 @@ func TestChat(t *testing.T) {
 
 	t.Run(`Message is required`, func(t *testing.T) {
 		chat := &entity.Chat{
-			GroupMemberID: 1,
+			GroupProjectID: 1,
 			ProcessID: 1,
 			SenderID: 1,
 			Message: "", // ผิดตรงนี้
@@ -40,9 +40,9 @@ func TestChat(t *testing.T) {
 		g.Expect(err.Error()).To(Equal("Message is required"))
 	})
 
-	t.Run(`GroupMemberID is required`, func(t *testing.T) {
+	t.Run(`GroupProjectID is required`, func(t *testing.T) {
 		chat := &entity.Chat{
-			GroupMemberID: 0, // ผิดตรงนี้
+			GroupProjectID: 0, // ผิดตรงนี้
 			ProcessID: 1,
 			SenderID: 1,
 			Message: "Hello world",
@@ -57,7 +57,7 @@ func TestChat(t *testing.T) {
 
 	t.Run(`ProcessID is required`, func(t *testing.T) {
 		chat := &entity.Chat{
-			GroupMemberID: 1,
+			GroupProjectID: 1,
 			ProcessID: 0, // ผิดตรงนี้
 			SenderID: 1,
 			Message: "Hello world",
@@ -72,7 +72,7 @@ func TestChat(t *testing.T) {
 
 	t.Run(`SenderID is required`, func(t *testing.T) {
 		chat := &entity.Chat{
-			GroupMemberID: 1,
+			GroupProjectID: 1,
 			ProcessID: 1,
 			SenderID: 0, // ผิดตรงนี้
 			Message: "Hello world",
