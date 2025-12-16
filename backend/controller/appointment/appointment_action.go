@@ -1,6 +1,7 @@
 package appointment
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -95,7 +96,13 @@ func CreateAppointment(c *gin.Context) {
 		return
 	}
 	appointment.TeacherID = claims.ID
+	// Force status to be lowercase "scheduled" to ensure consistency
+	appointment.AppointmentStatus = "scheduled"
 	db := database.DB()
+
+	// DEBUG: Print received appointment data
+	fmt.Printf("DEBUG: Creating Appointment - TypeID: %d, GroupID: %d, EvalID: %v\n",
+		appointment.AppointmentTypeID, appointment.GroupProjectID, appointment.EvaluationID)
 
 	if appointment.AppointmentTypeID != 3 {
 		var groupProject entity.GroupProject
@@ -110,12 +117,14 @@ func CreateAppointment(c *gin.Context) {
 		}
 	} else {
 		// Auto-assign Committee Evaluation (ID 4) for Final Defense (Type 3)
-		var committeeEval entity.Evaluation
-		if err := db.Where("name = ?", "Committee Evaluation").First(&committeeEval).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Committee Evaluation not found"})
-			return
+		if appointment.EvaluationID == nil {
+			var committeeEval entity.Evaluation
+			if err := db.Where("name = ?", "Committee Evaluation").First(&committeeEval).Error; err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Committee Evaluation not found"})
+				return
+			}
+			appointment.EvaluationID = &committeeEval.ID
 		}
-		appointment.EvaluationID = &committeeEval.ID
 	}
 
 	var existingAppt entity.Appointment

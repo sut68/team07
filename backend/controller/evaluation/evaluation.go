@@ -381,8 +381,11 @@ func GetStudentEvaluationForm(c *gin.Context) {
 	if err := db.Preload("GroupProject.GroupMembers.Student").
 		Preload("AppointmentType").
 		Preload("GroupProject.TopicSelections.Topic").
+		Preload("Evaluation").
+		Joins("LEFT JOIN evaluations ON evaluations.id = appointments.evaluation_id").
 		Joins("JOIN appointment_types ON appointment_types.id = appointments.appointment_type_id").
-		Where("group_project_id = ? AND appointment_status IN ? AND appointment_types.name = ?", member.GroupProjectID, []string{"scheduled", "completed"}, "Peer Assessment").
+		Where("group_project_id = ? AND appointment_status IN ?", member.GroupProjectID, []string{"scheduled", "completed", "Scheduled", "Completed"}).
+		Where("evaluations.name = ? OR appointment_types.name = ?", "Peer Assessment", "Final Defense").
 		Order("start_date_time DESC").
 		First(&appointment).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "No active Peer Assessment appointment found"})
@@ -432,6 +435,10 @@ func GetStudentEvaluationForm(c *gin.Context) {
 	students := []gin.H{}
 	for _, member := range appointment.GroupProject.GroupMembers {
 		if member.Student != nil {
+			// Filter out the current student (cannot evaluate self in Peer Assessment)
+			if member.Student.ID == claims.ID {
+				continue
+			}
 
 			rawCode := strings.Split(member.Student.Username, "@")[0]
 			displayCode := strings.ToUpper(rawCode)
