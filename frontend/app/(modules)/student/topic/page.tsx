@@ -1,8 +1,11 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, Button, Typography, Row, Col, Modal, Form, Input, Tag, Space, Empty, message, ConfigProvider, Tabs, Steps, Upload } from 'antd';
 import { ProjectOutlined, SendOutlined, TeamOutlined, FileTextOutlined, CheckCircleOutlined, ExclamationCircleOutlined, ClockCircleOutlined, CloseCircleOutlined, UploadOutlined, EyeOutlined, PaperClipOutlined } from '@ant-design/icons';
 import { Topic, TopicApproval } from '@/app/interfaces/Topic';
+import { getTopics, createTopic, updateTopic } from '@/app/services/topic';
+import { GetGroupProjects } from '@/app/services/group';
+import { GetMe } from '@/app/services/login';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -10,37 +13,96 @@ const { TextArea } = Input;
 export default function StudentTopicPage() {
     const [form] = Form.useForm();
     const [activeTab, setActiveTab] = useState('1');
+    const [loading, setLoading] = useState(false);
+    const [studentID, setStudentID] = useState<number | null>(null);
+    const [groupID, setGroupID] = useState<number | null>(null);
+    const [advisorID, setAdvisorID] = useState<number | null>(null);
 
-    // Mock Data - Available Teacher Topics
-    const [availableTopics, setAvailableTopics] = useState<Topic[]>([
-        {
-            id: 1,
-            title: "ระบบจัดการตารางเรียนอัตโนมัติ",
-            objective: "เพื่อลดความซับซ้อนในการจัดตารางเรียน",
-            scope: "Web Application สำหรับอาจารย์และเจ้าหน้าที่",
-            description: "ระบบที่ใช้อัลกอริทึมในการจัดตารางเรียนให้อัตโนมัติ โดยคำนึงถึงห้องเรียนและเวลาว่างของอาจารย์",
-            status: 'Open',
-            proposerId: 999,
-            proposerRole: 'Teacher'
-        },
-        {
-            id: 2,
-            title: "แอปพลิเคชันเพื่อการท่องเที่ยวชุมชน",
-            objective: "ส่งเสริมการท่องเที่ยวในท้องถิ่น",
-            scope: "Mobile Application (iOS/Android)",
-            description: "รวบรวมข้อมูลสถานที่ท่องเที่ยว ร้านอาหาร และที่พักในชุมชน",
-            status: 'Open',
-            proposerId: 999,
-            proposerRole: 'Teacher'
-        }
-    ]);
-
-    // Mock Data - Student's Current Proposal/Topic (Null if none selected/proposed)
+    // Data States
+    const [availableTopics, setAvailableTopics] = useState<Topic[]>([]);
     const [myTopic, setMyTopic] = useState<Topic | null>(null);
 
     // View Details State
     const [viewTopic, setViewTopic] = useState<Topic | null>(null);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            // Get Current User (Student)
+            let currentStudentID = studentID;
+            if (!currentStudentID) {
+                const user = await GetMe();
+                currentStudentID = user.id;
+                setStudentID(user.id);
+
+            }
+
+            // Fetch Teacher Topics (Available)
+            // Backend ListTopics filters by proposer_role
+            const teacherTopicsRes = await getTopics({ proposer_role: 'Teacher' });
+            setAvailableTopics(teacherTopicsRes.data || []);
+
+            // Fetch My Group
+            try {
+                const groupRes = await GetGroupProjects();
+                // Check structure. If it returns array, maybe take first? 
+                // Services usually return Axios Response. 
+                // api.get<GroupProject[]> implies res.data is GroupProject[]? 
+                // Or res.data.data? 
+                // Let's assume standard API response { data: ... }
+                // If the service doesn't unwrap it.
+                // Looking at group.ts: return await api.get...
+                // So result is AxiosResponse.
+                // Usage: groupRes.data typically holds the payload.
+                // If payload is { data: group }, then groupRes.data.data.
+                // If payload IS the group (unlikely), groupRes.data.
+                // Let's assume typical { data: ... }.
+                // But I should probably check backend. 
+                // For now, I'll log it if I could.
+                // Let's assume it returns { data: GroupProject } because it is "My Group".
+                // However, TS annotation said GroupProject[].
+                // If it is array, take first.
+                // Let's check safely.
+                const groupData = (groupRes.data as any).data || groupRes.data;
+                if (Array.isArray(groupData) && groupData.length > 0) {
+                    setGroupID(groupData[0].ID);
+                    if (groupData[0].teacher_id) setAdvisorID(groupData[0].teacher_id);
+                } else if (groupData && (groupData as any).ID) {
+                    setGroupID((groupData as any).ID);
+                    if ((groupData as any).teacher_id) setAdvisorID((groupData as any).teacher_id);
+                }
+            } catch (err) {
+                console.log("No group found or error fetching group", err);
+            }
+
+            const myTopicsRes = await getTopics({ proposer_role: 'Student' });
+
+            if (myTopicsRes.data && myTopicsRes.data.length > 0) {
+                const sortedTopics = myTopicsRes.data.sort((a, b) => b.ID - a.ID);
+                const activeTopic = sortedTopics.find(t => t.status !== 'Closed');
+
+                if (activeTopic) {
+                    setMyTopic(activeTopic);
+                } else {
+                    setMyTopic(null);
+
+                }
+            } else {
+                setMyTopic(null);
+            }
+
+        } catch (error) {
+            console.error("Failed to fetch data", error);
+            // message.error("ไม่สามารถโหลดข้อมูลได้");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, []);
 
     const handleViewDetails = (topic: Topic) => {
         setViewTopic(topic);
@@ -54,43 +116,75 @@ export default function StudentTopicPage() {
             content: `คุณต้องการเลือกหัวข้อ "${topic.title}" ใช่หรือไม่? เมื่อเลือกแล้วจะต้องรอการอนุมัติจากอาจารย์ที่ปรึกษา`,
             okText: 'ยืนยัน',
             cancelText: 'ยกเลิก',
-            onOk() {
-                // Simulate selecting a topic
-                const selected: Topic = {
-                    ...topic,
-                    id: Date.now(), // New ID for the proposal instance
-                    status: 'Pending',
-                    proposerRole: 'Student', // Now it's a student proposal based on teacher's topic
-                    approval: undefined // Reset approval
-                };
-                setMyTopic(selected);
-                setActiveTab('2'); // Switch to My Topic tab
-                message.success('ส่งคำขอเลือกหัวข้อเรียบร้อยแล้ว');
+            onOk: async () => {
+                setLoading(true);
+                try {
+                    const formData = new FormData();
+                    formData.append('title', topic.title);
+                    formData.append('objective', topic.objective);
+                    formData.append('scope', topic.scope);
+                    formData.append('description', topic.description || '');
+                    formData.append('proposer_role', 'Student');
+                    if (groupID) {
+                        formData.append('group_project_id', groupID.toString());
+                    }
+                    if (topic.teacher_id) {
+                        formData.append('teacher_id', topic.teacher_id.toString());
+                    } else if (advisorID) {
+                        formData.append('teacher_id', advisorID.toString());
+                    }
+
+                    await createTopic(formData);
+                    message.success('ส่งคำขอเลือกหัวข้อเรียบร้อยแล้ว');
+                    fetchData();
+                    setActiveTab('2');
+                } catch (error) {
+                    console.error(error);
+                    message.error('เกิดข้อผิดพลาดในการเลือกหัวข้อ');
+                } finally {
+                    setLoading(false);
+                }
             }
         });
     };
 
-    const handleProposeSubmit = (values: any) => {
+    const handleProposeSubmit = async (values: any) => {
         Modal.confirm({
             title: 'ยืนยันการเสนอหัวข้อ',
             content: 'คุณตรวจสอบรายละเอียดครบถ้วนแล้วใช่หรือไม่?',
             okText: 'ยืนยัน',
             cancelText: 'ตรวจสอบอีกครั้ง',
-            onOk() {
-                const newProposal: Topic = {
-                    id: Date.now(),
-                    title: values.title,
-                    objective: values.objective,
-                    scope: values.scope,
-                    description: values.description,
-                    status: 'Pending',
-                    proposerId: 1001, // Mock Student ID
-                    proposerRole: 'Student',
-                    // Handle attachment mock
-                    attachment: values.attachment && values.attachment.fileList.length > 0 ? values.attachment.fileList[0].name : undefined
-                };
-                setMyTopic(newProposal);
-                message.success('เสนอหัวข้อโครงงานเรียบร้อยแล้ว');
+            onOk: async () => {
+                setLoading(true);
+                try {
+                    const formData = new FormData();
+                    formData.append('title', values.title);
+                    formData.append('objective', values.objective);
+                    formData.append('scope', values.scope);
+                    formData.append('description', values.description || '');
+                    formData.append('proposer_role', 'Student');
+
+                    // Handle File
+                    if (groupID) {
+                        formData.append('group_project_id', groupID.toString());
+                    }
+                    if (advisorID) {
+                        formData.append('teacher_id', advisorID.toString());
+                    }
+
+                    if (values.attachment && values.attachment.fileList && values.attachment.fileList.length > 0) {
+                        formData.append('file_attachment', values.attachment.fileList[0].originFileObj);
+                    }
+
+                    await createTopic(formData);
+                    message.success('เสนอหัวข้อโครงงานเรียบร้อยแล้ว');
+                    fetchData();
+                } catch (error) {
+                    console.error(error);
+                    message.error('เกิดข้อผิดพลาดในการเสนอหัวข้อ');
+                } finally {
+                    setLoading(false);
+                }
             }
         });
     };
@@ -102,10 +196,50 @@ export default function StudentTopicPage() {
             okText: 'ยกเลิกหัวข้อ',
             okType: 'danger',
             cancelText: 'ปิด',
-            onOk() {
-                setMyTopic(null);
+            onOk: async () => {
+                if (myTopic) {
+                    try {
+                        const formData = new FormData();
+                        formData.append('status', 'Closed');
+
+                        // We also need to send required fields if validation is strict, 
+                        // but UpdateTopic logic we fixed supports partial updates if they are empty strings.
+                        // However, backend validation (valid:"required") might trigger if we bind to struct?
+                        // Using ShouldBind, it validates struct tags.
+                        // Topic struct has `valid:"required~..."`.
+                        // If we send empty title/objective, validation might fail?
+                        // Let's re-verify Topic struct validation logic. 
+                        // If we use `ShouldBind`, Gin binds. Does it validate `valid` tags automatically?
+                        // Gin uses `binding:"required"` for standard validation. 
+                        // The user uses `valid:"required~..."` which might be a custom validator or go-playground/validator.
+                        // If standard validation is used, empty fields might be an issue.
+                        // But wait, existing UpdateTopic: `if err := c.ShouldBind(&payload); err != nil`.
+                        // If payload has empty strings for required fields, ShouldBind might fail if `binding:"required"` is there.
+                        // Checked `backend/entity/Topic.go`: `valid:"required~..."` is used. 
+                        // Gin default validator uses `binding` tag. It ignores `valid` tag unless custom validator is registered.
+                        // So standard `ShouldBind` will NOT fail on empty fields unless `binding:"required"` is present.
+                        // The user removed `binding:"required"` earlier.
+                        // So it should be safe to send only status.
+
+                        // BUT, to be absolutely safe and avoid erasing data if my code assumption is wrong, 
+                        // we SHOULD send back the original data + new status.
+                        // This avoids "partial update" risks entirely.
+
+                        formData.append('title', myTopic.title);
+                        formData.append('objective', myTopic.objective);
+                        formData.append('scope', myTopic.scope);
+                        formData.append('description', myTopic.description);
+
+                        await updateTopic(myTopic.ID, formData);
+                        message.success('ยกเลิกหัวข้อเรียบร้อยแล้ว');
+                        setMyTopic(null);
+                        fetchData();
+                    } catch (error) {
+                        // console.error(error);
+                        message.error('ไม่สามารถยกเลิกหัวข้อได้');
+                    }
+                }
                 form.resetFields();
-                message.info('ยกเลิกหัวข้อเรียบร้อยแล้ว');
             }
         });
     };
@@ -150,10 +284,12 @@ export default function StudentTopicPage() {
                         </div>
                     </div>
                 </div>
-                {status === 'Rejected' && approval?.comment && (
+                {/* Approval Logic typically nested in Topic object from backend */}
+                {/* Assuming topic.topic_approvals is array */}
+                {status === 'Rejected' && myTopic?.topic_approvals && myTopic.topic_approvals.length > 0 && (
                     <div style={{ marginTop: 16, padding: 16, background: '#fff1f0', borderRadius: 8, border: '1px solid #ffccc7' }}>
                         <Text strong type="danger"><ExclamationCircleOutlined /> เหตุผล/สิ่งที่ต้องแก้ไข:</Text>
-                        <Paragraph style={{ margin: '8px 0 0 0' }}>{approval.comment}</Paragraph>
+                        <Paragraph style={{ margin: '8px 0 0 0' }}>{myTopic.topic_approvals[myTopic.topic_approvals.length - 1]?.comment}</Paragraph>
                     </div>
                 )}
             </Card>
@@ -176,7 +312,7 @@ export default function StudentTopicPage() {
                     ) : (
                         <Row gutter={[24, 24]}>
                             {availableTopics.map(topic => (
-                                <Col xs={24} md={12} lg={12} key={topic.id}>
+                                <Col xs={24} md={12} lg={12} key={topic.ID}>
                                     <Card
                                         hoverable
                                         style={{ height: '100%', display: 'flex', flexDirection: 'column', borderRadius: 12, border: '1px solid #f0f0f0' }}
@@ -224,7 +360,7 @@ export default function StudentTopicPage() {
                 <div style={{ maxWidth: 800, margin: '0 auto' }}>
                     {myTopic ? (
                         <div>
-                            <StatusBadge status={myTopic.status} approval={myTopic.approval} />
+                            <StatusBadge status={myTopic.status} approval={undefined} />
 
                             <Card title="รายละเอียดหัวข้อโครงงาน" extra={<Button danger onClick={handleCancelProposal}>ยกเลิก/สละสิทธิ์</Button>}>
                                 <Title level={4}>{myTopic.title}</Title>
@@ -301,7 +437,7 @@ export default function StudentTopicPage() {
 
                                 <Form.Item>
                                     <Button type="primary" htmlType="submit" block icon={<SendOutlined />} size="large"
-                                    style={{ background: '#8A011D', borderColor: '#8A011D' }}>
+                                        style={{ background: '#8A011D', borderColor: '#8A011D' }}>
                                         ส่งข้อเสนอโครงงาน
                                     </Button>
                                 </Form.Item>
@@ -331,7 +467,7 @@ export default function StudentTopicPage() {
                     <Text type="secondary">เลือกหัวข้อจากอาจารย์ หรือเสนอหัวข้อที่คุณสนใจด้วยตนเอง</Text>
                 </div>
 
-                <Tabs defaultActiveKey="1" items={items} />
+                <Tabs defaultActiveKey="1" items={items} activeKey={activeTab} onChange={setActiveTab} />
 
                 {/* View Details Modal */}
                 <Modal
@@ -366,7 +502,8 @@ export default function StudentTopicPage() {
                                 <Space>
                                     <TeamOutlined />
                                     <Text strong>เสนอโดย:</Text>
-                                    <Text>อาจารย์ที่ปรึกษา (ID: {viewTopic.proposerId})</Text>
+                                    {/* Display Teacher Name if available, or role */}
+                                    <Text>อาจารย์ที่ปรึกษา {viewTopic.teacher_id ? `(ID: ${viewTopic.teacher_id})` : ''}</Text>
                                 </Space>
                             </Card>
 
@@ -386,11 +523,11 @@ export default function StudentTopicPage() {
                                 <Paragraph style={{ marginTop: 4 }}>{viewTopic.description || '-'}</Paragraph>
                             </div>
 
-                            {viewTopic.attachment && (
+                            {viewTopic.file_attachment && (
                                 <div style={{ marginTop: 8 }}>
                                     <Text strong><PaperClipOutlined /> เอกสารแนบ:</Text>
-                                    <a href="#" style={{ marginLeft: 8 }} onClick={(e) => { e.preventDefault(); message.info('ดาวน์โหลดไฟล์จำลอง: ' + viewTopic.attachment); }}>
-                                        {viewTopic.attachment}
+                                    <a href="#" style={{ marginLeft: 8 }} onClick={(e) => { e.preventDefault(); message.info('ดาวน์โหลดไฟล์: ' + viewTopic.file_attachment); }}>
+                                        {viewTopic.file_attachment}
                                     </a>
                                 </div>
                             )}

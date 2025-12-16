@@ -1,0 +1,38 @@
+import api from "./api";
+import { Topic, TopicApproval } from "../interfaces/Topic";
+
+export const getTopics = async (params?: { teacher_id?: number; filter?: string; proposer_role?: string; group_id?: number }) => {
+    // Determine strict endpoint based on params if needed, but /groupProject/topics covers general cases
+    // However, for correct scoping, we use the shared endpoint that allows both roles
+    const res = await api.get<{ data: Topic[] }>("/groupProject/topics", { params });
+    return res.data;
+};
+
+export const getTopicById = async (id: number) => {
+    const res = await api.get<{ data: Topic }>(`/groupProject/topics/${id}`);
+    return res.data;
+};
+
+export const createTopic = async (data: FormData) => {
+    const res = await api.post<{ data: Topic }>("/groupProject/topics", data, {
+        headers: { "Content-Type": "multipart/form-data" },
+    });
+    return res.data;
+};
+
+export const updateTopic = async (id: number, data: FormData) => {
+    const res = await api.patch<{ data: Topic }>(`/groupProject/topics/${id}`, data, {
+        headers: { "Content-Type": "multipart/form-data" },
+    });
+    return res.data;
+};
+
+export const deleteTopic = async (id: number) => {
+    const res = await api.delete(`/groupProject/topics/${id}`);
+    return res.data;
+};
+
+export const approveTopic = async (id: number, data: { status: string; comment?: string; teacher_id: number }) => {
+    const res = await api.patch<{ data: Topic; approval: TopicApproval }>(`/teacher/topics/${id}/approval`, data);
+    return res.data;
+};

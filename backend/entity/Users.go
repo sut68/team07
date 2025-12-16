@@ -28,6 +28,7 @@ type User struct {
 	IssueReports []IssueReport `gorm:"foreignKey:UserID" json:"issue_reports"`
 	ProjectStorages []ProjectStorage `gorm:"foreignKey:TeacherID" json:"project_storages"`
 	TopicApprovals []TopicApproval `gorm:"foreignKey:TeacherID" json:"topic_approvals"`
+	Topics []Topic `gorm:"foreignKey:TeacherID" json:"topics"`
 	IndividualScores []IndividualScore `gorm:"foreignKey:StudentID" json:"individual_scores"`
 	IndividualScore []IndividualScore `gorm:"foreignKey:TeacherID" json:"individual_score"`
 	IndividualScoresEvaluated []IndividualScore `gorm:"foreignKey:StudentEvaluatorID" json:"individual_scores_evaluated"`

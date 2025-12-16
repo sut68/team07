@@ -100,10 +100,10 @@ var MockUser = []entity.User{
 }
 
 var MockGroupProject = []entity.GroupProject{
-	{Model: gorm.Model{ID: 1}, GroupNumber: 1, Year: 2568, GroupStatus: "In Process", Membership: 5, TeacherID: nil},
+	{Model: gorm.Model{ID: 1}, GroupNumber: 1, Year: 2568, GroupStatus: "In Process", Membership: 5, TeacherID: &teacher1},
 	{Model: gorm.Model{ID: 2}, GroupNumber: 2, Year: 2568, GroupStatus: "Pending", Membership: 5, TeacherID: nil},
 	{Model: gorm.Model{ID: 3}, GroupNumber: 3, Year: 2568, GroupStatus: "Completed", Membership: 5, TeacherID: nil},
-	{Model: gorm.Model{ID: 4}, GroupNumber: 4, Year: 2568, GroupStatus: "In Process", Membership: 5, TeacherID: nil},
+	{Model: gorm.Model{ID: 4}, GroupNumber: 4, Year: 2568, GroupStatus: "In Process", Membership: 5, TeacherID: &teacher1},
 	{Model: gorm.Model{ID: 5}, GroupNumber: 5, Year: 2568, GroupStatus: "Pending", Membership: 5, TeacherID: nil},
 	{Model: gorm.Model{ID: 6}, GroupNumber: 6, Year: 2568, GroupStatus: "Pending", Membership: 3, TeacherID: nil},
 
@@ -124,17 +124,52 @@ var MockGroupMember = []entity.GroupMember{
 	{Model: gorm.Model{ID: 11}, Leader: false, StudentID: 16, GroupProjectID: 5},
 }
 
+var (
+	gp1 uint = 1
+	gp3 uint = 3
+
+	teacher1 uint = 2
+)
+
 var MockTopics = []entity.Topic{
 	{
-		Model:gorm.Model{ID: 1},Title:"Smart Farm System",Description: "Automated IOT system for vegetable farming",Status:  "Approved",Proposer_role:  "Student",GroupProjectID: 1,
+		Model:       gorm.Model{ID: 1},
+		Title:       "Smart Farm System",
+		Objective:   "Develop an automated IoT system to monitor and control environmental parameters for vegetable farming.",
+		Scope:       "Sensor network, data collection, irrigation control, web dashboard",
+		Description: "Automated IoT system for vegetable farming",
+		Status:      "Approved",
+
+		ProposerRole:   "Student",
+		GroupProjectID: &gp1,
+		TeacherID:      &teacher1,
 	},
 	{
-		Model:gorm.Model{ID: 2},Title:"AI Face Recognition Attendance",Description: "Check-in system using camera and AI",Status:  "Approved",Proposer_role:  "Teacher",GroupProjectID: 2,
+		Model:       gorm.Model{ID: 2},
+		Title:       "AI Face Recognition Attendance",
+		Objective:   "Build an attendance system using face recognition to automate check-in/out.",
+		Scope:       "Face detection, recognition model, camera integration, attendance DB",
+		Description: "Check-in system using camera and AI",
+		Status:      "Approved",
+
+		ProposerRole:   "Teacher",
+		GroupProjectID: nil,          // อาจารย์เพิ่มก่อน ยังไม่มีกลุ่ม
+		TeacherID:      &teacher1,
 	},
 	{
-		Model:gorm.Model{ID: 3},Title:"E-Commerce Mobile Application",Description: "Online shopping app with payment gateway",Status:  "Approved",Proposer_role:  "Student",GroupProjectID: 3,
+		Model:       gorm.Model{ID: 3},
+		Title:       "E-Commerce Mobile Application",
+		Objective:   "Create a mobile shopping app with product listing, cart and payment integration.",
+		Scope:       "Mobile frontend, backend API, payment gateway, order management",
+		Description: "Online shopping app with payment gateway",
+		Status:      "Approved",
+
+		ProposerRole:   "Student",
+		GroupProjectID: &gp3,
+		TeacherID:      &teacher1,
 	},
 }
+
 
 var MockTopicSelections = []entity.TopicSelection{
 	{

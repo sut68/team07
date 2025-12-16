@@ -9,10 +9,11 @@ import (
 	"github.com/sut68/team07/backend/controller/group"
 	"github.com/sut68/team07/backend/controller/issues"
 	"github.com/sut68/team07/backend/controller/progress"
+	"github.com/sut68/team07/backend/controller/topic"
 	"github.com/sut68/team07/backend/controller/users"
 	"github.com/sut68/team07/backend/database"
 	"github.com/sut68/team07/backend/middleware"
-	mockdata "github.com/sut68/team07/backend/mockData"
+	// mockdata "github.com/sut68/team07/backend/mockData"
 	"github.com/sut68/team07/backend/service"
 
 )
@@ -22,8 +23,8 @@ func main() {
 	database.ConnectDatabase()
 	database.SetUpDatabase()
 	//========INSERT MOCK DATA================
-	Data := database.DB()
-	mockdata.InsertMock(Data)
+	// Data := database.DB()
+	// mockdata.InsertMock(Data)
 	//=========================================
 	service.InitEmailConfig()
 	service.StartCleanupWorker(database.DB())
@@ -96,7 +97,13 @@ func main() {
 			teacherGroup.POST("/createCriteriaLevel", evaluation.CreateCriteriaLevel)
 			teacherGroup.PATCH("/updateCriteriaLevel/:id", evaluation.UpdateCriteriaLevel)
 			teacherGroup.DELETE("/deleteCriteriaLevel/:id", evaluation.DeleteCriteriaLevel)
-			// ===============================================
+			// == Topic ===========================
+			teacherGroup.PATCH("/topics/:id/approval", topic.ApproveTopic)
+			teacherGroup.GET("/topics", topic.ListTopics)
+			teacherGroup.GET("/topics/:id", topic.GetTopic)
+			teacherGroup.POST("/topics", topic.CreateTopic)
+			teacherGroup.PATCH("/topics/:id", topic.UpdateTopic)
+			teacherGroup.DELETE("/topics/:id", topic.DeleteTopic)
 
 		}
 
@@ -123,6 +130,11 @@ func main() {
 		teacherOrStudentGroup.Use(middleware.RoleGuard("Teacher", "Student"))
 		{
 			// ถ้า API ไหนที่ครูและนักเรียนเข้าถึงได้ ให้นำไปใส่ในนี้
+			teacherOrStudentGroup.GET("/topics", topic.ListTopics)
+			teacherOrStudentGroup.GET("/topics/:id", topic.GetTopic)
+			teacherOrStudentGroup.POST("/topics", topic.CreateTopic)
+			teacherOrStudentGroup.PATCH("/topics/:id", topic.UpdateTopic)
+			teacherOrStudentGroup.DELETE("/topics/:id", topic.DeleteTopic)
 
 		}
 

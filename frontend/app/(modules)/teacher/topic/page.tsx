@@ -1,8 +1,10 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, Button, Typography, Row, Col, Modal, Form, Input, Tag, Space, Empty, message, ConfigProvider, Tabs, Upload } from 'antd';
 import { PlusOutlined, DeleteOutlined, EditOutlined, ProjectOutlined, CheckCircleOutlined, CloseCircleOutlined, UserOutlined, FileTextOutlined, TeamOutlined, PaperClipOutlined, UploadOutlined } from '@ant-design/icons';
 import { Topic, TopicApproval } from '@/app/interfaces/Topic';
+import { getTopics, createTopic, updateTopic, deleteTopic, approveTopic } from '@/app/services/topic';
+import { GetMe } from '@/app/services/login';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -11,6 +13,7 @@ export default function TeacherTopicPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingTopic, setEditingTopic] = useState<Topic | null>(null);
     const [form] = Form.useForm();
+    const [teacherID, setTeacherID] = useState<number | null>(null);
 
     // Student Proposal States
     const [selectedProposal, setSelectedProposal] = useState<Topic | null>(null);
@@ -18,83 +21,65 @@ export default function TeacherTopicPage() {
     const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
     const [rejectReason, setRejectReason] = useState('');
 
-    // Mock Data - Teacher Topics
-    const [topics, setTopics] = useState<Topic[]>([
-        {
-            id: 1,
-            title: "ระบบจัดการตารางเรียนอัตโนมัติ",
-            objective: "เพื่อลดความซับซ้อนในการจัดตารางเรียน",
-            scope: "Web Application สำหรับอาจารย์และเจ้าหน้าที่",
-            description: "ระบบที่ใช้อัลกอริทึมในการจัดตารางเรียนให้อัตโนมัติ โดยคำนึงถึงห้องเรียนและเวลาว่างของอาจารย์",
-            status: 'Open',
-            proposerId: 999,
-            proposerRole: 'Teacher'
-        },
-        {
-            id: 2,
-            title: "แอปพลิเคชันเพื่อการท่องเที่ยวชุมชน",
-            objective: "ส่งเสริมการท่องเที่ยวในท้องถิ่น",
-            scope: "Mobile Application (iOS/Android)",
-            description: "รวบรวมข้อมูลสถานที่ท่องเที่ยว ร้านอาหาร และที่พักในชุมชน",
-            status: 'Open',
-            proposerId: 999,
-            proposerRole: 'Teacher'
-        }
-    ]);
+    // Data States
+    const [topics, setTopics] = useState<Topic[]>([]);
+    const [proposals, setProposals] = useState<Topic[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    // Mock Data - Student Proposals
-    const [proposals, setProposals] = useState<Topic[]>([
-        {
-            id: 101,
-            title: "ระบบติดตามพัสดุด้วย QR Code",
-            objective: "เพื่อเพิ่มความสะดวกในการติดตามสถานะพัสดุ",
-            scope: "Mobile App สำหรับผู้ใช้ทั่วไป และ Web Admin",
-            description: "ผู้ใช้สามารถสแกน QR Code เพื่อดูสถานะพัสดุได้ทันที",
-            status: 'Pending',
-            proposerId: 1001,
-            proposerRole: 'Student',
-            group: {
-                ID: 1,
-                group_number: 1,
-                year: 2024,
-                group_status: 'Active',
-                membership: 3,
-                group_members: []
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            // Get Current User (Teacher)
+            let currentTeacherID = teacherID;
+            if (!currentTeacherID) {
+                const user = await GetMe();
+                // Assuming User definition has ID, or map it.
+                // Backend response for GetMe usually returns { id: ..., role: ... } directly or wrapped.
+                // Checking interfaces/Login.ts: UserDataInterface { id: number ... }
+                // The service GetMe returns res.data which IS UserDataInterface.
+                currentTeacherID = user.id;
+                setTeacherID(user.id);
             }
-        },
-        {
-            id: 102,
-            title: "Smart Home Control System",
-            objective: "ควบคุมอุปกรณ์ไฟฟ้าในบ้านผ่านมือถือ",
-            scope: "IoT Device + Mobile App",
-            description: "ใช้ ESP32 ควบคุมไฟและแอร์ ผ่านแอพพลิเคชั่น",
-            status: 'Pending',
-            proposerId: 1002,
-            proposerRole: 'Student',
-            group: {
-                ID: 2,
-                group_number: 2,
-                year: 2024,
-                group_status: 'Active',
-                membership: 3,
-                group_members: []
+
+            if (currentTeacherID) {
+                // Fetch My Topics
+                const myTopicsRes = await getTopics({ teacher_id: currentTeacherID, filter: 'my_topics', proposer_role: 'Teacher' });
+                setTopics(myTopicsRes.data || []);
+
+                // Fetch Advisor Proposals
+                const proposalsRes = await getTopics({ teacher_id: currentTeacherID, filter: 'advisor', proposer_role: 'Student' });
+                // Filter student proposals if backend returns mixed? 
+                // Backend 'filter=advisor' returns topics from groups advised by teacher.
+                // Usually these are student proposals.
+                setProposals(proposalsRes.data || []);
             }
+        } catch (error) {
+            console.error("Failed to fetch data", error);
+            message.error("ไม่สามารถโหลดข้อมูลได้");
+        } finally {
+            setLoading(false);
         }
-    ]);
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, []);
 
     // Teacher Topic Handlers
     const handleOpenModal = (topic?: Topic) => {
         if (topic) {
             setEditingTopic(topic);
-            // Transform string attachment to fileList for Upload component
             const formValues = {
-                ...topic,
-                attachment: topic.attachment ? [
+                title: topic.title,
+                objective: topic.objective,
+                scope: topic.scope,
+                description: topic.description,
+                attachment: topic.file_attachment ? [
                     {
                         uid: '-1',
-                        name: topic.attachment,
+                        name: topic.file_attachment,
                         status: 'done',
-                        url: '', // In real app, this would be a real URL
+                        url: '',
                     }
                 ] : []
             };
@@ -112,35 +97,41 @@ export default function TeacherTopicPage() {
         form.resetFields();
     };
 
-    const handleSubmit = (values: any) => {
-        // Extract attachment name (mock)
-        const attachmentName = values.attachment && values.attachment.length > 0 ? values.attachment[0].name : undefined;
-        // Or if it comes from raw event (sometimes wrapped in fileList)
-        const finalAttachment = values.attachment && values.attachment.fileList && values.attachment.fileList.length > 0
-            ? values.attachment.fileList[0].name
-            : (Array.isArray(values.attachment) && values.attachment.length > 0 ? values.attachment[0].name : undefined);
+    const handleSubmit = async (values: any) => {
+        try {
+            const formData = new FormData();
+            formData.append('title', values.title);
+            formData.append('objective', values.objective);
+            formData.append('scope', values.scope);
+            formData.append('description', values.description || '');
+            formData.append('proposer_role', 'Teacher');
 
-        const cleanValues = { ...values, attachment: finalAttachment };
+            // Handle File
+            if (values.attachment && values.attachment.fileList && values.attachment.fileList.length > 0) {
+                // New file upload
+                formData.append('file_attachment', values.attachment.fileList[0].originFileObj);
+            } else if (values.attachment && values.attachment.length > 0 && values.attachment[0].originFileObj) {
+                // Sometimes direct array depending on binding
+                formData.append('file_attachment', values.attachment[0].originFileObj);
+            }
 
-        if (editingTopic) {
-            setTopics(topics.map(t => t.id === editingTopic.id ? { ...t, ...cleanValues } : t));
-            message.success('แก้ไขหัวข้อโครงงานเรียบร้อยแล้ว');
-        } else {
-            const newTopic: Topic = {
-                id: Date.now(),
-                title: values.title,
-                objective: values.objective,
-                scope: values.scope,
-                description: values.description,
-                status: 'Open',
-                proposerId: 999,
-                proposerRole: 'Teacher',
-                attachment: finalAttachment
-            };
-            setTopics([...topics, newTopic]);
-            message.success('เพิ่มหัวข้อโครงงานเรียบร้อยแล้ว');
+            if (teacherID) {
+                formData.append('teacher_id', teacherID.toString());
+            }
+
+            if (editingTopic) {
+                await updateTopic(editingTopic.ID, formData);
+                message.success('แก้ไขหัวข้อโครงงานเรียบร้อยแล้ว');
+            } else {
+                await createTopic(formData);
+                message.success('เพิ่มหัวข้อโครงงานเรียบร้อยแล้ว');
+            }
+            handleCloseModal();
+            fetchData();
+        } catch (error) {
+            console.error(error);
+            message.error('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
         }
-        handleCloseModal();
     };
 
     const handleDelete = (id: number) => {
@@ -150,9 +141,14 @@ export default function TeacherTopicPage() {
             okText: 'ลบ',
             okType: 'danger',
             cancelText: 'ยกเลิก',
-            onOk() {
-                setTopics(topics.filter(t => t.id !== id));
-                message.success('ลบหัวข้อเรียบร้อยแล้ว');
+            onOk: async () => {
+                try {
+                    await deleteTopic(id);
+                    message.success('ลบหัวข้อเรียบร้อยแล้ว');
+                    fetchData();
+                } catch (error) {
+                    message.error('ลบหัวข้อไม่สำเร็จ');
+                }
             }
         });
     };
@@ -164,18 +160,25 @@ export default function TeacherTopicPage() {
     };
 
     const handleApprove = () => {
-        if (selectedProposal) {
+        if (selectedProposal && teacherID) {
             Modal.confirm({
                 title: 'ยืนยันการอนุมัติ',
                 content: `คุณต้องการอนุมัติหัวข้อ "${selectedProposal.title}" หรือไม่?`,
                 okText: 'อนุมัติ',
                 cancelText: 'ยกเลิก',
-                onOk() {
-                    setProposals(proposals.map(p =>
-                        p.id === selectedProposal.id ? { ...p, status: 'Approved' } : p
-                    ));
-                    message.success('อนุมัติหัวข้อเรียบร้อยแล้ว');
-                    setIsProposalModalOpen(false);
+                onOk: async () => {
+                    try {
+                        await approveTopic(selectedProposal.ID, {
+                            status: "Approved",
+                            comment: "Approved by Advisor",
+                            teacher_id: teacherID
+                        });
+                        message.success('อนุมัติหัวข้อเรียบร้อยแล้ว');
+                        setIsProposalModalOpen(false);
+                        fetchData();
+                    } catch (error) {
+                        message.error('อนุมัติหัวข้อไม่สำเร็จ');
+                    }
                 }
             });
         }
@@ -185,31 +188,26 @@ export default function TeacherTopicPage() {
         setIsRejectModalOpen(true);
     };
 
-    const handleConfirmReject = () => {
+    const handleConfirmReject = async () => {
         if (!rejectReason.trim()) {
             message.error('กรุณาระบุเหตุผลที่ไม่ผ่านการอนุมัติ');
             return;
         }
-        if (selectedProposal) {
-            const approval: TopicApproval = {
-                id: Date.now(),
-                topicId: selectedProposal.id,
-                status: 'Rejected',
-                comment: rejectReason,
-                TeacherId: 999
-            };
-
-            setProposals(proposals.map(p =>
-                p.id === selectedProposal.id ? {
-                    ...p,
-                    status: 'Rejected',
-                    approval: approval // Save rejection reason in approval object
-                } : p
-            ));
-            message.success('บันทึกผลการไม่อนุมัติเรียบร้อยแล้ว');
-            setIsRejectModalOpen(false);
-            setIsProposalModalOpen(false);
-            setRejectReason('');
+        if (selectedProposal && teacherID) {
+            try {
+                await approveTopic(selectedProposal.ID, {
+                    status: "Rejected",
+                    comment: rejectReason,
+                    teacher_id: teacherID
+                });
+                message.success('บันทึกผลการไม่อนุมัติเรียบร้อยแล้ว');
+                setIsRejectModalOpen(false);
+                setIsProposalModalOpen(false);
+                setRejectReason('');
+                fetchData();
+            } catch (error) {
+                message.error('บันทึกผลไม่สำเร็จ');
+            }
         }
     };
 
@@ -241,7 +239,7 @@ export default function TeacherTopicPage() {
                         เพิ่มหัวข้อใหม่
                     </Button>
 
-                    {topics.length === 0 ? (
+                    {topics.length === 0 && !loading ? (
                         <Empty
                             image={Empty.PRESENTED_IMAGE_SIMPLE}
                             description="ยังไม่มีหัวข้อโครงงาน"
@@ -251,12 +249,12 @@ export default function TeacherTopicPage() {
                     ) : (
                         <Row gutter={[24, 24]}>
                             {topics.map(topic => (
-                                <Col xs={24} md={12} lg={12} key={topic.id}>
+                                <Col xs={24} md={12} lg={12} key={topic.ID}>
                                     <Card
                                         hoverable
                                         actions={[
                                             <EditOutlined key="edit" style={{ color: '#faad14' }} onClick={() => handleOpenModal(topic)} />,
-                                            <DeleteOutlined key="delete" style={{ color: '#ff4d4f' }} onClick={() => handleDelete(topic.id)} />,
+                                            <DeleteOutlined key="delete" style={{ color: '#ff4d4f' }} onClick={() => handleDelete(topic.ID)} />,
                                         ]}
                                         style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid #f0f0f0' }}
                                         bodyStyle={{ padding: 24 }}
@@ -295,12 +293,12 @@ export default function TeacherTopicPage() {
             label: 'คำขออนุมัติหัวข้อ',
             children: (
                 <div>
-                    {proposals.length === 0 ? (
+                    {proposals.length === 0 && !loading ? (
                         <Empty description="ไม่มีคำขออนุมัติหัวข้อขณะนี้" />
                     ) : (
                         <Row gutter={[24, 24]}>
                             {proposals.map(proposal => (
-                                <Col xs={24} md={12} lg={12} key={proposal.id}>
+                                <Col xs={24} md={12} lg={12} key={proposal.ID}>
                                     <Card
                                         hoverable
                                         onClick={() => handleViewProposal(proposal)}
@@ -319,7 +317,7 @@ export default function TeacherTopicPage() {
                                         </div>
                                         <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
                                             <TeamOutlined style={{ color: '#1890ff' }} />
-                                            <Text>กลุ่มที่ {proposal.group?.group_number}</Text>
+                                            <Text>กลุ่มที่ {proposal.group_project?.group_number || '-'}</Text>
                                         </div>
 
                                         <div style={{ textAlign: 'right' }}>
@@ -469,11 +467,9 @@ export default function TeacherTopicPage() {
                                 <Space>
                                     <TeamOutlined />
                                     <Text strong>เสนอโดย:</Text>
-                                    <Text>กลุ่มที่ {selectedProposal.group?.group_number}</Text>
+                                    <Text>กลุ่มที่ {selectedProposal.group_project?.group_number || '-'}</Text>
                                 </Space>
                             </Card>
-
-
 
                             <Row gutter={16}>
                                 <Col span={12}>
@@ -491,11 +487,11 @@ export default function TeacherTopicPage() {
                                 <Paragraph style={{ marginTop: 4 }}>{selectedProposal.description}</Paragraph>
                             </div>
 
-                            {selectedProposal.attachment && (
+                            {selectedProposal.file_attachment && (
                                 <div style={{ marginTop: 8 }}>
                                     <Text strong><PaperClipOutlined /> ไฟล์แนบ:</Text>
-                                    <a href="#" style={{ marginLeft: 8 }} onClick={(e) => { e.preventDefault(); message.info('ดาวน์โหลดไฟล์จำลอง: ' + selectedProposal.attachment); }}>
-                                        {selectedProposal.attachment}
+                                    <a href="#" style={{ marginLeft: 8 }} onClick={(e) => { e.preventDefault(); message.info('ดาวน์โหลด: ' + selectedProposal.file_attachment); }}>
+                                        {selectedProposal.file_attachment}
                                     </a>
                                 </div>
                             )}
@@ -504,7 +500,9 @@ export default function TeacherTopicPage() {
                                 <div style={{ marginTop: 16, padding: 12, background: '#fff1f0', border: '1px solid #ffa39e', borderRadius: 8 }}>
                                     <Text type="danger" strong>ไม่อนุมัติเนื่องจาก:</Text>
                                     <Paragraph type="danger" style={{ margin: 0 }}>
-                                        {selectedProposal.approval?.comment}
+                                        {selectedProposal.topic_approvals && selectedProposal.topic_approvals.length > 0
+                                            ? selectedProposal.topic_approvals[selectedProposal.topic_approvals.length - 1].comment
+                                            : ''}
                                     </Paragraph>
                                 </div>
                             )}

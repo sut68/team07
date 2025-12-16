@@ -3,24 +3,28 @@ import { GroupProject } from './Group';
 export type TopicStatus = 'Open' | 'Closed' | 'Pending' | 'Approved' | 'Rejected';
 
 export interface Topic {
-    id: number;
+    ID: number;
+    id?: number; // Support for backend returning lowercase id
     title: string;
     objective: string;
     scope: string;
     description: string;
-    status: TopicStatus;
-    attachment?: string; 
-    proposerId: number;
-    proposerRole: 'Teacher' | 'Student';
+    status: string;
+    file_attachment?: string;
+    proposer_role: string;
+    teacher_id?: number;
+    group_project_id?: number;
 
-    approval?: TopicApproval;
-    group?: GroupProject; // Group info for proposals 
+    // Relations
+    topic_approvals?: TopicApproval[];
+    group_project?: GroupProject;
 }
 
 export interface TopicApproval {
-    id: number;
-    topicId: number;
-    status: TopicStatus;
+    ID: number;
+    topic_id: number;
+    status: string;
     comment: string;
-    TeacherId: number;
+    teacher_id: number;
+    approval_date?: string;
 }
