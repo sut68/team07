@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -16,16 +17,32 @@ import (
 func CreateTopic(c *gin.Context) {
 	var topic entity.Topic
 
-	// Bind form data
-	if err := c.ShouldBind(&topic); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+	topic.Title = c.PostForm("title")
+	topic.Objective = c.PostForm("objective")
+	topic.Scope = c.PostForm("scope")
+	topic.Description = c.PostForm("description")
+	topic.ProposerRole = c.PostForm("proposer_role")
+
+	if teacherIDStr := c.PostForm("teacher_id"); teacherIDStr != "" {
+		if id, err := strconv.ParseUint(teacherIDStr, 10, 32); err == nil {
+			uid := uint(id)
+			topic.TeacherID = &uid
+		}
 	}
 
-	// If the topic is created by a Teacher, automatically set status to "Approved"
-	if topic.ProposerRole == "Teacher" {
-		topic.Status = "Open"
-	} else if topic.ProposerRole == "Student" {
+	if groupIDStr := c.PostForm("group_project_id"); groupIDStr != "" {
+		if id, err := strconv.ParseUint(groupIDStr, 10, 32); err == nil {
+			uid := uint(id)
+			topic.GroupProjectID = &uid
+		}
+	}
+
+	// ===== Set Status ตาม proposer_role =====
+	switch topic.ProposerRole {
+	case "Teacher":
+		topic.Status = "Approved"
+
+	case "Student":
 		topic.Status = "Pending"
 
 		// Fetch TeacherID from GroupProject
@@ -38,21 +55,33 @@ func CreateTopic(c *gin.Context) {
 				}
 			}
 		}
+
+	default:
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid proposer_role",
+		})
+		return
 	}
 
-	// Handle File Upload
+	// ===== Handle File Upload =====
 	file, err := c.FormFile("file_attachment")
 	if err == nil {
-		uploadPath := "uploads/topics" 
+		uploadPath := "uploads/topics"
 		if _, err := os.Stat(uploadPath); os.IsNotExist(err) {
 			os.MkdirAll(uploadPath, 0755)
 		}
 
-		filename := fmt.Sprintf("%d_%s", time.Now().UnixNano(), file.Filename)
+		filename := fmt.Sprintf(
+			"%d_%s",
+			time.Now().UnixNano(),
+			filepath.Base(file.Filename),
+		)
 		filePath := filepath.Join(uploadPath, filename)
 
 		if err := c.SaveUploadedFile(file, filePath); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "Failed to save file",
+			})
 			return
 		}
 		topic.FileAttachment = filename
@@ -66,6 +95,7 @@ func CreateTopic(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"data": topic})
 }
+
 
 // GET /topics/:id
 func GetTopic(c *gin.Context) {
@@ -145,10 +175,11 @@ func UpdateTopic(c *gin.Context) {
 	}
 
 	// Bind form data
-	if err := c.ShouldBind(&payload); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+	payload.Title = c.PostForm("title")
+	payload.Objective = c.PostForm("objective")
+	payload.Scope = c.PostForm("scope")
+	payload.Description = c.PostForm("description")
+	payload.Status = c.PostForm("status")
 	
 	// Handle File Upload (Optional update)
 	file, err := c.FormFile("file_attachment")

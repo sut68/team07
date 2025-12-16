@@ -14,7 +14,7 @@ import (
 	"github.com/sut68/team07/backend/controller/users"
 	"github.com/sut68/team07/backend/database"
 	"github.com/sut68/team07/backend/middleware"
-	// mockdata "github.com/sut68/team07/backend/mockData"
+	mockdata "github.com/sut68/team07/backend/mockData"
 	"github.com/sut68/team07/backend/service"
 )
 
@@ -29,6 +29,7 @@ func main() {
 	service.StartCleanupWorker(database.DB())
 	r := gin.Default()
 	r.Use(database.CORSMiddleware())
+	r.Static("/uploads", "./uploads")
 
 	// test controller Group
 	// r.GET("/group", group.GetGroupProject)

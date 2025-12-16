@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Typography, Row, Col, Modal, Form, Input, Tag, Space, Empty, message, ConfigProvider, Tabs, Upload } from 'antd';
 import { PlusOutlined, DeleteOutlined, EditOutlined, ProjectOutlined, CheckCircleOutlined, CloseCircleOutlined, UserOutlined, FileTextOutlined, TeamOutlined, PaperClipOutlined, UploadOutlined } from '@ant-design/icons';
-import { Topic, TopicApproval } from '@/app/interfaces/Topic';
+import { Topic, TopicApproval, statusMap } from '@/app/interfaces/Topic';
 import { getTopics, createTopic, updateTopic, deleteTopic, approveTopic } from '@/app/services/topic';
 import { GetMe } from '@/app/services/login';
 
@@ -48,9 +48,6 @@ export default function TeacherTopicPage() {
 
                 // Fetch Advisor Proposals
                 const proposalsRes = await getTopics({ teacher_id: currentTeacherID, filter: 'advisor', proposer_role: 'Student' });
-                // Filter student proposals if backend returns mixed? 
-                // Backend 'filter=advisor' returns topics from groups advised by teacher.
-                // Usually these are student proposals.
                 setProposals(proposalsRes.data || []);
             }
         } catch (error) {
@@ -111,7 +108,7 @@ export default function TeacherTopicPage() {
                 // New file upload
                 formData.append('file_attachment', values.attachment.fileList[0].originFileObj);
             } else if (values.attachment && values.attachment.length > 0 && values.attachment[0].originFileObj) {
-                // Sometimes direct array depending on binding
+                //Sometimes direct array depending on binding
                 formData.append('file_attachment', values.attachment[0].originFileObj);
             }
 
@@ -252,17 +249,18 @@ export default function TeacherTopicPage() {
                                 <Col xs={24} md={12} lg={12} key={topic.ID}>
                                     <Card
                                         hoverable
+                                        onClick={() => handleViewProposal(topic)}
                                         actions={[
-                                            <EditOutlined key="edit" style={{ color: '#faad14' }} onClick={() => handleOpenModal(topic)} />,
-                                            <DeleteOutlined key="delete" style={{ color: '#ff4d4f' }} onClick={() => handleDelete(topic.ID)} />,
+                                            <EditOutlined key="edit" style={{ color: '#faad14' }} onClick={(e) => { e.stopPropagation(); handleOpenModal(topic); }} />,
+                                            <DeleteOutlined key="delete" style={{ color: '#ff4d4f' }} onClick={(e) => { e.stopPropagation(); handleDelete(topic.ID); }} />,
                                         ]}
                                         style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid #f0f0f0' }}
                                         bodyStyle={{ padding: 24 }}
                                     >
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
                                             <Title level={4} style={{ margin: 0, width: '70%' }} ellipsis={{ rows: 2 }}>{topic.title}</Title>
-                                            <Tag color={topic.status === 'Open' ? 'green' : 'red'}>
-                                                {topic.status === 'Open' ? 'เปิดรับสมัคร' : 'ปิดรับสมัคร'}
+                                            <Tag color={topic.status === 'Approved' ? 'green' : 'red'}>
+                                                {topic.status === 'Approved' ? 'เปิดรับสมัคร' : 'ปิดรับสมัคร'}
                                             </Tag>
                                         </div>
 
@@ -307,17 +305,16 @@ export default function TeacherTopicPage() {
                                     >
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
                                             <Title level={4} style={{ margin: 0, width: '70%' }} ellipsis={{ rows: 2 }}>{proposal.title}</Title>
-                                            <Tag color={
-                                                proposal.status === 'Approved' ? 'success' :
-                                                    proposal.status === 'Rejected' ? 'error' : 'warning'
-                                            }>
-                                                {proposal.status === 'Approved' ? 'อนุมัติแล้ว' :
-                                                    proposal.status === 'Rejected' ? 'ไม่อนุมัติ' : 'รอพิจารณา'}
+
+                                            <Tag color={statusMap[proposal.status]?.color || 'default'}>
+                                                {statusMap[proposal.status]?.text || proposal.status}
                                             </Tag>
+
                                         </div>
                                         <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
                                             <TeamOutlined style={{ color: '#1890ff' }} />
                                             <Text>กลุ่มที่ {proposal.group_project?.group_number || '-'}</Text>
+                                            {/* อาจจะใส่ชื่อหัวหน้ากลุ่มด้วย */}
                                         </div>
 
                                         <div style={{ textAlign: 'right' }}>
@@ -463,13 +460,15 @@ export default function TeacherTopicPage() {
                                 <Title level={4} style={{ marginTop: 0 }}>{selectedProposal.title}</Title>
                             </div>
 
-                            <Card size="small" style={{ background: '#fafafa' }}>
-                                <Space>
-                                    <TeamOutlined />
-                                    <Text strong>เสนอโดย:</Text>
-                                    <Text>กลุ่มที่ {selectedProposal.group_project?.group_number || '-'}</Text>
-                                </Space>
-                            </Card>
+                            {selectedProposal.proposer_role === 'Student' && (
+                                <Card size="small" style={{ background: '#fafafa' }}>
+                                    <Space>
+                                        <TeamOutlined />
+                                        <Text strong>เสนอโดย:</Text>
+                                        <Text>กลุ่มที่ {selectedProposal.group_project?.group_number || '-'}</Text>
+                                    </Space>
+                                </Card>
+                            )}
 
                             <Row gutter={16}>
                                 <Col span={12}>
@@ -490,7 +489,12 @@ export default function TeacherTopicPage() {
                             {selectedProposal.file_attachment && (
                                 <div style={{ marginTop: 8 }}>
                                     <Text strong><PaperClipOutlined /> ไฟล์แนบ:</Text>
-                                    <a href="#" style={{ marginLeft: 8 }} onClick={(e) => { e.preventDefault(); message.info('ดาวน์โหลด: ' + selectedProposal.file_attachment); }}>
+                                    <a
+                                        href={`http://localhost:8080/uploads/topics/${selectedProposal.file_attachment}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{ marginLeft: 8 }}
+                                    >
                                         {selectedProposal.file_attachment}
                                     </a>
                                 </div>

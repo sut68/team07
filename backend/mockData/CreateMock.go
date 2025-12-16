@@ -123,13 +123,6 @@ var MockGroupMember = []entity.GroupMember{
 	{Leader: true, StudentID: 17, GroupProjectID: 6},
 }
 
-var (
-	gp1 uint = 1
-	gp3 uint = 3
-
-	teacher1 uint = 2
-)
-
 var MockTopics = []entity.Topic{
 	{
 		Title:       "Smart Farm System",
@@ -139,8 +132,8 @@ var MockTopics = []entity.Topic{
 		Status:      "Approved",
 
 		ProposerRole:   "Student",
-		GroupProjectID: &gp1,
-		TeacherID:      &teacher1,
+		GroupProjectID: Uint(1),
+		TeacherID:      Uint(2),
 	},
 	{
 		Title:       "AI Face Recognition Attendance",
@@ -151,7 +144,7 @@ var MockTopics = []entity.Topic{
 
 		ProposerRole:   "Teacher",
 		GroupProjectID: nil,          // อาจารย์เพิ่มก่อน ยังไม่มีกลุ่ม
-		TeacherID:      &teacher1,
+		TeacherID:      Uint(2),
 	},
 	{
 		Title:       "E-Commerce Mobile Application",
@@ -161,8 +154,8 @@ var MockTopics = []entity.Topic{
 		Status:      "Approved",
 
 		ProposerRole:   "Student",
-		GroupProjectID: &gp3,
-		TeacherID:      &teacher1,
+		GroupProjectID: Uint(3),
+		TeacherID:      Uint(2),
 	},
 }
 

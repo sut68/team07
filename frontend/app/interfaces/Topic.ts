@@ -1,6 +1,14 @@
 import { GroupProject } from './Group';
 
-export type TopicStatus = 'Open' | 'Closed' | 'Pending' | 'Approved' | 'Rejected';
+export type TopicStatus = 'Approved' | 'Rejected' | 'Pending' | 'Closed';
+
+export const statusMap: Record<TopicStatus, { color: string; text: string }> = {
+  Approved: { color: 'success', text: 'อนุมัติแล้ว' },
+  Rejected: { color: 'error', text: 'ไม่อนุมัติ' },
+  Pending:  { color: 'warning', text: 'รอพิจารณา' },
+  Closed:   { color: 'default', text: 'ปิดหัวข้อแล้ว' },
+};
+
 
 export interface Topic {
     ID: number;
@@ -9,7 +17,7 @@ export interface Topic {
     objective: string;
     scope: string;
     description: string;
-    status: string;
+    status: TopicStatus;
     file_attachment?: string;
     proposer_role: string;
     teacher_id?: number;
@@ -23,7 +31,7 @@ export interface Topic {
 export interface TopicApproval {
     ID: number;
     topic_id: number;
-    status: string;
+    status: TopicStatus;
     comment: string;
     teacher_id: number;
     approval_date?: string;
