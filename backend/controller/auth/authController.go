@@ -82,7 +82,7 @@ func (h *LoginHandler) Login(c *gin.Context) {
 	// ใช้ normalizedUsername ในการค้นหา DB
 	if err := h.DB.Preload("Role").Where("username = ?", normalizedUsername).First(&user).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found or credentials invalid"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Username or Password invalid"})
 			return
 		}
 		logSys.Printf("DB ERROR: Failed to query user for login: %v", err)
@@ -91,7 +91,7 @@ func (h *LoginHandler) Login(c *gin.Context) {
 	}
 
 	if !h.JwtService.CheckPasswordHash(input.Password, user.Password) {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found or credentials invalid"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Username or Password invalid"})
 		return
 	}
 

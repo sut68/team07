@@ -1,8 +1,6 @@
 package mockdata
 
 import (
-	"time"
-
 	"github.com/sut68/team07/backend/entity"
 )
 
@@ -21,26 +19,11 @@ var MockAppointmentType = []entity.AppointmentType{
 	{Name: "Final Defense"},
 }
 
-var MockAppointment = []entity.Appointment{
-	{
-		StartDateTime: time.Date(2025, 12, 20, 9, 0, 0, 0, time.Local),
-		DurationMin: 30, AppointmentStatus: "completed", AppointmentTypeID: 3, RoomID: 1, TeacherID: 2, GroupProjectID: 3,
-	},
-	{
-		StartDateTime: time.Date(2025, 12, 25, 13, 30, 0, 0, time.Local),
-		DurationMin: 30, AppointmentStatus: "scheduled", AppointmentTypeID: 2, RoomID: 3, TeacherID: 3, GroupProjectID: 1,
-	},
-	{
-		StartDateTime: time.Date(2026, 1, 10, 10, 0, 0, 0, time.Local),
-		DurationMin: 30, AppointmentStatus: "scheduled", AppointmentTypeID: 3, RoomID: 5, TeacherID: 4, GroupProjectID: 2,
-	},
-}
-
 var MockEvaluation = []entity.Evaluation{
 	{Name: "Ethics Test", TotalScore: 5, ForGroupOnly: false, AppointmentTypeID: 3},
 	{Name: "Peer Assessment", TotalScore: 5, ForGroupOnly: false, AppointmentTypeID: 3},
 	{Name: "Advisor Evaluation", TotalScore: 55, ForGroupOnly: true, AppointmentTypeID: 3},
-	{Name: "Committee Evaluation", TotalScore: 35, ForGroupOnly: true, AppointmentTypeID: 3},
+	{Name: "Committee Evaluation", TotalScore: 35, ForGroupOnly: false, AppointmentTypeID: 3},
 }
 
 var MockCriteria = []entity.Criteria{
@@ -124,6 +107,7 @@ var MockCriteria = []entity.Criteria{
 		MaxScore:     10,
 		Order:        1,
 		EvaluationID: 4,
+		IsGroup:      true,
 		CriteriaLevel: []entity.CriteriaLevel{
 			{Description: "Professional (มืออาชีพ)", Score: 10},
 			{Description: "Good (ดี)", Score: 8},
@@ -135,6 +119,7 @@ var MockCriteria = []entity.Criteria{
 		MaxScore:     10,
 		Order:        2,
 		EvaluationID: 4,
+		IsGroup:      true,
 		CriteriaLevel: []entity.CriteriaLevel{
 			{Description: "Clear & Correct (ชัดเจนและถูกต้อง)", Score: 10},
 			{Description: "Partially Correct (ถูกบางส่วน)", Score: 6},
@@ -143,13 +128,27 @@ var MockCriteria = []entity.Criteria{
 	},
 	{
 		Name:         "System Demo (การสาธิตระบบ)",
-		MaxScore:     15,
+		MaxScore:     10,
 		Order:        3,
 		EvaluationID: 4,
+		IsGroup:      true,
 		CriteriaLevel: []entity.CriteriaLevel{
-			{Description: "Smooth (ราบรื่น)", Score: 15},
+			{Description: "Smooth (ราบรื่น)", Score: 10},
 			{Description: "Minor Issues (ติดขัดเล็กน้อย)", Score: 10},
 			{Description: "Failed/Error (ล้มเหลว)", Score: 5},
+		},
+	},
+	{
+		Name:         "การประเมินรายบุคคล",
+		MaxScore:     5,
+		Order:        4,
+		EvaluationID: 4,
+		IsGroup:      false,
+		CriteriaLevel: []entity.CriteriaLevel{
+			{Description: "Excellent (ดีเยี่ยม)", Score: 5},
+			{Description: "Good (ดี)", Score: 4},
+			{Description: "Fair (พอใช้)", Score: 3},
+			{Description: "Poor (ปรับปรุง)", Score: 1},
 		},
 	},
 }

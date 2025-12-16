@@ -5,6 +5,8 @@ export interface IEvaluationProject {
   project_name: string;
   status: "Pending" | "Graded";
   is_graded: boolean;
+  available_evaluations?: string[];
+  appointments?: any[];
 }
 
 export interface IRubricLevel {
@@ -31,10 +33,13 @@ export interface IEvaluationFormResponse {
   project_id: number;
   project_name: string;
   eval_type: string;
+  current_evaluation?: string;
+  available_evaluations?: string[];
   
   group_criteria: ICriteriaForm[];
   individual_criteria: ICriteriaForm[];
   students: IStudentForm[];
+  existing_scores?: Record<string, number>;
 }
 
 
@@ -56,6 +61,7 @@ export interface ISaveEvaluationRequest {
   appointment_id: number;
   group_scores: IGroupScoreData[];
   individual_scores: IIndividualScoreData[];
+  evaluation_name?: string;
 }
 
 export interface IPeerScoreData {
@@ -68,6 +74,7 @@ export interface IPeerScoreData {
 export interface ISaveEvaluationPeerRequest {
   appointment_id: number;
   scores: IPeerScoreData[];
+
 }
 
 export interface IEvaluationResultResponse {

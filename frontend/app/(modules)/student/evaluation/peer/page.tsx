@@ -3,8 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { message, Spin, Empty } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
-import { SavePeerEvaluation } from '../../../../services/evaluation';
-import { GetMyProjectAndAppointment } from '../../../../services/appointment';
+import { SavePeerEvaluation ,GetStudentEvaluationForm } from '../../../../services/evaluation';
+import { GetMe } from '../../../../services/login';
 import type { ISaveEvaluationPeerRequest } from '../../../../interfaces/Evaluation';
 import '../../../../style/evaluation.css';
 
@@ -13,6 +13,7 @@ const rubric = [
     { value: 4, label: "4 - บ่อยครั้ง (Often)" },
     { value: 3, label: "3 - บางครั้ง (Sometimes)" },
     { value: 1, label: "1 - น้อยมาก (Rarely)" },
+    { value: 0, label: "0 - มึงมันไร้ค่า (Priceless)" }
 ];
 
 export default function PeerEvaluationPage() {
@@ -26,11 +27,31 @@ export default function PeerEvaluationPage() {
     useEffect(() => {
         const initData = async () => {
             try {
-                const res = await GetMyProjectAndAppointment();
+                const [res, me] = await Promise.all([
+                    GetStudentEvaluationForm(),
+                    GetMe()
+                ]);
+
                 if (res.status === 200 && res.data) {
-                    
-                    if(res.data.appointment) {
-                        setAppointmentId(res.data.appointment.id);
+                    const myId = me.id;
+
+                    if (res.data.students) {
+                        const filtered = res.data.students.filter(
+                            (s: any) => s.student_id !== myId
+                        );
+                        setMembers(filtered);
+                    }
+
+                    if (res.data.appointment_id) {
+                        setAppointmentId(res.data.appointment_id);
+                    }
+
+                    if (res.data.existing_scores) {
+                        const loadedScores: Record<number, number> = {};
+                        Object.entries(res.data.existing_scores).forEach(([key, value]) => {
+                            loadedScores[Number(key)] = Number(value);
+                        });
+                        setScores(loadedScores);
                     }
                 }
             } catch (error) {
@@ -42,6 +63,7 @@ export default function PeerEvaluationPage() {
         initData();
     }, []);
 
+
     const handleScoreChange = (targetId: number, score: number) => {
         setScores(prev => ({ ...prev, [targetId]: score }));
     };
@@ -51,24 +73,20 @@ export default function PeerEvaluationPage() {
             message.warning("กรุณาประเมินเพื่อนให้ครบทุกคน");
             return;
         }
-        if (!appointmentId) {
-            message.error("ไม่พบข้อมูลนัดหมาย");
-            return;
-        }
 
         setSubmitting(true);
         try {
-            const payload: ISaveEvaluationPeerRequest = {
-                appointment_id: appointmentId,
-                scores: Object.entries(scores).map(([targetId, score]) => ({
-                    target_student_id: Number(targetId),
-                    criteria_id: 2,
-                    criteria_level_id: null, 
-                    score: score
-                }))
-            };
+        const payload: ISaveEvaluationPeerRequest = {
+            appointment_id: appointmentId || 0, 
+            scores: Object.entries(scores).map(([targetId, score]) => ({
+                target_student_id: Number(targetId),
+                criteria_id: 2,
+                criteria_level_id: null, 
+                score: score
+            }))
+        };
 
-            await SavePeerEvaluation(payload);
+        await SavePeerEvaluation(payload);
             message.success("บันทึกเรียบร้อย!");
             router.push('/student/evaluation');
         } catch (error) {

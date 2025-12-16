@@ -21,6 +21,8 @@ func ListEvaluationProjects(c *gin.Context) {
 	}
 
 	typeIDStr := c.Query("type_id")
+	mode := c.Query("mode")
+
 	var filterTypeID int
 	if typeIDStr != "" {
 		filterTypeID, _ = strconv.Atoi(typeIDStr)
@@ -28,14 +30,27 @@ func ListEvaluationProjects(c *gin.Context) {
 
 	db := database.DB()
 	var projects []entity.GroupProject
-
-	if err := db.
-		Preload("TopicSelections", func(db *gorm.DB) *gorm.DB {
-			return db.Order("created_at DESC")
+	query := db.Preload("TopicSelections", func(db *gorm.DB) *gorm.DB {
+		return db.Order("created_at DESC")
+	}).Preload("TopicSelections.Topic").
+		Preload("Appointment", func(db *gorm.DB) *gorm.DB {
+			return db.Order("start_date_time DESC")
 		}).
-		Preload("TopicSelections.Topic").
-		Where("teacher_id = ?", claims.ID).
-		Find(&projects).Error; err != nil {
+		Preload("Appointment.Evaluation").
+		Preload("Appointment.AppointmentType").
+		Preload("Appointment.AppointmentType.Evaluation").
+		Preload("GroupMembers")
+
+	if mode == "committee" {
+		query = query.Joins("JOIN appointments ON appointments.group_project_id = group_projects.id").
+			Where("appointments.appointment_type_id = ?", 3).
+			Where("appointments.teacher_id = ?", claims.ID).
+			Group("group_projects.id")
+	} else {
+		query = query.Where("teacher_id = ?", claims.ID)
+	}
+
+	if err := query.Find(&projects).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -57,6 +72,12 @@ func ListEvaluationProjects(c *gin.Context) {
 			Joins("JOIN appointments ON appointments.id = eva_results.appointment_id").
 			Where("appointments.group_project_id = ? AND eva_results.teacher_id = ?", p.ID, claims.ID)
 
+		if mode == "committee" {
+			query = query.Joins("JOIN criteria ON criteria.id = eva_results.criteria_id").
+				Joins("JOIN evaluations ON evaluations.id = criteria.evaluation_id").
+				Where("evaluations.name = ?", "Committee Evaluation")
+		}
+
 		if filterTypeID > 0 {
 			query = query.Where("appointments.appointment_type_id = ?", filterTypeID)
 		}
@@ -69,12 +90,85 @@ func ListEvaluationProjects(c *gin.Context) {
 			statusText = "Graded"
 		}
 
+		var appointmentID uint
+		availableEvaluationsMap := make(map[string]bool)
+		var appointmentsList []map[string]interface{}
+
+		for _, apt := range p.Appointment {
+			if apt.AppointmentStatus != "scheduled" && apt.AppointmentStatus != "completed" {
+				continue
+			}
+
+			// Determine if this appointment is relevant
+			if mode == "committee" {
+				if apt.AppointmentTypeID != 3 {
+					continue
+				}
+				if apt.TeacherID != claims.ID {
+					continue
+				}
+			}
+
+			// Set main appointmentID for backward compatibility or default action
+			if appointmentID == 0 {
+				appointmentID = apt.ID
+			}
+
+			var evalNames []string
+			if apt.EvaluationID != nil && apt.Evaluation != nil {
+				evalNames = append(evalNames, apt.Evaluation.Name)
+			} else if apt.AppointmentTypeID == 3 {
+				isAdvisor := p.TeacherID != nil && *p.TeacherID == claims.ID
+				if mode == "committee" {
+					evalNames = append(evalNames, "Committee Evaluation")
+				} else {
+					if isAdvisor {
+						evalNames = append(evalNames, "Advisor Evaluation", "Ethics Test")
+					}
+				}
+			} else {
+				if apt.AppointmentType != nil {
+					for _, e := range apt.AppointmentType.Evaluation {
+						evalNames = append(evalNames, e.Name)
+					}
+				}
+			}
+
+			for _, name := range evalNames {
+				if name == "Peer Assessment" {
+					continue
+				}
+				if mode == "committee" && name != "Committee Evaluation" {
+					continue
+				}
+				if mode != "committee" && name == "Committee Evaluation" {
+					continue
+				}
+				if !availableEvaluationsMap[name] {
+					availableEvaluationsMap[name] = true
+				}
+				appointmentsList = append(appointmentsList, map[string]interface{}{
+					"id":              apt.ID,
+					"evaluation_name": name,
+				})
+			}
+		}
+
+		availableEvaluations := []string{}
+		for name := range availableEvaluationsMap {
+			availableEvaluations = append(availableEvaluations, name)
+		}
+
 		item := gin.H{
-			"id":           p.ID,
-			"group_number": p.GroupNumber,
-			"project_name": projectName,
-			"status":       statusText,
-			"is_graded":    isGraded,
+			"id":                    p.ID,
+			"group_number":          p.GroupNumber,
+			"project_name":          projectName,
+			"status":                statusText,
+			"is_graded":             isGraded,
+			"appointment_id":        appointmentID,
+			"students":              p.GroupMembers,
+			"available_evaluations": availableEvaluations,
+			"appointments":          appointmentsList,
 		}
 		response = append(response, item)
 	}
@@ -102,11 +196,197 @@ func GetEvaluationForm(c *gin.Context) {
 		return
 	}
 
-	if appointment.AppointmentTypeID != 3 { 
+	if appointment.AppointmentTypeID != 3 {
 		if appointment.GroupProject.TeacherID == nil || *appointment.GroupProject.TeacherID != claims.ID {
 			c.JSON(http.StatusForbidden, gin.H{"error": "Only advisor can evaluate this section."})
 			return
 		}
+	}
+
+	isAdvisor := appointment.GroupProject.TeacherID != nil && *appointment.GroupProject.TeacherID == claims.ID
+	mode := c.Query("mode")
+	reqEvalName := strings.TrimSpace(c.Query("evaluation_name"))
+
+	var formCriteria []entity.Criteria
+	allowedEvaluations := []string{}
+	selectedEvaluationName := ""
+
+	criteriaQuery := db.
+		Preload("CriteriaLevel").
+		Preload("Evaluation").
+		Joins("JOIN evaluations ON evaluations.id = criteria.evaluation_id").
+		Order("criteria.order ASC")
+
+	if appointment.EvaluationID != nil {
+		criteriaQuery = criteriaQuery.Where("evaluations.id = ?", *appointment.EvaluationID)
+		var evaluation entity.Evaluation
+		if err := db.First(&evaluation, *appointment.EvaluationID).Error; err == nil {
+			allowedEvaluations = []string{evaluation.Name}
+			selectedEvaluationName = evaluation.Name
+		}
+	} else {
+		// Fallback Logic
+		criteriaQuery = criteriaQuery.Where("evaluations.appointment_type_id = ?", appointment.AppointmentTypeID)
+
+		if appointment.AppointmentTypeID == 3 {
+			if mode == "committee" {
+				allowedEvaluations = []string{"Committee Evaluation"}
+				// Force selection if not specified
+				if reqEvalName == "" {
+					selectedEvaluationName = "Committee Evaluation"
+				}
+			} else if isAdvisor {
+				allowedEvaluations = []string{"Advisor Evaluation", "Ethics Test"}
+			} else {
+				allowedEvaluations = []string{"Committee Evaluation"}
+			}
+		}
+
+		if reqEvalName != "" {
+			if len(allowedEvaluations) > 0 {
+				allowed := false
+				for _, name := range allowedEvaluations {
+					if name == reqEvalName {
+						allowed = true
+						break
+					}
+				}
+				if !allowed {
+					c.JSON(http.StatusForbidden, gin.H{"error": "Evaluation not allowed for this appointment"})
+					return
+				}
+			}
+			selectedEvaluationName = reqEvalName
+		}
+
+		if selectedEvaluationName == "" && len(allowedEvaluations) > 0 {
+			selectedEvaluationName = allowedEvaluations[0]
+		}
+
+		if selectedEvaluationName != "" {
+			criteriaQuery = criteriaQuery.Where("evaluations.name = ?", selectedEvaluationName)
+		}
+	}
+
+	if err := criteriaQuery.Find(&formCriteria).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Criteria not found"})
+		return
+	}
+
+	if selectedEvaluationName == "" && len(formCriteria) > 0 && formCriteria[0].Evaluation != nil {
+		selectedEvaluationName = formCriteria[0].Evaluation.Name
+	}
+
+	availableEvaluations := []string{}
+	if len(allowedEvaluations) > 0 {
+		var evalNames []string
+		if err := db.Model(&entity.Evaluation{}).
+			Where("appointment_type_id = ?", appointment.AppointmentTypeID).
+			Pluck("name", &evalNames).Error; err == nil {
+			for _, allowedName := range allowedEvaluations {
+				for _, existing := range evalNames {
+					if allowedName == existing {
+						availableEvaluations = append(availableEvaluations, allowedName)
+						break
+					}
+				}
+			}
+		}
+	}
+
+	if len(availableEvaluations) == 0 && selectedEvaluationName != "" {
+		availableEvaluations = append(availableEvaluations, selectedEvaluationName)
+	}
+
+	groupCriteria := []gin.H{}
+	individualCriteria := []gin.H{}
+
+	for _, cri := range formCriteria {
+		levels := []gin.H{}
+		for _, lvl := range cri.CriteriaLevel {
+			levels = append(levels, gin.H{
+				"id":          lvl.ID,
+				"description": lvl.Description,
+				"score":       lvl.Score,
+			})
+		}
+
+		data := gin.H{
+			"id":        cri.ID,
+			"name":      cri.Name,
+			"max_score": cri.MaxScore,
+			"levels":    levels,
+		}
+
+		if cri.Evaluation.ForGroupOnly || cri.IsGroup {
+			groupCriteria = append(groupCriteria, data)
+		} else {
+			individualCriteria = append(individualCriteria, data)
+		}
+	}
+
+	students := []gin.H{}
+	for _, member := range appointment.GroupProject.GroupMembers {
+		if member.Student != nil {
+			rawCode := strings.Split(member.Student.Username, "@")[0]
+			displayCode := strings.ToUpper(rawCode)
+			students = append(students, gin.H{
+				"student_id": member.Student.ID,
+				"code":       displayCode,
+				"name":       member.Student.Firstname + " " + member.Student.Lastname,
+			})
+		}
+	}
+
+	projectName := fmt.Sprintf("Group %d", appointment.GroupProject.GroupNumber)
+	if len(appointment.GroupProject.TopicSelections) > 0 {
+		if appointment.GroupProject.TopicSelections[0].Topic != nil {
+			projectName = appointment.GroupProject.TopicSelections[0].Topic.Title
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"appointment_id":        appointment.ID,
+		"project_id":            appointment.GroupProjectID,
+		"project_name":          projectName,
+		"eval_type":             appointment.AppointmentType.Name,
+		"current_evaluation":    selectedEvaluationName,
+		"available_evaluations": availableEvaluations,
+		"group_criteria":        groupCriteria,
+		"individual_criteria":   individualCriteria,
+		"students":              students,
+	})
+}
+
+func GetStudentEvaluationForm(c *gin.Context) {
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	db := database.DB()
+
+	// Find student's group
+	var member entity.GroupMember
+	if err := db.Preload("GroupProject").
+		Where("student_id = ?", claims.ID).
+		First(&member).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "You do not belong to any project group."})
+		return
+	}
+
+	// Find active appointment
+	var appointment entity.Appointment
+	if err := db.Preload("GroupProject.GroupMembers.Student").
+		Preload("AppointmentType").
+		Preload("GroupProject.TopicSelections.Topic").
+		Joins("JOIN appointment_types ON appointment_types.id = appointments.appointment_type_id").
+		Where("group_project_id = ? AND appointment_status IN ? AND appointment_types.name = ?", member.GroupProjectID, []string{"scheduled", "completed"}, "Peer Assessment").
+		Order("start_date_time DESC").
+		First(&appointment).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "No active Peer Assessment appointment found"})
+		return
 	}
 
 	var formCriteria []entity.Criteria
@@ -142,7 +422,7 @@ func GetEvaluationForm(c *gin.Context) {
 			"levels":    levels,
 		}
 
-		if cri.Evaluation.ForGroupOnly {
+		if cri.Evaluation.ForGroupOnly || cri.IsGroup {
 			groupCriteria = append(groupCriteria, data)
 		} else {
 			individualCriteria = append(individualCriteria, data)
@@ -152,11 +432,15 @@ func GetEvaluationForm(c *gin.Context) {
 	students := []gin.H{}
 	for _, member := range appointment.GroupProject.GroupMembers {
 		if member.Student != nil {
+
 			rawCode := strings.Split(member.Student.Username, "@")[0]
 			displayCode := strings.ToUpper(rawCode)
 			students = append(students, gin.H{
+				"id":         member.Student.ID,
 				"student_id": member.Student.ID,
 				"code":       displayCode,
+				"firstname":  member.Student.Firstname,
+				"lastname":   member.Student.Lastname,
 				"name":       member.Student.Firstname + " " + member.Student.Lastname,
 			})
 		}
@@ -169,7 +453,19 @@ func GetEvaluationForm(c *gin.Context) {
 		}
 	}
 
+	var existingScores []entity.IndividualScore
+	db.Where("appointment_id = ? AND student_evaluator_id = ?", appointment.ID, claims.ID).
+		Find(&existingScores)
+
+	scoresMap := make(map[uint]float64)
+	for _, s := range existingScores {
+		scoresMap[s.StudentID] = s.Score
+	}
+
 	c.JSON(http.StatusOK, gin.H{
+		"appointment": gin.H{
+			"id": appointment.ID,
+		},
 		"appointment_id":      appointment.ID,
 		"project_id":          appointment.GroupProjectID,
 		"project_name":        projectName,
@@ -177,176 +473,6 @@ func GetEvaluationForm(c *gin.Context) {
 		"group_criteria":      groupCriteria,
 		"individual_criteria": individualCriteria,
 		"students":            students,
-	})
-}
-
-func GetEvaluationResult(c *gin.Context) {
-	appointmentID := c.Param("appointment_id")
-
-	claims, err := middleware.GetClaimsFromContext(c)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-		return
-	}
-
-	db := database.DB()
-
-	var groupResults []entity.EvaResult
-	if err := db.Where("appointment_id = ? AND teacher_id = ?", appointmentID, claims.ID).
-		Find(&groupResults).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch group scores"})
-		return
-	}
-
-	groupScores := []gin.H{}
-	for _, res := range groupResults {
-		groupScores = append(groupScores, gin.H{
-			"criteria_id":       res.CriteriaID,
-			"criteria_level_id": res.CriteriaLevelID,
-			"score":             res.Score,
-			"comment":           res.Comment,
-		})
-	}
-
-	var individualResults []entity.IndividualScore
-	if err := db.Where("appointment_id = ? AND teacher_id = ?", appointmentID, claims.ID).
-		Find(&individualResults).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch individual scores"})
-		return
-	}
-
-	individualScores := []gin.H{}
-	for _, res := range individualResults {
-		individualScores = append(individualScores, gin.H{
-			"student_id":        res.StudentID,
-			"criteria_id":       res.CriteriaID,
-			"criteria_level_id": res.CriteriaLevelID,
-			"score":             res.Score,
-		})
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"group_scores":      groupScores,
-		"individual_scores": individualScores,
-	})
-}
-
-func GetEvaluationSummary(c *gin.Context) {
-	projectID := c.Param("group_project_id")
-	
-	_, err := middleware.GetClaimsFromContext(c)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-		return
-	}
-
-	db := database.DB()
-
-	var groupResults []entity.EvaResult
-	if err := db.Preload("Criteria.Evaluation").
-		Joins("JOIN appointments ON appointments.id = eva_results.appointment_id").
-		Where("appointments.group_project_id = ?", projectID).
-		Find(&groupResults).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch group results"})
-		return
-	}
-
-	groupScoresMap := make(map[string]map[uint]float64)
-	maxScoreMap := make(map[string]float64)
-
-	for _, res := range groupResults {
-		evalName := res.Criteria.Evaluation.Name
-		teacherID := res.TeacherID
-		
-		if groupScoresMap[evalName] == nil {
-			groupScoresMap[evalName] = make(map[uint]float64)
-			maxScoreMap[evalName] = res.Criteria.Evaluation.TotalScore 
-		}
-		groupScoresMap[evalName][teacherID] += res.Score
-	}
-
-	groupSummary := []gin.H{}
-	var totalGroupScore float64 = 0
-
-	for evalName, teachersScores := range groupScoresMap {
-		var sumScore float64 = 0
-		teacherCount := 0
-		for _, score := range teachersScores {
-			sumScore += score
-			teacherCount++
-		}
-		averageScore := 0.0
-		if teacherCount > 0 {
-			averageScore = sumScore / float64(teacherCount)
-		}
-		totalGroupScore += averageScore
-
-		groupSummary = append(groupSummary, gin.H{
-			"evaluation_name": evalName,
-			"teacher_count":   teacherCount,
-			"average_score":   fmt.Sprintf("%.2f", averageScore),
-			"full_score":      maxScoreMap[evalName],
-		})
-	}
-
-	var indResults []entity.IndividualScore
-	if err := db.Preload("Criteria.Evaluation").
-		Preload("Student").
-		Joins("JOIN appointments ON appointments.id = individual_scores.appointment_id").
-		Where("appointments.group_project_id = ?", projectID).
-		Find(&indResults).Error; err != nil {
-	}
-
-	studentScores := make(map[uint]map[string][]float64)
-	studentDetails := make(map[uint]string)
-
-	for _, res := range indResults {
-		sID := res.StudentID
-		evalName := res.Criteria.Evaluation.Name
-		
-		if studentScores[sID] == nil {
-			studentScores[sID] = make(map[string][]float64)
-			if res.Student != nil {
-				rawCode := strings.Split(res.Student.Username, "@")[0]
-				studentDetails[sID] = strings.ToUpper(rawCode) + " " + res.Student.Firstname
-			}
-		}
-		studentScores[sID][evalName] = append(studentScores[sID][evalName], res.Score)
-	}
-
-	individualSummary := []gin.H{}
-	for sID, evals := range studentScores {
-		evalList := []gin.H{}
-		var myTotalIndScore float64 = 0
-
-		for evalName, scores := range evals {
-			sum := 0.0
-			for _, s := range scores { sum += s }
-			avg := 0.0
-			if len(scores) > 0 { avg = sum / float64(len(scores)) }
-			
-			myTotalIndScore += avg
-
-			evalList = append(evalList, gin.H{
-				"evaluation_name": evalName,
-				"average_score":   fmt.Sprintf("%.2f", avg),
-				"count":           len(scores),
-			})
-		}
-
-		individualSummary = append(individualSummary, gin.H{
-			"student_id":   sID,
-			"student_name": studentDetails[sID],
-			"scores":       evalList,
-			"total_individual": fmt.Sprintf("%.2f", myTotalIndScore),
-			"grand_total": fmt.Sprintf("%.2f", totalGroupScore + myTotalIndScore),
-		})
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"project_id":        projectID,
-		"group_total_score": fmt.Sprintf("%.2f", totalGroupScore),
-		"group_details":     groupSummary,
-		"individual_details": individualSummary,
+		"existing_scores":     scoresMap,
 	})
 }

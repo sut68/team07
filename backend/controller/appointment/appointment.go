@@ -54,9 +54,12 @@ func ListAppointments(c *gin.Context) {
 			"start_date_time":    apt.StartDateTime,
 			"duration_min":       apt.DurationMin,
 			"appointment_status": apt.AppointmentStatus,
+			"type_id":            apt.AppointmentType.ID,
 			"type_name":          apt.AppointmentType.Name,
+			"room_id":            apt.Room.ID,
 			"room_name":          apt.Room.Name,
 			"location":           apt.Room.Location,
+			"group_project_id":   apt.GroupProject.ID,
 			"group_number":       apt.GroupProject.GroupNumber,
 			"teacher_name":       apt.Teacher.Firstname + " " + apt.Teacher.Lastname,
 		}
@@ -170,31 +173,30 @@ func ListAppointmentTypes(c *gin.Context) {
 }
 
 func GetRandomGroup(c *gin.Context) {
-    var group entity.GroupProject
-    db := database.DB()
+	var group entity.GroupProject
+	db := database.DB()
 
-    if err := db.Preload("Teacher").
-        Where("group_status IN ?", []string{"Pending", "In Process"}).
-        Order("RANDOM()").
-        First(&group).Error; err != nil {
+	if err := db.Preload("Teacher").
+		Where("group_status IN ?", []string{"Pending", "In Process"}).
+		Order("RANDOM()").
+		First(&group).Error; err != nil {
 
-        c.JSON(http.StatusNotFound, gin.H{"error": "No pending groups available"})
-        return
-    }
+		c.JSON(http.StatusNotFound, gin.H{"error": "No pending groups available"})
+		return
+	}
 
-    advisorName := ""
-    if group.Teacher != nil {
-        advisorName = group.Teacher.Firstname + " " + group.Teacher.Lastname
-    }
+	advisorName := ""
+	if group.Teacher != nil {
+		advisorName = group.Teacher.Firstname + " " + group.Teacher.Lastname
+	}
 
-    c.JSON(http.StatusOK, gin.H{
-        "id":           group.ID,
-        "group_number": group.GroupNumber,
-        "advisor_id":   group.TeacherID,
-        "advisor_name": advisorName,
-    })
+	c.JSON(http.StatusOK, gin.H{
+		"id":           group.ID,
+		"group_number": group.GroupNumber,
+		"advisor_id":   group.TeacherID,
+		"advisor_name": advisorName,
+	})
 }
-
 
 func GetMyProjectAndAppointment(c *gin.Context) {
 	claims, err := middleware.GetClaimsFromContext(c)
@@ -220,7 +222,7 @@ func GetMyProjectAndAppointment(c *gin.Context) {
 
 	var appointment entity.Appointment
 	apptFound := false
-	if err := db.Preload("Room").Preload("AppointmentType").
+	if err := db.Preload("Room").Preload("AppointmentType").Preload("Evaluation").
 		Where("group_project_id = ? AND appointment_status IN ?", groupID, []string{"scheduled", "completed"}).
 		Order("start_date_time DESC").
 		First(&appointment).Error; err == nil {
@@ -242,11 +244,16 @@ func GetMyProjectAndAppointment(c *gin.Context) {
 	}
 
 	if apptFound {
+		evaluationName := ""
+		if appointment.Evaluation != nil {
+			evaluationName = appointment.Evaluation.Name
+		}
 		response["appointment"] = gin.H{
-			"type":      appointment.AppointmentType.Name,
-			"date_time": appointment.StartDateTime,
-			"room":      appointment.Room.Name,
-			"location":  appointment.Room.Location,
+			"type":            appointment.AppointmentType.Name,
+			"date_time":       appointment.StartDateTime,
+			"room":            appointment.Room.Name,
+			"location":        appointment.Room.Location,
+			"evaluation_name": evaluationName,
 		}
 	}
 

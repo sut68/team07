@@ -1,0 +1,321 @@
+package evaluation
+
+import (
+	"fmt"
+	"net/http"
+	"strings"
+
+	"github.com/gin-gonic/gin"
+	"github.com/sut68/team07/backend/database"
+	"github.com/sut68/team07/backend/entity"
+	"github.com/sut68/team07/backend/middleware"
+)
+
+func GetEvaluationResult(c *gin.Context) {
+	appointmentID := c.Param("appointment_id")
+
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	db := database.DB()
+
+	var groupResults []entity.EvaResult
+	if err := db.Where("appointment_id = ? AND teacher_id = ?", appointmentID, claims.ID).
+		Find(&groupResults).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch group scores"})
+		return
+	}
+
+	groupScores := []gin.H{}
+	for _, res := range groupResults {
+		groupScores = append(groupScores, gin.H{
+			"criteria_id":       res.CriteriaID,
+			"criteria_level_id": res.CriteriaLevelID,
+			"score":             res.Score,
+			"comment":           res.Comment,
+		})
+	}
+
+	var individualResults []entity.IndividualScore
+	if err := db.Where("appointment_id = ? AND teacher_id = ?", appointmentID, claims.ID).
+		Find(&individualResults).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch individual scores"})
+		return
+	}
+
+	individualScores := []gin.H{}
+	for _, res := range individualResults {
+		individualScores = append(individualScores, gin.H{
+			"student_id":        res.StudentID,
+			"criteria_id":       res.CriteriaID,
+			"criteria_level_id": res.CriteriaLevelID,
+			"score":             res.Score,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"group_scores":      groupScores,
+		"individual_scores": individualScores,
+	})
+}
+
+func GetEvaluationSummary(c *gin.Context) {
+	projectID := c.Param("group_project_id")
+
+	_, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	db := database.DB()
+
+	var groupResults []entity.EvaResult
+	if err := db.Preload("Criteria.Evaluation").
+		Joins("JOIN appointments ON appointments.id = eva_results.appointment_id").
+		Where("appointments.group_project_id = ?", projectID).
+		Find(&groupResults).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch group results"})
+		return
+	}
+
+	groupScoresMap := make(map[string]map[uint]float64)
+	maxScoreMap := make(map[string]float64)
+
+	for _, res := range groupResults {
+		evalName := res.Criteria.Evaluation.Name
+		teacherID := res.TeacherID
+
+		if groupScoresMap[evalName] == nil {
+			groupScoresMap[evalName] = make(map[uint]float64)
+			maxScoreMap[evalName] = res.Criteria.Evaluation.TotalScore
+		}
+		groupScoresMap[evalName][teacherID] += res.Score
+	}
+
+	groupSummary := []gin.H{}
+	var totalGroupScore float64 = 0
+
+	for evalName, teachersScores := range groupScoresMap {
+		var sumScore float64 = 0
+		teacherCount := 0
+		for _, score := range teachersScores {
+			sumScore += score
+			teacherCount++
+		}
+		averageScore := 0.0
+		if teacherCount > 0 {
+			averageScore = sumScore / float64(teacherCount)
+		}
+		totalGroupScore += averageScore
+
+		groupSummary = append(groupSummary, gin.H{
+			"evaluation_name": evalName,
+			"teacher_count":   teacherCount,
+			"average_score":   fmt.Sprintf("%.2f", averageScore),
+			"full_score":      maxScoreMap[evalName],
+		})
+	}
+
+	var indResults []entity.IndividualScore
+	if err := db.Preload("Criteria.Evaluation").
+		Preload("Student").
+		Joins("JOIN appointments ON appointments.id = individual_scores.appointment_id").
+		Where("appointments.group_project_id = ?", projectID).
+		Find(&indResults).Error; err != nil {
+	}
+
+	studentScores := make(map[uint]map[string][]float64)
+	studentDetails := make(map[uint]string)
+
+	for _, res := range indResults {
+		sID := res.StudentID
+		evalName := res.Criteria.Evaluation.Name
+
+		if studentScores[sID] == nil {
+			studentScores[sID] = make(map[string][]float64)
+			if res.Student != nil {
+				rawCode := strings.Split(res.Student.Username, "@")[0]
+				studentDetails[sID] = strings.ToUpper(rawCode) + " " + res.Student.Firstname
+			}
+		}
+		studentScores[sID][evalName] = append(studentScores[sID][evalName], res.Score)
+	}
+
+	individualSummary := []gin.H{}
+	for sID, evals := range studentScores {
+		evalList := []gin.H{}
+		var myTotalIndScore float64 = 0
+
+		for evalName, scores := range evals {
+			sum := 0.0
+			for _, s := range scores {
+				sum += s
+			}
+			avg := 0.0
+			if len(scores) > 0 {
+				avg = sum / float64(len(scores))
+			}
+
+			myTotalIndScore += avg
+
+			evalList = append(evalList, gin.H{
+				"evaluation_name": evalName,
+				"average_score":   fmt.Sprintf("%.2f", avg),
+				"count":           len(scores),
+			})
+		}
+
+		grandTotal := totalGroupScore + myTotalIndScore
+		grade := CalculateGrade(grandTotal)
+
+		individualSummary = append(individualSummary, gin.H{
+			"student_id":       sID,
+			"student_name":     studentDetails[sID],
+			"scores":           evalList,
+			"total_individual": fmt.Sprintf("%.2f", myTotalIndScore),
+			"grand_total":      fmt.Sprintf("%.2f", grandTotal),
+			"grade":            grade,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"project_id":         projectID,
+		"group_total_score":  fmt.Sprintf("%.2f", totalGroupScore),
+		"group_details":      groupSummary,
+		"individual_details": individualSummary,
+	})
+}
+
+func GetStudentEvaluationResult(c *gin.Context) {
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	studentID := claims.ID
+
+	db := database.DB()
+
+	// 1. Find Student's Group Project ID
+	var member entity.GroupMember
+	if err := db.Where("student_id = ?", studentID).First(&member).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Student not in a group"})
+		return
+	}
+	projectID := member.GroupProjectID
+
+	// 2. Calculate Group Scores (EvaResult)
+	var groupResults []entity.EvaResult
+	if err := db.Preload("Criteria.Evaluation").
+		Joins("JOIN appointments ON appointments.id = eva_results.appointment_id").
+		Where("appointments.group_project_id = ?", projectID).
+		Find(&groupResults).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch group results"})
+		return
+	}
+
+	groupScoresMap := make(map[string]map[uint]float64)
+
+	for _, res := range groupResults {
+		evalName := res.Criteria.Evaluation.Name
+		teacherID := res.TeacherID
+
+		if groupScoresMap[evalName] == nil {
+			groupScoresMap[evalName] = make(map[uint]float64)
+		}
+		groupScoresMap[evalName][teacherID] += res.Score
+	}
+
+	var totalGroupScore float64 = 0
+	groupDetails := []gin.H{}
+
+	for evalName, teachersScores := range groupScoresMap {
+		var sumScore float64 = 0
+		teacherCount := 0
+		for _, score := range teachersScores {
+			sumScore += score
+			teacherCount++
+		}
+		averageScore := 0.0
+		if teacherCount > 0 {
+			averageScore = sumScore / float64(teacherCount)
+		}
+		totalGroupScore += averageScore
+
+		groupDetails = append(groupDetails, gin.H{
+			"evaluation_name": evalName,
+			"score":           fmt.Sprintf("%.2f", averageScore),
+		})
+	}
+
+	// 3. Calculate Individual Scores (IndividualScore) for this student
+	var indResults []entity.IndividualScore
+	if err := db.Preload("Criteria.Evaluation").
+		Where("student_id = ?", studentID).
+		Find(&indResults).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch individual scores"})
+		return
+	}
+
+	studentScores := make(map[string][]float64)
+	for _, res := range indResults {
+		evalName := res.Criteria.Evaluation.Name
+		studentScores[evalName] = append(studentScores[evalName], res.Score)
+	}
+
+	var myTotalIndScore float64 = 0
+	individualDetails := []gin.H{}
+
+	for evalName, scores := range studentScores {
+		sum := 0.0
+		for _, s := range scores {
+			sum += s
+		}
+		avg := 0.0
+		if len(scores) > 0 {
+			avg = sum / float64(len(scores))
+		}
+		myTotalIndScore += avg
+
+		individualDetails = append(individualDetails, gin.H{
+			"evaluation_name": evalName,
+			"score":           fmt.Sprintf("%.2f", avg),
+		})
+	}
+
+	grandTotal := totalGroupScore + myTotalIndScore
+	grade := CalculateGrade(grandTotal)
+
+	c.JSON(http.StatusOK, gin.H{
+		"total_score":        fmt.Sprintf("%.2f", grandTotal),
+		"average_score":      fmt.Sprintf("%.2f", grandTotal),
+		"grade":              grade,
+		"status":             "completed",
+		"group_details":      groupDetails,
+		"individual_details": individualDetails,
+	})
+}
+
+func CalculateGrade(score float64) string {
+	if score >= 80 {
+		return "A"
+	} else if score >= 75 {
+		return "B+"
+	} else if score >= 70 {
+		return "B"
+	} else if score >= 65 {
+		return "C+"
+	} else if score >= 60 {
+		return "C"
+	} else if score >= 55 {
+		return "D+"
+	} else if score >= 50 {
+		return "D"
+	} else {
+		return "F"
+	}
+}
