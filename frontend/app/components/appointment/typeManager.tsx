@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Modal, Form, Input, Button, Flex, Popconfirm, message } from 'antd';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
+import { Toast_success, Toast_fail } from '../Webmessage';
 import { CreateAppointmentType, DeleteAppointmentType } from '../../services/appointment';
 
 interface TypeManagerProps {
@@ -19,11 +20,11 @@ export default function TypeManager({ visible, onClose, types, onRefresh }: Type
         setLoading(true);
         try {
             await CreateAppointmentType(values);
-            message.success("เพิ่มประเภทสำเร็จ");
+            Toast_success("เพิ่มประเภทสำเร็จ");
             form.resetFields();
             onRefresh();
-        } catch (error) {
-            message.error("เพิ่มไม่สำเร็จ");
+        } catch (error: any) {
+            Toast_fail(error?.response?.data?.error || "เพิ่มไม่สำเร็จ");
         } finally {
             setLoading(false);
         }
@@ -32,10 +33,10 @@ export default function TypeManager({ visible, onClose, types, onRefresh }: Type
     const handleDelete = async (id: number) => {
         try {
             await DeleteAppointmentType(id);
-            message.success("ลบสำเร็จ");
+            Toast_success("ลบสำเร็จ");
             onRefresh();
-        } catch (error) {
-            message.error("ลบไม่สำเร็จ");
+        } catch (error: any) {
+            Toast_fail(error?.response?.data?.error || "ลบไม่สำเร็จ");
         }
     };
 

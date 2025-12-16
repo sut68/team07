@@ -10,6 +10,7 @@ function Toast_success(message: string) {
         pauseOnHover: false,
         draggable: false,
         progress: undefined,
+        closeButton: false,
         style: { marginTop: '25px', backgroundColor: 'white', fontFamily: 'Inter, sans-serif', color: "black", borderRadius: '30px', width: "100%", borderColor: '#9a0120', borderStyle: 'solid', zIndex: "9999" }
     })
 }
@@ -23,6 +24,7 @@ function Toast_fail(message: string) {
         pauseOnHover: false,
         draggable: false,
         progress: undefined,
+        closeButton: false,
         style: { marginTop: '25px', backgroundColor: 'white', fontFamily: 'Inter, sans-serif', color: "black", borderRadius: '30px', width: "100%", borderColor: '#9a0120', borderStyle: 'solid', zIndex: "9999" }
     })
 }

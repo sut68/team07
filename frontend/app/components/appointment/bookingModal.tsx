@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Modal, Form, Select, DatePicker, Button, message, TimePicker, Tabs, Divider, Spin } from 'antd';
 import { UserOutlined, RobotOutlined, DeploymentUnitOutlined, DeleteOutlined, SaveOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
+import { Toast_success, Toast_fail } from '../Webmessage';
 import {
     SearchGroup, GetRandomGroup, CreateAppointment, AutoCreateAppointments, UpdateAppointment, DeleteAppointment
 } from '../../services/appointment';
@@ -64,6 +65,16 @@ export default function BookingModal({ visible, onClose, onSuccess, rooms, types
             if (initialData) {
                 setMode('manual');
                 const start = dayjs(initialData.start_date_time);
+
+                const typeId = (initialData.type_id || initialData.appointment_type_id);
+
+                if (typeId === 3) {
+                    const available = mockEvaluations.filter(e => e.type_id === 3 && (e.name === "Ethics Test" || e.name === "Peer Assessment" || e.name === "Advisor Evaluation"));
+                    setEvaluations(available);
+                } else {
+                    setEvaluations([]);
+                }
+
                 form.setFieldsValue({
                     date: start.clone(),
                     time_range: [
@@ -71,8 +82,9 @@ export default function BookingModal({ visible, onClose, onSuccess, rooms, types
                         start.clone().add(initialData.duration_min, 'minute')
                     ],
                     room_id: initialData.room_id ?? undefined,
-                    type_id: (initialData.type_id || initialData.appointment_type_id) ?? undefined,
-                    group_id: initialData.group_project_id ?? undefined
+                    type_id: typeId ?? undefined,
+                    group_id: initialData.group_project_id ?? undefined,
+                    evaluation_id: initialData.evaluation_id ?? undefined
                 });
 
 
@@ -135,10 +147,10 @@ export default function BookingModal({ visible, onClose, onSuccess, rooms, types
 
                 if (initialData) {
                     await UpdateAppointment(initialData.id, payload);
-                    message.success("แก้ไขเรียบร้อย");
+                    Toast_success("แก้ไขเรียบร้อย");
                 } else {
                     await CreateAppointment(payload);
-                    message.success("สร้างนัดหมายเรียบร้อย");
+                    Toast_success("สร้างนัดหมายเรียบร้อย");
                 }
             } else {
                 // --- Auto ---
@@ -152,12 +164,12 @@ export default function BookingModal({ visible, onClose, onSuccess, rooms, types
                     room_id: values.room_id,
                     appointment_type_id: values.type_id
                 });
-                message.success("จัดตารางอัตโนมัติสำเร็จ!");
+                Toast_success("จัดตารางอัตโนมัติสำเร็จ!");
             }
             onSuccess();
             onClose();
         } catch (error: any) {
-            message.error(error.response?.data?.error || "เกิดข้อผิดพลาด");
+            Toast_fail(error.response?.data?.error || "เกิดข้อผิดพลาด");
         } finally {
             setLoading(false);
         }
@@ -174,11 +186,11 @@ export default function BookingModal({ visible, onClose, onSuccess, rooms, types
             onOk: async () => {
                 try {
                     await DeleteAppointment(initialData.id);
-                    message.success("ลบเรียบร้อย");
+                    Toast_success("ลบเรียบร้อย");
                     onSuccess();
                     onClose();
                 } catch (e) {
-                    message.error("ลบไม่สำเร็จ");
+                    Toast_fail("ลบไม่สำเร็จ");
                 }
             }
         });

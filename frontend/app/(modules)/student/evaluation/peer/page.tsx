@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { message, Spin, Empty } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
+import { Toast_success, Toast_fail } from '../../../../components/Webmessage';
 import { SavePeerEvaluation ,GetStudentEvaluationForm } from '../../../../services/evaluation';
 import { GetMe } from '../../../../services/login';
 import type { ISaveEvaluationPeerRequest } from '../../../../interfaces/Evaluation';
@@ -87,10 +88,10 @@ export default function PeerEvaluationPage() {
         };
 
         await SavePeerEvaluation(payload);
-            message.success("บันทึกเรียบร้อย!");
+            Toast_success("บันทึกเรียบร้อย!");
             router.push('/student/evaluation');
-        } catch (error) {
-            message.error("บันทึกไม่สำเร็จ");
+        } catch (error: any) {
+            Toast_fail(error?.response?.data?.error || "บันทึกไม่สำเร็จ");
         } finally {
             setSubmitting(false);
         }
