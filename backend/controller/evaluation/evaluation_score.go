@@ -22,38 +22,63 @@ func GetEvaluationResult(c *gin.Context) {
 
 	db := database.DB()
 
+	// 1. Get Current Appointment to find GroupProjectID
+	var currentAppt entity.Appointment
+	if err := db.Select("group_project_id").First(&currentAppt, appointmentID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Appointment not found"})
+		return
+	}
+
+	// 2. Fetch Group Scores (EvaResult)
+	// Find results for this project and teacher, ordered by latest first
 	var groupResults []entity.EvaResult
-	if err := db.Where("appointment_id = ? AND teacher_id = ?", appointmentID, claims.ID).
+	if err := db.Unscoped().
+		Joins("JOIN appointments ON appointments.id = eva_results.appointment_id").
+		Where("appointments.group_project_id = ? AND eva_results.teacher_id = ?", currentAppt.GroupProjectID, claims.ID).
+		Order("eva_results.created_at DESC").
 		Find(&groupResults).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch group scores"})
 		return
 	}
 
 	groupScores := []gin.H{}
+	seenCriteria := make(map[uint]bool)
 	for _, res := range groupResults {
-		groupScores = append(groupScores, gin.H{
-			"criteria_id":       res.CriteriaID,
-			"criteria_level_id": res.CriteriaLevelID,
-			"score":             res.Score,
-			"comment":           res.Comment,
-		})
+		if !seenCriteria[res.CriteriaID] {
+			groupScores = append(groupScores, gin.H{
+				"criteria_id":       res.CriteriaID,
+				"criteria_level_id": res.CriteriaLevelID,
+				"score":             res.Score,
+				"comment":           res.Comment,
+			})
+			seenCriteria[res.CriteriaID] = true
+		}
 	}
 
+	// 3. Fetch Individual Scores
 	var individualResults []entity.IndividualScore
-	if err := db.Where("appointment_id = ? AND teacher_id = ?", appointmentID, claims.ID).
+	if err := db.Unscoped().
+		Joins("JOIN appointments ON appointments.id = individual_scores.appointment_id").
+		Where("appointments.group_project_id = ? AND individual_scores.teacher_id = ?", currentAppt.GroupProjectID, claims.ID).
+		Order("individual_scores.created_at DESC").
 		Find(&individualResults).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch individual scores"})
 		return
 	}
 
 	individualScores := []gin.H{}
+	seenIndividual := make(map[string]bool)
 	for _, res := range individualResults {
-		individualScores = append(individualScores, gin.H{
-			"student_id":        res.StudentID,
-			"criteria_id":       res.CriteriaID,
-			"criteria_level_id": res.CriteriaLevelID,
-			"score":             res.Score,
-		})
+		key := fmt.Sprintf("%d_%d", res.StudentID, res.CriteriaID)
+		if !seenIndividual[key] {
+			individualScores = append(individualScores, gin.H{
+				"student_id":        res.StudentID,
+				"criteria_id":       res.CriteriaID,
+				"criteria_level_id": res.CriteriaLevelID,
+				"score":             res.Score,
+			})
+			seenIndividual[key] = true
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{

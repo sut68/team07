@@ -10,6 +10,7 @@ var MockGender = []entity.Gender{
 	{Name: "Male"},
 	{Name: "Female"},
 }
+
 var MockBranch = []entity.Branch{
 	{BranchName: "Computer Engineering"},
 	{BranchName: "Electrical Engineering"},
@@ -65,7 +66,6 @@ var MockActionType = []entity.ActionType{
 	{ActionType: "UpdateCriteriaLevel"},
 }
 
-
 func Uint(v uint) *uint { return &v }
 
 var MockGroupProject = []entity.GroupProject{
@@ -78,20 +78,20 @@ var MockGroupProject = []entity.GroupProject{
 }
 
 var MockGroupMember = []entity.GroupMember{
-	{Leader: true, StudentID: 7, GroupProjectID: 1},
-	{Leader: true, StudentID: 8, GroupProjectID: 4},
-	{Leader: false, StudentID: 9, GroupProjectID: 1},
-	{Leader: true, StudentID: 11, GroupProjectID: 2},
-	{Leader: true, StudentID: 10, GroupProjectID: 3},
+	{Leader: true, StudentID: 12, GroupProjectID: 1},
+	{Leader: true, StudentID: 13, GroupProjectID: 4},
+	{Leader: false, StudentID: 14, GroupProjectID: 1},
+	{Leader: true, StudentID: 16, GroupProjectID: 2},
+	{Leader: true, StudentID: 15, GroupProjectID: 3},
 
-	{Leader: false, StudentID: 12, GroupProjectID: 2},
-	{Leader: false, StudentID: 13, GroupProjectID: 3},
-	{Leader: false, StudentID: 14, GroupProjectID: 4},
-	{Leader: true, StudentID: 15, GroupProjectID: 5},
-	{Leader: false, StudentID: 16, GroupProjectID: 5},
-	{Leader: true, StudentID: 17, GroupProjectID: 6},
-	{Leader: false, StudentID: 18, GroupProjectID: 6},
-	{Leader: false, StudentID: 19, GroupProjectID: 6},
+	{Leader: false, StudentID: 17, GroupProjectID: 2},
+	{Leader: false, StudentID: 18, GroupProjectID: 3},
+	{Leader: false, StudentID: 19, GroupProjectID: 4},
+	{Leader: true, StudentID: 20, GroupProjectID: 5},
+	{Leader: false, StudentID: 21, GroupProjectID: 5},
+	{Leader: true, StudentID: 22, GroupProjectID: 6},
+	{Leader: false, StudentID: 23, GroupProjectID: 6},
+	{Leader: false, StudentID: 24, GroupProjectID: 6},
 }
 
 var MockTopics = []entity.Topic{

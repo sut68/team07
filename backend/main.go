@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/gin-gonic/gin"
 	"github.com/sut68/team07/backend/controller/appointment"
 	"github.com/sut68/team07/backend/controller/auth"
@@ -19,12 +21,15 @@ import (
 )
 
 func main() {
-
 	database.ConnectDatabase()
 	database.SetUpDatabase()
-	//========INSERT MOCK DATA================ ถ้าอยากสร้างข้อมูลปลอมให้เอา comment ออก
-	//InsertDataOpen()
-	//=========================================
+
+	// ถ้าอยาก Mock ข้อมูล ให้รันคำสั่ง go run main.go --seed หรือ go run main.go seed ****ถ้า go run main.go จะไม่ Mock ข้อมูล ****
+	if len(os.Args) > 1 && (os.Args[1] == "--seed" || os.Args[1] == "seed") {
+		Data := database.DB()
+		mockdata.InsertMock(Data)
+	}
+
 	service.InitEmailConfig()
 	service.StartCleanupWorker(database.DB())
 	r := gin.Default()
@@ -173,7 +178,3 @@ func main() {
 	r.Run(":8080")
 }
 
-func InsertDataOpen() {
-	Data := database.DB()
-	mockdata.InsertMock(Data)
-}

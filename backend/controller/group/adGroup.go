@@ -72,7 +72,6 @@ func GenerateGroups(c *gin.Context) {
 	// 1. หาเลขกลุ่มล่าสุดของปีการศึกษานั้น (Max GroupNumber)
 	var maxGroupNumber int
 	// ใช้ COALESCE เพื่อจัดการกรณีที่ยังไม่มีกลุ่มในปีนั้น (ให้ค่าเป็น 0)
-	// แต่ Gorm ปกติถ้าไม่เจอจะ return 0 ให้อยู่แล้วถ้า scan เข้า int
 	row := db.Model(&entity.GroupProject{}).
 		Where("year = ?", input.Year).
 		Select("COALESCE(MAX(group_number), 0)").
@@ -94,7 +93,7 @@ func GenerateGroups(c *gin.Context) {
 			group := entity.GroupProject{
 				GroupNumber: uint(currentGroupNum),
 				Year:        input.Year,
-				GroupStatus: "Open", // หรือ Pending ตาม Flow ระบบ
+				GroupStatus: "Pending",
 				Membership:  size,
 			}
 			if err := tx.Create(&group).Error; err != nil {
@@ -105,7 +104,7 @@ func GenerateGroups(c *gin.Context) {
 		return nil
 	}
 
-	// 2. สร้างกลุ่ม (เรียงลำดับ 5 -> 4 -> 3 ตามโจทย์)
+	// 2. สร้างกลุ่ม
 	// กลุ่มละ 5 คน
 	if err := createGroups(input.Count5, 5); err != nil {
 		tx.Rollback()
@@ -408,7 +407,6 @@ func DeleteGroup(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Group deleted successfully"})
 }
-
 
 // GET: /admin/teachers
 // ดึงรายชื่ออาจารย์ทั้งหมด (RoleID = 2)
