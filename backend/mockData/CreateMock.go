@@ -10,6 +10,7 @@ var MockGender = []entity.Gender{
 	{Name: "Male"},
 	{Name: "Female"},
 }
+
 var MockBranch = []entity.Branch{
 	{BranchName: "Computer Engineering"},
 	{BranchName: "Electrical Engineering"},

@@ -10,6 +10,7 @@ var (
 	passFalse       = false
 	passNull  *bool = nil
 )
+
 var jwtService = service.NewJwtService()
 
 var MockUser = []entity.User{
