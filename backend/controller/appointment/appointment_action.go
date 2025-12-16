@@ -96,11 +96,9 @@ func CreateAppointment(c *gin.Context) {
 		return
 	}
 	appointment.TeacherID = claims.ID
-	// Force status to be lowercase "scheduled" to ensure consistency
 	appointment.AppointmentStatus = "scheduled"
 	db := database.DB()
 
-	// DEBUG: Print received appointment data
 	fmt.Printf("DEBUG: Creating Appointment - TypeID: %d, GroupID: %d, EvalID: %v\n",
 		appointment.AppointmentTypeID, appointment.GroupProjectID, appointment.EvaluationID)
 
@@ -116,7 +114,6 @@ func CreateAppointment(c *gin.Context) {
 			return
 		}
 	} else {
-		// Auto-assign Committee Evaluation (ID 4) for Final Defense (Type 3)
 		if appointment.EvaluationID == nil {
 			var committeeEval entity.Evaluation
 			if err := db.Where("name = ?", "Committee Evaluation").First(&committeeEval).Error; err != nil {
@@ -221,13 +218,11 @@ func AutoCreateAppointments(c *gin.Context) {
 	var validSlots []time.Time
 	currentTime := req.StartDateTime
 
-	// Create a location for Thailand (UTC+7)
 	loc := time.FixedZone("ICT", 7*60*60)
 
 	for currentTime.Add(time.Duration(req.DurationMin)*time.Minute).Before(req.EndDateTime) ||
 		currentTime.Add(time.Duration(req.DurationMin)*time.Minute).Equal(req.EndDateTime) {
 
-		// Convert to local time for lunch check
 		localTime := currentTime.In(loc)
 		startHour := localTime.Hour()
 		startMin := localTime.Minute()
@@ -257,7 +252,6 @@ func AutoCreateAppointments(c *gin.Context) {
 		return
 	}
 
-	// Filter out groups that already have a scheduled appointment of the same type
 	subQuery := db.Model(&entity.Appointment{}).
 		Select("group_project_id").
 		Where("appointment_status = ? AND appointment_type_id = ?", "scheduled", req.AppointmentTypeID)

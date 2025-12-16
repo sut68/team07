@@ -1,10 +1,10 @@
 "use client";
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Spin, Button } from 'antd';
+import { Spin} from 'antd';
 import { ArrowLeftOutlined, TrophyOutlined, UserOutlined } from '@ant-design/icons';
 import { GetEvaluationSummary } from '../../../../../services/evaluation';
-import '../../../../../style/evaluation.css'; // ใช้ CSS ไฟล์เดียว
+import '../../../../../style/evaluation.css';
 
 export default function EvaluationSummaryPage() {
     const params = useParams();

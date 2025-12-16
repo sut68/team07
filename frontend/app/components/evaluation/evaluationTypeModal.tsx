@@ -1,5 +1,4 @@
 "use client";
-import React from "react";
 import { Modal, message } from "antd";
 import { useRouter } from "next/navigation";
 
@@ -40,7 +39,6 @@ export default function EvaluationTypeModal({
     );
   };
 
-  // ✅ ดึงประเภทการประเมินจาก appointments โดยตรง
   const evaluations: string[] = Array.from(
     new Set(
       project.appointments?.map(

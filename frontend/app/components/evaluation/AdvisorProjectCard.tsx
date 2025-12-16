@@ -1,4 +1,3 @@
-import React from 'react';
 import Link from 'next/link';
 import { Tag, Tooltip, message } from 'antd';
 import { 
@@ -17,7 +16,6 @@ interface Props {
 export default function AdvisorProjectCard({ project, onEvaluate }: Props) {
 
   const handleEvaluateClick = () => {
-    // ✅ กันตั้งแต่ตรงนี้
     if (!project.appointments || project.appointments.length === 0) {
       message.warning("ยังไม่มีการนัดหมายสำหรับโครงงานนี้");
       return;
