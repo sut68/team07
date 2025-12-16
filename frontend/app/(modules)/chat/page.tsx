@@ -36,6 +36,7 @@ export default function ChatTestPage() {
 
   // --- Effect: Handle Scrolling ---
   useEffect(() => {
+    
     if (chats.length > prevChatLengthRef.current) {
       scrollToBottom();
     }

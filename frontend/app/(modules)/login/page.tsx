@@ -8,6 +8,7 @@ import { SignInInterface, ForgotPasswordInterface } from '../../interfaces/Login
 import loginbg from "../../../public/image/Background.jpg"
 import { useAuth } from "../roleCheck/authContext";
 
+
 // ********* ลองเพิ่มการเชื่อมการ login ดู ส่วนdesign ยังเเย่อยู่รอคนมาทำต่อ **************
 export default function LoginPage() {
   const router = useRouter();
@@ -69,6 +70,7 @@ export default function LoginPage() {
       console.error("Login Error:", err);
     } finally {
       setIsLoading(false);
+
     }
   };
 
