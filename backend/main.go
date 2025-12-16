@@ -139,7 +139,8 @@ func main() {
 			studentGroup.DELETE("/deleteProgress", progress.DeleteProgress)
 
 			// Group
-			// studentGroup.GET("/group", group.GetGroupProject)
+			//studentGroup.GET("/group", group.GetGroupProject)
+			studentGroup.GET("/myGroup", group.GetMyGroup)
 			studentGroup.POST("/addMember", group.PostGroupMember)
 
 			// Evaluation and Appointment
