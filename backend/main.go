@@ -23,7 +23,7 @@ func main() {
 	database.ConnectDatabase()
 	database.SetUpDatabase()
 	//========INSERT MOCK DATA================ ถ้าอยากสร้างข้อมูลปลอมให้เอา comment ออก
-	//InsertDataOpen()
+	// InsertDataOpen()
 	//=========================================
 	service.InitEmailConfig()
 	service.StartCleanupWorker(database.DB())
@@ -65,10 +65,9 @@ func main() {
 			adminGroup.POST("/importUsersCSV", importuser.ImportUsersHandler)
 			adminGroup.PATCH("/issues/:id", issues.UpdateIssueStatus)
 
-
 			// Group
 			adminGroup.GET("/studentCount", group.GetEligibleStudentCount)
-    		adminGroup.POST("/generateGroups", group.GenerateGroups)
+			adminGroup.POST("/generateGroups", group.GenerateGroups)
 
 			adminGroup.GET("/group/:id", group.GetGroupDetailById)
 			adminGroup.GET("/students/search", group.SearchAvailableStudents)
@@ -79,7 +78,7 @@ func main() {
 
 			adminGroup.GET("/teachers/search", group.GetAllTeachers)
 			adminGroup.POST("/group/updateAdvisor", group.UpdateGroupAdvisor)
-					
+
 		}
 
 		teacherGroup := protected.Group("/teacher")
@@ -172,7 +171,6 @@ func main() {
 
 	r.Run(":8080")
 }
-
 
 func InsertDataOpen() {
 	Data := database.DB()
