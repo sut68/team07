@@ -1,350 +1,502 @@
 "use client";
 
-import { useState } from "react";
-import {
-  GetProgress,
-  AddProgress,
-  UpProgress,
-  EraseProgress,
-} from "../../../services/progress";
+import { useEffect, useMemo, useState } from "react";
+import { GetProgress, AddProgress, UpProgress, EraseProgress } from "../../../services/progress";
 import type { FullProgress } from "../../../interfaces/Progress";
 
-type Mode = "get" | "add" | "update" | "delete";
+type Mode = "view" | "submit" | "edit";
 
-export default function TestApiPage() {
-  const [mode, setMode] = useState<Mode>("get");
+export default function ProgressPage() {
+  const [mode, setMode] = useState<Mode>("view");
+
   const [groupProjectId, setGroupProjectId] = useState<number>(0);
+  const [userId, setUserId] = useState<number>(0);
+
+  const [progressList, setProgressList] = useState<FullProgress[]>([]);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
 
   const [file, setFile] = useState("");
   const [comment, setComment] = useState("");
 
-  const [updateId, setUpdateId] = useState<number | null>(null);
-  const [delId, setDelId] = useState<number | null>(null);
-
-  const [progressList, setProgressList] = useState<FullProgress[]>([]);
-  const [status, setStatus] = useState<string>("Waiting for action...");
+  const [status, setStatus] = useState<string>("Ready");
   const [isError, setIsError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Helper to extract IDs
-  const availableIds = Array.isArray(progressList)
-    ? (progressList as any[])
-        .map((p) => p.id ?? p.ID ?? p.progress_id)
-        .filter((id) => id !== null && id !== undefined)
-    : [];
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const gp = 1//Number(window.localStorage.getItem("group_project_id") ?? 0);
+    const uid = Number(window.localStorage.getItem("user_id") ?? 0);
+    setGroupProjectId(Number.isFinite(gp) ? gp : 0);
+    setUserId(Number.isFinite(uid) ? uid : 0);
+  }, []);
 
-  const handleRun = async () => {
+  const availableIds = useMemo(() => {
+    return Array.isArray(progressList)
+      ? (progressList as any[])
+          .map((p) => Number(p.id ?? p.ID ?? p.progress_id ?? 0))
+          .filter((id) => Number.isFinite(id) && id > 0)
+      : [];
+  }, [progressList]);
+
+  useEffect(() => {
+    if (availableIds.length > 0) setSelectedId(availableIds[0]);
+    else setSelectedId(null);
+  }, [availableIds]);
+
+  const safeText = (s: unknown) => String(s ?? "").trim();
+
+  const refresh = async () => {
+    if (!groupProjectId || groupProjectId <= 0) {
+      setProgressList([]);
+      return;
+    }
+    const list = await GetProgress({ group_project_id: groupProjectId });
+    setProgressList(Array.isArray(list) ? list : []);
+  };
+
+  const handleView = async () => {
     setIsLoading(true);
     setIsError(false);
-    setStatus("Processing...");
+    setStatus("Loading updates...");
 
     try {
-      let list: FullProgress[] = [];
-
-      if (mode === "get") {
-        list = await GetProgress({ group_project_id: groupProjectId });
-        setStatus(`✅ Fetch Success: Retrieved ${list.length} records`);
-      } 
-      else if (mode === "add") {
-        await AddProgress({
-          group_project_id: groupProjectId,
-          file,
-          comment,
-        });
-        list = await GetProgress({ group_project_id: groupProjectId });
-        setStatus("✅ Create Success: New progress added.");
-      } 
-      else if (mode === "delete") {
-        if (!delId) throw new Error("Please select an ID to delete.");
-        await EraseProgress({ id: delId });
-        list = await GetProgress({ group_project_id: groupProjectId });
-        setStatus(`✅ Delete Success: Removed ID ${delId}`);
-      } 
-      else {
-        if (!updateId) throw new Error("Please select an ID to update.");
-        await UpProgress({ id: updateId, file, comment });
-        list = await GetProgress({ group_project_id: groupProjectId });
-        setStatus(`✅ Update Success: Modified ID ${updateId}`);
-      }
-
-      setProgressList(list);
-
+      await refresh();
+      setStatus("✅ Loaded progress updates");
     } catch (err: any) {
-      console.error("Axios ERROR:", err);
+      console.error(err);
       setIsError(true);
-      const msg =
-        err?.response?.data?.error ||
-        err?.response?.data?.message ||
-        err?.message ||
-        "Unknown Error occurred";
-      setStatus(`❌ Error: ${msg}`);
-      // Don't clear list on error so user can still see previous data
+      setStatus(`❌ ${err?.response?.data?.message || err?.message || "Failed to load"}`);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleSubmit = async () => {
+    setIsLoading(true);
+    setIsError(false);
+
+    try {
+      const f = safeText(file);
+      const c = safeText(comment);
+      if (!groupProjectId || groupProjectId <= 0) throw new Error("Missing group_project_id");
+      if (!userId || userId <= 0) throw new Error("Missing user_id");
+      if (!f) throw new Error("Please enter a file name / link");
+      if (!c) throw new Error("Please write a short update");
+
+      setStatus("Submitting your update...");
+      await AddProgress({ group_project_id: groupProjectId, file: f, comment: c });
+
+      setFile("");
+      setComment("");
+
+      await refresh();
+      setStatus("✅ Submitted! Your update was posted.");
+    } catch (err: any) {
+      console.error(err);
+      setIsError(true);
+      setStatus(`❌ ${err?.response?.data?.message || err?.message || "Submit failed"}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleEdit = async () => {
+    setIsLoading(true);
+    setIsError(false);
+
+    try {
+      const id = selectedId;
+      const f = safeText(file);
+      const c = safeText(comment);
+
+      if (!id) throw new Error("Please select an update to edit");
+      if (!f && !c) throw new Error("Enter a new file and/or comment");
+
+      setStatus(`Updating #${id}...`);
+      await UpProgress({ id, file: f, comment: c });
+
+      setFile("");
+      setComment("");
+
+      await refresh();
+      setStatus(`✅ Updated progress #${id}`);
+    } catch (err: any) {
+      console.error(err);
+      setIsError(true);
+      setStatus(`❌ ${err?.response?.data?.message || err?.message || "Update failed"}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setIsLoading(true);
+    setIsError(false);
+
+    try {
+      const id = selectedId;
+      if (!id) throw new Error("Please select an update to delete");
+
+      if (!confirm(`Delete progress update #${id}?`)) {
+        setIsLoading(false);
+        return;
+      }
+
+      setStatus(`Deleting #${id}...`);
+      await EraseProgress({ id });
+
+      await refresh();
+      setStatus(`✅ Deleted progress #${id}`);
+    } catch (err: any) {
+      console.error(err);
+      setIsError(true);
+      setStatus(`❌ ${err?.response?.data?.message || err?.message || "Delete failed"}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (groupProjectId > 0) handleView();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groupProjectId]);
+
+  const locked = groupProjectId <= 0 || userId <= 0;
+
   return (
-    <div style={styles.pageContainer}>
-      <h1 style={styles.pageTitle}>🚀 Progress API Inspector</h1>
-      
-      <div style={styles.mainGrid}>
-        
-        {/* LEFT PANEL: Controls */}
-        <div style={styles.controlPanel}>
-          
-          {/* 1. Mode Tabs */}
-          <div style={styles.tabContainer}>
-            <button onClick={() => setMode("get")} style={mode === "get" ? styles.tabActive : styles.tab}>GET</button>
-            <button onClick={() => setMode("add")} style={mode === "add" ? styles.tabActive : styles.tab}>POST</button>
-            <button onClick={() => setMode("update")} style={mode === "update" ? styles.tabActive : styles.tab}>PATCH</button>
-            <button onClick={() => setMode("delete")} style={mode === "delete" ? styles.tabActive : styles.tab}>DELETE</button>
+    <div style={styles.page}>
+      <div style={styles.header}>
+        <div>
+          <div style={styles.appTitle}>Progress Updates</div>
+          <div style={styles.subTitle}>
+            Group: <b>{groupProjectId || "-"}</b> • Student: <b>{userId || "-"}</b>
+          </div>
+        </div>
+
+        <div style={styles.modeTabs}>
+          <button onClick={() => setMode("view")} style={mode === "view" ? styles.tabActive : styles.tab}>
+            View
+          </button>
+          <button onClick={() => setMode("submit")} style={mode === "submit" ? styles.tabActive : styles.tab}>
+            Submit
+          </button>
+          <button onClick={() => setMode("edit")} style={mode === "edit" ? styles.tabActive : styles.tab}>
+            Manage
+          </button>
+        </div>
+      </div>
+
+      <div style={styles.content}>
+        <div style={styles.left}>
+          <div
+            style={{
+              ...styles.status,
+              background: isError ? "#fee2e2" : "#dcfce7",
+              color: isError ? "#991b1b" : "#166534",
+            }}
+          >
+            <b>Status:</b> {status}
           </div>
 
-          <div style={styles.formContent}>
-            <h3 style={styles.sectionTitle}>
-              {mode === "get" && "🔍 Fetch Data"}
-              {mode === "add" && "✨ Add New Progress"}
-              {mode === "update" && "✏️ Edit Progress"}
-              {mode === "delete" && "🗑️ Remove Progress"}
-            </h3>
-
-            {/* Global Input */}
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>Group Project ID</label>
-              <input
-                type="number"
-                value={groupProjectId}
-                onChange={(e) => setGroupProjectId(Number(e.target.value))}
-                placeholder="e.g. 1"
-                style={styles.input}
-              />
+          {locked && (
+            <div style={styles.notice}>
+              Missing IDs. Please set <code>group_project_id</code> and <code>user_id</code> in localStorage.
             </div>
+          )}
 
-            {/* Dynamic Inputs */}
-            {mode === "add" && (
-              <>
-                <div style={styles.inputGroup}>
-                  <label style={styles.label}>File Path / URL</label>
-                  <input value={file} onChange={(e) => setFile(e.target.value)} placeholder="e.g. report.pdf" style={styles.input} />
-                </div>
-                <div style={styles.inputGroup}>
-                  <label style={styles.label}>Comment</label>
-                  <input value={comment} onChange={(e) => setComment(e.target.value)} placeholder="e.g. First Draft" style={styles.input} />
-                </div>
-              </>
-            )}
+          {mode === "view" && (
+            <div style={styles.card}>
+              <div style={styles.cardTitle}>Latest updates</div>
+              <div style={styles.cardDesc}>See what your group has submitted so far.</div>
 
-            {mode === "update" && (
-              <>
-                <div style={styles.inputGroup}>
-                  <label style={styles.label}>Target ID</label>
-                  <select value={updateId ?? ""} onChange={(e) => setUpdateId(Number(e.target.value))} style={styles.select}>
-                    <option value="">-- Select ID --</option>
-                    {availableIds.map((id) => <option key={id} value={id}>{id}</option>)}
-                  </select>
-                </div>
-                <div style={styles.inputGroup}>
-                  <label style={styles.label}>New File</label>
-                  <input value={file} onChange={(e) => setFile(e.target.value)} placeholder="Updated file..." style={styles.input} />
-                </div>
-                <div style={styles.inputGroup}>
-                  <label style={styles.label}>New Comment</label>
-                  <input value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Updated comment..." style={styles.input} />
-                </div>
-              </>
-            )}
+              <button onClick={handleView} disabled={isLoading || locked} style={styles.primaryBtn}>
+                {isLoading ? "Loading..." : "Refresh"}
+              </button>
+            </div>
+          )}
 
-            {mode === "delete" && (
-              <div style={styles.inputGroup}>
-                <label style={styles.label}>Target ID to Delete</label>
-                <select value={delId ?? ""} onChange={(e) => setDelId(Number(e.target.value))} style={styles.select}>
-                  <option value="">-- Select ID --</option>
-                  {availableIds.map((id) => <option key={id} value={id}>{id}</option>)}
+          {mode === "submit" && (
+            <div style={styles.card}>
+              <div style={styles.cardTitle}>Submit a new update</div>
+              <div style={styles.cardDesc}>Add a file name/link and a short description.</div>
+
+              <div style={styles.field}>
+                <label style={styles.label}>File</label>
+                <input
+                  value={file}
+                  onChange={(e) => setFile(e.target.value)}
+                  placeholder="e.g. Week3_Report.pdf or https://..."
+                  style={styles.input}
+                  disabled={isLoading || locked}
+                />
+              </div>
+
+              <div style={styles.field}>
+                <label style={styles.label}>Comment</label>
+                <textarea
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  placeholder="What did you work on? Any issues?"
+                  style={styles.textarea}
+                  disabled={isLoading || locked}
+                />
+              </div>
+
+              <button onClick={handleSubmit} disabled={isLoading || locked} style={styles.primaryBtn}>
+                {isLoading ? "Submitting..." : "Submit update"}
+              </button>
+            </div>
+          )}
+
+          {mode === "edit" && (
+            <div style={styles.card}>
+              <div style={styles.cardTitle}>Manage your updates</div>
+              <div style={styles.cardDesc}>Edit or delete an update (teacher/group rules may apply).</div>
+
+              <div style={styles.field}>
+                <label style={styles.label}>Select update</label>
+                <select
+                  value={selectedId ?? ""}
+                  onChange={(e) => setSelectedId(Number(e.target.value) || null)}
+                  style={styles.select}
+                  disabled={isLoading || locked || availableIds.length === 0}
+                >
+                  {availableIds.length === 0 ? <option value="">No updates</option> : null}
+                  {availableIds.map((id) => (
+                    <option key={id} value={id}>
+                      Update #{id}
+                    </option>
+                  ))}
                 </select>
               </div>
-            )}
 
-            <button onClick={handleRun} disabled={isLoading} style={styles.runButton}>
-              {isLoading ? "Running..." : "EXECUTE REQUEST"}
-            </button>
-          </div>
-        </div>
+              <div style={styles.field}>
+                <label style={styles.label}>New file (optional)</label>
+                <input
+                  value={file}
+                  onChange={(e) => setFile(e.target.value)}
+                  placeholder="Leave blank to keep same"
+                  style={styles.input}
+                  disabled={isLoading || locked}
+                />
+              </div>
 
-        {/* RIGHT PANEL: Console / Results */}
-        <div style={styles.resultPanel}>
-          {/* Status Banner */}
-          <div style={{...styles.statusBanner, backgroundColor: isError ? "#fee2e2" : "#dcfce7", color: isError ? "#991b1b" : "#166534" }}>
-            <span style={{ fontWeight: "bold" }}>STATUS:</span> {status}
-          </div>
+              <div style={styles.field}>
+                <label style={styles.label}>New comment (optional)</label>
+                <textarea
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  placeholder="Leave blank to keep same"
+                  style={styles.textarea}
+                  disabled={isLoading || locked}
+                />
+              </div>
 
-          {/* JSON Viewer */}
-          <div style={styles.jsonContainer}>
-            <div style={styles.jsonHeader}>
-              <span>📦 Response Payload</span>
-              <span style={{ fontSize: 12, opacity: 0.7 }}>{progressList.length} Items</span>
+              <div style={{ display: "flex", gap: 10 }}>
+                <button onClick={handleEdit} disabled={isLoading || locked} style={styles.primaryBtn}>
+                  {isLoading ? "Saving..." : "Save changes"}
+                </button>
+                <button onClick={handleDelete} disabled={isLoading || locked} style={styles.dangerBtn}>
+                  Delete
+                </button>
+              </div>
             </div>
-            <pre style={styles.jsonCode}>
-              {progressList.length > 0
-                ? JSON.stringify(progressList, null, 2)
-                : "// No data loaded yet.\n// Run a GET request to see data here."}
-            </pre>
-          </div>
+          )}
         </div>
 
+        <div style={styles.right}>
+          <div style={styles.listHeader}>
+            <div style={{ fontWeight: 800 }}>Updates</div>
+            <div style={{ fontSize: 12, opacity: 0.7 }}>{progressList.length} items</div>
+          </div>
+
+          {progressList.length === 0 ? (
+            <div style={styles.empty}>No progress updates yet.</div>
+          ) : (
+            <div style={styles.list}>
+              {progressList.map((p: any) => {
+                const id = p.id ?? p.ID ?? p.progress_id;
+                const fileVal = p.file ?? p.File ?? "";
+                const commentVal = p.comment ?? p.Comment ?? "";
+                const updatedAt = p.updatedAt ?? p.UpdatedAt ?? p.updated_at ?? "";
+
+                return (
+                  <div key={id} style={styles.item}>
+                    <div style={styles.itemTop}>
+                      <div style={styles.badge}>#{id}</div>
+                      <div style={styles.itemFile}>{String(fileVal)}</div>
+                    </div>
+                    <div style={styles.itemComment}>{String(commentVal)}</div>
+                    <div style={styles.itemMeta}>{updatedAt ? `Updated: ${String(updatedAt)}` : ""}</div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
-// --- Styles (CSS-in-JS) ---
 const styles: { [key: string]: React.CSSProperties } = {
-  pageContainer: {
-    padding: "40px",
-    maxWidth: "1200px",
-    margin: "0 auto",
-    fontFamily: "'Inter', system-ui, sans-serif",
-    backgroundColor: "#f8f9fa",
+  page: {
     minHeight: "100vh",
+    background: "#f6f7fb",
+    fontFamily: "'Inter', system-ui, sans-serif",
+    color: "#111827",
   },
-  pageTitle: {
-    fontSize: "24px",
-    fontWeight: "800",
-    color: "#1f2937",
-    marginBottom: "24px",
-    borderLeft: "6px solid #8A011D", // SUT Brand Color
-    paddingLeft: "12px",
-  },
-  mainGrid: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1.5fr", // Left 40%, Right 60%
-    gap: "24px",
-    alignItems: "start",
-  },
-  // Left Panel
-  controlPanel: {
-    backgroundColor: "#ffffff",
-    borderRadius: "12px",
-    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-    overflow: "hidden",
-  },
-  tabContainer: {
+  header: {
+    position: "sticky",
+    top: 0,
+    zIndex: 10,
+    background: "linear-gradient(100deg, #8A011D 0%, #7F666B 100%)",
+    padding: "18px 18px",
+    color: "white",
     display: "flex",
-    backgroundColor: "#f3f4f6",
-    borderBottom: "1px solid #e5e7eb",
+    justifyContent: "space-between",
+    gap: "14px",
+    alignItems: "center",
+    flexWrap: "wrap",
+  },
+  appTitle: { fontSize: 20, fontWeight: 900, letterSpacing: 0.2 },
+  subTitle: { fontSize: 13, opacity: 0.9 },
+  modeTabs: {
+    display: "flex",
+    gap: 8,
+    background: "rgba(255,255,255,0.14)",
+    padding: 6,
+    borderRadius: 999,
   },
   tab: {
-    flex: 1,
-    padding: "12px",
     border: "none",
-    backgroundColor: "transparent",
     cursor: "pointer",
-    fontWeight: "600",
-    color: "#6b7280",
-    transition: "all 0.2s",
-    borderBottom: "3px solid transparent",
+    padding: "10px 14px",
+    borderRadius: 999,
+    background: "transparent",
+    color: "rgba(255,255,255,0.9)",
+    fontWeight: 700,
   },
   tabActive: {
-    flex: 1,
-    padding: "12px",
     border: "none",
-    backgroundColor: "#fff",
     cursor: "pointer",
-    fontWeight: "bold",
+    padding: "10px 14px",
+    borderRadius: 999,
+    background: "white",
     color: "#8A011D",
-    borderBottom: "3px solid #8A011D",
+    fontWeight: 900,
   },
-  formContent: {
-    padding: "24px",
+  content: {
+    maxWidth: 1200,
+    margin: "0 auto",
+    padding: 18,
+    display: "grid",
+    gridTemplateColumns: "420px 1fr",
+    gap: 16,
   },
-  sectionTitle: {
-    fontSize: "16px",
-    fontWeight: "700",
-    marginBottom: "20px",
-    color: "#374151",
-    borderBottom: "1px solid #eee",
-    paddingBottom: "10px",
+  left: { display: "flex", flexDirection: "column", gap: 12 },
+  right: {
+    background: "white",
+    borderRadius: 14,
+    boxShadow: "0 10px 25px rgba(0,0,0,0.06)",
+    overflow: "hidden",
+    minHeight: 520,
+    display: "flex",
+    flexDirection: "column",
   },
-  inputGroup: {
-    marginBottom: "16px",
+  status: {
+    borderRadius: 12,
+    padding: "12px 14px",
+    border: "1px solid rgba(0,0,0,0.05)",
+    fontSize: 14,
   },
-  label: {
-    display: "block",
-    fontSize: "12px",
-    fontWeight: "600",
-    color: "#4b5563",
-    marginBottom: "6px",
-    textTransform: "uppercase",
+  notice: {
+    borderRadius: 12,
+    padding: "12px 14px",
+    background: "#fff7ed",
+    border: "1px solid #fed7aa",
+    color: "#9a3412",
+    fontSize: 13,
   },
+  card: {
+    background: "white",
+    borderRadius: 14,
+    boxShadow: "0 10px 25px rgba(0,0,0,0.06)",
+    padding: 16,
+  },
+  cardTitle: { fontSize: 16, fontWeight: 900, marginBottom: 6 },
+  cardDesc: { fontSize: 13, opacity: 0.8, marginBottom: 12 },
+  field: { display: "flex", flexDirection: "column", gap: 6, marginBottom: 12 },
+  label: { fontSize: 12, fontWeight: 800, textTransform: "uppercase", opacity: 0.7 },
   input: {
-    width: "100%",
-    padding: "10px",
-    borderRadius: "6px",
-    border: "1px solid #d1d5db",
-    fontSize: "14px",
+    padding: "10px 12px",
+    borderRadius: 10,
+    border: "1px solid #e5e7eb",
     outline: "none",
-    transition: "border-color 0.2s",
+    fontSize: 14,
+  },
+  textarea: {
+    padding: "10px 12px",
+    borderRadius: 10,
+    border: "1px solid #e5e7eb",
+    outline: "none",
+    fontSize: 14,
+    minHeight: 90,
+    resize: "vertical",
   },
   select: {
-    width: "100%",
-    padding: "10px",
-    borderRadius: "6px",
-    border: "1px solid #d1d5db",
-    fontSize: "14px",
-    backgroundColor: "#fff",
+    padding: "10px 12px",
+    borderRadius: 10,
+    border: "1px solid #e5e7eb",
+    outline: "none",
+    fontSize: 14,
+    background: "white",
   },
-  runButton: {
+  primaryBtn: {
     width: "100%",
-    padding: "12px",
-    marginTop: "10px",
-    backgroundColor: "#8A011D",
-    color: "white",
+    padding: "12px 12px",
+    borderRadius: 12,
     border: "none",
-    borderRadius: "8px",
-    fontWeight: "bold",
     cursor: "pointer",
-    boxShadow: "0 2px 4px rgba(138, 1, 29, 0.3)",
-    transition: "opacity 0.2s",
+    background: "#8A011D",
+    color: "white",
+    fontWeight: 900,
+    boxShadow: "0 8px 16px rgba(138,1,29,0.25)",
   },
-  // Right Panel
-  resultPanel: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "16px",
+  dangerBtn: {
+    flex: 1,
+    padding: "12px 12px",
+    borderRadius: 12,
+    border: "none",
+    cursor: "pointer",
+    background: "#ef4444",
+    color: "white",
+    fontWeight: 900,
   },
-  statusBanner: {
-    padding: "12px 16px",
-    borderRadius: "8px",
-    fontSize: "14px",
-    border: "1px solid rgba(0,0,0,0.05)",
-  },
-  jsonContainer: {
-    backgroundColor: "#1e1e1e", // Dark Terminal Background
-    borderRadius: "12px",
-    overflow: "hidden",
-    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
-    minHeight: "400px",
-    display: "flex",
-    flexDirection: "column",
-  },
-  jsonHeader: {
-    backgroundColor: "#2d2d2d",
-    color: "#e5e7eb",
-    padding: "8px 16px",
-    fontSize: "12px",
-    fontWeight: "bold",
+  listHeader: {
+    padding: "14px 16px",
+    borderBottom: "1px solid #eef2f7",
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
   },
-  jsonCode: {
-    margin: 0,
-    padding: "16px",
-    color: "#4ade80", // Matrix Green
-    fontSize: "13px",
-    fontFamily: "'Fira Code', 'Consolas', monospace",
-    overflow: "auto",
-    maxHeight: "600px",
-    lineHeight: "1.5",
+  list: { padding: 16, display: "flex", flexDirection: "column", gap: 12 },
+  item: {
+    border: "1px solid #eef2f7",
+    borderRadius: 14,
+    padding: 14,
+    background: "#ffffff",
   },
+  itemTop: { display: "flex", gap: 10, alignItems: "center", marginBottom: 6 },
+  badge: {
+    background: "#f3f4f6",
+    borderRadius: 999,
+    padding: "4px 10px",
+    fontWeight: 900,
+    fontSize: 12,
+  },
+  itemFile: { fontWeight: 900, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
+  itemComment: { fontSize: 14, opacity: 0.9, marginTop: 2, whiteSpace: "pre-wrap" },
+  itemMeta: { fontSize: 12, opacity: 0.6, marginTop: 8 },
+  empty: { padding: 28, textAlign: "center", color: "#6b7280" },
 };
