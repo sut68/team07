@@ -62,6 +62,7 @@ func ListAppointments(c *gin.Context) {
 			"group_project_id":   apt.GroupProject.ID,
 			"group_number":       apt.GroupProject.GroupNumber,
 			"teacher_name":       apt.Teacher.Firstname + " " + apt.Teacher.Lastname,
+			"evaluation_id":      apt.EvaluationID,
 		}
 		response = append(response, item)
 	}
@@ -127,6 +128,7 @@ func GetAppointment(c *gin.Context) {
 		"teacher_name":  apt.Teacher.Firstname + " " + apt.Teacher.Lastname,
 		"teacher_email": apt.Teacher.Email,
 		"teacher_phone": apt.Teacher.Phone,
+		"evaluation_id": apt.EvaluationID,
 	})
 }
 

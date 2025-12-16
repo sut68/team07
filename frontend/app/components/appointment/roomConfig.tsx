@@ -1,7 +1,8 @@
 "use client";
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Modal, Form, Input, InputNumber, Button, message } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
+import { Toast_success, Toast_fail } from '../Webmessage';
 import { CreateRoom } from '../../services/appointment';
 
 interface RoomConfigProps {
@@ -18,12 +19,12 @@ export default function RoomConfig({ visible, onClose, onSuccess }: RoomConfigPr
         setLoading(true);
         try {
             await CreateRoom(values);
-            message.success("เพิ่มห้องสอบเรียบร้อย");
+            Toast_success("เพิ่มห้องสอบเรียบร้อย");
             form.resetFields();
             onSuccess();
             onClose();
-        } catch (error) {
-            message.error("บันทึกไม่สำเร็จ");
+        } catch (error: any) {
+            Toast_fail(error?.response?.data?.error || "บันทึกไม่สำเร็จ");
         } finally {
             setLoading(false);
         }
