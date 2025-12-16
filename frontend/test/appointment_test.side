@@ -1,0 +1,281 @@
+{
+  "id": "f4924686-e451-46db-9c14-4e4cfef0f3f5",
+  "version": "2.0",
+  "name": "TEST07",
+  "url": "http://localhost:5173",
+  "tests": [{
+    "id": "af22551b-6903-4775-bf96-47a36027faa2",
+    "name": "appointment_fixed",
+    "commands": [{
+      "id": "open_login",
+      "comment": "เปิดหน้า Login",
+      "command": "open",
+      "target": "/login",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "set_size",
+      "comment": "",
+      "command": "setWindowSize",
+      "target": "1280x800",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "wait_username",
+      "comment": "รอช่อง Username",
+      "command": "waitForElementVisible",
+      "target": "name=username",
+      "targets": [],
+      "value": "10000"
+    }, {
+      "id": "type_username",
+      "comment": "กรอก Username",
+      "command": "type",
+      "target": "name=username",
+      "targets": [],
+      "value": "Teacher1"
+    }, {
+      "id": "type_password",
+      "comment": "กรอก Password",
+      "command": "type",
+      "target": "name=password",
+      "targets": [],
+      "value": "tch123"
+    }, {
+      "id": "click_login",
+      "comment": "กดปุ่ม Login",
+      "command": "click",
+      "target": "css=.login-button",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "wait_dashboard",
+      "comment": "รอให้ Login สำเร็จ (รอ Avatar)",
+      "command": "waitForElementVisible",
+      "target": "css=.anticon-down",
+      "targets": [],
+      "value": "10000"
+    }, {
+      "id": "open_appoint_page",
+      "comment": "ไปหน้า Appointment",
+      "command": "open",
+      "target": "/teacher/appointment",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "wait_btn",
+      "comment": "รอปุ่มสร้างนัดหมาย",
+      "command": "waitForElementVisible",
+      "target": "xpath=//button[contains(.,'สร้างนัดหมาย')]",
+      "targets": [],
+      "value": "4000"
+    }, {
+      "id": "click_create",
+      "comment": "",
+      "command": "click",
+      "target": "xpath=//button[contains(.,'สร้างนัดหมาย')]",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "wait_modal",
+      "comment": "รอ Modal ขึ้น",
+      "command": "waitForElementVisible",
+      "target": "xpath=//span[contains(text(), 'สร้างนัดหมายใหม่')]",
+      "targets": [],
+      "value": "10000"
+    }, {
+      "id": "pause_modal",
+      "comment": "รอ Animation Modal",
+      "command": "pause",
+      "target": "500",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "click_room",
+      "comment": "เลือกห้อง",
+      "command": "click",
+      "target": "id=room_id",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "select_room_item",
+      "comment": "เลือกห้องแรกสุด",
+      "command": "click",
+      "target": "css=.ant-select-item-option:first-child",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "click_type",
+      "comment": "เลือกประเภท",
+      "command": "click",
+      "target": "id=type_id",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "select_type_item",
+      "comment": "เลือก Final Defense",
+      "command": "click",
+      "target": "xpath=//div[contains(@class, 'ant-select-item-option-content') and contains(text(), 'Final Defense')]",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "click_eval",
+      "comment": "เลือกแบบประเมิน",
+      "command": "click",
+      "target": "id=evaluation_id",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "select_eval_item",
+      "comment": "เลือก Advisor Evaluation",
+      "command": "click",
+      "target": "xpath=//div[contains(@class, 'ant-select-item-option-content') and contains(text(), 'Advisor Evaluation')]",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "type_date",
+      "comment": "พิมพ์วันที่",
+      "command": "type",
+      "target": "id=date",
+      "targets": [],
+      "value": "21/12/2025"
+    }, {
+      "id": "enter_date",
+      "comment": "กด Enter วันที่",
+      "command": "sendKeys",
+      "target": "id=date",
+      "targets": [],
+      "value": "${KEY_ENTER}"
+    }, {
+      "id": "click_time",
+      "comment": "เปิด Time Picker",
+      "command": "click",
+      "target": "id=time_range",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "select_hour",
+      "comment": "เลือก 09 นาฬิกา",
+      "command": "click",
+      "target": "xpath=//div[contains(@class, 'ant-picker-time-panel-cell-inner') and contains(text(), '09')]",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "confirm_time",
+      "comment": "กด OK เวลา",
+      "command": "click",
+      "target": "xpath=//span[contains(text(),'OK')]",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "click_group",
+      "comment": "คลิกเลือกกลุ่ม",
+      "command": "click",
+      "target": "id=group_id",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "type_group",
+      "comment": "พิมพ์ค้นหากลุ่ม",
+      "command": "sendKeys",
+      "target": "id=group_id",
+      "targets": [],
+      "value": "1"
+    }, {
+      "id": "0ec652f1-4092-4219-8429-43aea144919d",
+      "comment": "",
+      "command": "click",
+      "target": "css=div:nth-child(23) .ant-select-item:nth-child(1) > .ant-select-item-option-content",
+      "targets": [
+        ["css=div:nth-child(23) .ant-select-item:nth-child(1) > .ant-select-item-option-content", "css:finder"],
+        ["xpath=//div[9]/div/div/div[2]/div/div/div/div/div", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "3cff85f9-3a25-4107-8244-34ace4ac0a6f",
+      "comment": "",
+      "command": "click",
+      "target": "css=.bg-\\[\\#9a0120\\] > span",
+      "targets": [
+        ["css=.bg-\\[\\#9a0120\\] > span", "css:finder"],
+        ["xpath=//div[5]/div[2]/button[2]/span", "xpath:position"],
+        ["xpath=//span[contains(.,'บันทึก')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "0aa3e944-eed2-496f-bcfd-7b8e3217fb3e",
+      "comment": "",
+      "command": "mouseOver",
+      "target": "css=.anticon-loading > svg",
+      "targets": [
+        ["css=.anticon-loading > svg", "css:finder"]
+      ],
+      "value": ""
+    }, {
+      "id": "ee42b2b7-6ba6-4fa2-a1e3-15809bc54521",
+      "comment": "",
+      "command": "click",
+      "target": "css=.appt-time",
+      "targets": [
+        ["css=.appt-time", "css:finder"],
+        ["xpath=//div[106]/span", "xpath:position"],
+        ["xpath=//span[contains(.,'09:00–10:00')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "8373caa6-c203-4e8c-859b-5b26f5f30f41",
+      "comment": "",
+      "command": "click",
+      "target": "css=.ant-btn-text > span:nth-child(2)",
+      "targets": [
+        ["css=.ant-btn-text > span:nth-child(2)", "css:finder"],
+        ["xpath=//div[5]/button/span[2]", "xpath:position"],
+        ["xpath=//span[contains(.,'ยกเลิกนัด')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "8bd485dd-eaa2-4144-9fa0-2e919c9683a9",
+      "comment": "",
+      "command": "mouseOver",
+      "target": "css=.ant-btn-text > span:nth-child(2)",
+      "targets": [
+        ["css=.ant-btn-text > span:nth-child(2)", "css:finder"],
+        ["xpath=//div[5]/button/span[2]", "xpath:position"],
+        ["xpath=//span[contains(.,'ยกเลิกนัด')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "4c1084d8-e2c6-4d82-80a7-0ec8f2e74cf8",
+      "comment": "",
+      "command": "mouseOut",
+      "target": "css=.ant-btn-text > span:nth-child(2)",
+      "targets": [
+        ["css=.ant-btn-text > span:nth-child(2)", "css:finder"],
+        ["xpath=//div[5]/button/span[2]", "xpath:position"],
+        ["xpath=//span[contains(.,'ยกเลิกนัด')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "31a5afcd-8dcf-4cf8-b484-b7b9c11f28b2",
+      "comment": "",
+      "command": "click",
+      "target": "css=.ant-btn-default:nth-child(2) > span",
+      "targets": [
+        ["css=.ant-btn-default:nth-child(2) > span", "css:finder"],
+        ["xpath=//div/div[2]/button[2]/span", "xpath:position"],
+        ["xpath=//span[contains(.,'ลบเลย')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }]
+  }],
+  "suites": [{
+    "id": "7b9b9f82-c4e2-4caf-a0da-4407696d74fd",
+    "name": "Default Suite",
+    "persistSession": false,
+    "parallel": false,
+    "timeout": 300,
+    "tests": ["af22551b-6903-4775-bf96-47a36027faa2"]
+  }],
+  "urls": ["http://localhost:5173/"],
+  "plugins": []
+}
