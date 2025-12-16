@@ -1,21 +1,98 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-// Import the new function and interface
-import { GetAllChat, InsertChat, DropChat } from "../../services/chat";
-import { GetProcessIDbyGroupID } from "../../services/chat"; // <-- CHANGE PATH AS NEEDED
-import { ProcessInterface } from "../../interfaces/Chat"; // <-- CHANGE PATH AS NEEDED
+import { GetAllChat, InsertChat, DropChat, GetProcessIDbyGroupID } from "../../services/chat";
+import { ProcessInterface } from "../../interfaces/Chat";
 
 
-// --- Mock Data (MOCK_GROUP_OPTIONS is no longer used for selection, but kept for reference) ---
+
 const DEFAULT_SENDER_ID = 5; 
 
 
+interface TopicSelectorProps {
+    processes: ProcessInterface[];
+    groupMemberId: number | string;
+    onSelect: (id: number) => void;
+    currentProcess: ProcessInterface | undefined;
+    isDisabled: boolean;
+    loading: boolean;
+}
+
+const TopicSelector: React.FC<TopicSelectorProps> = ({ 
+    processes, 
+    groupMemberId,
+    onSelect, 
+    isDisabled,
+    loading,
+}) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const selectorRef = useRef<HTMLDivElement>(null);
+
+   
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (selectorRef.current && !selectorRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+    
+    const handleSelect = (id: number) => {
+        onSelect(id);
+        setIsOpen(false);
+    };
+
+    const displayLabel = loading 
+        ? "Loading..."
+        : !groupMemberId
+            ? "No Group ID"
+            : processes.length === 0 
+                ? "No Topics Found"
+                : "Topic";
+    
+    const buttonDisabled = isDisabled || processes.length === 0 || !groupMemberId;
+
+    return (
+        <div style={dropdownStyles.container} ref={selectorRef}>
+            <button
+                type="button"
+                onClick={() => !buttonDisabled && setIsOpen(!isOpen)}
+                style={{
+                    ...dropdownStyles.button,
+                    opacity: buttonDisabled ? 0.6 : 1,
+                    cursor: buttonDisabled ? 'not-allowed' : 'pointer',
+                }}
+                disabled={buttonDisabled}
+            >
+                <span style={dropdownStyles.icon}>@</span>
+                <span style={dropdownStyles.label}>{displayLabel}</span>
+            </button>
+
+            {isOpen && processes.length > 0 && (
+                <div style={dropdownStyles.list}>
+                    {processes.map(process => (
+                        <div 
+                            key={process.id}
+                            onClick={() => handleSelect(process.id)}
+                            style={dropdownStyles.item}
+                        >
+                            <div style={dropdownStyles.itemFile}>{process.file}</div>
+                            <div style={dropdownStyles.itemId}>ID: {process.id}</div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
+
 export default function ChatTestPage() {
-    // --- State ---
-    // groupMemberId is now a string from the text input
+   
     const [groupMemberIdInput, setGroupMemberIdInput] = useState<string>(""); 
-    const [groupMemberId, setGroupMemberId] = useState<number | string>(""); // Actual ID used for API calls
+    const [groupMemberId, setGroupMemberId] = useState<number | string>(""); 
     
     const [processId, setProcessId] = useState<number | string>(""); 
     const [senderId, setSenderId] = useState<number>(DEFAULT_SENDER_ID); 
@@ -24,12 +101,14 @@ export default function ChatTestPage() {
     const [message, setMessage] = useState(""); 
     const [chats, setChats] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
-
-    // --- Refs and Helpers (Unchanged) ---
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const pollingRef = useRef<NodeJS.Timeout | null>(null);
     const prevChatLengthRef = useRef(0);
+    const isPendingImage = message.startsWith("data:image/");
+    const currentProcess = availableProcesses.find(p => p.id === Number(processId));
 
+
+   
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
@@ -56,14 +135,13 @@ export default function ChatTestPage() {
     };
 
     const getIds = () => ({
-        group_member_id: Number(groupMemberId),
+        group_project_id: Number(groupMemberId), 
         process_id: Number(processId),
         sender_id: Number(senderId),
     });
     
-    // --- NEW EFFECT: Update Group ID and Fetch Processes when Input changes ---
+   
     useEffect(() => {
-        // 1. Validate Input
         const parsedGroupId = parseInt(groupMemberIdInput);
         
         if (isNaN(parsedGroupId) || parsedGroupId <= 0) {
@@ -73,18 +151,15 @@ export default function ChatTestPage() {
             return;
         }
 
-        // 2. Set the validated ID
         setGroupMemberId(parsedGroupId);
-        
-        // 3. Start Loading Processes
         setLoading(true);
-        setProcessId(""); // Reset process ID when group changes
+        setProcessId(""); 
         
-        GetProcessIDbyGroupID(parsedGroupId)
+ 
+        GetProcessIDbyGroupID(parsedGroupId) 
             .then(processes => {
                 setAvailableProcesses(processes);
                 if (processes.length > 0) {
-                    // Automatically select the first process in the list
                     setProcessId(processes[0].id);
                 } else {
                     setProcessId("");
@@ -96,17 +171,17 @@ export default function ChatTestPage() {
             })
             .finally(() => setLoading(false));
             
-    // Dependency array watches the raw input string
     }, [groupMemberIdInput]); 
 
-    // --- API Functions & Polling (Modified to use state/effect) ---
+  
     const loadChats = async (silent = false) => {
-        const { group_member_id, process_id } = getIds();
-        if (!group_member_id || !process_id) return;
-
+        const { group_project_id, process_id } = getIds();
+        if (!group_project_id || !process_id) return;
+        
         try {
             if (!silent) setLoading(true);
-            const res = await GetAllChat({ group_member_id, process_id });
+        
+            const res = await GetAllChat({ group_project_id, process_id }); 
             if (Array.isArray(res)) {
                 setChats(res);
             }
@@ -117,7 +192,7 @@ export default function ChatTestPage() {
         }
     };
 
-    // --- Real-Time Polling ---
+  
     useEffect(() => {
         if (pollingRef.current) clearInterval(pollingRef.current);
         if (groupMemberId && processId) {
@@ -126,7 +201,7 @@ export default function ChatTestPage() {
                 loadChats(true);
             }, 2000);
         } else {
-            setChats([]); // Clear chats if selection is invalid
+            setChats([]); 
         }
         return () => {
             if (pollingRef.current) clearInterval(pollingRef.current);
@@ -134,7 +209,7 @@ export default function ChatTestPage() {
     }, [groupMemberId, processId]);
 
 
-    // --- HANDLER: Paste Image (Unchanged) ---
+
     const handlePaste = (e: React.ClipboardEvent) => {
         const items = e.clipboardData.items;
         
@@ -157,15 +232,15 @@ export default function ChatTestPage() {
 
     const sendChat = async (e?: React.FormEvent) => {
         if (e) e.preventDefault();
-        const { group_member_id, process_id, sender_id } = getIds();
-        if (!message || !group_member_id || !process_id) return; 
+        const { group_project_id, process_id, sender_id } = getIds();
+        if (!message || !group_project_id || !process_id) return; 
         
         try {
             await InsertChat({
-                group_member_id,
+                group_project_id,
                 process_id,
                 sender_id,
-                messege: message, 
+                message: message,
             });
             
             setMessage("");
@@ -179,77 +254,60 @@ export default function ChatTestPage() {
 
     const deleteChat = async (targetId: number) => {
         if (!confirm("Are you sure you want to remove this message?")) return;
-        const { group_member_id, process_id } = getIds();
+        const { group_project_id, process_id } = getIds();
         try {
-            await DropChat({ id: targetId, group_member_id, process_id });
+            await DropChat({ id: targetId, group_project_id, process_id }); 
             await loadChats(true);
         } catch (error) {
             console.error("Error deleting chat:", error);
         }
     };
 
-    const isPendingImage = message.startsWith("data:image/");
-    const currentProcess = availableProcesses.find(p => p.id === Number(processId));
-
     // --- Render ---
     return (
         <div style={styles.container}>
 
-            {/* 1. New Combined Header/Config Area */}
+            {/* 1. Header Area */}
             <div style={styles.header}>
                 <div style={styles.headerContentWrapper}>
                     <div style={styles.headerIconContainer}>
                         <div style={styles.headerIconCircle}>💬</div>
                     </div>
                     <div>
-                        {/* Display the selected file name as the main title */}
                         <h3 style={styles.headerTitle}>
-                            {currentProcess ? currentProcess.file : "Select a Project Topic"}
+                            {currentProcess ? currentProcess.file : "Chat Room"}
                         </h3>
-                        {/* Display status and ID */}
                         <span style={styles.headerSubtitle}>
                             {currentProcess 
-                                ? `Group ID: ${groupMemberId} | Process ID: ${currentProcess.id}` 
+                                ? `Group ID: ${groupMemberId} | Process ID: ${currentProcess.id} (Topic)` 
                                 : `Enter Group ID to load topics.`
                             }
                         </span>
                     </div>
                 </div>
 
-                {/* Selection Controls */}
+    
                 <div style={styles.selectionBar}>
-                    {/* NEW: Input Text for Group ID (Real-time update) */}
                     <input 
                         type="number" 
-                        placeholder="Enter Group ID" 
+                        placeholder="Group ID" 
                         value={groupMemberIdInput} 
                         onChange={(e) => setGroupMemberIdInput(e.target.value)} 
                         style={styles.inputControl}
                         disabled={loading}
                     />
-
-                    {/* Select Process/Topic (Filtered by Group) */}
-                    <select 
-                        value={processId} 
-                        onChange={(e) => setProcessId(e.target.value)} 
-                        style={styles.selectControl}
-                        disabled={loading || availableProcesses.length === 0 || !groupMemberId}
-                    >
-                        <option value="">
-                            {loading ? "Loading Topics..." : "-- Choose Topic --"}
-                        </option>
-                        {availableProcesses.map(process => (
-                            <option key={process.id} value={process.id}>
-                                {/* Displaying the 'file' field for selection */}
-                                {process.file} (ID: {process.id}) 
-                            </option>
-                        ))}
-                    </select>
                     
+               
+                    {currentProcess && (
+                         <span style={styles.topicDisplay}>
+                            Topic: {currentProcess.file}
+                        </span>
+                    )}
+
                     <span style={styles.liveStatus}>
                         {loading ? "Syncing..." : (groupMemberId && processId ? "● Live" : "● Offline")}
                     </span>
-                    {/* Debug Input for Sender ID (Kept small for flexibility) */}
+             
                     <input 
                         type="number" 
                         placeholder="My ID" 
@@ -260,11 +318,11 @@ export default function ChatTestPage() {
                 </div>
             </div>
 
-            {/* 2. Messages Area */}
+       
             <div style={styles.messageArea}>
                 {!groupMemberId || !processId ? (
                     <div style={styles.emptyState}>
-                        {loading ? "Loading available topics..." : "Please enter a valid Group ID and select a Topic above to start chatting."}
+                        {loading ? "Loading available topics..." : "Please enter a valid Group ID and select a Topic to start chatting."}
                     </div>
                 ) : chats.length === 0 && !loading ? (
                     <div style={styles.emptyState}>No messages yet. Paste an image or say hello! 👋</div>
@@ -276,7 +334,7 @@ export default function ChatTestPage() {
 
                         return (
                             <div key={c.ID} style={{ ...styles.messageRow, justifyContent: isMe ? 'flex-end' : 'flex-start' }}>
-                                {/* Avatar shows sender_id, but should ideally show the user's initial/image */}
+                                
                                 {!isMe && <div style={styles.avatar}>{c.sender_id}</div>}
 
                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: isMe ? 'flex-end' : 'flex-start', maxWidth: '70%' }}>
@@ -320,10 +378,19 @@ export default function ChatTestPage() {
                 <div ref={messagesEndRef} />
             </div>
 
-            {/* 3. Footer Input (Disabled when not selected) */}
+   
             <form onSubmit={sendChat} style={styles.footer}>
                 <div style={styles.inputWrapper}>
-                    
+       
+                    <TopicSelector
+                        processes={availableProcesses}
+                        groupMemberId={groupMemberId}
+                        onSelect={(id) => setProcessId(id)}
+                        currentProcess={currentProcess}
+                        isDisabled={loading || !groupMemberId}
+                        loading={loading}
+                    />
+
                     {isPendingImage ? (
                         <div style={styles.imagePreviewContainer}>
                             <div style={styles.previewLabel}>Image Ready to Send</div>
@@ -338,12 +405,12 @@ export default function ChatTestPage() {
                         </div>
                     ) : (
                         <input
-                            placeholder={!groupMemberId || !processId ? "Please select Group and Topic to type..." : "Type a message or Ctrl+V to paste image..."}
+                            placeholder={!groupMemberId || !processId ? "Please select a Topic to type..." : "Type a message or Ctrl+V to paste image..."}
                             value={message}
                             onChange={(e) => setMessage(e.target.value)}
                             onPaste={handlePaste}
                             style={styles.chatInput}
-                            disabled={!groupMemberId || !processId} // Disable input if not configured
+                            disabled={!groupMemberId || !processId} 
                         />
                     )}
 
@@ -358,14 +425,14 @@ export default function ChatTestPage() {
     );
 }
 
-// --- Styles (Combined and Simplified) ---
+
 const styles: { [key: string]: React.CSSProperties } = {
-    // Container Styles
+  
     container: {
         display: "flex", flexDirection: "column", height: "100vh", backgroundColor: "#f5f5f5",
         fontFamily: "'Noto Sans Thai', 'Inter', system-ui, sans-serif",
     },
-    // Header/Selection Styles (Fixed Layout)
+  
     header: {
         padding: "10px 16px",
         background: 'linear-gradient(100deg, #8A011D 0%, #7F666B 100%)',
@@ -392,8 +459,8 @@ const styles: { [key: string]: React.CSSProperties } = {
         alignItems: 'center', 
         gap: '8px', 
         paddingTop: '4px',
+        position: 'relative', 
     },
-    // NEW Style for the Group ID input field
     inputControl: { 
         padding: "6px 10px", 
         borderRadius: "8px", 
@@ -403,19 +470,17 @@ const styles: { [key: string]: React.CSSProperties } = {
         fontSize: "14px",
         width: "120px"
     },
-    selectControl: {
-        padding: "6px 10px", 
-        borderRadius: "8px", 
-        border: "1px solid rgba(255,255,255,0.3)", 
-        backgroundColor: "rgba(255,255,255,0.1)", 
-        color: "white", 
+    topicDisplay: {
+        padding: "6px 10px",
+        borderRadius: "8px",
+        backgroundColor: "rgba(255,255,255,0.15)",
         fontSize: "14px",
-        appearance: 'none', 
-        backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'white\'%3e%3cpath d=\'M7 10l5 5 5-5H7z\'/%3e%3c/svg%3e")',
-        backgroundRepeat: 'no-repeat',
-        backgroundPosition: 'right 8px center',
-        backgroundSize: '16px',
-        cursor: 'pointer',
+        color: "white",
+        fontWeight: "500",
+        maxWidth: "200px",
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        whiteSpace: "nowrap",
     },
     liveStatus: {
         fontSize: "12px", 
@@ -434,7 +499,7 @@ const styles: { [key: string]: React.CSSProperties } = {
         marginLeft: '8px',
     },
 
-    // Message Area Styles
+  
     messageArea: {
         flex: 1, overflowY: "auto", padding: "20px 15px", display: "flex", flexDirection: "column", gap: "12px", backgroundColor: "#f9f9f9",
     },
@@ -452,10 +517,10 @@ const styles: { [key: string]: React.CSSProperties } = {
         background: "none", border: "none", color: "#8A011D", fontSize: "11px", cursor: "pointer", padding: 0, textDecoration: "underline", opacity: 0.8,
     },
 
-    // Footer Styles
+  
     footer: { padding: "10px 12px", backgroundColor: "#ffffff", borderTop: "1px solid #e4e6eb" },
     inputWrapper: {
-        display: "flex", alignItems: "center", backgroundColor: "#f0f2f5", borderRadius: "20px", padding: "4px 10px", minHeight: "44px"
+        display: "flex", alignItems: "center", backgroundColor: "#f0f2f5", borderRadius: "20px", padding: "4px 10px", minHeight: "44px", position: 'relative', 
     },
     chatInput: {
         flex: 1, padding: "10px 8px", backgroundColor: "transparent", border: "none", outline: "none", fontSize: "15px", color: "#050505",
@@ -463,7 +528,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     sendBtn: {
         background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: "8px",
     },
-    // Image Preview Styles
+  
     imagePreviewContainer: {
         flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 10px',
     },
@@ -472,4 +537,69 @@ const styles: { [key: string]: React.CSSProperties } = {
     clearImageBtn: {
         background: '#ddd', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', marginLeft: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#555'
     }
+};
+
+
+const dropdownStyles: { [key: string]: React.CSSProperties } = {
+    container: {
+        position: 'relative',
+        display: 'inline-block',
+        zIndex: 100, 
+        height: '100%',
+        alignItems: 'center',
+    },
+    button: {
+        padding: "6px 10px", 
+        borderRadius: "20px", 
+        border: "none", 
+        backgroundColor: '#4e5052', 
+        color: "white", 
+        fontSize: "14px",
+        fontWeight: 'bold',
+        display: 'flex',
+        alignItems: 'center',
+        cursor: 'pointer',
+        height: '36px',
+        marginRight: '8px',
+        transition: 'background-color 0.1s',
+    },
+    icon: {
+        fontSize: '16px',
+        marginRight: '4px',
+        color: '#8A011D', 
+    },
+    label: {
+        overflow: 'hidden',
+        whiteSpace: 'nowrap',
+        textOverflow: 'ellipsis',
+        maxWidth: '120px',
+    },
+    list: {
+        position: 'absolute',
+        bottom: 'calc(100% + 10px)', 
+        left: 0,
+        backgroundColor: '#242526', 
+        border: '1px solid #3e4042',
+        borderRadius: '8px',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4)',
+        width: '300px', 
+        maxHeight: '200px',
+        overflowY: 'auto',
+    },
+    item: {
+        padding: '10px 12px',
+        color: '#fff',
+        cursor: 'pointer',
+        transition: 'background-color 0.1s',
+        display: 'flex',
+        flexDirection: 'column',
+    },
+    itemFile: {
+        fontWeight: 'bold',
+        fontSize: '14px',
+    },
+    itemId: {
+        fontSize: '11px',
+        color: '#b0b3b8',
+    },
 };
