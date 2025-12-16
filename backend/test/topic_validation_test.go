@@ -18,7 +18,7 @@ func TestTopic(t *testing.T) {
 			Scope:          "Scope",
 			Description:    "Description about the topic",
 			Status:         "Pending",
-			Proposer_role:  "Student",
+			//Proposer_role:  "Student",
 		}
 
 		ok, err := govalidator.ValidateStruct(topic)
@@ -34,7 +34,7 @@ func TestTopic(t *testing.T) {
 			Scope:          "Scope",
 			Description:    "Description about the topic",
 			Status:         "Pending",
-			Proposer_role:  "Student",
+			//Proposer_role:  "Student",
 		}
 
 		ok, err := govalidator.ValidateStruct(topic)
@@ -50,7 +50,7 @@ func TestTopic(t *testing.T) {
 			Scope:          "", // ผิดตรงนี้
 			Description:    "Description about the topic",
 			Status:         "Pending",
-			Proposer_role:  "Student",
+			//Proposer_role:  "Student",
 		}
 
 		ok, err := govalidator.ValidateStruct(topic)
@@ -66,7 +66,7 @@ func TestTopic(t *testing.T) {
 			Scope:          "Scope",
 			Description:    "", // ผิดตรงนี้
 			Status:         "Pending",
-			Proposer_role:  "Student",
+			//Proposer_role:  "Student",
 		}
 
 		ok, err := govalidator.ValidateStruct(topic)
@@ -82,7 +82,7 @@ func TestTopic(t *testing.T) {
 			Scope:          "Scope",
 			Description:    "Description about the topic",
 			Status:         "", // ผิดตรงนี้
-			Proposer_role:  "Student",
+			//Proposer_role:  "Student",
 		}
 
 		ok, err := govalidator.ValidateStruct(topic)
@@ -98,7 +98,7 @@ func TestTopic(t *testing.T) {
 			Scope:          "Scope",
 			Description:    "Description about the topic",
 			Status:         "Pending",
-			Proposer_role:  "", // ผิดตรงนี้
+			//Proposer_role:  "", // ผิดตรงนี้
 		}
 
 		ok, err := govalidator.ValidateStruct(topic)
