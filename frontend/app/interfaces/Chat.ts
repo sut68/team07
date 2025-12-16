@@ -15,6 +15,12 @@ export interface ChatCreate {
   messege: string;
 }
 
+export interface ProcessInterface {
+    id: number;
+    file: string;
+    updated_at: Date;
+}
+
 export interface GetChat {
   process_id: number;
   group_member_id: number;

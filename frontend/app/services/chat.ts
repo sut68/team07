@@ -1,5 +1,5 @@
 import api from "./api";
-import type { FullChat,ChatCreate,GetChat,ChatDelete} from "../interfaces/Chat";
+import type { FullChat,ChatCreate,GetChat,ChatDelete,ProcessInterface} from "../interfaces/Chat";
 
 
 
@@ -25,6 +25,24 @@ async function DropChat(payload: ChatDelete) {
     });
     console.warn("delete chat complete",payload); //test
 }
+ 
+async function GetProcessIDbyGroupID(group_member_id: number): Promise<ProcessInterface[]> {
+    try {
+        const response = await api.get<ProcessInterface[]>("/GetProcessID", {
+            params: {
+                group_member_id: group_member_id, 
+            },
+        });
+        
+        return response.data; // <--- SUCCESS: Returns the array
+        
+    } catch (error) {
+        console.error("Failed to fetch process IDs:", error);
+        
+        return []; // <--- ERROR: Returns an empty array (ProcessInterface[])
 
-export {GetAllChat,InsertChat,DropChat};
+    }
+}
+
+export {GetAllChat,InsertChat,DropChat,GetProcessIDbyGroupID};
 
