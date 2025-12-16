@@ -75,7 +75,6 @@ const AdminGroupPage = () => {
   
 
   // Logic คำนวณนักศึกษาที่เหลือ (Real-time)
-  // สูตร: ทั้งหมด - [(5 * จำนวนกลุ่ม5) + (4 * จำนวนกลุ่ม4) + (3 * จำนวนกลุ่ม3)]
   const usedStudents = (count5 * 5) + (count4 * 4) + (count3 * 3);
   const remainingStudents = totalStudents - usedStudents;
 
@@ -138,7 +137,7 @@ const AdminGroupPage = () => {
   };
 
   return (
-      <div className="min-h-screen ">
+      <div className="min-h-screen w-full">
         
         <div className="h-fit w-lg bg-white flex flex-col justify-start items-center shadow-xl rounded-xl">
           {/* หัวข้อ */}
@@ -232,7 +231,7 @@ const AdminGroupPage = () => {
           </div>
         </div>
 
-        <div className="h-full max-w-full border-5 shadow-xl rounded-xl">
+        <div className="h-full w-full max-w-full border-5 shadow-xl rounded-xl">
               {/* Header Section */}
               <div className="max-w-7xl mx-auto mb-8 mt-8 flex flex-col md:flex-row justify-between items-end md:items-center gap-5">
                   <div>
