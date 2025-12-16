@@ -55,7 +55,6 @@ func GetEvaluationResult(c *gin.Context) {
 		}
 	}
 
-	// 3. Fetch Individual Scores
 	var individualResults []entity.IndividualScore
 	if err := db.Unscoped().
 		Joins("JOIN appointments ON appointments.id = individual_scores.appointment_id").

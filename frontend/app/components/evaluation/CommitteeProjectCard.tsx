@@ -18,13 +18,11 @@ export default function CommitteeProjectCard({ project }: Props) {
     const router = useRouter();
 
     const handleEvaluate = () => {
-        // For Committee, we look for "Committee Evaluation" specifically
         const appt = project.appointments?.find(
             (a: any) => a.evaluation_name === "Committee Evaluation"
         );
 
         if (!appt) {
-            // Fallback: try to find any appointment if specific one not found (though backend should filter)
              const anyAppt = project.appointments?.[0];
              if (anyAppt) {
                  router.push(`/teacher/evaluation/form/${anyAppt.id}?evalType=Committee Evaluation&mode=committee`);

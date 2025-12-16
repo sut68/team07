@@ -1,7 +1,6 @@
 "use client";
-import React from 'react';
 import Link from 'next/link';
-import { UsergroupAddOutlined, BarChartOutlined, TrophyOutlined } from '@ant-design/icons';
+import { UsergroupAddOutlined, TrophyOutlined } from '@ant-design/icons';
 import '../../../style/evaluation.css';
 
 export default function StudentEvaluationHub() {

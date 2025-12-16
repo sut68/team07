@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { message, Spin, Empty } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Modal, Button, Collapse, Form, Input, InputNumber, Popconfirm, message, Empty } from 'antd';
 import { 
     PlusOutlined, DeleteOutlined, EditOutlined, SettingOutlined, BarsOutlined 
@@ -9,8 +9,6 @@ import {
     CreateCriteria, UpdateCriteria, DeleteCriteria, 
     CreateCriteriaLevel, UpdateCriteriaLevel, DeleteCriteriaLevel 
 } from '../../services/evaluation';
-
-// ใช้ CSS ไฟล์เดียวกัน
 import '../../style/evaluation.css';
 
 interface Props {
