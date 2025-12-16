@@ -128,7 +128,7 @@ const GroupSelectionPage = () => {
                         showConfirmButton: false
                     });
                     fetchGroups(selectedYear); // Reload ตามปีปัจจุบัน
-                } 
+                }
             } catch (error: any) {
                 Swal.fire({
                     icon: 'error',
@@ -137,8 +137,8 @@ const GroupSelectionPage = () => {
                 });
             }
         }
-      }
-    });
+      });
+    
   };
 
 return (
