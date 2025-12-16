@@ -17,7 +17,7 @@
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-toastify": "^11.0.5",
-    "sweetalert2": "^11.26.4",
+    "sweetalert2": "^11.26.10",
     "toastify": "^2.0.1"
   },
   "devDependencies": {

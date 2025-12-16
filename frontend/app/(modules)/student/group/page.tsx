@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Swal from "sweetalert2"; 
+// import 'sweetalert2/src/sweetalert2.scss';
 import { GetGroupProjects, JoinGroup, GetAcademicYears } from "../../../services/group";
 import { GroupProject } from "../../../interfaces/Group";
 import GroupCard from "../../../components/GroupCard";
@@ -138,10 +139,9 @@ const GroupSelectionPage = () => {
             }
         }
       }
-    });
-  };
+    )};
 
-return (
+  return (
     <div className="min-h-screen bg-white py-10 px-4 font-sans">
       <div className="max-w-7xl mx-auto">
         
