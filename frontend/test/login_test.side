@@ -1,0 +1,105 @@
+{
+  "id": "5a6b7c8d-9e0f-1a2b-3c4d-5e6f7a8b9c0d",
+  "version": "2.0",
+  "name": "TEST07",
+  "url": "http://localhost:5173/login",
+  "tests": [{
+    "id": "affd8eb6-5d15-4582-b074-72ad5125f7b0",
+    "name": "login_test_fixed",
+    "commands": [{
+      "id": "open_page",
+      "comment": "",
+      "command": "open",
+      "target": "http://localhost:5173/login",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "set_size",
+      "comment": "",
+      "command": "setWindowSize",
+      "target": "1280x800",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "wait_username",
+      "comment": "รอช่อง Username",
+      "command": "waitForElementVisible",
+      "target": "name=username",
+      "targets": [],
+      "value": "10000"
+    }, {
+      "id": "type_username",
+      "comment": "",
+      "command": "type",
+      "target": "name=username",
+      "targets": [],
+      "value": "Teacher1"
+    }, {
+      "id": "type_password",
+      "comment": "",
+      "command": "type",
+      "target": "name=password",
+      "targets": [],
+      "value": "tch123"
+    }, {
+      "id": "click_login",
+      "comment": "",
+      "command": "click",
+      "target": "css=.login-button",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "wait_dashboard",
+      "comment": "รอให้ Login สำเร็จ",
+      "command": "waitForElementVisible",
+      "target": "css=.anticon-down",
+      "targets": [],
+      "value": "10000"
+    }, {
+      "id": "click_dropdown",
+      "comment": "คลิกเปิดเมนู",
+      "command": "click",
+      "target": "css=.anticon-down",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "wait_logout_btn",
+      "comment": "รอปุ่มออกจากระบบเด้งขึ้นมา",
+      "command": "waitForElementVisible",
+      "target": "xpath=//span[contains(text(), 'ออกจากระบบ')]",
+      "targets": [],
+      "value": "5000"
+    }, {
+      "id": "pause_animation",
+      "comment": "รอ Animation นิดนึง",
+      "command": "pause",
+      "target": "500",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "click_logout",
+      "comment": "คลิกออกจากระบบ",
+      "command": "click",
+      "target": "xpath=//span[contains(text(), 'ออกจากระบบ')]",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "wait_login_page",
+      "comment": "รอให้กลับมาหน้า Login",
+      "command": "waitForElementVisible",
+      "target": "name=username",
+      "targets": [],
+      "value": "10000"
+    }]
+  }],
+  "suites": [{
+    "id": "d1e2f3a4-b5c6-7d8e-9f0a-1b2c3d4e5f6a",
+    "name": "Login Suite",
+    "persistSession": false,
+    "parallel": false,
+    "timeout": 300,
+    "tests": ["affd8eb6-5d15-4582-b074-72ad5125f7b0"]
+  }],
+  "urls": ["http://localhost:5173/login"],
+  "plugins": []
+}

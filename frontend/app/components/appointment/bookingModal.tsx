@@ -259,7 +259,7 @@ export default function BookingModal({ visible, onClose, onSuccess, rooms, types
                         </Select>
                     </Form.Item>
 
-                    <Form.Item name="type_id" label="ประเภทการสอบ" rules={[{ required: true }]}>
+                    <Form.Item name="type_id" label="ประเภทการนัดหมาย" rules={[{ required: true }]}>
                         <Select placeholder="เลือกประเภท" onChange={handleTypeChange}>
                             {types
                                 ?.filter(t => t?.id != null)
