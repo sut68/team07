@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { GetProgress, AddProgress, UpProgress, EraseProgress } from "../../../services/progress";
-import type { FullProgress } from "../../../interfaces/Progress";
+import React, { useEffect, useMemo, useState } from "react";
+import type { CSSProperties } from "react";
+import api from "../../../services/api";
 
 type Mode = "view" | "submit" | "edit";
 
@@ -12,35 +12,36 @@ export default function ProgressPage() {
   const [groupProjectId, setGroupProjectId] = useState<number>(0);
   const [userId, setUserId] = useState<number>(0);
 
-  const [progressList, setProgressList] = useState<FullProgress[]>([]);
+  const [progressList, setProgressList] = useState<any[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
-  const [file, setFile] = useState("");
+  const [file, setFile] = useState<File | null>(null);
   const [comment, setComment] = useState("");
 
-  const [status, setStatus] = useState<string>("Ready");
+  const [status, setStatus] = useState("Ready");
   const [isError, setIsError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const gp = 1//Number(window.localStorage.getItem("group_project_id") ?? 0);
+
+    const gp = 1; // Number(window.localStorage.getItem("group_project_id") ?? 0);
     const uid = Number(window.localStorage.getItem("user_id") ?? 0);
+
     setGroupProjectId(Number.isFinite(gp) ? gp : 0);
     setUserId(Number.isFinite(uid) ? uid : 0);
   }, []);
 
   const availableIds = useMemo(() => {
     return Array.isArray(progressList)
-      ? (progressList as any[])
-          .map((p) => Number(p.id ?? p.ID ?? p.progress_id ?? 0))
+      ? progressList
+          .map((p) => Number(p?.id ?? p?.ID ?? p?.progress_id ?? 0))
           .filter((id) => Number.isFinite(id) && id > 0)
       : [];
   }, [progressList]);
 
   useEffect(() => {
-    if (availableIds.length > 0) setSelectedId(availableIds[0]);
-    else setSelectedId(null);
+    setSelectedId(availableIds.length > 0 ? availableIds[0] : null);
   }, [availableIds]);
 
   const safeText = (s: unknown) => String(s ?? "").trim();
@@ -50,15 +51,16 @@ export default function ProgressPage() {
       setProgressList([]);
       return;
     }
-    const list = await GetProgress({ group_project_id: groupProjectId });
-    setProgressList(Array.isArray(list) ? list : []);
+    const res = await api.get("/student/getProcess", {
+      params: { group_project_id: groupProjectId },
+    });
+    setProgressList(Array.isArray(res.data) ? res.data : []);
   };
 
   const handleView = async () => {
     setIsLoading(true);
     setIsError(false);
     setStatus("Loading updates...");
-
     try {
       await refresh();
       setStatus("✅ Loaded progress updates");
@@ -71,63 +73,73 @@ export default function ProgressPage() {
     }
   };
 
-  const handleSubmit = async () => {
-    setIsLoading(true);
-    setIsError(false);
+ const handleSubmit = async () => {
+  setIsLoading(true);
+  setIsError(false);
 
-    try {
-      const f = safeText(file);
-      const c = safeText(comment);
-      if (!groupProjectId || groupProjectId <= 0) throw new Error("Missing group_project_id");
-      if (!userId || userId <= 0) throw new Error("Missing user_id");
-      if (!f) throw new Error("Please enter a file name / link");
-      if (!c) throw new Error("Please write a short update");
+  try {
+    if (!groupProjectId) throw new Error("Missing group_project_id");
+    if (!file) throw new Error("Please select a file");
+    if (!comment.trim()) throw new Error("Please write a comment");
 
-      setStatus("Submitting your update...");
-      await AddProgress({ group_project_id: groupProjectId, file: f, comment: c });
+    const fd = new FormData();
+    fd.append("group_project_id", String(groupProjectId));
+    fd.append("comment", comment.trim());
+    fd.append("file", file);
 
-      setFile("");
-      setComment("");
+    await api.post("/student/assignProgress", fd, {
+      headers: {
+        "Content-Type": "multipart/form-data", // ✅ ONLY HERE
+      },
+    });
 
-      await refresh();
-      setStatus("✅ Submitted! Your update was posted.");
-    } catch (err: any) {
-      console.error(err);
-      setIsError(true);
-      setStatus(`❌ ${err?.response?.data?.message || err?.message || "Submit failed"}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    setFile(null);
+    setComment("");
+    await refresh();
+    setStatus("✅ Submitted!");
+  } catch (err: any) {
+    setIsError(true);
+    setStatus(err?.response?.data?.error || err?.message || "Submit failed");
+  } finally {
+    setIsLoading(false);
+  }
+};
 
-  const handleEdit = async () => {
-    setIsLoading(true);
-    setIsError(false);
 
-    try {
-      const id = selectedId;
-      const f = safeText(file);
-      const c = safeText(comment);
 
-      if (!id) throw new Error("Please select an update to edit");
-      if (!f && !c) throw new Error("Enter a new file and/or comment");
 
-      setStatus(`Updating #${id}...`);
-      await UpProgress({ id, file: f, comment: c });
+ const handleEdit = async () => {
+  setIsLoading(true);
+  setIsError(false);
 
-      setFile("");
-      setComment("");
+  try {
+    if (!selectedId) throw new Error("Select update");
 
-      await refresh();
-      setStatus(`✅ Updated progress #${id}`);
-    } catch (err: any) {
-      console.error(err);
-      setIsError(true);
-      setStatus(`❌ ${err?.response?.data?.message || err?.message || "Update failed"}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    const fd = new FormData();
+    fd.append("id", String(selectedId));
+    if (comment.trim()) fd.append("comment", comment.trim());
+    if (file) fd.append("file", file);
+
+    await api.post("/student/modifyProgress", fd, {
+      headers: {
+        "Content-Type": "multipart/form-data", // ✅ ONLY HERE
+      },
+    });
+
+    setFile(null);
+    setComment("");
+    await refresh();
+    setStatus("✅ Updated!");
+  } catch (err: any) {
+    setIsError(true);
+    setStatus(err?.response?.data?.error || err?.message || "Update failed");
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+
+
 
   const handleDelete = async () => {
     setIsLoading(true);
@@ -143,7 +155,10 @@ export default function ProgressPage() {
       }
 
       setStatus(`Deleting #${id}...`);
-      await EraseProgress({ id });
+
+      await api.delete("/student/deleteProgress", {
+        params: { id },
+      });
 
       await refresh();
       setStatus(`✅ Deleted progress #${id}`);
@@ -218,17 +233,17 @@ export default function ProgressPage() {
           {mode === "submit" && (
             <div style={styles.card}>
               <div style={styles.cardTitle}>Submit a new update</div>
-              <div style={styles.cardDesc}>Add a file name/link and a short description.</div>
+              <div style={styles.cardDesc}>Upload a file and write a short description.</div>
 
               <div style={styles.field}>
                 <label style={styles.label}>File</label>
                 <input
-                  value={file}
-                  onChange={(e) => setFile(e.target.value)}
-                  placeholder="e.g. Week3_Report.pdf or https://..."
+                  type="file"
+                  onChange={(e) => setFile(e.target.files?.[0] ?? null)}
                   style={styles.input}
                   disabled={isLoading || locked}
                 />
+                {file?.name ? <div style={styles.smallText}>Selected: {file.name}</div> : null}
               </div>
 
               <div style={styles.field}>
@@ -251,7 +266,6 @@ export default function ProgressPage() {
           {mode === "edit" && (
             <div style={styles.card}>
               <div style={styles.cardTitle}>Manage your updates</div>
-              <div style={styles.cardDesc}>Edit or delete an update (teacher/group rules may apply).</div>
 
               <div style={styles.field}>
                 <label style={styles.label}>Select update</label>
@@ -273,12 +287,12 @@ export default function ProgressPage() {
               <div style={styles.field}>
                 <label style={styles.label}>New file (optional)</label>
                 <input
-                  value={file}
-                  onChange={(e) => setFile(e.target.value)}
-                  placeholder="Leave blank to keep same"
+                  type="file"
+                  onChange={(e) => setFile(e.target.files?.[0] ?? null)}
                   style={styles.input}
                   disabled={isLoading || locked}
                 />
+                {file?.name ? <div style={styles.smallText}>Selected: {file.name}</div> : null}
               </div>
 
               <div style={styles.field}>
@@ -339,7 +353,7 @@ export default function ProgressPage() {
   );
 }
 
-const styles: { [key: string]: React.CSSProperties } = {
+const styles: Record<string, CSSProperties> = {
   page: {
     minHeight: "100vh",
     background: "#f6f7fb",
@@ -464,7 +478,6 @@ const styles: { [key: string]: React.CSSProperties } = {
     boxShadow: "0 8px 16px rgba(138,1,29,0.25)",
   },
   dangerBtn: {
-    flex: 1,
     padding: "12px 12px",
     borderRadius: 12,
     border: "none",
@@ -472,6 +485,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     background: "#ef4444",
     color: "white",
     fontWeight: 900,
+    flex: 1,
   },
   listHeader: {
     padding: "14px 16px",
@@ -499,4 +513,5 @@ const styles: { [key: string]: React.CSSProperties } = {
   itemComment: { fontSize: 14, opacity: 0.9, marginTop: 2, whiteSpace: "pre-wrap" },
   itemMeta: { fontSize: 12, opacity: 0.6, marginTop: 8 },
   empty: { padding: 28, textAlign: "center", color: "#6b7280" },
+  smallText: { fontSize: 12, opacity: 0.8 },
 };
