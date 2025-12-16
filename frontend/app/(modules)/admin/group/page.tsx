@@ -1,3 +1,5 @@
+// Page
+
 'use client'
 
 import React, { useState, useEffect } from "react";
@@ -137,30 +139,30 @@ const AdminGroupPage = () => {
   };
 
   return (
-      <div className="min-h-screen w-full">
+      <div className="min-h-screen bg-gray-50">
         
-        <div className="h-fit w-lg bg-white flex flex-col justify-start items-center shadow-xl rounded-xl">
+        <div className=" bg-white flex flex-col justify-center items-center shadow-xl rounded-xl">
           {/* หัวข้อ */}
           <h1 className="text-4xl font-bold text-red-800 text-left mb-10 tracking-wide border-b-5 border-red-900">
             สร้างกลุ่มโครงงาน
           </h1>
 
           {/* ส่วนแสดงผลข้อมูล (Stat) */}
-          <div className="space-y-4 mb-10 pl-4 md:pl-10 ">
+          <div className="p-10 mt-10">
             <div className="text-xl md:text-2xl text-black font-medium">
               จำนวนนักศึกษา 
-              <span className="ml-2 font-bold"> {totalStudents} </span> คน
+              <span className="font-bold"> {totalStudents} </span> คน
             </div>
             <div className="text-xl md:text-2xl text-red-600 font-medium">
               จำนวนนักศึกษาที่เหลือ 
-              <span className={`ml-2 font-bold ${remainingStudents < 0 ? "underline" : ""}`}>
+              <span className={`font-bold ${remainingStudents < 0 ? "underline" : ""}`}>
                 {remainingStudents}
-              </span> คน
+              </span> คน 
             </div>
           </div>
 
           {/* Form Inputs */}
-          <div className="space-y-6 pl-4 md:pl-10">
+          <div className="">
             
             {/* ปีการศึกษา */}
             <div className="flex flex-col md:flex-row md:items-center gap-4">
@@ -219,10 +221,10 @@ const AdminGroupPage = () => {
             </div>
 
             {/* ปุ่มยืนยัน */}
-            <div className="m-10">
+            <div className="m-20">
                 <button
                     onClick={handleSubmit}
-                    className="bg-sky-300 hover:bg-sky-500 text-black border-2 border-black rounded-sm text-xl font-bold transition-all active:scale-95 shadow-xl"
+                    className="bg-sky-300 hover:bg-sky-500 p-10 text-black border-2 border-black rounded-sm text-xl font-bold "
                 >
                     ยืนยัน
                 </button>
