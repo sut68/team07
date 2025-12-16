@@ -1,0 +1,380 @@
+/* --- Page Layout --- */
+.appointment-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #333;
+  animation: fadeIn 0.5s ease;
+}
+
+/* --- Header Section --- */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  background: #fff;
+  padding: 20px 24px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  border: 1px solid #eaeaea;
+}
+
+.header-title h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0;
+  border-left: 5px solid #9a0120; /* สีธีม SUT */
+  padding-left: 16px;
+}
+
+.header-title p {
+  margin: 4px 0 0 21px;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #555;
+}
+
+.btn-icon:hover {
+  border-color: #9a0120;
+  color: #9a0120;
+  background: #fff5f6;
+}
+
+/* --- Calendar Container --- */
+.calendar-wrapper {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  border: 1px solid #eaeaea;
+  overflow: hidden; /* กันมุมทะลุ */
+  min-height: 600px;
+}
+
+/* --- The Timetable Grid (หัวใจสำคัญ) --- */
+.timetable-container {
+  display: grid;
+  grid-template-columns: 60px repeat(7, 1fr);
+
+  grid-template-rows:
+    50px
+    repeat(12, 60px);
+
+  height: auto;
+  overflow-y: auto;
+}
+
+/* Header (วันจันทร์-อาทิตย์) */
+.day-header {
+  background: #f8fafc;
+  border-bottom: 2px solid #e2e8f0;
+  border-right: 1px solid #f1f5f9;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #475569;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.day-header.today {
+  background: #fff5f6;
+  color: #9a0120;
+  border-bottom-color: #9a0120;
+}
+
+.time-label {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 4px;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  border-right: 1px solid #e2e8f0;
+  background: white;
+}
+
+
+/* Grid Cells (ช่องตาราง) */
+.grid-cell {
+  border-right: 1px dashed #f1f5f9;
+  border-bottom: 1px dashed #f1f5f9;
+  position: relative;
+  transition: background 0.1s;
+}
+
+.grid-cell:hover {
+  background-color: #fafafa;
+}
+
+.lunch-break-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  pointer-events: none;
+  z-index: 3;
+
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  letter-spacing: 0.05em;
+
+  background: rgba(241, 245, 249, 0.85);
+}
+
+/* --- Appointment Block (แนว timetable) --- */
+.appt-card {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+
+  padding: 4px 8px;
+  border-radius: 4px;        /* สี่เหลี่ยม */
+  font-size: 0.75rem;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  z-index: 5;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+
+/* hover เบา ๆ */
+.appt-card:hover {
+  filter: brightness(0.97);
+}
+
+/* Manual */
+.appt-manual {
+  background: #fee2e2;
+  border-left: 4px solid #dc2626;
+  color: #7f1d1d;
+}
+
+
+/* Auto */
+.appt-auto {
+  background: #ffedd5;
+  border-left: 4px solid #ea580c;
+  color: #7c1212;
+}
+
+
+.appt-time {
+  font-weight: 600;
+  font-size: 0.7rem;
+  opacity: 0.85;
+}
+
+.appt-title {
+  font-weight: 700;
+  font-size: 0.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+/* ห้อง */
+.appt-room {
+  font-size: 0.65rem;
+  opacity: 0.7;
+  margin-top: 2px;
+}
+
+
+.appt-time {
+  font-size: 0.7rem;
+  opacity: 0.8;
+}
+
+/* Loading State */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 400px;
+  color: #9a0120;
+}
+
+/* --- Appointment Card (หน้าดูนัดหมาย) --- */
+.appt-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  position: relative;
+}
+
+.student-appt-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  position: relative;
+}
+.appt-header {
+  background: linear-gradient(135deg, #9a0120 0%, #be123c 100%);
+  padding: 24px 32px;
+  color: white;
+  display: flex;
+  border-radius: 12px;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.appt-info h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+  color: white;
+}
+.appt-info p {
+  opacity: 0.9;
+  margin: 0;
+  font-weight: 600;
+}
+
+.status-badge {
+  background: rgba(255,255,255,0.2);
+  padding: 6px 16px;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1px solid rgba(255,255,255,0.3);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.appt-body {
+  padding: 40px 32px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 32px;
+}
+
+.detail-item {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.icon-circle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.icon-date { background: #fff1f2; color: #9a0120; }
+.icon-time { background: #fff7ed; color: #ea580c; }
+.icon-loc { background: #f0f9ff; color: #0284c7; }
+
+.detail-text .label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.detail-text .value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #334155;
+}
+.detail-text .sub-value {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+.appt-footer {
+  margin-top: 32px;
+  padding: 20px;
+  background: #f8fafc;
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid #f1f5f9;
+}
+
+/* Empty State */
+.empty-state-card {
+  text-align: center;
+  padding: 80px 20px;
+  border: 2px dashed #e2e8f0;
+  border-radius: 16px;
+  background: #fdfdfd;
+}
+
+.student-page {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: #f8fafc;
+  min-height: 100vh;
+  padding-bottom: 60px;
+}
+
+.student-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+/* Header Title Style */
+.page-title-box {
+  margin-bottom: 32px;
+  border-left: 6px solid #9a0120;
+  padding-left: 20px;
+}
+
+.page-title-box h1 {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #1a1a1a;
+  margin: 0 0 8px 0;
+}
+
+.page-title-box p {
+  color: #64748b;
+  font-size: 1rem;
+  margin: 0;
+}

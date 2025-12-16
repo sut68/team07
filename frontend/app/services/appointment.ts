@@ -33,8 +33,11 @@ async function GetAppointmentTypes() {
 }
 
 // ค้นหากลุ่มโครงงาน (Manual Search)
-async function SearchGroup(keyword: string) {
-    return await api.get<IGroupSearchResult[]>(`/teacher/groups/search?keyword=${keyword}`);
+async function SearchGroup(keyword: string, typeId?: number, mode?: 'manual' | 'auto') {
+    let url = `/teacher/groups/search?keyword=${keyword}`;
+    if (typeId) url += `&type_id=${typeId}`;
+    if (mode) url += `&mode=${mode}`;
+    return await api.get<IGroupSearchResult[]>(url);
 }
 
 // สุ่มกลุ่ม (Random Button)
@@ -67,15 +70,14 @@ async function DeleteAppointment(id: number | string) {
     return await api.delete(`/teacher/deleteAppointment/${id}`);
 }
 
-// ADMIN
 // สร้างประเภทนัดหมายใหม่
 async function CreateAppointmentType(data: { name: string }) {
-    return await api.post("/admin/appointmentTypes", data);
+    return await api.post("/teacher/createAppointmentTypes", data);
 }
 
 // ลบประเภทนัดหมาย
 async function DeleteAppointmentType(id: number | string) {
-    return await api.delete(`/admin/appointmentTypes/${id}`);
+    return await api.delete(`/teacher/deleteAppointmentTypes/${id}`);
 }
 
 // student

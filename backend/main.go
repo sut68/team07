@@ -7,6 +7,7 @@ import (
 	"github.com/sut68/team07/backend/controller/chat"
 	"github.com/sut68/team07/backend/controller/evaluation"
 	"github.com/sut68/team07/backend/controller/group"
+	"github.com/sut68/team07/backend/controller/importuser"
 	"github.com/sut68/team07/backend/controller/issues"
 	"github.com/sut68/team07/backend/controller/progress"
 	"github.com/sut68/team07/backend/controller/topic"
@@ -15,16 +16,14 @@ import (
 	"github.com/sut68/team07/backend/middleware"
 	// mockdata "github.com/sut68/team07/backend/mockData"
 	"github.com/sut68/team07/backend/service"
-
 )
 
 func main() {
 
 	database.ConnectDatabase()
 	database.SetUpDatabase()
-	//========INSERT MOCK DATA================
-	// Data := database.DB()
-	// mockdata.InsertMock(Data)
+	//========INSERT MOCK DATA================ ถ้าอยากสร้างข้อมูลปลอมให้เอา comment ออก
+	// InsertDataOpen()
 	//=========================================
 	service.InitEmailConfig()
 	service.StartCleanupWorker(database.DB())
@@ -41,8 +40,6 @@ func main() {
 	r.POST("/refresh", authHandler.Refresh)
 	r.POST("/forgot-password", authHandler.ForgotPassword)
 	r.POST("/reset-password", authHandler.ResetPassword)
-
-	
 
 	protected := r.Group("/")
 	protected.Use(middleware.CSRFCheckMiddleware(), middleware.AuthMiddleware())
@@ -62,7 +59,8 @@ func main() {
 			// ถ้า API ไหนที่แอดมินเข้าถึงได้ ให้นำไปใส่ในนี้
 			adminGroup.GET("/getGender", users.GetGender)
 			adminGroup.GET("/getIssueStatus", issues.GetIssueStatus)
-			
+			adminGroup.POST("/importUsersCSV", importuser.ImportUsersHandler)
+			adminGroup.PATCH("/issues/:id", issues.UpdateIssueStatus)
 		}
 
 		teacherGroup := protected.Group("/teacher")
@@ -87,8 +85,8 @@ func main() {
 			teacherGroup.GET("/evaluation/summary/:group_project_id", evaluation.GetEvaluationSummary)
 			teacherGroup.POST("/evaluation/save", evaluation.SaveEvaluation)
 			// Evaluation and Appointment Admin
-			teacherGroup.POST("/createAppointmentTypes", appointment.CreateAppointmentType) 
-    		teacherGroup.DELETE("/deleteAppointmentTypes/:id", appointment.DeleteAppointmentType)
+			teacherGroup.POST("/createAppointmentTypes", appointment.CreateAppointmentType)
+			teacherGroup.DELETE("/deleteAppointmentTypes/:id", appointment.DeleteAppointmentType)
 			teacherGroup.GET("/criteria", evaluation.ListCriteria)
 			teacherGroup.GET("/criteria/:id", evaluation.GetCriteria)
 			teacherGroup.POST("/createCriteria", evaluation.CreateCriteria)
@@ -115,15 +113,16 @@ func main() {
 			studentGroup.POST("/assignProgress", progress.AssignProGress)
 			studentGroup.POST("/modifyProgress", progress.UpdateProGress)
 			studentGroup.DELETE("/deleteProgress", progress.DeleteProgress)
-			
+
 			// Group
 			studentGroup.GET("/group", group.GetGroupProject)
 			studentGroup.POST("/addMember", group.PostGroupMember)
 
 			// Evaluation and Appointment
 			studentGroup.GET("/myAppointment", appointment.GetMyProjectAndAppointment)
+			studentGroup.GET("/evaluation/form", evaluation.GetStudentEvaluationForm)
+			studentGroup.GET("/evaluation/result", evaluation.GetStudentEvaluationResult)
 			studentGroup.POST("/evaluation/peer", evaluation.SavePeerEvaluation)
-
 		}
 
 		teacherOrStudentGroup := protected.Group("/groupProject")
@@ -138,8 +137,25 @@ func main() {
 
 		}
 
+		//สร้าง Group สำหรับ Issues โดยเฉพาะ
+		issueGroup := protected.Group("/issues")
+		// อนุญาตให้ Admin, Teacher, Student เข้าถึงได้
+		issueGroup.Use(middleware.RoleGuard("Admin", "Teacher", "Student"))
+		{
+			issueGroup.GET("", issues.GetIssueReports)        // GET /issues (List)
+			issueGroup.POST("", issues.CreateIssue)           // POST /issues (Create)
+			issueGroup.GET("/:id", issues.GetIssueReportByID) // GET /issues/:id (Get By ID)
+			issueGroup.GET("/my", issues.GetMyIssues)         // GET /issues/my (Get My Issues)
+		}
+
 		protected.POST("/logout", authHandler.Logout)
 	}
 
 	r.Run(":8080")
+}
+
+
+func InsertDataOpen() {
+	Data := database.DB()
+	mockdata.InsertMock(Data)
 }
