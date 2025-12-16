@@ -314,7 +314,7 @@ export default function TeacherTopicPage() {
                                         <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
                                             <TeamOutlined style={{ color: '#1890ff' }} />
                                             <Text>กลุ่มที่ {proposal.group_project?.group_number || '-'}</Text>
-                                            {/* อาจจะใส่ชื่อหัวหน้ากลุ่มด้วย */}
+                                            {/* อาจจะใส่ชื่อหัวหน้ากลุ่มด้วย เผื่อมันว่างไป */}
                                         </div>
 
                                         <div style={{ textAlign: 'right' }}>
