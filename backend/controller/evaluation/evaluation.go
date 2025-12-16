@@ -159,12 +159,42 @@ func ListEvaluationProjects(c *gin.Context) {
 			availableEvaluations = append(availableEvaluations, name)
 		}
 
+		// Calculate Graded Count vs Total Count
+		totalCount := len(availableEvaluations)
+		gradedCount := 0
+
+		if totalCount > 0 {
+			var completedEvaluations []string
+			db.Model(&entity.EvaResult{}).
+				Joins("JOIN criteria ON criteria.id = eva_results.criteria_id").
+				Joins("JOIN evaluations ON evaluations.id = criteria.evaluation_id").
+				Joins("JOIN appointments ON appointments.id = eva_results.appointment_id").
+				Where("appointments.group_project_id = ? AND eva_results.teacher_id = ?", p.ID, claims.ID).
+				Distinct("evaluations.name").
+				Pluck("evaluations.name", &completedEvaluations)
+
+			for _, completed := range completedEvaluations {
+				if availableEvaluationsMap[completed] {
+					gradedCount++
+				}
+			}
+		}
+
+		isGraded = (gradedCount == totalCount) && totalCount > 0
+		if isGraded {
+			statusText = "Graded"
+		} else {
+			statusText = "Pending"
+		}
+
 		item := gin.H{
 			"id":                    p.ID,
 			"group_number":          p.GroupNumber,
 			"project_name":          projectName,
 			"status":                statusText,
 			"is_graded":             isGraded,
+			"graded_count":          gradedCount,
+			"total_count":           totalCount,
 			"appointment_id":        appointmentID,
 			"students":              p.GroupMembers,
 			"available_evaluations": availableEvaluations,
@@ -381,8 +411,11 @@ func GetStudentEvaluationForm(c *gin.Context) {
 	if err := db.Preload("GroupProject.GroupMembers.Student").
 		Preload("AppointmentType").
 		Preload("GroupProject.TopicSelections.Topic").
+		Preload("Evaluation").
+		Joins("LEFT JOIN evaluations ON evaluations.id = appointments.evaluation_id").
 		Joins("JOIN appointment_types ON appointment_types.id = appointments.appointment_type_id").
-		Where("group_project_id = ? AND appointment_status IN ? AND appointment_types.name = ?", member.GroupProjectID, []string{"scheduled", "completed"}, "Peer Assessment").
+		Where("group_project_id = ? AND appointment_status IN ?", member.GroupProjectID, []string{"scheduled", "completed", "Scheduled", "Completed"}).
+		Where("evaluations.name = ?", "Peer Assessment").
 		Order("start_date_time DESC").
 		First(&appointment).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "No active Peer Assessment appointment found"})
@@ -395,7 +428,7 @@ func GetStudentEvaluationForm(c *gin.Context) {
 		Preload("CriteriaLevel").
 		Preload("Evaluation").
 		Joins("JOIN evaluations ON evaluations.id = criteria.evaluation_id").
-		Where("evaluations.appointment_type_id = ?", appointment.AppointmentTypeID).
+		Where("evaluations.id = ?", *appointment.EvaluationID).
 		Order("criteria.order ASC").
 		Find(&formCriteria).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Criteria not found"})
@@ -432,6 +465,10 @@ func GetStudentEvaluationForm(c *gin.Context) {
 	students := []gin.H{}
 	for _, member := range appointment.GroupProject.GroupMembers {
 		if member.Student != nil {
+			// Filter out the current student (cannot evaluate self in Peer Assessment)
+			if member.Student.ID == claims.ID {
+				continue
+			}
 
 			rawCode := strings.Split(member.Student.Username, "@")[0]
 			displayCode := strings.ToUpper(rawCode)

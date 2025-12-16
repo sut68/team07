@@ -28,8 +28,9 @@ export default function StudentAppointmentPage() {
 
     if (loading) {
         return (
-            <div style={{display:'flex', justifyContent:'center', marginTop: 100}}>
-                <Spin size="large" tip="กำลังโหลดข้อมูล..." />
+            <div style={{display:'flex', flexDirection: 'column', alignItems:'center', justifyContent:'center', marginTop: 100}}>
+                <Spin size="large" />
+                <div style={{marginTop: 16}}>กำลังโหลดข้อมูล...</div>
             </div>
         );
     }
