@@ -26,4 +26,4 @@ RUN chmod +x /app/goapp
 
 EXPOSE 8080
 
-CMD ["/app/goapp"]
+CMD ["/app/goapp", "--seed"]
