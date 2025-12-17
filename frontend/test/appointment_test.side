@@ -182,17 +182,17 @@
       "targets": [],
       "value": "1"
     }, {
-      "id": "0ec652f1-4092-4219-8429-43aea144919d",
+      "id": "e99008b1-c293-453b-afa1-d9ec019abd9e",
       "comment": "",
       "command": "click",
-      "target": "css=div:nth-child(23) .ant-select-item:nth-child(1) > .ant-select-item-option-content",
+      "target": "css=div:nth-child(24) .ant-select-item:nth-child(1) > .ant-select-item-option-content",
       "targets": [
-        ["css=div:nth-child(23) .ant-select-item:nth-child(1) > .ant-select-item-option-content", "css:finder"],
+        ["css=div:nth-child(24) .ant-select-item:nth-child(1) > .ant-select-item-option-content", "css:finder"],
         ["xpath=//div[9]/div/div/div[2]/div/div/div/div/div", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "3cff85f9-3a25-4107-8244-34ace4ac0a6f",
+      "id": "11cc5a1b-ca10-4e6f-b9b6-a1ba61d2b7c0",
       "comment": "",
       "command": "click",
       "target": "css=.bg-\\[\\#9a0120\\] > span",
@@ -203,51 +203,49 @@
       ],
       "value": ""
     }, {
-      "id": "0aa3e944-eed2-496f-bcfd-7b8e3217fb3e",
+      "id": "673906c7-cfa3-4403-a8c2-8c91cdb36d81",
       "comment": "",
       "command": "mouseOver",
-      "target": "css=.anticon-loading > svg",
+      "target": "css=.bg-\\[\\#9a0120\\] > span",
       "targets": [
-        ["css=.anticon-loading > svg", "css:finder"]
+        ["css=.bg-\\[\\#9a0120\\] > span", "css:finder"],
+        ["xpath=//div[5]/div[2]/button[2]/span", "xpath:position"],
+        ["xpath=//span[contains(.,'บันทึก')]", "xpath:innerText"]
       ],
       "value": ""
     }, {
-      "id": "ee42b2b7-6ba6-4fa2-a1e3-15809bc54521",
-      "comment": "",
-      "command": "click",
-      "target": "css=.appt-time",
-      "targets": [
-        ["css=.appt-time", "css:finder"],
-        ["xpath=//div[106]/span", "xpath:position"],
-        ["xpath=//span[contains(.,'09:00–10:00')]", "xpath:innerText"]
-      ],
-      "value": ""
-    }, {
-      "id": "8373caa6-c203-4e8c-859b-5b26f5f30f41",
-      "comment": "",
-      "command": "click",
-      "target": "css=.ant-btn-text > span:nth-child(2)",
-      "targets": [
-        ["css=.ant-btn-text > span:nth-child(2)", "css:finder"],
-        ["xpath=//div[5]/button/span[2]", "xpath:position"],
-        ["xpath=//span[contains(.,'ยกเลิกนัด')]", "xpath:innerText"]
-      ],
-      "value": ""
-    }, {
-      "id": "8bd485dd-eaa2-4144-9fa0-2e919c9683a9",
-      "comment": "",
-      "command": "mouseOver",
-      "target": "css=.ant-btn-text > span:nth-child(2)",
-      "targets": [
-        ["css=.ant-btn-text > span:nth-child(2)", "css:finder"],
-        ["xpath=//div[5]/button/span[2]", "xpath:position"],
-        ["xpath=//span[contains(.,'ยกเลิกนัด')]", "xpath:innerText"]
-      ],
-      "value": ""
-    }, {
-      "id": "4c1084d8-e2c6-4d82-80a7-0ec8f2e74cf8",
+      "id": "670f78cb-00f7-41bd-be33-a23d579f8e4d",
       "comment": "",
       "command": "mouseOut",
+      "target": "css=.ant-btn > span:nth-child(3)",
+      "targets": [
+        ["css=.ant-btn > span:nth-child(3)", "css:finder"],
+        ["xpath=//button[2]/span[2]", "xpath:position"],
+        ["xpath=//span[contains(.,'บันทึก')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "7e742254-026e-4ff0-8ec4-e7ce08ef0a2c",
+      "comment": "",
+      "command": "click",
+      "target": "css=.appt-title",
+      "targets": [
+        ["css=.appt-title", "css:finder"],
+        ["xpath=//div[106]/span[2]", "xpath:position"],
+        ["xpath=//span[contains(.,'Group 1')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "4e42d65e-41f8-4126-ab68-415659a74c71",
+      "comment": "รอผลลัพธ์สักครู่",
+      "command": "pause",
+      "target": "1000",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "cf7e2bc5-994b-4d02-bb6d-d406b830f813",
+      "comment": "",
+      "command": "click",
       "target": "css=.ant-btn-text > span:nth-child(2)",
       "targets": [
         ["css=.ant-btn-text > span:nth-child(2)", "css:finder"],
@@ -256,7 +254,7 @@
       ],
       "value": ""
     }, {
-      "id": "31a5afcd-8dcf-4cf8-b484-b7b9c11f28b2",
+      "id": "2e1ab78b-694a-4b1d-b61d-dc34aa575d90",
       "comment": "",
       "command": "click",
       "target": "css=.ant-btn-default:nth-child(2) > span",
@@ -265,6 +263,13 @@
         ["xpath=//div/div[2]/button[2]/span", "xpath:position"],
         ["xpath=//span[contains(.,'ลบเลย')]", "xpath:innerText"]
       ],
+      "value": ""
+    }, {
+      "id": "wait_search_result",
+      "comment": "รอผลลัพธ์สักครู่",
+      "command": "pause",
+      "target": "2000",
+      "targets": [],
       "value": ""
     }]
   }],

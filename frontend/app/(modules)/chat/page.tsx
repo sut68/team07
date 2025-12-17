@@ -7,16 +7,13 @@ import type { ProcessInterface, FullChat } from "../../interfaces/Chat";
 
 const GROUP_PROJECT_ID = 1;
 
-
 const RED = "#9a0120";
 const RED_DARK = "#7d0019";
 const BORDER = "#e5e7eb";
 const BG = "#fafafa";
 
 export default function ChatPage() {
-
   const [userId, setUserId] = useState<string | null>(null);
-
   const [processes, setProcesses] = useState<ProcessInterface[]>([]);
   const [activeRoomId, setActiveRoomId] = useState<number | null>(null);
 
@@ -25,15 +22,11 @@ export default function ChatPage() {
 
   const bottomRef = useRef<HTMLDivElement>(null);
 
-
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      setUserId(localStorage.getItem("user_id"));
-    }
+    setUserId(localStorage.getItem("user_id"));
   }, []);
 
-
-  const idsOk = GROUP_PROJECT_ID > 0 && userId !== null && Number(userId) > 0;
+  const idsOk = GROUP_PROJECT_ID > 0 && Number(userId) > 0;
   const roomJoined = activeRoomId !== null;
 
   const currentRoom = useMemo(
@@ -144,7 +137,7 @@ export default function ChatPage() {
         <div style={{ padding: 14, borderBottom: `1px solid ${BORDER}` }}>
           <div style={{ fontSize: 16, fontWeight: 800, color: "#111827" }}>Topics</div>
           <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>
-            Group <b>{GROUP_PROJECT_ID}</b> • User <b>{userId || "..."}</b>
+            Group <b>{GROUP_PROJECT_ID}</b> • User <b>{userId}</b>
           </div>
         </div>
 

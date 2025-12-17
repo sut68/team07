@@ -1,4 +1,4 @@
-import './globals.css';
+import "./globals.css";
 import 'antd/dist/reset.css';
 import { AuthProvider } from '../app/(modules)/roleCheck/authContext'; 
 import { ToastContainer } from 'react-toastify';

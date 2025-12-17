@@ -10,20 +10,6 @@ import (
 func TestChat(t *testing.T) {
 	g := NewGomegaWithT(t)
 
-	t.Run(`Message is required`, func(t *testing.T) {
-		chat := &entity.Chat{
-			GroupProjectID: 1,
-			ProcessID: 1,
-			SenderID: 1,
-			Message: "", // ผิดตรงนี้
-		}
-
-		ok, err := govalidator.ValidateStruct(chat)
-		
-		g.Expect(ok).NotTo(BeTrue())
-		g.Expect(err).NotTo(BeNil())
-		g.Expect(err.Error()).To(Equal("Message is required"))
-	})
 
 	t.Run(`Message is required`, func(t *testing.T) {
 		chat := &entity.Chat{
@@ -40,7 +26,7 @@ func TestChat(t *testing.T) {
 		g.Expect(err.Error()).To(Equal("Message is required"))
 	})
 
-	t.Run(`GroupMemberID is required`, func(t *testing.T) {
+	t.Run(`GroupProjectID is required`, func(t *testing.T) {
 		chat := &entity.Chat{
 			GroupProjectID: 0, // ผิดตรงนี้
 			ProcessID: 1,
@@ -52,7 +38,7 @@ func TestChat(t *testing.T) {
 		
 		g.Expect(ok).NotTo(BeTrue())
 		g.Expect(err).NotTo(BeNil())
-		g.Expect(err.Error()).To(Equal("GroupMemberID is required"))
+		g.Expect(err.Error()).To(Equal("GroupProjectID is required"))
 	})
 
 	t.Run(`ProcessID is required`, func(t *testing.T) {

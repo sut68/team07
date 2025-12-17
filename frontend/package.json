@@ -11,24 +11,25 @@
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "@material-tailwind/react": "^2.1.10",
+    "@tailwindcss/postcss": "^4.1.18",
     "antd": "^6.1.0",
     "axios": "^1.13.2",
     "next": "^16.0.10",
+    "postcss": "^8.5.6",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-toastify": "^11.0.5",
     "sweetalert2": "^11.26.10",
+    "tailwindcss": "^4.1.18",
     "toastify": "^2.0.1"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.1.17",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "baseline-browser-mapping": "^2.9.7",
     "eslint": "^9",
     "eslint-config-next": "16.0.1",
-    "tailwindcss": "^4",
     "typescript": "^5"
   }
 }
