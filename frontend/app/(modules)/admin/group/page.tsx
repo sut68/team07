@@ -5,6 +5,7 @@ import Swal from "sweetalert2";
 import GroupManagementModal from "../../../components/GroupModal"; 
 import { GetEligibleStudentCount, GenerateGroups, GetGroupProjects } from "../../../services/group"; 
 import { GroupProject } from "../../../interfaces/Group"; 
+import { button } from "@material-tailwind/react";
 
 const AdminGroupPage = () => {
   // State ข้อมูล
@@ -137,8 +138,7 @@ const AdminGroupPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      
+    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8" style={{margin: "20px"}}>
       {/* Wrapper เพื่อคุมความกว้างเนื้อหาทั้งหมดให้เท่ากัน */}
       <div className="max-w-7xl mx-auto space-y-8">
         
@@ -256,7 +256,7 @@ const AdminGroupPage = () => {
         </div>
 
         {/* --- SECTION 2: จัดการข้อมูลกลุ่มโครงงาน --- */}
-        <div className="bg-transparent"> {/* เอา border/shadow ออกเพื่อให้ดู Clean ขึ้น หรือใส่กลับได้ถ้าต้องการ */}
+        <div className="bg-transparent border" style={{ padding: '100px '}}> {/* เอา border/shadow ออกเพื่อให้ดู Clean ขึ้น หรือใส่กลับได้ถ้าต้องการ */}
             
             {/* Header Section */}
             <div className="mb-6 flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
