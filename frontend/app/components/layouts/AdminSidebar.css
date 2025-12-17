@@ -101,9 +101,13 @@
   background: #f3f4f6;
 }
 
+
+/* แก้ไขส่วนนี้ */
 .main-content {
-  padding: 40px;
+  /* เพิ่มบรรทัดนี้: ดันเนื้อหาออกมาเท่ากับความกว้าง Sidebar */
+  margin-left: var(--sidebar-width); 
   transition: margin-left 200ms ease;
+  min-height: 100vh; /* ควรใส่เพื่อให้สีพื้นหลังเต็มจอ */
 }
 
 .logout-area {

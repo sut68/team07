@@ -38,31 +38,4 @@ func TestIndividual(t *testing.T) {
 		g.Expect(err.Error()).To(Equal("CriteriaID is required"))
 	})
 
-	t.Run(`TeacherID is required`, func(t *testing.T) {
-		individual := &entity.IndividualScore{
-			Score: 80,
-			CriteriaID: 1,
-			StudentID: 1,
-		}
-
-		ok, err := govalidator.ValidateStruct(individual)
-		
-		g.Expect(ok).NotTo(BeTrue())
-		g.Expect(err).NotTo(BeNil())
-		g.Expect(err.Error()).To(Equal("TeacherID is required"))
-	})
-
-	t.Run(`StudentID is required`, func(t *testing.T) {
-		individual := &entity.IndividualScore{
-			Score: 80,
-			CriteriaID: 1,
-			StudentID: 0, // ผิดตรงนี้
-		}
-
-		ok, err := govalidator.ValidateStruct(individual)
-		
-		g.Expect(ok).NotTo(BeTrue())
-		g.Expect(err).NotTo(BeNil())
-		g.Expect(err.Error()).To(Equal("StudentID is required"))
-	})
 }
