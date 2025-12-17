@@ -1,4 +1,4 @@
-FROM golang:1.25-alpine AS builder
+FROM golang:1.24-alpine AS builder
 
 WORKDIR /app
 
@@ -26,4 +26,4 @@ RUN chmod +x /app/goapp
 
 EXPOSE 8080
 
-CMD ["/app/goapp"]
+CMD ["/app/goapp", "--seed"]

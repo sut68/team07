@@ -57,10 +57,12 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8080
     container_name: capstone_frontend
     restart: always
     environment:
-      NEXT_PUBLIC_API_URL: http://backend:8080 
+      NEXT_PUBLIC_API_URL: http://localhost:8080 
     ports:
       - "5173:5173"
     depends_on:
