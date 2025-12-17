@@ -8,7 +8,6 @@ import type { ProcessInterface, FullChat } from "../../interfaces/Chat";
    FIXED IDs (edit these)
    ========================= */
 const GROUP_PROJECT_ID = 1;
-const USER_ID = localStorage.getItem("user_id")
 /* ========================= */
 
 const RED = "#9a0120";
@@ -17,6 +16,7 @@ const BORDER = "#e5e7eb";
 const BG = "#fafafa";
 
 export default function ChatPage() {
+  const [userId, setUserId] = useState<string | null>(null);
   const [processes, setProcesses] = useState<ProcessInterface[]>([]);
   const [activeRoomId, setActiveRoomId] = useState<number | null>(null);
 
@@ -25,7 +25,11 @@ export default function ChatPage() {
 
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const idsOk = GROUP_PROJECT_ID > 0 && Number(USER_ID) > 0;
+  useEffect(() => {
+    setUserId(localStorage.getItem("user_id"));
+  }, []);
+
+  const idsOk = GROUP_PROJECT_ID > 0 && Number(userId) > 0;
   const roomJoined = activeRoomId !== null;
 
   const currentRoom = useMemo(
@@ -99,7 +103,7 @@ export default function ChatPage() {
     await InsertChat({
       group_project_id: GROUP_PROJECT_ID,
       process_id: Number(activeRoomId),
-      sender_id: Number(USER_ID),
+      sender_id: Number(userId),
       message: text,
     });
 
@@ -131,7 +135,7 @@ export default function ChatPage() {
         <div style={{ padding: 14, borderBottom: `1px solid ${BORDER}` }}>
           <div style={{ fontSize: 16, fontWeight: 800, color: "#111827" }}>Topics</div>
           <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>
-            Group <b>{GROUP_PROJECT_ID}</b> • User <b>{USER_ID}</b>
+            Group <b>{GROUP_PROJECT_ID}</b> • User <b>{userId}</b>
           </div>
         </div>
 
@@ -270,7 +274,7 @@ export default function ChatPage() {
             </div>
           ) : (
             chats.map((c) => {
-              const isMe = Number(c.sender_id) === Number(USER_ID);
+              const isMe = Number(c.sender_id) === Number(userId);
 
               return (
                 <div
