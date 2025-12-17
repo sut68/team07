@@ -106,10 +106,9 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
             >
                 <nav style={{ position: 'absolute', left: 120, display: 'flex', gap: 40 }}>
                     <Link href="/teacher/dashboard" style={getNavStyle('/teacher/dashboard')}>หน้าหลัก</Link>
-                    <Link href="/teacher/advisor" style={getNavStyle('/teacher/advisor')}>ที่ปรึกษาของฉัน</Link>
                     <Link href="/teacher/group" style={getNavStyle('/teacher/group')}>กลุ่มในที่ปรึกษา</Link>
                     <Link href="/teacher/topic" style={getNavStyle('/teacher/topic')}>หัวข้อโครงงาน</Link>
-                    <Link href="/chat" style={getNavStyle('/chat')}>แชท</Link>
+                    <Link href="/teacher/progress" style={getNavStyle('/teacher/progress')}>ความคืบหน้า</Link>
                 </nav>
 
                 <Link href="/teacher/dashboard" aria-label="หน้าหลัก" className="topbar-logo" style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -117,7 +116,7 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
                 </Link>
 
                 <div style={{ position: 'absolute', right: 200, display: 'flex', gap: 40, alignItems: 'center' }}>
-                    <Link href="/teacher/progress" style={getNavStyle('/teacher/progress')}>ความคืบหน้า</Link>
+                    <Link href="/chat" style={getNavStyle('/chat')}>แชท</Link>
                     <Link href="/teacher/appointment" style={getNavStyle('/teacher/appointment')}>การนัดหมาย</Link>
                     <Link href="/teacher/evaluation" style={getNavStyle('/teacher/evaluation')}>การประเมิน</Link>
                     <Link href="/teacher/storage" style={getNavStyle('/teacher/storage')}>คลังโครงงาน</Link>

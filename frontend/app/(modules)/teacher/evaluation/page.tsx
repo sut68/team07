@@ -1,13 +1,9 @@
 "use client";
-import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { Spin, Tag, Tooltip, Modal, message } from 'antd';
+import { useEffect, useState } from 'react';
+import { Spin, Modal, message } from 'antd';
 import { 
-  EditOutlined, 
-  CheckCircleOutlined, 
-  ClockCircleOutlined, 
+  CheckCircleOutlined,  
   SettingOutlined,
-  BarChartOutlined,
   TeamOutlined
 } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';

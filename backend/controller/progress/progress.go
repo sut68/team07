@@ -2,121 +2,155 @@ package progress
 
 import (
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
-
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sut68/team07/backend/controller/log"
 	"github.com/sut68/team07/backend/database"
 	"github.com/sut68/team07/backend/entity"
-	"github.com/sut68/team07/backend/controller/log"
 )
 
-func GetProGressByID(c *gin.Context) {
+// helper: ensure upload dir exists
+func ensureDir(dir string) error {
+	return os.MkdirAll(dir, os.ModePerm)
+}
 
+func GetProGressByID(c *gin.Context) {
 	db := database.DB()
 
-	var  group_projectid = c.Query("group_project_id")
-	var group_progress [] entity.Progress
+	group_projectid := c.Query("group_project_id")
+	var group_progress []entity.Progress
 
 	db.Where("group_project_id = ?", group_projectid).Find(&group_progress)
-	log.InsertLog(c,4)
+	log.InsertLog(c, 4)
 
 	c.JSON(http.StatusOK, &group_progress)
 }
 
-func AssignProGress(c * gin.Context) {
-	
+func AssignProGress(c *gin.Context) {
 	db := database.DB()
 
+	// ✅ REQUIRED
+	c.Request.ParseMultipartForm(32 << 20)
 
-	var   group_projectid = c.Query("group_project_id")
-	var   file_progress  = c.Query("file")
-	var   comment  = c.Query("comment")
-	if file_progress == ""{
-		c.JSON(http.StatusBadRequest, gin.H{"error": "file is needed"})
-    	return
+	group_projectid := c.PostForm("group_project_id")
+	comment := c.PostForm("comment")
+
+	fh, err := c.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(), 
+		})
+		return
 	}
+
 	contoint, err := strconv.ParseUint(group_projectid, 10, 64)
-
-	if err != nil{
-		c.JSON(400, gin.H{"error": "Invalid group project id "})
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid group project id"})
 		return
 	}
 
-	var group_progress [] entity.GroupProject
-	result := db.Where("id = ?", contoint).Find(&group_progress)
-	if result.RowsAffected == 0{
-		c.JSON(http.StatusBadRequest,gin.H{"error":"invalid project_id this id not appear on database"})
+	var gp entity.GroupProject
+	if err := db.Where("id = ?", uint(contoint)).First(&gp).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid project_id"})
 		return
 	}
 
-	Progresses := []entity.Progress{
-		{	
-			GroupProjectID: 	uint(contoint), 
-			File: 				file_progress, 
-			Comment: 			comment,
-		},
+	uploadDir := "./uploads/progress"
+	_ = os.MkdirAll(uploadDir, os.ModePerm)
+
+	ext := filepath.Ext(fh.Filename)
+	newName := strconv.FormatInt(time.Now().UnixNano(), 10) + ext
+	savePath := filepath.Join(uploadDir, newName)
+
+	if err := c.SaveUploadedFile(fh, savePath); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "cannot save file"})
+		return
+	}
+
+	progress := entity.Progress{
+		GroupProjectID: uint(contoint),
+		File:           "/uploads/progress/" + newName,
+		Comment:        comment,
+	}
+
+	db.Create(&progress)
+	log.InsertLog(c, 5)
+
+	c.JSON(http.StatusOK, progress)
+}
+
+func UpdateProGress(c *gin.Context) {
+	db := database.DB()
+
+	idStr := c.PostForm("id")
+	newcomment := c.PostForm("comment")
+
+	pro_id, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid id"})
+		return
+	}
+
+	// find existing
+	var prog entity.Progress
+	if err := db.Where("id = ?", uint(pro_id)).First(&prog).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+
+	fh, fileErr := c.FormFile("file")
+	if fileErr == nil && fh != nil {
+		uploadDir := "./uploads/progress"
+		if err := ensureDir(uploadDir); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "cannot create upload folder"})
+			return
+		}
+
+		ext := filepath.Ext(fh.Filename)
+		newName := strconv.FormatInt(time.Now().UnixNano(), 10) + ext
+		savePath := filepath.Join(uploadDir, newName)
+
+		if err := c.SaveUploadedFile(fh, savePath); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "cannot save file"})
+			return
+		}
+
+		prog.File = "/uploads/progress/" + newName
 	}
 
 	
-
-	db.Create(&Progresses)
-	log.InsertLog(c,5)
-
-	c.JSON(http.StatusOK, &Progresses)
-}
-
-func UpdateProGress(c * gin.Context) {
-	db := database.DB()
-
-	var prostring = c.Query("id")
-	var pro_id,_  = strconv.ParseUint(prostring, 10, 64)
-	var newfile = c.Query("file")
-	var newcomment = c.Query("comment")
-	
-	if newfile == ""{
-		c.JSON(http.StatusBadRequest, gin.H{"error": "file is needed(must be valid)"})
-    	return
+	if newcomment != "" {
+		prog.Comment = newcomment
 	}
 
-	var group_progress [] entity.Progress
-	result := db.Where("id = ?", pro_id).Find(&group_progress)
-	if result.RowsAffected == 0{
-		c.JSON(http.StatusBadRequest,gin.H{"error":"invalid id "})
+	if err := db.Save(&prog).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "cannot update progress"})
 		return
 	}
 
-
-	type newUpdate struct {
-    	File string
-		Comment string
-	}
-
-	db.Model(&entity.Progress{}).Where("id = ?", uint(pro_id)).
-
-	Updates(newUpdate{
-		File: newfile,
-        Comment:  newcomment,
-	})
-	log.InsertLog(c,6)
-	c.JSON(http.StatusOK,"update ok")
+	log.InsertLog(c, 6)
+	c.JSON(http.StatusOK, gin.H{"message": "update ok", "data": prog})
 }
 
-func DeleteProgress(c * gin.Context) {
+func DeleteProgress(c *gin.Context) {
 	db := database.DB()
 
-	var id_str = c.Query("id")
-	id_int,_ := strconv.ParseInt(id_str,10,64)
+	id_str := c.Query("id")
+	id_int, _ := strconv.ParseInt(id_str, 10, 64)
 
-	var group_progress [] entity.Progress
+	var group_progress []entity.Progress
 	result := db.Where("id = ?", id_int).Find(&group_progress)
-	if result.RowsAffected == 0{
-		c.JSON(http.StatusBadRequest,gin.H{"error":"invalid id "})
+	if result.RowsAffected == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
 	}
 
 	db.Delete(&entity.Progress{}, id_int)
-	log.InsertLog(c,7)
-	c.JSON(http.StatusOK,"suscessfully delete")
-
+	log.InsertLog(c, 7)
+	c.JSON(http.StatusOK, "suscessfully delete")
 }
