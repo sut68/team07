@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter ,useSearchParams} from 'next/navigation';
 import { message, Spin, Tooltip } from 'antd';
 import { 
@@ -9,6 +9,7 @@ import {
   UsergroupAddOutlined,
   InfoCircleOutlined
 } from '@ant-design/icons';
+import { Toast_success, Toast_fail } from '../../../../../components/Webmessage';
 import { GetEvaluationForm, GetEvaluationResult, SaveEvaluation } from '../../../../../services/evaluation';
 import type { IEvaluationFormResponse } from '../../../../../interfaces/Evaluation';
 import '../../../../../style/evaluation.css';
@@ -120,12 +121,12 @@ export default function EvaluationFormPage() {
             newScores[key] = { score, levelId };
         });
         setIndScores(newScores);
-        message.success("ปรับคะแนนทุกคนเรียบร้อย");
+        Toast_success("ปรับคะแนนทุกคนเรียบร้อย");
     };
 
     const handleSubmit = async () => {
         if (!evalType) {
-            message.error("กรุณาเลือกประเภทการประเมิน");
+            Toast_fail("กรุณาเลือกประเภทการประเมิน");
             return;
         }
         setSubmitting(true);
@@ -151,10 +152,10 @@ export default function EvaluationFormPage() {
             };
 
             await SaveEvaluation(payload);
-            message.success("บันทึกสำเร็จ!");
+            Toast_success("บันทึกสำเร็จ!");
             router.back();
-        } catch (error) {
-            message.error("บันทึกไม่สำเร็จ");
+        } catch (error: any) {
+            Toast_fail(error?.response?.data?.error || "บันทึกไม่สำเร็จ");
         } finally {
             setSubmitting(false);
         }

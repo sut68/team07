@@ -1,16 +1,15 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Modal, Button, Collapse, Form, Input, InputNumber, Popconfirm, message, Empty } from 'antd';
 import { 
     PlusOutlined, DeleteOutlined, EditOutlined, SettingOutlined, BarsOutlined 
 } from '@ant-design/icons';
+import { Toast_success, Toast_fail } from '../Webmessage';
 import { 
     ListCriteria, GetCriteriaById, 
     CreateCriteria, UpdateCriteria, DeleteCriteria, 
     CreateCriteriaLevel, UpdateCriteriaLevel, DeleteCriteriaLevel 
 } from '../../services/evaluation';
-
-// ใช้ CSS ไฟล์เดียวกัน
 import '../../style/evaluation.css';
 
 interface Props {
@@ -40,7 +39,6 @@ export default function CriteriaManager({ visible, onClose }: Props) {
         try {
             const res = await ListCriteria();
             if (res.status === 200) {
-                // Fetch detail ของแต่ละ Evaluation Type (เช่น Advisor, Committee)
                 const fullData = await Promise.all(
                     res.data.map(async (eva: any) => {
                         const detailRes = await GetCriteriaById(eva.id);
@@ -65,46 +63,46 @@ export default function CriteriaManager({ visible, onClose }: Props) {
         try {
             if (editingCriteria) {
                 await UpdateCriteria(editingCriteria.id, values);
-                message.success("แก้ไขเกณฑ์สำเร็จ");
+                Toast_success("แก้ไขเกณฑ์สำเร็จ");
             } else {
                 await CreateCriteria({ ...values, evaluation_id: selectedEvalId });
-                message.success("เพิ่มเกณฑ์สำเร็จ");
+                Toast_success("เพิ่มเกณฑ์สำเร็จ");
             }
             setIsCriteriaModalOpen(false);
             fetchData();
         } catch (error: any) {
-            message.error("บันทึกไม่สำเร็จ");
+            Toast_fail(error?.response?.data?.error || "บันทึกไม่สำเร็จ");
         }
     };
 
     const handleDeleteCriteria = async (id: number) => {
         try {
             await DeleteCriteria(id);
-            message.success("ลบเกณฑ์สำเร็จ");
+            Toast_success("ลบเกณฑ์สำเร็จ");
             fetchData();
-        } catch { message.error("ลบไม่สำเร็จ"); }
+        } catch (error: any) { Toast_fail(error?.response?.data?.error || "ลบไม่สำเร็จ"); }
     };
 
     const handleSaveLevel = async (values: any) => {
         try {
             if (editingLevel) {
                 await UpdateCriteriaLevel(editingLevel.id, values);
-                message.success("แก้ไข Rubric สำเร็จ");
+                Toast_success("แก้ไข Rubric สำเร็จ");
             } else {
                 await CreateCriteriaLevel({ ...values, criteria_id: selectedCriteriaId });
-                message.success("เพิ่ม Rubric สำเร็จ");
+                Toast_success("เพิ่ม Rubric สำเร็จ");
             }
             setIsLevelModalOpen(false);
             fetchData();
-        } catch { message.error("บันทึกไม่สำเร็จ"); }
+        } catch (error: any) { Toast_fail(error?.response?.data?.error || "บันทึกไม่สำเร็จ"); }
     };
 
     const handleDeleteLevel = async (id: number) => {
         try {
             await DeleteCriteriaLevel(id);
-            message.success("ลบ Rubric สำเร็จ");
+            Toast_success("ลบ Rubric สำเร็จ");
             fetchData();
-        } catch { message.error("ลบไม่สำเร็จ"); }
+        } catch (error: any) { Toast_fail(error?.response?.data?.error || "ลบไม่สำเร็จ"); }
     };
 
     // --- Render Items ---

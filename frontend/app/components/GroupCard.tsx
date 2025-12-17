@@ -53,8 +53,8 @@ const GroupCard: React.FC<GroupCardProps> = ({
             className={`px-5 py-1.5 rounded-lg text-white text-2xl font-bold transition-all shadow-sm
               ${
                 globalUserHasGroup || isFull
-                  ? "bg-gray-300 outline-2 outline-offset text-gray-500 min-w-[60px] min-h-[20px] cursor-not-allowed"
-                  : "bg-amber-200 outline-2 outline-offset hover:bg-amber-300 min-w-[60px] min-h-[20px] hover:shadow-md active:scale-95"
+                  ? "bg-gray-300 outline-2 outline-offset text-gray-500 min-w-[60px] min-h-5 cursor-not-allowed"
+                  : "bg-amber-200 outline-2 outline-offset hover:bg-amber-300 min-w-[60px] min-h-5 hover:shadow-md active:scale-95"
               }`}
           >
             {isFull ? "เต็ม" : "เข้าร่วม"}
@@ -77,7 +77,7 @@ const GroupCard: React.FC<GroupCardProps> = ({
                 // --- กรณีมีคนนั่ง ---
                 <div className="flex w-full justify-between items-center gap-3 overflow-hidden">
                   <div className="flex items-center gap-5 truncate w-full ">
-                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md min-w-[80px] text-center">
+                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md min-w-20 text-center">
                         {member.student?.username?.split('@')[0] || "Bxxxxxx"} 
                     </span>
                     <span className="truncate font-medium text-gray-700 text-sm">
@@ -86,7 +86,7 @@ const GroupCard: React.FC<GroupCardProps> = ({
                   </div>
                   
                   {member.leader && (
-                    <span className="text-[10px] text-orange-700 bg-orange-100 border border-orange-200 min-w-[40px] text-center px-2 py-0.5 rounded-full font-bold whitespace-nowrap">
+                    <span className="text-[10px] text-orange-700 bg-orange-100 border border-orange-200 min-w-10 text-center px-2 py-0.5 rounded-full font-bold whitespace-nowrap">
                     หัวหน้า 
                     </span>
                   )}

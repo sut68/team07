@@ -961,6 +961,13 @@
   font-size: 0.95rem;
 }
 
+.result-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 40px 24px;
+  text-align: center;
+}
+
 .menu-card.disabled {
   opacity: 0.6;
   cursor: not-allowed;
@@ -970,14 +977,6 @@
   background: #f5f5f5;
   color: #999;
 }
-
-.result-container {
-  max-width: 600px; /* เล็กลงหน่อยเพื่อโฟกัสคะแนน */
-  margin: 0 auto;
-  padding: 40px 24px;
-  text-align: center;
-}
-
 .score-summary-card {
   background: white;
   border-radius: 20px;

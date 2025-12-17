@@ -99,7 +99,6 @@ func ListEvaluationProjects(c *gin.Context) {
 				continue
 			}
 
-			// Determine if this appointment is relevant
 			if mode == "committee" {
 				if apt.AppointmentTypeID != 3 {
 					continue
@@ -109,7 +108,6 @@ func ListEvaluationProjects(c *gin.Context) {
 				}
 			}
 
-			// Set main appointmentID for backward compatibility or default action
 			if appointmentID == 0 {
 				appointmentID = apt.ID
 			}
@@ -159,7 +157,6 @@ func ListEvaluationProjects(c *gin.Context) {
 			availableEvaluations = append(availableEvaluations, name)
 		}
 
-		// Calculate Graded Count vs Total Count
 		totalCount := len(availableEvaluations)
 		gradedCount := 0
 
@@ -255,13 +252,11 @@ func GetEvaluationForm(c *gin.Context) {
 			selectedEvaluationName = evaluation.Name
 		}
 	} else {
-		// Fallback Logic
 		criteriaQuery = criteriaQuery.Where("evaluations.appointment_type_id = ?", appointment.AppointmentTypeID)
 
 		if appointment.AppointmentTypeID == 3 {
 			if mode == "committee" {
 				allowedEvaluations = []string{"Committee Evaluation"}
-				// Force selection if not specified
 				if reqEvalName == "" {
 					selectedEvaluationName = "Committee Evaluation"
 				}
@@ -397,7 +392,6 @@ func GetStudentEvaluationForm(c *gin.Context) {
 
 	db := database.DB()
 
-	// Find student's group
 	var member entity.GroupMember
 	if err := db.Preload("GroupProject").
 		Where("student_id = ?", claims.ID).
@@ -406,7 +400,6 @@ func GetStudentEvaluationForm(c *gin.Context) {
 		return
 	}
 
-	// Find active appointment
 	var appointment entity.Appointment
 	if err := db.Preload("GroupProject.GroupMembers.Student").
 		Preload("AppointmentType").
@@ -465,7 +458,6 @@ func GetStudentEvaluationForm(c *gin.Context) {
 	students := []gin.H{}
 	for _, member := range appointment.GroupProject.GroupMembers {
 		if member.Student != nil {
-			// Filter out the current student (cannot evaluate self in Peer Assessment)
 			if member.Student.ID == claims.ID {
 				continue
 			}

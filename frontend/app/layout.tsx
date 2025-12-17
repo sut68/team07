@@ -1,6 +1,8 @@
 import "./globals.css";
 import 'antd/dist/reset.css';
 import { AuthProvider } from '../app/(modules)/roleCheck/authContext'; 
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 
 export default function RootLayout({
@@ -19,6 +21,7 @@ export default function RootLayout({
         <AuthProvider>
            {children}
         </AuthProvider>
+        <ToastContainer />
       </body>
     </html>
   );

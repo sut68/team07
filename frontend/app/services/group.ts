@@ -1,9 +1,9 @@
 // services/https/group/index.ts
 import api from "./api";
-import { 
-    GroupProject, 
-    StudentCountResponse, 
-    GenerateGroupRequest, 
+import {
+    GroupProject,
+    StudentCountResponse,
+    GenerateGroupRequest,
     GenerateGroupResponse,
     StudentSearchResult,
     AddMemberRequest,
@@ -16,7 +16,7 @@ import {
 // ดึงข้อมูลกลุ่มทั้งหมด
 export const GetGroupProjects = async (year?: number) => {
     const url = year ? `/group?year=${year}` : "/student/group";
-    return await api.get<GroupProject[]>(url); 
+    return await api.get<GroupProject[]>(url);
 };
 
 // กดเข้าร่วมกลุ่ม
@@ -24,9 +24,16 @@ export const JoinGroup = async (data: { group_project_id: number }) => {
     return await api.post("/student/addMember", data);
 };
 
+// ดึงกลุ่มของฉัน (Student Logged In)
+export const GetMyGroup = async () => {
+    // Backend returns { data: GroupProject }
+    // Note: The backend returns { data: GroupProject } structure.
+    return await api.get<{ data: GroupProject }>("/student/myGroup");
+};
+
 // ดึงปี
 export const GetAcademicYears = async () => {
-    return await api.get<number[]>("/academicYears"); 
+    return await api.get<number[]>("/academicYears");
 };
 
 // ------------------------------------------------------------------------
