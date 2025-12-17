@@ -25,7 +25,7 @@ export default function ChatPage() {
 
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const idsOk = GROUP_PROJECT_ID > 0 && USER_ID > 0;
+  const idsOk = GROUP_PROJECT_ID > 0 && Number(USER_ID) > 0;
   const roomJoined = activeRoomId !== null;
 
   const currentRoom = useMemo(
@@ -99,7 +99,7 @@ export default function ChatPage() {
     await InsertChat({
       group_project_id: GROUP_PROJECT_ID,
       process_id: Number(activeRoomId),
-      sender_id: USER_ID,
+      sender_id: Number(USER_ID),
       message: text,
     });
 
@@ -270,7 +270,7 @@ export default function ChatPage() {
             </div>
           ) : (
             chats.map((c) => {
-              const isMe = Number(c.sender_id) === USER_ID;
+              const isMe = Number(c.sender_id) === Number(USER_ID);
 
               return (
                 <div
