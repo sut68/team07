@@ -1,0 +1,162 @@
+{
+  "id": "ef8713f8-b9ec-46ee-b9b8-ceeea34c9a9f",
+  "version": "2.0",
+  "name": "se",
+  "url": "http://localhost:5173/login",
+  "tests": [{
+    "id": "0f73f691-d85d-42f2-8518-3b1d40c26e80",
+    "name": "testProgress",
+    "commands": [{
+      "id": "b55378dc-d74f-480c-a336-d5d123d56d3c",
+      "comment": "",
+      "command": "open",
+      "target": "http://localhost:5173/login",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "9a177f2d-1d69-4a87-936f-7e14d766f0e4",
+      "comment": "",
+      "command": "setWindowSize",
+      "target": "1294x814",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "3b156240-fefb-4f18-8b5c-30b3a763c0fb",
+      "comment": "",
+      "command": "click",
+      "target": "name=username",
+      "targets": [
+        ["name=username", "name"],
+        ["css=.login-info:nth-child(2)", "css:finder"],
+        ["xpath=//input[@name='username']", "xpath:attributes"],
+        ["xpath=//input", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "fb75cd0e-a81c-49f4-8d07-8a5c07d2e960",
+      "comment": "",
+      "command": "type",
+      "target": "name=username",
+      "targets": [
+        ["name=username", "name"],
+        ["css=.login-info:nth-child(2)", "css:finder"],
+        ["xpath=//input[@name='username']", "xpath:attributes"],
+        ["xpath=//input", "xpath:position"]
+      ],
+      "value": "B6500001"
+    }, {
+      "id": "ae7f37e6-7b21-43df-8e88-41c9e6e20fe4",
+      "comment": "",
+      "command": "click",
+      "target": "name=password",
+      "targets": [
+        ["name=password", "name"],
+        ["css=.login-info:nth-child(1)", "css:finder"],
+        ["xpath=//input[@name='password']", "xpath:attributes"],
+        ["xpath=//div[2]/div/input", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "f139cb07-2600-41d8-b1ce-f3acec6e0e50",
+      "comment": "",
+      "command": "type",
+      "target": "name=password",
+      "targets": [
+        ["name=password", "name"],
+        ["css=.login-info:nth-child(1)", "css:finder"],
+        ["xpath=//input[@name='password']", "xpath:attributes"],
+        ["xpath=//div[2]/div/input", "xpath:position"]
+      ],
+      "value": "std123"
+    }, {
+      "id": "d1bf6828-c1f8-4f15-bdb1-5d0b2a41f703",
+      "comment": "",
+      "command": "click",
+      "target": "css=.login-button",
+      "targets": [
+        ["css=.login-button", "css:finder"],
+        ["xpath=//button[@type='submit']", "xpath:attributes"],
+        ["xpath=//div[4]/button", "xpath:position"],
+        ["xpath=//button[contains(.,'เข้าสู่ระบบ')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "f0bc0510-51a3-46e1-8571-ca8873f3c826",
+      "comment": "",
+      "command": "click",
+      "target": "linkText=ความคืบหน้า",
+      "targets": [
+        ["linkText=ความคืบหน้า", "linkText"],
+        ["css=a:nth-child(5)", "css:finder"],
+        ["xpath=//a[contains(text(),'ความคืบหน้า')]", "xpath:link"],
+        ["xpath=//a[contains(@href, '/student/progress')]", "xpath:href"],
+        ["xpath=//a[5]", "xpath:position"],
+        ["xpath=//a[contains(.,'ความคืบหน้า')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "8fbfac3b-3d99-493e-8e56-e6773dc3272a",
+      "comment": "",
+      "command": "click",
+      "target": "css=button:nth-child(2)",
+      "targets": [
+        ["css=button:nth-child(2)", "css:finder"],
+        ["xpath=//button[2]", "xpath:position"],
+        ["xpath=//button[contains(.,'Submit')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "a71749b0-adb0-43fc-b0c5-eb26dc829c62",
+      "comment": "",
+      "command": "click",
+      "target": "css=textarea",
+      "targets": [
+        ["css=textarea", "css:finder"],
+        ["xpath=//textarea", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "73731cc7-c77d-4b0a-a176-084795e47291",
+      "comment": "",
+      "command": "type",
+      "target": "css=textarea",
+      "targets": [
+        ["css=textarea", "css:finder"],
+        ["xpath=//textarea", "xpath:position"]
+      ],
+      "value": "5555"
+    }, {
+      "id": "2f779aa2-088e-41ec-ba3b-693036bf65a3",
+      "comment": "",
+      "command": "click",
+      "target": "css=button:nth-child(5)",
+      "targets": [
+        ["css=button:nth-child(5)", "css:finder"],
+        ["xpath=//div[2]/div/div[2]/button", "xpath:position"],
+        ["xpath=//button[contains(.,'Submit update')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "b51a45bd-4b8d-4737-930e-fcb7b1e462a7",
+      "comment": "",
+      "command": "mouseOver",
+      "target": "css=button:nth-child(5)",
+      "targets": [
+        ["css=button:nth-child(5)", "css:finder"],
+        ["xpath=//div[2]/div/div[2]/button", "xpath:position"],
+        ["xpath=//button[contains(.,'Submit update')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }]
+  }],
+  "suites": [{
+    "id": "16710552-1be6-4305-a282-cea6c9c57713",
+    "name": "Default Suite",
+    "persistSession": false,
+    "parallel": false,
+    "timeout": 300,
+    "tests": ["0f73f691-d85d-42f2-8518-3b1d40c26e80"]
+  }],
+  "urls": ["http://localhost:5173/login"],
+  "plugins": []
+}
