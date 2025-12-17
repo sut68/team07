@@ -1,0 +1,437 @@
+/* AdminGroupModal.css */
+
+/* =========================================
+   1. MODAL LAYOUT & OVERLAY
+   ========================================= */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modal-container {
+  background-color: #ffffff;
+  width: 100%;
+  max-width: 50rem; /* ปรับความกว้างให้พอดี */
+  border-radius: 1rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh; /* ความสูงสูงสุด 90% ของหน้าจอ */
+}
+
+/* Header */
+.modal-header {
+  background-color: #f9fafb;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-shrink: 0;
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.2;
+}
+
+.modal-subtitle {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+.close-btn {
+  color: #9ca3af;
+  font-size: 1.5rem;
+  line-height: 1;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 0.375rem;
+  transition: all 0.2s;
+}
+
+.close-btn:hover {
+  color: #ef4444;
+  background-color: #fee2e2;
+}
+
+/* Content Area */
+.modal-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+  background-color: #ffffff;
+}
+
+.flex-col-gap {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Loading & Empty States */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem;
+  color: #6b7280;
+}
+
+/* =========================================
+   2. COLOR THEMES & SECTIONS
+   ========================================= */
+
+/* Common Box Style */
+.section-box {
+  padding: 1.25rem;
+  border-radius: 0.75rem;
+  border: 1px solid transparent;
+}
+
+.section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+/* 🟡 Theme: Advisor (Yellow/Amber) */
+.advisor-section {
+  background-color: #fffbeb;
+  border-color: #fde68a;
+}
+.text-advisor { color: #b45309; }
+
+/* 🔵 Theme: Members (Blue) */
+.members-section {
+  background-color: #eff6ff;
+  border-color: #bfdbfe;
+}
+.text-members { color: #1d4ed8; }
+
+/* 🟢 Theme: Add Member (Green) */
+.add-member-section {
+  background-color: #f0fdf4;
+  border-color: #bbf7d0;
+}
+.text-add { color: #15803d; }
+
+/* 🔴 Theme: Danger Zone (Red) */
+.danger-zone {
+  background-color: #fef2f2;
+  border-color: #fecaca;
+}
+.text-danger { color: #b91c1c; }
+
+
+/* =========================================
+   3. COMPONENT STYLES
+   ========================================= */
+
+/* --- Inputs & Selects --- */
+.select-wrapper {
+  position: relative;
+}
+
+.advisor-select {
+  width: 100%;
+  appearance: none;
+  background-color: #ffffff;
+  border: 1px solid #fcd34d; /* Border สีเหลืองเข้ม */
+  border-radius: 0.5rem;
+  padding: 0.625rem 2.5rem 0.625rem 1rem;
+  font-size: 0.95rem;
+  color: #374151;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+}
+
+.advisor-select:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.3);
+}
+
+.select-icon {
+  position: absolute;
+  top: 0; bottom: 0; right: 0;
+  display: flex; align-items: center;
+  padding-right: 0.75rem;
+  pointer-events: none;
+  color: #d97706;
+}
+
+/* --- Badges --- */
+.count-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  background-color: #ffffff;
+  border: 1px solid #dbeafe;
+  color: #1e40af;
+}
+
+.add-member-subtitle {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: none;
+  color: #6b7280;
+  margin-left: 0.5rem;
+  opacity: 0.8;
+}
+
+/* --- Member Cards --- */
+.members-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.member-card {
+  background-color: #ffffff;
+  border: 1px solid #dbeafe; /* ขอบฟ้าอ่อน */
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: border-color 0.2s;
+}
+
+.member-card:hover {
+  border-color: #60a5fa;
+}
+
+.student-info {
+  display: flex;
+  align-items: center;
+}
+
+.student-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1f2937;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.code-badge {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.8rem;
+  background-color: #f3f4f6;
+  color: #4b5563;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  border: 1px solid #e5e7eb;
+}
+
+.leader-badge {
+  font-size: 0.65rem;
+  background-color: #fef08a;
+  color: #854d0e;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  border: 1px solid #fde047;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+/* --- Buttons --- */
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-promote {
+  font-size: 0.75rem;
+  color: #2563eb;
+  background-color: #eff6ff;
+  border: 1px solid #dbeafe;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-promote:hover {
+  background-color: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+}
+
+.btn-remove {
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  padding: 0.375rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s;
+}
+
+.btn-remove:hover {
+  background-color: #fee2e2;
+  color: #ef4444;
+}
+
+/* --- Student List (Add Member) --- */
+.student-list-container {
+  background-color: #ffffff;
+  border: 1px solid #bbf7d0; /* ขอบเขียวอ่อน */
+  border-radius: 0.5rem;
+  height: 16rem;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+.student-search-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.375rem;
+  border: 1px solid #f3f4f6;
+  margin-bottom: 0.5rem;
+  transition: all 0.2s;
+}
+
+.student-search-item:hover {
+  border-color: #86efac;
+}
+
+.btn-add {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #15803d;
+  background-color: #dcfce7;
+  border: 1px solid #86efac;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-add:hover {
+  background-color: #15803d;
+  color: #ffffff;
+  border-color: #15803d;
+}
+
+/* --- Danger Zone Content --- */
+.danger-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.danger-warning {
+  font-size: 0.85rem;
+  color: #991b1b;
+  opacity: 0.8;
+}
+
+.btn-delete-group {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #ffffff;
+  background-color: #ef4444;
+  border: 1px solid #dc2626;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-delete-group:hover {
+  background-color: #b91c1c;
+  border-color: #991b1b;
+}
+
+/* =========================================
+   4. UTILITIES
+   ========================================= */
+
+/* Empty States */
+.empty-members, .empty-list {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  color: #9ca3af;
+  font-size: 0.875rem;
+  padding: 1rem;
+  text-align: center;
+  background-color: rgba(255, 255, 255, 0.5);
+  border-radius: 0.5rem;
+}
+
+.empty-members {
+  border: 1px dashed #bfdbfe;
+  height: auto;
+  padding: 1.5rem;
+}
+
+/* Spinner */
+.loading-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #6b7280;
+  gap: 0.5rem;
+}
+
+.spinner {
+  height: 1.5rem;
+  width: 1.5rem;
+  border-radius: 50%;
+  border: 2px solid #e5e7eb;
+  border-top-color: #6b7280;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #d1d5db;
+  border-radius: 20px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #9ca3af;
+}

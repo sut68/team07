@@ -1,0 +1,358 @@
+/* --- Layout หลัก --- */
+.admin-page-container {
+  min-height: 100vh;
+  width: 100%;
+  background-color: #f5f5f5;
+  /* สีพื้นหลัง */
+  padding: 40px;
+  /* ระยะห่างจากขอบจอ */
+  font-family: "Noto Sans Thai", sans-serif;
+  box-sizing: border-box;
+  border-radius: 20px;
+}
+
+.content-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  /* จัดกึ่งกลางแนวนอน */
+  display: flex;
+  flex-direction: column;
+  gap: 50px;
+  /* ระยะห่างระหว่าง Section บนและล่าง */
+}
+
+/* --- Section 1: Form Card --- */
+.card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e0e0e0;
+  overflow: hidden;
+}
+
+.card-header {
+  padding: 30px;
+  border-bottom: 1px solid #eee;
+}
+
+.card-title {
+  font-size: 28px;
+  font-weight: bold;
+  color: #8a011d;
+  border-left: 5px solid #8a011d;
+  padding-left: 15px;
+  margin: 0;
+}
+
+.card-body {
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+/* --- Stats Box (กล่องแสดงจำนวน) --- */
+.stats-box {
+  background-color: #fff5f5;
+  border: 1px solid #feb2b2;
+  border-radius: 8px;
+  padding: 20px;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.stat-item {
+  flex: 1; /* เพื่อให้ขยายเต็มพื้นที่คนละครึ่ง */
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* เพื่อจัดข้อความให้อยู่กึ่งกลางแนวนอน */
+  justify-content: center; /* พื่อจัดกึ่งกลางแนวตั้ง (ถ้ามีพื้นที่เหลือ) */
+  gap: 10px;
+  text-align: center; 
+}
+
+.stat-number {
+  font-size: 36px;
+  font-weight: bold;
+  color: #333;
+  display: block;
+}
+
+.stat-divider {
+  width: 1px;
+  height: 50px;
+  background-color: #feb2b2;
+}
+
+/* --- Form Inputs --- */
+.form-container {
+  max-width: 600px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 15px;
+}
+
+.form-label {
+  flex: 1;
+  min-width: 150px;
+  text-align: right;
+  font-size: 16px;
+  font-weight: 500;
+  color: #444;
+}
+
+.input-group {
+  flex: 2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.form-input {
+  padding: 10px 15px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+  width: 100%;
+  max-width: 200px;
+  text-align: center;
+}
+
+.form-input:focus {
+  outline: 2px solid #8a011d;
+  border-color: transparent;
+}
+
+/* 1. จัดตำแหน่งปุ่มให้ชิดขวา */
+.submit-btn-wrapper {
+  display: flex;
+  /* justify-content: flex-end; สั่งให้เนื้อหาไปอยู่ชิดขวาสุด */
+  justify-content: center;
+  margin-top: 40px; /* ระยะห่างด้านบน */
+}
+
+.btn-submit {
+  background-color: #0f172a;
+  color: white;
+
+  /* ขนาดปุ่ม */
+  padding: 13px 36px;
+  font-size: 16px;
+  font-weight: 500; /* ความหนาตัวอักษรระดับกลาง  */
+  letter-spacing: 0.5px; /* เพิ่มระยะห่างตัวอักษรนิดนึง เพิ่มความหรู */
+
+  /* รูปทรง */
+  border: 1px solid #0f172a;
+  border-radius: 12px;
+
+  /* การกระทำ */
+  cursor: pointer;
+  transition: all 0.1s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* --- State: เมื่อเอาเมาส์ไปชี้ (Hover) --- */
+.btn-submit:hover {
+  background-color: #cbcbcb;
+  color: #0f172a;
+  border-color: #0f172a;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* --- State: เมื่อกด (Active) --- */
+.btn-submit:active {
+  background-color: #f1f5f9;
+  transform: translateY(0); /* ไม่ขยับ แค่เปลี่ยนสี */
+}
+
+/* --- Section 2: Group List Header --- */
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.list-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #8a011d;
+  border-left: 5px solid #8a011d;
+  padding-left: 15px;
+  margin: 0;
+}
+
+.list-subtitle {
+  margin-left: 20px;
+  color: #666;
+  margin-top: 5px;
+  font-size: 14px;
+}
+
+.year-filter {
+  padding: 5px 10px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  width: 100px;
+  margin-left: 10px;
+  text-align: center;
+}
+
+.year-filter:focus {
+  outline: 2px solid #8a011d;
+  border-color: transparent;
+}
+
+/* --- Grid & Cards --- */
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+  margin-top: 20px;
+}
+
+.group-card {
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.group-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+}
+
+.status-bar {
+  height: 6px;
+  width: 100%;
+}
+
+/* Dynamic Status Classes */
+.bg-red {
+  background-color: #ef4444;
+}
+
+.bg-green {
+  background-color: #22c55e;
+}
+
+.bg-blue {
+  background-color: #3b82f6;
+}
+
+.text-red {
+  color: #ef4444;
+  border-color: #ef4444;
+}
+
+.text-green {
+  color: #22c55e;
+  border-color: #22c55e;
+}
+
+.text-blue {
+  color: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.card-info {
+  padding: 20px;
+  flex: 1;
+}
+
+.card-header-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.group-number {
+  margin: 0;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.status-badge {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  border: 1px solid;
+  font-weight: 600;
+}
+
+.info-text {
+  margin: 5px 0;
+  font-size: 14px;
+  color: #555;
+  display: flex;
+  justify-content: space-between;
+}
+
+.card-footer {
+  padding: 15px 20px;
+  background-color: #f9f9f9;
+  border-top: 1px solid #eee;
+}
+
+.btn-detail {
+  width: 100%;
+  padding: 8px;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #555;
+  transition: all 0.2s;
+}
+
+.btn-detail:hover {
+  background-color: #e0f2fe;
+  color: #0284c7;
+  border-color: #7dd3fc;
+}
+
+/* Loading & Empty State */
+.loading-text {
+  text-align: center;
+  color: #999;
+  padding: 50px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 50px;
+  background-color: #fff;
+  border: 2px dashed #ccc;
+  border-radius: 10px;
+  color: #888;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .admin-page-container {
+    padding: 20px;
+    /* ลด Padding ในมือถือ */
+  }
+
+  .form-label {
+    text-align: left;
+    /* จัด Label ชิดซ้ายในมือถือ */
+  }
+}
