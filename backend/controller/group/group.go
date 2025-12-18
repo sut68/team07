@@ -35,6 +35,8 @@ func GetGroupProject(c *gin.Context) {
 		query = query.Where("year = ?", year)
 	}
 
+	query = query.Order("group_number asc")
+
 	// 4. สั่งค้นหา
 	if err := query.Find(&group).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
