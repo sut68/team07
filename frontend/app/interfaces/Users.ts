@@ -44,3 +44,17 @@ export interface UpdateUserProfileInterface {
     email?: string;
     phone?: string;
 }
+
+// Interface สำหรับรับค่า Form
+export interface CreateUserInterface {
+    username?: string;
+    password?: string;
+    firstname?: string;
+    lastname?: string;
+    email?: string;
+    phone?: string;
+    gender_id?: number;
+    branch_id?: number;
+    role_id?: number;
+    status_id?: number;
+}
