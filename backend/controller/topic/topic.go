@@ -1,6 +1,7 @@
 package topic
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -63,28 +64,38 @@ func CreateTopic(c *gin.Context) {
 		return
 	}
 
-	// ===== Handle File Upload =====
-	file, err := c.FormFile("file_attachment")
+	// ===== Handle File Upload (Multiple) =====
+	form, err := c.MultipartForm()
 	if err == nil {
+		files := form.File["file_attachment"]
+		var fileList []string
+
 		uploadPath := "uploads/topics"
 		if _, err := os.Stat(uploadPath); os.IsNotExist(err) {
 			os.MkdirAll(uploadPath, 0755)
 		}
 
-		filename := fmt.Sprintf(
-			"%d_%s",
-			time.Now().UnixNano(),
-			filepath.Base(file.Filename),
-		)
-		filePath := filepath.Join(uploadPath, filename)
+		for _, file := range files {
+			filename := fmt.Sprintf(
+				"%d_%s",
+				time.Now().UnixNano(),
+				filepath.Base(file.Filename),
+			)
+			filePath := filepath.Join(uploadPath, filename)
 
-		if err := c.SaveUploadedFile(file, filePath); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": "Failed to save file",
-			})
-			return
+			if err := c.SaveUploadedFile(file, filePath); err != nil {
+				continue // Or handle error, but trying to save as many as possible
+			}
+			fileList = append(fileList, filename)
 		}
-		topic.FileAttachment = filename
+
+		if len(fileList) > 0 {
+			// Marshal to JSON
+			jsonBytes, err := json.Marshal(fileList)
+			if err == nil {
+				topic.FileAttachment = string(jsonBytes)
+			}
+		}
 	}
 
 	db := database.DB()
@@ -181,24 +192,45 @@ func UpdateTopic(c *gin.Context) {
 	payload.Description = c.PostForm("description")
 	payload.Status = c.PostForm("status")
 	
-	// Handle File Upload (Optional update)
-	file, err := c.FormFile("file_attachment")
-	if err == nil {
-		uploadPath := "uploads/topics"
-		if _, err := os.Stat(uploadPath); os.IsNotExist(err) {
-			os.MkdirAll(uploadPath, 0755)
-		}
-		filename := fmt.Sprintf("%d_%s", time.Now().UnixNano(), file.Filename)
-		filePath := filepath.Join(uploadPath, filename)
-		if err := c.SaveUploadedFile(file, filePath); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
-			return
-		}
-		payload.FileAttachment = filename
-	} else {
-		// Keep existing file if not provided
-		payload.FileAttachment = topic.FileAttachment
+	// Handle File Upload (Multiple)
+	form, err := c.MultipartForm()
+	
+	// Collect files: existing + new
+	var finalFileList []string
+
+	// 1. Get Existing Files
+	existingFiles := c.PostFormArray("existing_files")
+	if len(existingFiles) > 0 {
+		finalFileList = append(finalFileList, existingFiles...)
 	}
+
+	// 2. Handle New Files
+	if err == nil {
+		files := form.File["file_attachment"]
+		uploadPath := "uploads/topics"
+		if len(files) > 0 {
+			if _, err := os.Stat(uploadPath); os.IsNotExist(err) {
+				os.MkdirAll(uploadPath, 0755)
+			}
+
+			for _, file := range files {
+				filename := fmt.Sprintf("%d_%s", time.Now().UnixNano(), file.Filename)
+				filePath := filepath.Join(uploadPath, filename)
+				if err := c.SaveUploadedFile(file, filePath); err == nil {
+					finalFileList = append(finalFileList, filename)
+				}
+			}
+		}
+	}
+	
+	if len(finalFileList) > 0 {
+		jsonBytes, _ := json.Marshal(finalFileList)
+		payload.FileAttachment = string(jsonBytes)
+	} else if c.Request.MultipartForm != nil {
+		payload.FileAttachment = topic.FileAttachment
+	} else {
+         payload.FileAttachment = topic.FileAttachment
+    }
 
 	// Update fields
 	// Update fields only if they are not empty in payload
@@ -220,21 +252,7 @@ func UpdateTopic(c *gin.Context) {
 		topic.Status = payload.Status
 	}
 
-	// Update FileAttachment only if a new file was uploaded (filename would be set in payload.FileAttachment)
-	// If no new file, we already set payload.FileAttachment to topic.FileAttachment, 
-	// but to be safe with partial updates logic:
-	// If payload.FileAttachment was derived from c.FormFile, it will be the new filename.
-	// If it was fallback to topic.FileAttachment, it's same.
-	// So assignment is safe IF lines 150-159 logic is preserved correctly?
-	// Lines 150-159 sets payload.FileAttachment based on upload.
-	// But if we just want to update status, and no file sent?
-	// c.FormFile returns error. else block runs: payload.FileAttachment = topic.FileAttachment.
-	// So payload.FileAttachment IS correct.
 	topic.FileAttachment = payload.FileAttachment
-	
-	// If approval logic is needed here (e.g. changing status to Rejected/Approved), 
-	// it should probably be handled in a separate specific endpoint or carefully here.
-	// For now, we allow updating everything.
 
 	if err := db.Save(&topic).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -243,6 +261,7 @@ func UpdateTopic(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"data": topic})
 }
+
 
 // PATCH /topics/:id/approval
 // Used for Approving or Rejecting a topic
@@ -279,13 +298,9 @@ func ApproveTopic(c *gin.Context) {
 	// Create Approval Record
 	approval.TopicID = topic.ID
 	approval.ApprovalDate = time.Now()
-	
-	// IMPORTANT: TeacherID should come from Context (JWT Middleware), mocking for now or expecting in payload
-	// In production, get from c.MustGet("userId")
+
 	if approval.TeacherID == 0 {
-		// Fallback for testing/dev if not sent
-		// c.JSON(http.StatusBadRequest, gin.H{"error": "TeacherID is required"})
-		// return
+
 	}
 
 	if err := db.Create(&approval).Error; err != nil {
@@ -295,3 +310,142 @@ func ApproveTopic(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"data": topic, "approval": approval})
 }
+
+// POST /topics/:id/select
+func SelectTopic(c *gin.Context) {
+	var payload struct {
+		GroupProjectID uint `json:"group_project_id"`
+	}
+	topicID := c.Param("id")
+
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	db := database.DB()
+
+	// 1. Check if group already has an active selection
+	var existingSelection entity.TopicSelection
+	if err := db.Where("group_project_id = ? AND status != ?", payload.GroupProjectID, "Cancelled").First(&existingSelection).Error; err == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Group already has an active topic selection"})
+		return
+	}
+
+	// 2. Check if group has an active student proposal
+	var existingTopic entity.Topic
+	if err := db.Where("group_project_id = ? AND proposer_role = ? AND status != ?", payload.GroupProjectID, "Student", "Closed").First(&existingTopic).Error; err == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Group already has an active topic proposal"})
+		return
+	}
+
+	// 3. Create Selection
+	tid, _ := strconv.ParseUint(topicID, 10, 32)
+
+	// 2.5 Check if the topic is already selected by another group
+	var duplicateSelection entity.TopicSelection
+
+	err := db.Where(
+		"topic_id = ? AND status = ? AND group_project_id != ?",
+		tid,
+		"Active",
+		payload.GroupProjectID,
+	).First(&duplicateSelection).Error
+
+	if err == nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "This topic has already been selected by another group",
+    })
+    return
+}
+
+
+	selection := entity.TopicSelection{
+		TopicID:        uint(tid),
+		GroupProjectID: payload.GroupProjectID,
+		Status:         "Active", // Teacher topics are auto-approved
+		DateSelected:   time.Now(),
+	}
+
+	if err := db.Create(&selection).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": selection})
+}
+
+// POST /topics/cancel-selection
+func CancelSelection(c *gin.Context) {
+	var payload struct {
+		GroupProjectID uint `json:"group_project_id"`
+	}
+
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	db := database.DB()
+
+	// 1. หา selection ที่ยัง active
+	var selection entity.TopicSelection
+	if err := db.
+		Where("group_project_id = ? AND status = ?", payload.GroupProjectID, "Active").
+		First(&selection).Error; err != nil {
+
+		c.JSON(http.StatusNotFound, gin.H{"error": "No active selection found"})
+		return
+	}
+
+	// 2. ปิด selection เสมอ
+	selection.Status = "Cancelled"
+	if err := db.Save(&selection).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// 3. หา topic ที่ถูกเลือก
+	var topic entity.Topic
+	if err := db.First(&topic, selection.TopicID).Error; err == nil {
+
+		// 4. ถ้าเป็น Student Topic → ปิดหัวข้อถาวร
+		if topic.ProposerRole == "Student" {
+			topic.Status = "Closed"
+			db.Save(&topic)
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Selection cancelled successfully",
+	})
+}
+
+
+// GET /student/topic
+func GetStudentTopic(c *gin.Context) {
+	groupID := c.Query("group_id")
+	if groupID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "group_id is required"})
+		return
+	}
+
+	db := database.DB()
+
+	// 1. Check for Selection (Active only)
+	var selection entity.TopicSelection
+	if err := db.Preload("Topic").Where("group_project_id = ? AND status = ?", groupID, "Active").First(&selection).Error; err == nil {
+			c.JSON(http.StatusOK, gin.H{"data": selection.Topic, "source": "selection"})
+			return
+	}
+
+	// 2. Check for Student Proposal
+	var topic entity.Topic
+	if err := db.Where("group_project_id = ? AND proposer_role = ? AND status != ?", groupID, "Student", "Closed").First(&topic).Error; err == nil {
+			c.JSON(http.StatusOK, gin.H{"data": topic, "source": "proposal"})
+			return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": nil})
+}
+

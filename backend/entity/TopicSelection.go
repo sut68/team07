@@ -14,6 +14,8 @@ type TopicSelection struct {
 	GroupProjectID uint          `json:"group_project_id" valid:"required~GroupProjectID is required"`
 	GroupProject   *GroupProject `gorm:"foreignKey:GroupProjectID" json:"group_project"`
 
+	Status string `json:"status" valid:"required~Status is required"`
+
 	Project  []Project `gorm:"foreignKey:SelectionID" json:"projects"`
 
 }

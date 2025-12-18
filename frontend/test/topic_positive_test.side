@@ -1,0 +1,186 @@
+{
+  "id": "4a91f9e6-b6c6-4043-84bd-333848c13e30",
+  "version": "2.0",
+  "name": "test",
+  "url": "http://localhost:5173",
+  "tests": [{
+    "id": "4dca7cff-8af7-4045-ad67-47e3ab31797e",
+    "name": "test",
+    "commands": [{
+      "id": "866fd850-b023-42c7-9df9-6456bdc228c6",
+      "comment": "",
+      "command": "open",
+      "target": "/login",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "cfa59926-c454-40c6-97c6-1e67ca30633b",
+      "comment": "",
+      "command": "setWindowSize",
+      "target": "1936x1048",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "34e8ec59-dfb4-4c88-9738-540db4097667",
+      "comment": "",
+      "command": "click",
+      "target": "css=.login-button",
+      "targets": [
+        ["css=.login-button", "css:finder"],
+        ["xpath=//button[@type='submit']", "xpath:attributes"],
+        ["xpath=//div[4]/button", "xpath:position"],
+        ["xpath=//button[contains(.,'เข้าสู่ระบบ')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "4ea4d10b-a0d5-4ccf-91d2-8998440aa8fc",
+      "comment": "",
+      "command": "click",
+      "target": "linkText=หัวข้อโครงงาน",
+      "targets": [
+        ["linkText=หัวข้อโครงงาน", "linkText"],
+        ["css=nav > a:nth-child(3)", "css:finder"],
+        ["xpath=//a[contains(text(),'หัวข้อโครงงาน')]", "xpath:link"],
+        ["xpath=//a[contains(@href, '/teacher/topic')]", "xpath:href"],
+        ["xpath=//a[3]", "xpath:position"],
+        ["xpath=//a[contains(.,'หัวข้อโครงงาน')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "06b8bf36-173a-4845-802b-c8c2e5d8b01b",
+      "comment": "",
+      "command": "mouseOver",
+      "target": "linkText=หัวข้อโครงงาน",
+      "targets": [
+        ["linkText=หัวข้อโครงงาน", "linkText"],
+        ["css=nav > a:nth-child(3)", "css:finder"],
+        ["xpath=//a[contains(text(),'หัวข้อโครงงาน')]", "xpath:link"],
+        ["xpath=//a[contains(@href, '/teacher/topic')]", "xpath:href"],
+        ["xpath=//a[3]", "xpath:position"],
+        ["xpath=//a[contains(.,'หัวข้อโครงงาน')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "c0a36915-154d-4bc9-b636-c45ce109722f",
+      "comment": "",
+      "command": "mouseOut",
+      "target": "linkText=หัวข้อโครงงาน",
+      "targets": [
+        ["linkText=หัวข้อโครงงาน", "linkText"],
+        ["css=nav > a:nth-child(3)", "css:finder"],
+        ["xpath=//a[contains(text(),'หัวข้อโครงงาน')]", "xpath:link"],
+        ["xpath=//a[contains(@href, '/teacher/topic')]", "xpath:href"],
+        ["xpath=//a[3]", "xpath:position"],
+        ["xpath=//a[contains(.,'หัวข้อโครงงาน')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "248bc15f-3724-48ca-b04b-7a8c5570d5f2",
+      "comment": "",
+      "command": "click",
+      "target": "id=add-topic-btn",
+      "targets": [
+        ["id=add-topic-btn", "id"],
+        ["css=#add-topic-btn", "css:finder"],
+        ["xpath=//button[@id='add-topic-btn']", "xpath:attributes"],
+        ["xpath=//div[@id='rc-tabs-3-panel-1']/div/button", "xpath:idRelative"],
+        ["xpath=//div[2]/div/div/div/button", "xpath:position"],
+        ["xpath=//button[contains(.,'เพิ่มหัวข้อใหม่')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "88b107a1-4343-4715-91ae-05af26014848",
+      "comment": "",
+      "command": "click",
+      "target": "id=title",
+      "targets": [
+        ["id=title", "id"],
+        ["css=#title", "css:finder"],
+        ["xpath=//input[@id='title']", "xpath:attributes"],
+        ["xpath=//input", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "b5d97703-4e2f-4560-8642-30876e750294",
+      "comment": "",
+      "command": "type",
+      "target": "id=title",
+      "targets": [
+        ["id=title", "id"],
+        ["css=#title", "css:finder"],
+        ["xpath=//input[@id='title']", "xpath:attributes"],
+        ["xpath=//input", "xpath:position"]
+      ],
+      "value": "ระบบซักผ้า"
+    }, {
+      "id": "6d0e94d6-326f-43ed-b795-86a70a866eae",
+      "comment": "",
+      "command": "click",
+      "target": "id=objective",
+      "targets": [
+        ["id=objective", "id"],
+        ["css=#objective", "css:finder"],
+        ["xpath=//textarea[@id='objective']", "xpath:attributes"],
+        ["xpath=//textarea", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "f66f9465-c707-43c7-884c-296022256e0c",
+      "comment": "",
+      "command": "type",
+      "target": "id=objective",
+      "targets": [
+        ["id=objective", "id"],
+        ["css=#objective", "css:finder"],
+        ["xpath=//textarea[@id='objective']", "xpath:attributes"],
+        ["xpath=//textarea", "xpath:position"]
+      ],
+      "value": "เพื่อการซักผ้าที่มีประสิทธิภาพ"
+    }, {
+      "id": "6bae1246-3fe0-4612-9df2-dbb0d61631f1",
+      "comment": "",
+      "command": "click",
+      "target": "id=scope",
+      "targets": [
+        ["id=scope", "id"],
+        ["css=#scope", "css:finder"],
+        ["xpath=//textarea[@id='scope']", "xpath:attributes"],
+        ["xpath=//div[3]/div/div[2]/div/div/textarea", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "937c4352-8a9d-460e-b461-eca7b73b46ee",
+      "comment": "",
+      "command": "type",
+      "target": "id=scope",
+      "targets": [
+        ["id=scope", "id"],
+        ["css=#scope", "css:finder"],
+        ["xpath=//textarea[@id='scope']", "xpath:attributes"],
+        ["xpath=//div[3]/div/div[2]/div/div/textarea", "xpath:position"]
+      ],
+      "value": "ร้านซักผ้า"
+    }, {
+      "id": "e9b8b22c-e2e3-464f-a36c-07d51f072551",
+      "comment": "",
+      "command": "click",
+      "target": "css=.ant-space-item > .ant-btn-primary > span",
+      "targets": [
+        ["css=.ant-space-item > .ant-btn-primary > span", "css:finder"],
+        ["xpath=//div/div/div/div/div[2]/button/span", "xpath:position"],
+        ["xpath=//span[contains(.,'บันทึกข้อมูล')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }]
+  }],
+  "suites": [{
+    "id": "013cd8eb-7831-40d1-b661-ffee922ee473",
+    "name": "Default Suite",
+    "persistSession": false,
+    "parallel": false,
+    "timeout": 300,
+    "tests": ["4dca7cff-8af7-4045-ad67-47e3ab31797e"]
+  }],
+  "urls": ["http://localhost:5173/"],
+  "plugins": []
+}

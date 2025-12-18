@@ -37,8 +37,10 @@ var MockCriteria = []entity.Criteria{
 		CriteriaLevel: []entity.CriteriaLevel{
 			{Description: "Excellent (ดีเยี่ยม)", Score: 5},
 			{Description: "Good (ดี)", Score: 4},
-			{Description: "Fair (พอใช้)", Score: 3},
+			{Description: "Moderate (ปานกลาง)", Score: 3},
+			{Description: "Fair (พอใช้)", Score: 2},
 			{Description: "Poor (ปรับปรุง)", Score: 1},
+			{Description: "Very Poor (แย่)", Score: 0},
 		},
 	},
 
@@ -147,8 +149,10 @@ var MockCriteria = []entity.Criteria{
 		CriteriaLevel: []entity.CriteriaLevel{
 			{Description: "Excellent (ดีเยี่ยม)", Score: 5},
 			{Description: "Good (ดี)", Score: 4},
-			{Description: "Fair (พอใช้)", Score: 3},
+			{Description: "Moderate (ปานกลาง)", Score: 3},
+			{Description: "Fair (พอใช้)", Score: 2},
 			{Description: "Poor (ปรับปรุง)", Score: 1},
+			{Description: "Very Poor (แย่)", Score: 0},
 		},
 	},
 }

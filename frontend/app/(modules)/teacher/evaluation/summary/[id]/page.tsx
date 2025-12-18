@@ -5,6 +5,7 @@ import { Spin} from 'antd';
 import { ArrowLeftOutlined, TrophyOutlined, UserOutlined } from '@ant-design/icons';
 import { GetEvaluationSummary } from '../../../../../services/evaluation';
 import '../../../../../style/evaluation.css';
+import ConfirmGroupCompletion from './ConfirmGroupCompletion';
 
 export default function EvaluationSummaryPage() {
     const params = useParams();
@@ -26,10 +27,15 @@ export default function EvaluationSummaryPage() {
             <div className="summary-container animate-fade-in">
                 
                 {/* Header Navigation */}
-                <div style={{marginBottom: 24}}>
+                <div style={{marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                     <button className="btn-back" onClick={() => router.back()} style={{display: 'flex', alignItems: 'center', gap: 8, fontSize: '1rem', padding: '8px 16px', borderRadius: 8}}>
                         <ArrowLeftOutlined /> กลับไปหน้าประเมิน
                     </button>
+                    <ConfirmGroupCompletion groupId={Number(params.id)} onSuccess={() => {
+                        GetEvaluationSummary(Number(params.id)).then(res => {
+                            setData(res.data);
+                        });
+                    }} />
                 </div>
 
                 <div className="section-header">
