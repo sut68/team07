@@ -133,7 +133,7 @@ func PostGroupMember(c *gin.Context) {
 	}
 
 	if existingCount > 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "เคุณมีกลุ่มในปีการศึกษานี้อยู่แล้ว"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "คุณมีกลุ่มในปีการศึกษานี้อยู่แล้ว"})
 		return
 	}
 
@@ -195,8 +195,6 @@ func GetMyGroup(c *gin.Context) {
 	}
 
 	// 3. เตรียมข้อมูลตอบกลับ
-	// เราต้องการ group_project_id และ teacher_id (จาก GroupProject.TeacherID)
-	// ส่งกลับทั้ง object GroupProject เลยก็ได้
 	group := member.GroupProject
 
 	c.JSON(http.StatusOK, gin.H{

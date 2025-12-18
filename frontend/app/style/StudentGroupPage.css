@@ -1,0 +1,164 @@
+/* --- Layout หลัก --- */
+.group-selection-container {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  padding: 40px 20px;
+  font-family: 'Noto Sans Thai', sans-serif;
+}
+
+.content-wrapper {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+/* --- Header Section --- */
+.page-header {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 40px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e0e0e0;
+  gap: 20px;
+}
+
+/* ส่วนซ้าย: หัวข้อและคำอธิบาย */
+.header-left {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 15px;
+}
+
+.thick-red-bar {
+  width: 8px;
+  background-color: #8A011D;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.header-text-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.page-title {
+  font-size: 36px;
+  font-weight: 700;
+  color: #111;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.page-subtitle {
+  font-size: 18px;
+  font-weight: 500;
+  color: #6b7280;
+  margin: 4px 0 0 0;
+}
+
+/* --- Year Selector (Dropdown) --- */
+.year-selector-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: white;
+  padding: 8px 20px;
+  border-radius: 50px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.year-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.year-select {
+  border: none;
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+  background-color: transparent;
+  cursor: pointer;
+  outline: none;
+}
+
+.year-select:focus {
+  color: #8A011D;
+}
+
+/* --- Grid Layout (3 คอลัมน์) --- */
+.groups-grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr)); /* Mobile: 1 แถว */
+  gap: 24px;
+}
+
+@media (min-width: 768px) {
+  .page-header {
+    flex-direction: row;
+    align-items: flex-end;
+  }
+  
+  .groups-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)); /* Tablet: 2 แถว */
+  }
+}
+
+@media (min-width: 1024px) {
+  .groups-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)); /* Desktop: บังคับ 3 แถว */
+  }
+}
+
+/* --- Card Wrapper (เพื่อให้การ์ดสูงเท่ากัน) --- */
+.group-card-wrapper {
+  animation: fadeIn 0.5s ease-out forwards;
+  height: 100%;
+  min-width: 0;
+}
+
+.group-card-wrapper > div {
+  height: 100%;
+}
+
+/* --- Loading & Empty States --- */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  flex-direction: column;
+  gap: 20px;
+  color: #888;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #e0e0e0;
+  border-top-color: #8A011D;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.empty-state-box {
+  text-align: center;
+  padding: 60px;
+  background-color: white;
+  border: 2px dashed #d1d5db;
+  border-radius: 16px;
+  color: #9ca3af;
+  font-size: 18px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
