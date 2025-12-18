@@ -85,14 +85,14 @@ export default function ProgressPage() {
     if (locked) return;
     setIsLoading(true);
     setIsError(false);
-    setStatus("Loading updates...");
+    setStatus("กำลังโหลดความคืบหน้า...");
     try {
       await refresh();
-      setStatus("✅ Loaded progress updates");
+      setStatus(" โหลดสำเร็จ!!!");
     } catch (err: any) {
       console.error(err);
       setIsError(true);
-      setStatus(`❌ ${err?.response?.data?.message || err?.message || "Failed to load"}`);
+      setStatus(`❌ ${err?.response?.data?.message || err?.message || "โหลดไม่สำเร็จ"}`);
     } finally {
       setIsLoading(false);
     }
@@ -104,10 +104,10 @@ export default function ProgressPage() {
     setIsError(false);
 
     try {
-      if (!groupProjectId) throw new Error("Missing group_project_id");
-      if (!progressTitle.trim()) throw new Error("Please enter progress title");
-      if (!file) throw new Error("Please select a file");
-      if (!comment.trim()) throw new Error("Please write a comment");
+      if (!groupProjectId) throw new Error("ขาด group_project_id");
+      if (!progressTitle.trim()) throw new Error("ได้โปรดตั้งชื่อหัวข้อ");
+      if (!file) throw new Error("ได้โปรดเลือกไฟล์");
+      if (!comment.trim()) throw new Error("โปรดใส่ความคิดเห็น");
 
       const fd = new FormData();
       fd.append("group_project_id", String(groupProjectId));
@@ -127,10 +127,10 @@ export default function ProgressPage() {
       setComment("");
       setProgressTitle("");
       await refresh();
-      setStatus("✅ Submitted!");
+      setStatus("ส่งสำเร็จ !!!");
     } catch (err: any) {
       setIsError(true);
-      setStatus(err?.response?.data?.error || err?.message || "Submit failed");
+      setStatus(err?.response?.data?.error || err?.message || "ส่งไม่สำเร็จ");
     } finally {
       setIsLoading(false);
     }
@@ -142,7 +142,7 @@ export default function ProgressPage() {
     setIsError(false);
 
     try {
-      if (!selectedId) throw new Error("Select update");
+      if (!selectedId) throw new Error("ได้โปรดเลือกความคืบหน้าที่ต้องการจัดการ");
 
       const fd = new FormData();
       fd.append("id", String(selectedId));
@@ -162,7 +162,7 @@ export default function ProgressPage() {
       setComment("");
       setProgressTitle("");
       await refresh();
-      setStatus("✅ Updated!");
+      setStatus("Updated!");
     } catch (err: any) {
       setIsError(true);
       setStatus(err?.response?.data?.error || err?.message || "Update failed");
@@ -178,22 +178,22 @@ export default function ProgressPage() {
 
     try {
       const id = selectedId;
-      if (!id) throw new Error("Please select an update to delete");
+      if (!id) throw new Error("ได้โปรดเลือกความคืบหน้าที่ต้องการลบ");
 
-      if (!confirm(`Delete progress update #${id}?`)) {
+      if (!confirm(`ลบความคืบหน้า #${id}?`)) {
         setIsLoading(false);
         return;
       }
 
-      setStatus(`Deleting #${id}...`);
+      setStatus(`ลบ #${id}...`);
       await api.delete("/student/deleteProgress", { params: { id } });
 
       await refresh();
-      setStatus(`✅ Deleted progress #${id}`);
+      setStatus(`ลบความคืบหน้า #${id} สำเร็จ`);
     } catch (err: any) {
       console.error(err);
       setIsError(true);
-      setStatus(`❌ ${err?.response?.data?.message || err?.message || "Delete failed"}`);
+      setStatus(`❌ ${err?.response?.data?.message || err?.message || "เกิดข้อผิดพลาด"}`);
     } finally {
       setIsLoading(false);
     }
@@ -218,10 +218,7 @@ export default function ProgressPage() {
     <div style={styles.page}>
       <div style={styles.header}>
         <div>
-          <div style={styles.appTitle}>Progress Updates</div>
-          <div style={styles.subTitle}>
-            Group: <b>{groupProjectId || "-"}</b> • Student: <b>{userId || "-"}</b>
-          </div>
+          <div style={styles.appTitle}>ติดตามความคืบหน้า</div>
         </div>
 
         <div style={styles.modeTabs}>
@@ -229,25 +226,25 @@ export default function ProgressPage() {
             onClick={() => !locked && setMode("view")}
             style={mode === "view" ? styles.tabActive : styles.tab}
             disabled={locked}
-            title={locked ? "Locked until you join a group" : ""}
+            title={locked ? "ใช้งานไม่ได้เนื่องจากยังไม่มีกลุ่ม" : ""}
           >
-            View
+            ดูความคืบหน้า
           </button>
           <button
             onClick={() => !locked && setMode("submit")}
             style={mode === "submit" ? styles.tabActive : styles.tab}
             disabled={locked}
-            title={locked ? "Locked until you join a group" : ""}
+            title={locked ? "ใช้งานไม่ได้เนื่องจากยังไม่มีกลุ่ม" : ""}
           >
-            Submit
+            ส่งความคืบหน้า
           </button>
           <button
             onClick={() => !locked && setMode("edit")}
             style={mode === "edit" ? styles.tabActive : styles.tab}
             disabled={locked}
-            title={locked ? "Locked until you join a group" : ""}
+            title={locked ? "ใช้งานไม่ได้เนื่องจากยังไม่มีกลุ่ม" : ""}
           >
-            Manage
+            จัดการความคืบหน้า
           </button>
         </div>
       </div>
@@ -263,38 +260,38 @@ export default function ProgressPage() {
               border: locked ? "1px solid #fde68a" : "1px solid rgba(0,0,0,0.05)",
             }}
           >
-            <b>Status:</b> {locked ? "🔒 Locked — you still don’t have a group yet." : status}
+            <b>Status:</b> {locked ? "ระบบจะล็อกจนกว่าคุณจะมีกลุ่ม." : status}
           </div>
 
           {locked ? (
             <div style={styles.lockCard}>
-              <div style={styles.lockTitle}>You don’t have a group yet</div>
+              <div style={styles.lockTitle}>คุณยังไม่มีกลุ่มโปรเจกต์</div>
               <div style={styles.lockDesc}>
-                Join a group project first, then you can submit and manage progress updates here.
+                กรุณาเข้าร่วมกลุ่มก่อนเพื่อปลดล็อกหน้านี้
               </div>
 
               <div style={styles.lockSteps}>
                 <div style={styles.lockStep}>
-                  <b>1)</b> Go to <b>Groups / Projects</b>
+                  <b>1)</b> ไปยังหน้า <b> กลุ่มของฉัน</b>
                 </div>
                 <div style={styles.lockStep}>
-                  <b>2)</b> Join or create a group
+                  <b>2)</b> กดเข้าร่วมกลุ่ม
                 </div>
                 <div style={styles.lockStep}>
-                  <b>3)</b> Come back to this page
+                  <b>3)</b> กลับมาหน้านี้
                 </div>
               </div>
 
               <div style={styles.lockHint}>
-                (This page is locked because <code>group_project_id</code> is not set / invalid.)
+                (หากคิดว่านี่เป็นข้อผิดพลาด โปรดรายงานปัญหา.)
               </div>
             </div>
           ) : (
             <>
               {mode === "view" && (
                 <div style={styles.card}>
-                  <div style={styles.cardTitle}>Latest updates</div>
-                  <div style={styles.cardDesc}>See what your group has submitted so far.</div>
+                  <div style={styles.cardTitle}>รีเฟรชระบบ</div>
+                  <div style={styles.cardDesc}>หากระบบยังไม่อัปเดตสามารถกดปุ่มนี้ได้.</div>
 
                   <button onClick={handleView} disabled={isLoading} style={styles.primaryBtn}>
                     {isLoading ? "Loading..." : "Refresh"}
@@ -304,11 +301,11 @@ export default function ProgressPage() {
 
               {mode === "submit" && (
                 <div style={styles.card}>
-                  <div style={styles.cardTitle}>Submit a new update</div>
-                  <div style={styles.cardDesc}>Use Name as progress title (Work 1 / Fix bug / etc.).</div>
+                  <div style={styles.cardTitle}>ส่งความคืบหน้า</div>
+                  
 
                   <div style={styles.field}>
-                    <label style={styles.label}>Name (Progress title)</label>
+                    <label style={styles.label}>ชื่อโครงงาน (Progress title)</label>
                     <input
                       value={progressTitle}
                       onChange={(e) => setProgressTitle(e.target.value)}
@@ -319,7 +316,7 @@ export default function ProgressPage() {
                   </div>
 
                   <div style={styles.field}>
-                    <label style={styles.label}>File</label>
+                    <label style={styles.label}>ไฟล์</label>
                     <input
                       type="file"
                       onChange={(e) => setFile(e.target.files?.[0] ?? null)}
@@ -330,18 +327,18 @@ export default function ProgressPage() {
                   </div>
 
                   <div style={styles.field}>
-                    <label style={styles.label}>Comment</label>
+                    <label style={styles.label}>ความคิดเห็น</label>
                     <textarea
                       value={comment}
                       onChange={(e) => setComment(e.target.value)}
-                      placeholder="What did you work on? Any issues?"
+                      placeholder="อยากมีอะไรจะบอกคนอื่นๆไหม"
                       style={styles.textarea}
                       disabled={isLoading}
                     />
                   </div>
 
                   <button onClick={handleSubmit} disabled={isLoading} style={styles.primaryBtn}>
-                    {isLoading ? "Submitting..." : "Submit update"}
+                    {isLoading ? "Submitting..." : "ส่งความคืบหน้า"}
                   </button>
                 </div>
               )}
@@ -376,7 +373,7 @@ export default function ProgressPage() {
                     <input
                       value={progressTitle}
                       onChange={(e) => setProgressTitle(e.target.value)}
-                      placeholder="Leave blank to keep same"
+                      placeholder="field ที่ว่างจะยังคง value เดิมไว้"
                       style={styles.input}
                       disabled={isLoading}
                     />
@@ -398,7 +395,7 @@ export default function ProgressPage() {
                     <textarea
                       value={comment}
                       onChange={(e) => setComment(e.target.value)}
-                      placeholder="Leave blank to keep same"
+                      placeholder="field ที่ว่างจะยังคง value เดิมไว้"
                       style={styles.textarea}
                       disabled={isLoading}
                     />
@@ -406,7 +403,7 @@ export default function ProgressPage() {
 
                   <div style={{ display: "flex", gap: 10 }}>
                     <button onClick={handleEdit} disabled={isLoading} style={styles.primaryBtn}>
-                      {isLoading ? "Saving..." : "Save changes"}
+                      {isLoading ? "Saving..." : "บันทึก"}
                     </button>
                     <button onClick={handleDelete} disabled={isLoading} style={styles.dangerBtn}>
                       Delete
