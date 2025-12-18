@@ -1,34 +1,10 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import {
-    GetUsers,
-    ImportUsersCSV,
-    CreateUser,
-    GetGenders,
-    GetBranches,
-    GetRoles,
-    GetUserStatuses
-} from '../../../services/user';
-import {
-    UserProfileInterface,
-    GenderInterface,
-    BranchInterface,
-    RoleInterface,
-    StatusInterface,
-    CreateUserInterface
-} from '../../../interfaces/Users';
+import { GetUsers, ImportUsersCSV, CreateUser, GetGenders, GetBranches, GetRoles, GetUserStatuses, DeleteUser } from '../../../services/user';
+import { UserProfileInterface, GenderInterface, BranchInterface, RoleInterface, StatusInterface, CreateUserInterface } from '../../../interfaces/Users';
 import "../../../style/import-user.css";
 import "../../../style/admin-dashboard.css";
-import {
-    CloudUploadOutlined,
-    FileTextOutlined,
-    DownloadOutlined,
-    TeamOutlined,
-    SearchOutlined,
-    PlusOutlined,
-    SaveOutlined
-} from '@ant-design/icons';
+import { CloudUploadOutlined, FileTextOutlined, DownloadOutlined, TeamOutlined, SearchOutlined, PlusOutlined, SaveOutlined, DeleteOutlined } from '@ant-design/icons';
 
 export default function UsersManagePage() {
     // --- State: Data ---
@@ -73,7 +49,6 @@ export default function UsersManagePage() {
             if (branchesRes.status === 200) setBranches(branchesRes.data);
             if (rolesRes.status === 200) setRoles(rolesRes.data);
             if (statusesRes.status === 200) setStatuses(statusesRes.data);
-
         } catch (error) {
             console.error("Error fetching data:", error);
         } finally {
@@ -87,7 +62,6 @@ export default function UsersManagePage() {
 
     // 2. Logic Import CSV
     const handleBoxClick = () => !isUploading && fileInputRef.current?.click();
-
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
             const selectedFile = e.target.files[0];
@@ -156,7 +130,6 @@ export default function UsersManagePage() {
             if (res.status === 201) {
                 alert("✅ เพิ่มผู้ใช้งานสำเร็จ!");
                 setShowCreate(false);
-                // Reset Form (กลับไปเป็นค่า Default)
                 setNewUser({
                     username: "", password: "", firstname: "", lastname: "",
                     email: "", phone: "", gender_id: 1, branch_id: 1, role_id: 3, status_id: 1
@@ -165,9 +138,29 @@ export default function UsersManagePage() {
             } else {
                 alert("❌ เกิดข้อผิดพลาด: " + res.data.error);
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
-            alert("❌ ไม่สามารถเชื่อมต่อ Server ได้");
+            // ✅ แสดง Error message ที่โยนมาจาก Service (เช่น ห้ามสร้าง Admin)
+            alert("❌ " + (error.response?.data?.error || error.message || "ไม่สามารถเชื่อมต่อ Server ได้"));
+        }
+    };
+
+    // ✅ 4. Logic Delete User (เพิ่มใหม่)
+    const handleDelete = async (id: number) => {
+        const isConfirmed = confirm("⚠️ คุณแน่ใจหรือไม่ว่าจะลบผู้ใช้งานรายนี้? \nการกระทำนี้ไม่สามารถย้อนกลับได้");
+        if (!isConfirmed) return;
+
+        try {
+            const res = await DeleteUser(id);
+            if (res.status === 200) {
+                alert("✅ ลบผู้ใช้งานสำเร็จ");
+                fetchAllData(); // โหลดข้อมูลใหม่
+            } else {
+                alert("❌ ลบไม่สำเร็จ: " + res.data.error);
+            }
+        } catch (error: any) {
+            console.error(error);
+            alert("❌ เกิดข้อผิดพลาด: " + (error.response?.data?.error || error.message));
         }
     };
 
@@ -180,7 +173,6 @@ export default function UsersManagePage() {
 
     return (
         <div className="dashboard-container">
-
             {/* Header Page */}
             <div className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
@@ -198,7 +190,6 @@ export default function UsersManagePage() {
                     >
                         <PlusOutlined /> เพิ่มผู้ใช้งาน
                     </button>
-
                     <button
                         onClick={() => setShowImport(true)}
                         style={{
@@ -242,19 +233,21 @@ export default function UsersManagePage() {
                                     <th>บทบาท (Role)</th>
                                     <th>สาขา (Branch)</th>
                                     <th>สถานะ</th>
+                                    {/* ✅ เพิ่มหัวตาราง Action */}
+                                    <th style={{ textAlign: 'center' }}>จัดการ</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {filteredUsers.length === 0 ? (
                                     <tr>
-                                        <td colSpan={6} style={{ textAlign: 'center', padding: '30px', color: '#999' }}>
+                                        <td colSpan={7} style={{ textAlign: 'center', padding: '30px', color: '#999' }}>
                                             ไม่พบข้อมูลผู้ใช้งาน
                                         </td>
                                     </tr>
                                 ) : (
                                     filteredUsers.map((user) => (
                                         <tr key={user.ID}>
-                                            <td style={{ fontWeight: 'bold', color: '#9a0120', textAlign: 'center' }}>#{user.ID}</td>
+                                            <td style={{ fontWeight: 'bold', color: '#9a0120', textAlign: 'center' }}>{user.ID}</td>
                                             <td>{user.username}</td>
                                             <td>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -278,6 +271,30 @@ export default function UsersManagePage() {
                                                 <span style={{ color: user.status?.status === 'Active' ? 'green' : 'red', fontWeight: 500 }}>
                                                     {user.status?.status || "-"}
                                                 </span>
+                                            </td>
+                                            {/* ✅ แก้ไขปุ่มลบ: ซ่อนปุ่มถ้าเป็น Admin */}
+                                            <td style={{ textAlign: 'center' }}>
+                                                {user.role?.role !== 'Admin' ? (
+                                                    <button
+                                                        onClick={() => user.ID && handleDelete(user.ID)}
+                                                        style={{
+                                                            backgroundColor: 'transparent',
+                                                            border: 'none',
+                                                            cursor: 'pointer',
+                                                            color: '#ff4d4f',
+                                                            fontSize: '1.2rem',
+                                                            transition: 'color 0.2s'
+                                                        }}
+                                                        title="ลบผู้ใช้งาน"
+                                                    >
+                                                        <DeleteOutlined />
+                                                    </button>
+                                                ) : (
+                                                    // ถ้าเป็น Admin ให้แสดงเครื่องหมายขีด หรือกุญแจล็อคแทน
+                                                    <span style={{ color: '#ccc', fontSize: '1.2rem', cursor: 'not-allowed' }} title="ไม่สามารถลบ Admin ได้">
+                                                        🚫
+                                                    </span>
+                                                )}
                                             </td>
                                         </tr>
                                     ))
@@ -303,7 +320,6 @@ export default function UsersManagePage() {
                                 style={{ position: 'absolute', top: '20px', right: '20px', background: 'none', border: 'none', color: 'white', fontSize: '1.5rem', cursor: 'pointer' }}
                             >×</button>
                         </div>
-
                         <div className="import-content">
                             <div className="template-section">
                                 <span>ยังไม่มีไฟล์ต้นแบบ? </span>
@@ -311,7 +327,6 @@ export default function UsersManagePage() {
                                     <DownloadOutlined /> ดาวน์โหลด Template CSV
                                 </button>
                             </div>
-
                             <div
                                 className="upload-area"
                                 onClick={handleBoxClick}
@@ -327,7 +342,6 @@ export default function UsersManagePage() {
                                     </div>
                                 )}
                             </div>
-
                             <div className="action-buttons">
                                 <button className="btn-back" onClick={() => setShowImport(false)} disabled={isUploading}>ยกเลิก</button>
                                 <button className="btn-upload" onClick={handleUpload} disabled={!file || isUploading}>
@@ -356,7 +370,6 @@ export default function UsersManagePage() {
                         </div>
 
                         <form onSubmit={handleCreateSubmit} className="create-user-form">
-
                             <div className="form-group">
                                 <label>Username <span style={{ color: 'red' }}>*</span></label>
                                 <input className="form-input" name="username" value={newUser.username} onChange={handleInputChange} required placeholder="เช่น student66" />
@@ -365,7 +378,6 @@ export default function UsersManagePage() {
                                 <label>Password <span style={{ color: 'red' }}>*</span></label>
                                 <input className="form-input" type="password" name="password" value={newUser.password} onChange={handleInputChange} required placeholder="กำหนดรหัสผ่าน" />
                             </div>
-
                             <div className="form-group">
                                 <label>ชื่อจริง <span style={{ color: 'red' }}>*</span></label>
                                 <input className="form-input" name="firstname" value={newUser.firstname} onChange={handleInputChange} required placeholder="ชื่อภาษาอังกฤษ" />
@@ -374,7 +386,6 @@ export default function UsersManagePage() {
                                 <label>นามสกุล <span style={{ color: 'red' }}>*</span></label>
                                 <input className="form-input" name="lastname" value={newUser.lastname} onChange={handleInputChange} required placeholder="นามสกุลภาษาอังกฤษ" />
                             </div>
-
                             <div className="form-group">
                                 <label>อีเมล</label>
                                 <input className="form-input" type="email" name="email" value={newUser.email} onChange={handleInputChange} placeholder="example@sut.ac.th" />
@@ -400,7 +411,12 @@ export default function UsersManagePage() {
                             <div className="form-group">
                                 <label>บทบาท (Role)</label>
                                 <select className="form-input" name="role_id" value={newUser.role_id} onChange={handleInputChange}>
-                                    {roles.map(r => <option key={r.ID} value={r.ID}>{r.role}</option>)}
+                                    {roles
+                                        .filter(r => r.role !== 'Admin') // กรองเอา Admin ออก
+                                        .map(r => (
+                                            <option key={r.ID} value={r.ID}>{r.role}</option>
+                                        ))
+                                    }
                                 </select>
                             </div>
                             <div className="form-group">

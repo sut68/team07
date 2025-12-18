@@ -28,9 +28,21 @@ async function GetUsers() {
     return await api.get("/admin/users");
 }
 
-// POST: สร้าง User ใหม่
 async function CreateUser(data: CreateUserInterface) {
+    // กำหนด ID ของ Role Admin (ต้องเช็คใน DB ว่าเลขอะไร ปกติคือ 1)
+    const ADMIN_ROLE_ID = 1; 
+
+    if (data.role_id === ADMIN_ROLE_ID) {
+        // Throw Error เพื่อให้หน้า Form จับได้แล้วแจ้งเตือน
+        throw new Error("Access Denied: ไม่อนุญาตให้สร้างผู้ดูแลระบบ (Admin) ผ่านช่องทางนี้");
+    }
+
     return await api.post("/admin/user", data);
+}
+
+// ✅ ใหม่: DELETE ลบ User ตาม ID
+async function DeleteUser(id: number) {
+    return await api.delete(`/admin/user/${id}`);
 }
 
 async function GetGenders() {
@@ -58,5 +70,6 @@ export {
     GetUserProfile,
     UpdateUserProfile,
     ImportUsersCSV,
-    CreateUser
+    CreateUser,
+    DeleteUser
 };
