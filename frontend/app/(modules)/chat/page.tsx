@@ -3,9 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { GetAllChat, InsertChat, GetProcessIDbyGroupID } from "../../services/chat";
 import type { ProcessInterface, FullChat } from "../../interfaces/Chat";
-
-
-const GROUP_PROJECT_ID = 1;
+import { GetGroupProjectIDByUser } from "../../services/progress";
 
 const RED = "#9a0120";
 const RED_DARK = "#7d0019";
@@ -14,6 +12,8 @@ const BG = "#fafafa";
 
 export default function ChatPage() {
   const [userId, setUserId] = useState<string | null>(null);
+  const [groupProjectId, setGroupProjectId] = useState<number>(0);
+
   const [processes, setProcesses] = useState<ProcessInterface[]>([]);
   const [activeRoomId, setActiveRoomId] = useState<number | null>(null);
 
@@ -26,7 +26,27 @@ export default function ChatPage() {
     setUserId(localStorage.getItem("user_id"));
   }, []);
 
-  const idsOk = GROUP_PROJECT_ID > 0 && Number(userId) > 0;
+  useEffect(() => {
+    if (!userId) return;
+
+    const uid = Number(userId);
+    if (!Number.isFinite(uid) || uid <= 0) {
+      setGroupProjectId(0);
+      return;
+    }
+
+    (async () => {
+      try {
+        const res = await GetGroupProjectIDByUser({ student_id: uid });
+        const gp = Number(res?.group_project_id ?? 0);
+        setGroupProjectId(Number.isFinite(gp) && gp > 0 ? gp : 0);
+      } catch {
+        setGroupProjectId(0);
+      }
+    })();
+  }, [userId]);
+
+  const idsOk = groupProjectId > 0 && Number(userId) > 0;
   const roomJoined = activeRoomId !== null;
 
   const currentRoom = useMemo(
@@ -39,21 +59,19 @@ export default function ChatPage() {
     if (!idsOk || rid == null) return;
 
     const res = await GetAllChat({
-      group_project_id: GROUP_PROJECT_ID,
+      group_project_id: groupProjectId,
       process_id: Number(rid),
     });
 
     setChats(Array.isArray(res) ? res : []);
   };
 
-
   useEffect(() => {
     if (!idsOk) return;
 
     (async () => {
-      const res = await GetProcessIDbyGroupID(GROUP_PROJECT_ID);
+      const res = await GetProcessIDbyGroupID(groupProjectId);
 
- 
       const normalized = (Array.isArray(res) ? res : [])
         .map((p: any) => {
           const rawId = p?.id ?? p?.ID ?? p?.process_id ?? p?.progress_id;
@@ -65,22 +83,22 @@ export default function ChatPage() {
 
       if (normalized.length > 0) {
         setActiveRoomId(normalized[0].id);
+      } else {
+        setActiveRoomId(null);
       }
     })();
-  }, [idsOk]);
+  }, [idsOk, groupProjectId]);
 
-  // Room changed → load chats
   useEffect(() => {
     if (!roomJoined) return;
     setChats([]);
-    loadChats(activeRoomId as number);
+    void loadChats(activeRoomId as number);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeRoomId]);
 
-  // Optional polling
   useEffect(() => {
     if (!roomJoined) return;
-    const t = setInterval(() => loadChats(), 2000);
+    const t = setInterval(() => void loadChats(), 2000);
     return () => clearInterval(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeRoomId]);
@@ -98,9 +116,9 @@ export default function ChatPage() {
     if (!text) return;
 
     await InsertChat({
-      group_project_id: GROUP_PROJECT_ID,
+      group_project_id: groupProjectId,
       process_id: Number(activeRoomId),
-      sender_id: Number(userId), // Updated to use state
+      sender_id: Number(userId),
       message: text,
     });
 
@@ -109,10 +127,9 @@ export default function ChatPage() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  if (typeof window === "undefined") return null;
 
-  if (!userId && typeof window === 'undefined') {
-     return null; 
-  }
+  const locked = !idsOk;
 
   return (
     <div
@@ -135,17 +152,19 @@ export default function ChatPage() {
         }}
       >
         <div style={{ padding: 14, borderBottom: `1px solid ${BORDER}` }}>
-          <div style={{ fontSize: 16, fontWeight: 800, color: "#111827" }}>Topics</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: "#111827" }}>หัวข้อ</div>
           <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>
-            Group <b>{GROUP_PROJECT_ID}</b> • User <b>{userId}</b>
+            กลุ่ม <b>{groupProjectId || "-"}</b> • ผู้ใช้ <b>{userId || "-"}</b>
           </div>
         </div>
 
         <div style={{ padding: 10, overflowY: "auto" }}>
-          {processes.length === 0 ? (
+          {locked ? (
             <div style={{ padding: 10, color: "#6b7280", fontSize: 13 }}>
-              No topics
+              คุณยังไม่มีกลุ่ม โปรดเข้าร่วมกลุ่มก่อนจึงจะใช้งานแชทได้
             </div>
+          ) : processes.length === 0 ? (
+            <div style={{ padding: 10, color: "#6b7280", fontSize: 13 }}>ยังไม่มีหัวข้อ</div>
           ) : (
             processes.map((p) => {
               const isActive = Number(p.id) === Number(activeRoomId);
@@ -169,7 +188,9 @@ export default function ChatPage() {
                     cursor: "pointer",
                     textAlign: "left",
                     fontWeight: isActive ? 800 : 600,
+                    opacity: locked ? 0.6 : 1,
                   }}
+                  disabled={locked}
                 >
                   <span
                     style={{
@@ -223,10 +244,14 @@ export default function ChatPage() {
                 whiteSpace: "nowrap",
               }}
             >
-              {currentRoom ? currentRoom.file : "Select a topic"}
+              {locked ? "ยังไม่พร้อมใช้งาน" : currentRoom ? currentRoom.file : "เลือกหัวข้อ"}
             </div>
             <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>
-              {roomJoined ? `${chats.length} messages` : "Click a topic on the left"}
+              {locked
+                ? "โปรดเข้าร่วมกลุ่มก่อน"
+                : roomJoined
+                ? `${chats.length} ข้อความ`
+                : "คลิกหัวข้อทางซ้าย"}
             </div>
           </div>
 
@@ -249,10 +274,10 @@ export default function ChatPage() {
                 width: 8,
                 height: 8,
                 borderRadius: 999,
-                background: roomJoined ? "#22c55e" : "#9ca3af",
+                background: locked ? "#9ca3af" : roomJoined ? "#22c55e" : "#9ca3af",
               }}
             />
-            {roomJoined ? "Connected" : "Not joined"}
+            {locked ? "ยังไม่พร้อม" : roomJoined ? "เชื่อมต่อแล้ว" : "ยังไม่ได้เข้าห้อง"}
           </div>
         </div>
 
@@ -265,14 +290,18 @@ export default function ChatPage() {
             background: BG,
           }}
         >
-          {!roomJoined ? (
+          {locked ? (
             <div style={{ textAlign: "center", marginTop: 90, color: "#6b7280" }}>
-              Select a topic on the left
+              คุณยังไม่มีกลุ่ม โปรดเข้าร่วมกลุ่มก่อนจึงจะใช้งานแชทได้
+            </div>
+          ) : !roomJoined ? (
+            <div style={{ textAlign: "center", marginTop: 90, color: "#6b7280" }}>
+              เลือกหัวข้อทางซ้าย
             </div>
           ) : chats.length === 0 ? (
             <div style={{ textAlign: "center", marginTop: 90, color: "#6b7280" }}>
-              <div style={{ fontWeight: 800, color: "#111827" }}>No messages</div>
-              <div style={{ marginTop: 6 }}>Be the first one to say hi 👋</div>
+              <div style={{ fontWeight: 800, color: "#111827" }}>ยังไม่มีข้อความ</div>
+              <div style={{ marginTop: 6 }}>พิมพ์ข้อความแรกได้เลย</div>
             </div>
           ) : (
             chats.map((c) => {
@@ -297,7 +326,7 @@ export default function ChatPage() {
                         textAlign: isMe ? "right" : "left",
                       }}
                     >
-                      {isMe ? "Me" : `User ${c.sender_id}`}
+                      {isMe ? "ฉัน" : `ผู้ใช้ ${c.sender_id}`}
                     </div>
 
                     <div
@@ -339,8 +368,14 @@ export default function ChatPage() {
           <input
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            disabled={!roomJoined}
-            placeholder={!roomJoined ? "Select topic first..." : "Type a message..."}
+            disabled={locked || !roomJoined}
+            placeholder={
+              locked
+                ? "ยังไม่สามารถส่งข้อความได้"
+                : !roomJoined
+                ? "กรุณาเลือกหัวข้อก่อน"
+                : "พิมพ์ข้อความ..."
+            }
             style={{
               flex: 1,
               height: 42,
@@ -355,25 +390,25 @@ export default function ChatPage() {
 
           <button
             type="submit"
-            disabled={!roomJoined || !message.trim()}
+            disabled={locked || !roomJoined || !message.trim()}
             style={{
               height: 42,
               padding: "0 18px",
               borderRadius: 10,
               border: "none",
-              background: !roomJoined || !message.trim() ? "#e5e7eb" : RED,
-              color: !roomJoined || !message.trim() ? "#6b7280" : "#fff",
-              cursor: !roomJoined || !message.trim() ? "not-allowed" : "pointer",
+              background: locked || !roomJoined || !message.trim() ? "#e5e7eb" : RED,
+              color: locked || !roomJoined || !message.trim() ? "#6b7280" : "#fff",
+              cursor: locked || !roomJoined || !message.trim() ? "not-allowed" : "pointer",
               fontWeight: 900,
             }}
             onMouseEnter={(e) => {
-              if (!(!roomJoined || !message.trim())) e.currentTarget.style.background = RED_DARK;
+              if (!(locked || !roomJoined || !message.trim())) e.currentTarget.style.background = RED_DARK;
             }}
             onMouseLeave={(e) => {
-              if (!(!roomJoined || !message.trim())) e.currentTarget.style.background = RED;
+              if (!(locked || !roomJoined || !message.trim())) e.currentTarget.style.background = RED;
             }}
           >
-            Send
+            ส่ง
           </button>
         </form>
       </main>
