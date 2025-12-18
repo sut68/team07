@@ -4,11 +4,8 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { GetAllChat, InsertChat, GetProcessIDbyGroupID } from "../../services/chat";
 import type { ProcessInterface, FullChat } from "../../interfaces/Chat";
 
-/* =========================
-   FIXED IDs (edit these)
-   ========================= */
+
 const GROUP_PROJECT_ID = 1;
-/* ========================= */
 
 const RED = "#9a0120";
 const RED_DARK = "#7d0019";
@@ -49,14 +46,14 @@ export default function ChatPage() {
     setChats(Array.isArray(res) ? res : []);
   };
 
-  // Load topics (rooms) and auto-join first one
+
   useEffect(() => {
     if (!idsOk) return;
 
     (async () => {
       const res = await GetProcessIDbyGroupID(GROUP_PROJECT_ID);
 
-      // ✅ robust mapping (this is what makes topics appear reliably)
+ 
       const normalized = (Array.isArray(res) ? res : [])
         .map((p: any) => {
           const rawId = p?.id ?? p?.ID ?? p?.process_id ?? p?.progress_id;
@@ -103,7 +100,7 @@ export default function ChatPage() {
     await InsertChat({
       group_project_id: GROUP_PROJECT_ID,
       process_id: Number(activeRoomId),
-      sender_id: Number(userId),
+      sender_id: Number(userId), // Updated to use state
       message: text,
     });
 
@@ -111,6 +108,11 @@ export default function ChatPage() {
     await loadChats();
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+
+  if (!userId && typeof window === 'undefined') {
+     return null; 
+  }
 
   return (
     <div

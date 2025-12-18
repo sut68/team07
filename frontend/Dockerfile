@@ -31,7 +31,7 @@ COPY --from=builder /app/package-lock.json ./package-lock.json
 
 # Environment Variable สำหรับ Runtime
 ENV NODE_ENV production
-ENV PORT 5173 
+ENV PORT 5173
 
 EXPOSE 5173
 CMD ["npm", "start"]

@@ -69,8 +69,13 @@ export default function BookingModal({ visible, onClose, onSuccess, rooms, types
                 const typeId = (initialData.type_id || initialData.appointment_type_id);
 
                 if (typeId === 3) {
-                    const available = mockEvaluations.filter(e => e.type_id === 3 && (e.name === "Ethics Test" || e.name === "Peer Assessment" || e.name === "Advisor Evaluation"));
-                    setEvaluations(available);
+                    if (initialData.evaluation_id === 4) {
+                        // If currently Committee Evaluation (Auto), show all so it displays correctly
+                        setEvaluations(mockEvaluations.filter(e => e.type_id === 3));
+                    } else {
+                        // If Manual, exclude Committee Evaluation so it cannot be selected
+                        setEvaluations(mockEvaluations.filter(e => e.type_id === 3 && e.id !== 4));
+                    }
                 } else {
                     setEvaluations([]);
                 }
@@ -289,7 +294,7 @@ export default function BookingModal({ visible, onClose, onSuccess, rooms, types
 
                     {evaluations.length > 0 && (
                         <Form.Item name="evaluation_id" label="แบบประเมิน" rules={[{ required: true }]}>
-                            <Select placeholder="เลือกแบบประเมิน">
+                            <Select placeholder="เลือกแบบประเมิน" disabled={initialData?.evaluation_id === 4}>
                                 {evaluations.map(e => (
                                     <Option key={e.id} value={e.id}>
                                         {e.name}

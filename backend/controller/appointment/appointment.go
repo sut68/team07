@@ -36,6 +36,7 @@ func ListAppointments(c *gin.Context) {
 		Preload("AppointmentType", func(db *gorm.DB) *gorm.DB { return db.Select("id", "name") }).
 		Preload("GroupProject", func(db *gorm.DB) *gorm.DB { return db.Select("id", "group_number", "group_status") }).
 		Preload("Teacher", func(db *gorm.DB) *gorm.DB { return db.Select("id", "username", "firstname", "lastname") }).
+		Preload("Evaluation", func(db *gorm.DB) *gorm.DB { return db.Select("id", "name") }).
 		Joins("JOIN users ON users.id = appointments.teacher_id").
 		Where("appointments.teacher_id = ?", claims.ID).
 		Or("appointments.appointment_type_id = ? AND users.branch_id = ?", 3, claims.BranchID).
@@ -63,6 +64,13 @@ func ListAppointments(c *gin.Context) {
 			"group_number":       apt.GroupProject.GroupNumber,
 			"teacher_name":       apt.Teacher.Firstname + " " + apt.Teacher.Lastname,
 			"evaluation_id":      apt.EvaluationID,
+			"evaluation_name": func() string {
+				if apt.Evaluation != nil {
+					return apt.Evaluation.Name
+				} else {
+					return ""
+				}
+			}(),
 		}
 		response = append(response, item)
 	}
@@ -93,6 +101,9 @@ func GetAppointment(c *gin.Context) {
 		}).
 		Preload("Teacher", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id", "username", "firstname", "lastname", "phone", "email")
+		}).
+		Preload("Evaluation", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id", "name")
 		}).
 		Joins("JOIN users ON users.id = appointments.teacher_id").
 		Where("appointments.id = ?", id).
@@ -129,6 +140,13 @@ func GetAppointment(c *gin.Context) {
 		"teacher_email": apt.Teacher.Email,
 		"teacher_phone": apt.Teacher.Phone,
 		"evaluation_id": apt.EvaluationID,
+		"evaluation_name": func() string {
+			if apt.Evaluation != nil {
+				return apt.Evaluation.Name
+			} else {
+				return ""
+			}
+		}(),
 	})
 }
 

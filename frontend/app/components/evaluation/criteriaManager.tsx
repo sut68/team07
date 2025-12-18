@@ -206,7 +206,8 @@ export default function CriteriaManager({ visible, onClose }: Props) {
                 open={isCriteriaModalOpen}
                 onCancel={() => setIsCriteriaModalOpen(false)}
                 onOk={() => form.submit()}
-                destroyOnClose
+                destroyOnHidden
+
                 centered
             >
                 <Form form={form} layout="vertical" onFinish={handleSaveCriteria}>
@@ -230,7 +231,8 @@ export default function CriteriaManager({ visible, onClose }: Props) {
                 open={isLevelModalOpen}
                 onCancel={() => setIsLevelModalOpen(false)}
                 onOk={() => levelForm.submit()}
-                destroyOnClose
+                destroyOnHidden
+
                 centered
             >
                 <Form form={levelForm} layout="vertical" onFinish={handleSaveLevel}>
