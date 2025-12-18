@@ -12,6 +12,20 @@ import (
 func TestTopicApproval(t *testing.T) {
 	g := NewGomegaWithT(t)
 
+	t.Run(`True input`, func(t *testing.T) {
+		approval := &entity.TopicApproval{
+			Status:       "Approved",
+			Comment:      "Good topic",
+			ApprovalDate: time.Now(),
+			TeacherID:    1,
+			TopicID:      1,
+		}
+
+		ok, err := govalidator.ValidateStruct(approval)
+		g.Expect(ok).To(BeTrue())
+		g.Expect(err).To(BeNil())
+	})
+
 	t.Run(`Status must be Approved or Rejected`, func(t *testing.T) {
 		approval := &entity.TopicApproval{
 			Status:       "Pending", // ผิดตรงนี้ - ต้องเป็น Approved หรือ Rejected เท่านั้น

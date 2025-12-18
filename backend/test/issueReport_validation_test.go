@@ -12,6 +12,21 @@ import (
 func TestIssueReport(t *testing.T) {
 	g := NewGomegaWithT(t)
 
+	t.Run(`True input`, func(t *testing.T) {
+		issueReport := &entity.IssueReport{
+			Detail:     "Issue 1",
+			ReportDate: time.Now().AddDate(-20, 0, 0),
+			StatusID:   1,
+			TypeID:     1,
+			UserID:     1,
+		}
+
+		ok, err := govalidator.ValidateStruct(issueReport)
+
+		g.Expect(ok).To(BeTrue())
+		g.Expect(err).To(BeNil())
+	})
+
 	t.Run(`Detail is required`, func(t *testing.T) {
 		issueReport := &entity.IssueReport{
 			Detail:     "", // ผิดตรงนี้
