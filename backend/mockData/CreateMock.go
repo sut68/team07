@@ -64,6 +64,9 @@ var MockActionType = []entity.ActionType{
 	{ActionType: "CreateCriteriaLevel"},
 	{ActionType: "DeleteCriteriaLevel"},
 	{ActionType: "UpdateCriteriaLevel"},
+	{ActionType: "UpdateUserStatus"},
+	{ActionType: "UpdateGroupStatus"},
+	
 }
 
 func Uint(v uint) *uint { return &v }

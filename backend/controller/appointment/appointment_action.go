@@ -25,10 +25,12 @@ func SearchGroup(c *gin.Context) {
 	if mode == "manual" {
 		query = query.Where("teacher_id = ?", claims.ID)
 	} else if typeID == "3" {
-		query = query.Where("group_status IN ?", []string{"Pending", "In Process"})
+		// Committee can see all groups
 	} else {
 		query = query.Where("teacher_id = ?", claims.ID)
 	}
+
+	query = query.Where("group_status IN ?", []string{"Pending", "In Process"})
 
 	if keyword != "" {
 		query = query.Where("name_project LIKE ? OR CAST(group_number AS TEXT) LIKE ?", "%"+keyword+"%", "%"+keyword+"%")
@@ -68,13 +70,24 @@ func DeleteAppointment(c *gin.Context) {
 		return
 	}
 
-	if err := tx.Model(&entity.GroupProject{}).
-		Where("id = ?", apt.GroupProjectID).
-		Update("group_status", "Pending").Error; err != nil {
-
+	// ตรวจสอบสถานะปัจจุบันของกลุ่มก่อนที่จะทำการ Revert
+	var currentGroup entity.GroupProject
+	if err := tx.First(&currentGroup, apt.GroupProjectID).Error; err != nil {
 		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to revert group status"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Group Project not found"})
 		return
+	}
+
+	// ถ้าสถานะเป็น Completed แล้ว ไม่ต้องเปลี่ยนกลับเป็น Pending
+	if currentGroup.GroupStatus != "Completed" {
+		if err := tx.Model(&entity.GroupProject{}).
+			Where("id = ?", apt.GroupProjectID).
+			Update("group_status", "Pending").Error; err != nil {
+
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to revert group status"})
+			return
+		}
 	}
 
 	tx.Commit()
@@ -99,16 +112,22 @@ func CreateAppointment(c *gin.Context) {
 	appointment.AppointmentStatus = "scheduled"
 	db := database.DB()
 
+	// ตรวจสอบสถานะกลุ่มก่อนสร้างนัดหมาย
+	var groupProject entity.GroupProject
+	if err := db.Select("id, teacher_id, group_status").First(&groupProject, appointment.GroupProjectID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Group Project not found"})
+		return
+	}
+
+	if groupProject.GroupStatus != "Pending" && groupProject.GroupStatus != "In Process" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ไม่สามารถสร้างนัดหมายสำหรับกลุ่มที่จบการศึกษาแล้วได้"})
+		return
+	}
+
 	fmt.Printf("DEBUG: Creating Appointment - TypeID: %d, GroupID: %d, EvalID: %v\n",
 		appointment.AppointmentTypeID, appointment.GroupProjectID, appointment.EvaluationID)
 
 	if appointment.AppointmentTypeID != 3 {
-		var groupProject entity.GroupProject
-		if err := db.Select("teacher_id").First(&groupProject, appointment.GroupProjectID).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Group Project not found"})
-			return
-		}
-
 		if groupProject.TeacherID == nil || *groupProject.TeacherID != claims.ID {
 			c.JSON(http.StatusForbidden, gin.H{"error": "You are not the advisor of this group."})
 			return

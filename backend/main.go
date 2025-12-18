@@ -13,6 +13,7 @@ import (
 	"github.com/sut68/team07/backend/controller/issues"
 	"github.com/sut68/team07/backend/controller/progress"
 	"github.com/sut68/team07/backend/controller/topic"
+	"github.com/sut68/team07/backend/controller/updateStatus"
 	"github.com/sut68/team07/backend/controller/users"
 	"github.com/sut68/team07/backend/database"
 	"github.com/sut68/team07/backend/middleware"
@@ -126,7 +127,8 @@ func main() {
 			teacherGroup.POST("/topics", topic.CreateTopic)
 			teacherGroup.PATCH("/topics/:id", topic.UpdateTopic)
 			teacherGroup.DELETE("/topics/:id", topic.DeleteTopic)
-
+			// Status Update
+			teacherGroup.PATCH("/groups/:id/status", updateStatus.UpdateGroupStatus)
 		}
 
 		studentGroup := protected.Group("/student")
@@ -183,4 +185,3 @@ func main() {
 
 	r.Run(":8080")
 }
-

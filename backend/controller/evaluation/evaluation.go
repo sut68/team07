@@ -3,7 +3,6 @@ package evaluation
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -19,14 +18,7 @@ func ListEvaluationProjects(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
-
-	typeIDStr := c.Query("type_id")
 	mode := c.Query("mode")
-
-	var filterTypeID int
-	if typeIDStr != "" {
-		filterTypeID, _ = strconv.Atoi(typeIDStr)
-	}
 
 	db := database.DB()
 	var projects []entity.GroupProject
@@ -43,8 +35,9 @@ func ListEvaluationProjects(c *gin.Context) {
 
 	if mode == "committee" {
 		query = query.Joins("JOIN appointments ON appointments.group_project_id = group_projects.id").
+			Joins("JOIN users ON users.id = appointments.teacher_id").
 			Where("appointments.appointment_type_id = ?", 3).
-			Where("appointments.teacher_id = ?", claims.ID).
+			Where("users.branch_id = ?", claims.BranchID).
 			Group("group_projects.id")
 	} else {
 		query = query.Where("teacher_id = ?", claims.ID)
@@ -67,29 +60,6 @@ func ListEvaluationProjects(c *gin.Context) {
 			}
 		}
 
-		var count int64
-		query := db.Model(&entity.EvaResult{}).
-			Joins("JOIN appointments ON appointments.id = eva_results.appointment_id").
-			Where("appointments.group_project_id = ? AND eva_results.teacher_id = ?", p.ID, claims.ID)
-
-		if mode == "committee" {
-			query = query.Joins("JOIN criteria ON criteria.id = eva_results.criteria_id").
-				Joins("JOIN evaluations ON evaluations.id = criteria.evaluation_id").
-				Where("evaluations.name = ?", "Committee Evaluation")
-		}
-
-		if filterTypeID > 0 {
-			query = query.Where("appointments.appointment_type_id = ?", filterTypeID)
-		}
-
-		query.Count(&count)
-
-		isGraded := count > 0
-		statusText := "Pending"
-		if isGraded {
-			statusText = "Graded"
-		}
-
 		var appointmentID uint
 		availableEvaluationsMap := make(map[string]bool)
 		var appointmentsList []map[string]interface{}
@@ -103,9 +73,10 @@ func ListEvaluationProjects(c *gin.Context) {
 				if apt.AppointmentTypeID != 3 {
 					continue
 				}
-				if apt.TeacherID != claims.ID {
-					continue
-				}
+				// Allow seeing appointments created by other teachers in the same branch
+				// if apt.TeacherID != claims.ID {
+				// 	continue
+				// }
 			}
 
 			if appointmentID == 0 {
@@ -177,16 +148,22 @@ func ListEvaluationProjects(c *gin.Context) {
 			}
 		}
 
-		isGraded = (gradedCount == totalCount) && totalCount > 0
+		isGraded := (gradedCount == totalCount) && totalCount > 0
+		statusText := "Pending"
 		if isGraded {
 			statusText = "Graded"
-		} else {
-			statusText = "Pending"
+		}
+
+		// ถ้าสถานะกลุ่มเป็น Completed ให้ถือว่า Graded แล้ว (กรณีลบนัดหมายไปแล้ว)
+		if p.GroupStatus == "Completed" {
+			statusText = "Graded"
+			isGraded = true
 		}
 
 		item := gin.H{
 			"id":                    p.ID,
 			"group_number":          p.GroupNumber,
+			"group_status":          p.GroupStatus,
 			"project_name":          projectName,
 			"status":                statusText,
 			"is_graded":             isGraded,
