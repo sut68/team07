@@ -76,6 +76,7 @@ func main() {
 			adminGroup.PATCH("/issues/:id", issues.UpdateIssueStatus)
 			adminGroup.GET("/users", users.ListUsers)
 			adminGroup.POST("/user", users.CreateUser)
+            adminGroup.DELETE("/user/:id", users.DeleteUser)
 
 			// Group
 			adminGroup.GET("/studentCount", group.GetEligibleStudentCount)

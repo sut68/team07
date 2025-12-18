@@ -24,7 +24,7 @@ var MockRole = []entity.UserRole{
 }
 var MockAccountStatus = []entity.AccountStatus{
 	{Status: "Active"},
-	{Status: "Inactive"},
+	{Status: "Suspended"},
 }
 var MockIssueStatus = []entity.IssueStatus{
 	{Status: "Completed"},
