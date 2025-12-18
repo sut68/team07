@@ -13,12 +13,12 @@ func TestTopic(t *testing.T) {
 
 	t.Run(`Title is required`, func(t *testing.T) {
 		topic := &entity.Topic{
-			Title:          "", // ผิดตรงนี้
-			Objective:      "Objective",
-			Scope:          "Scope",
-			Description:    "Description about the topic",
-			Status:         "Pending",
-			//Proposer_role:  "Student",
+			Title:        "", // ผิดตรงนี้
+			Objective:    "Objective",
+			Scope:        "Scope",
+			Description:  "Description about the topic",
+			Status:       "Pending",
+			ProposerRole: "Teacher",
 		}
 
 		ok, err := govalidator.ValidateStruct(topic)
@@ -29,12 +29,12 @@ func TestTopic(t *testing.T) {
 
 	t.Run(`Objective is required`, func(t *testing.T) {
 		topic := &entity.Topic{
-			Title:          "System Analysis Topic",
-			Objective:      "", // ผิดตรงนี้
-			Scope:          "Scope",
-			Description:    "Description about the topic",
-			Status:         "Pending",
-			//Proposer_role:  "Student",
+			Title:        "System Analysis Topic",
+			Objective:    "", // ผิดตรงนี้
+			Scope:        "Scope",
+			Description:  "Description about the topic",
+			Status:       "Pending",
+			ProposerRole: "Teacher",
 		}
 
 		ok, err := govalidator.ValidateStruct(topic)
@@ -45,12 +45,12 @@ func TestTopic(t *testing.T) {
 
 	t.Run(`Scope is required`, func(t *testing.T) {
 		topic := &entity.Topic{
-			Title:          "System Analysis Topic",
-			Objective:      "Objective",
-			Scope:          "", // ผิดตรงนี้
-			Description:    "Description about the topic",
-			Status:         "Pending",
-			//Proposer_role:  "Student",
+			Title:        "System Analysis Topic",
+			Objective:    "Objective",
+			Scope:        "", // ผิดตรงนี้
+			Description:  "Description about the topic",
+			Status:       "Pending",
+			ProposerRole: "Teacher",
 		}
 
 		ok, err := govalidator.ValidateStruct(topic)
@@ -59,37 +59,50 @@ func TestTopic(t *testing.T) {
 		g.Expect(err.Error()).To(Equal("Scope is required"))
 	})
 
-	t.Run(`Description is required`, func(t *testing.T) {
+	t.Run(`Status must be valid`, func(t *testing.T) {
 		topic := &entity.Topic{
-			Title:          "System Analysis Topic",
-			Objective:      "Objective",
-			Scope:          "Scope",
-			Description:    "", // ผิดตรงนี้
-			Status:         "Pending",
-			//Proposer_role:  "Student",
+			Title:        "System Analysis Topic",
+			Objective:    "Objective",
+			Scope:        "Scope",
+			Description:  "Description about the topic",
+			Status:       "InvalidStatus", // ผิดตรงนี้
+			ProposerRole: "Teacher",
 		}
 
 		ok, err := govalidator.ValidateStruct(topic)
 		g.Expect(ok).NotTo(BeTrue())
 		g.Expect(err).NotTo(BeNil())
-		g.Expect(err.Error()).To(Equal("Description is required"))
+		g.Expect(err.Error()).To(Equal("Invalid status"))
 	})
 
-	t.Run(`Status is required`, func(t *testing.T) {
+	t.Run(`ProposerRole must be valid`, func(t *testing.T) {
 		topic := &entity.Topic{
-			Title:          "System Analysis Topic",
-			Objective:      "Objective",
-			Scope:          "Scope",
-			Description:    "Description about the topic",
-			Status:         "", // ผิดตรงนี้
-			//Proposer_role:  "Student",
+			Title:        "System Analysis Topic",
+			Objective:    "Objective",
+			Scope:        "Scope",
+			Description:  "Description about the topic",
+			Status:       "Pending",
+			ProposerRole: "InvalidRole", // ผิดตรงนี้
 		}
 
 		ok, err := govalidator.ValidateStruct(topic)
 		g.Expect(ok).NotTo(BeTrue())
 		g.Expect(err).NotTo(BeNil())
-		g.Expect(err.Error()).To(Equal("Status is required"))
+		g.Expect(err.Error()).To(Equal("Invalid proposer role"))
 	})
 
+	t.Run(`Valid Topic`, func(t *testing.T) {
+		topic := &entity.Topic{
+			Title:        "System Analysis Topic",
+			Objective:    "Objective",
+			Scope:        "Scope",
+			Description:  "Description about the topic",
+			Status:       "Pending",
+			ProposerRole: "Teacher",
+		}
 
+		ok, err := govalidator.ValidateStruct(topic)
+		g.Expect(ok).To(BeTrue())
+		g.Expect(err).To(BeNil())
+	})
 }

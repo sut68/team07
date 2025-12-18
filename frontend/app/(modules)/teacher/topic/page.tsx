@@ -215,6 +215,7 @@ export default function TeacherTopicPage() {
             children: (
                 <div>
                     <Button
+                        id="add-topic-btn"
                         type="primary"
                         icon={<PlusOutlined />}
                         size="large"
