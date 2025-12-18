@@ -34,8 +34,8 @@ const AdminGroupPage = () => {
     try {
       const res = await GetGroupProjects(year);
       setGroups(res.data ? res.data : []);
-    } catch (error) {
-      Swal.fire("Error", "ไม่สามารถดึงข้อมูลกลุ่มได้", "error");
+    // } catch (error) {
+    //   Swal.fire("Error", "ไม่สามารถดึงข้อมูลกลุ่มได้", "error");
     } finally { setLoading(false); }
   };
 
@@ -54,12 +54,29 @@ const AdminGroupPage = () => {
   const remainingStudents = totalStudents - usedStudents;
 
   const handleSubmit = async () => {
-    if (year < 2500) { Swal.fire("ข้อผิดพลาด", "ระบุปีไม่ถูกต้อง", "warning"); return; }
-    if (count5 === 0 && count4 === 0 && count3 === 0) { Swal.fire("ข้อผิดพลาด", "ระบุจำนวนกลุ่มอย่างน้อย 1 ประเภท", "warning"); return; }
+    // Validation เบื้องต้น
+    if (year < 2500) {
+      Swal.fire("ข้อผิดพลาด", "กรุณาระบุปีการศึกษาให้ถูกต้อง", "warning");
+      return;
+    }
+    if (count5 === 0 && count4 === 0 && count3 === 0) {
+      Swal.fire("ข้อผิดพลาด", "กรุณาระบุจำนวนกลุ่มอย่างน้อย 1 ประเภท", "warning");
+      return;
+    }
 
     Swal.fire({
       title: "ยืนยันการสร้างกลุ่ม?",
-      html: `สร้างกลุ่มสำหรับปี: ${year}<br/>โควต้าที่ใช้: ${usedStudents} คน`,
+      html: `
+        <div class="text-left text-sm">
+          <p>ปีการศึกษา: <b>${year}</b></p>
+          <p>กลุ่มละ 5 คน: <b>${count5}</b> กลุ่ม</p>
+          <p>กลุ่มละ 4 คน: <b>${count4}</b> กลุ่ม</p>
+          <p>กลุ่มละ 3 คน: <b>${count3}</b> กลุ่ม</p>
+          <hr class="my-2"/>
+          <p>ใช้โควต้านักศึกษาไป: <b>${usedStudents}</b> คน</p>
+          <p>คงเหลือ: <b style="color:${remainingStudents < 0 ? 'red' : 'green'}">${remainingStudents}</b> คน</p>
+        </div>
+      `,
       icon: "question",
       showCancelButton: true,
       confirmButtonText: "ยืนยัน",
@@ -67,12 +84,25 @@ const AdminGroupPage = () => {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          await GenerateGroups({ year, count_5: count5, count_4: count4, count_3: count3 });
-          await Swal.fire("สำเร็จ!", "สร้างกลุ่มเรียบร้อย", "success");
-          setCount5(0); setCount4(0); setCount3(0);
+          // เรียก API สร้างกลุ่ม
+          await GenerateGroups({
+            year: year,
+            count_5: count5,
+            count_4: count4,
+            count_3: count3,
+          });
+
+          Swal.fire({ icon: 'success', title: 'สร้างกลุ่มโครงงานสำเสร็จ', timer: 1500, showConfirmButton: false });
+          
+          // Reset ค่า 
+          setCount5(0);
+          setCount4(0);
+          setCount3(0);
+
           await fetchGroups();
+          
         } catch (error: any) {
-          Swal.fire("Error", error.response?.data?.error || "Failed", "error");
+          Swal.fire("เกิดข้อผิดพลาด", error.response?.data?.error || "ไม่สามารถสร้างกลุ่มได้", "error");
         }
       }
     });
@@ -132,7 +162,7 @@ const AdminGroupPage = () => {
                       const val = parseInt(e.target.value) || 0;
                       setCount5(val < 0 ? 0 : val); 
                     }}
-                    onKeyDown={(evt) => ["e", "E", "+", "-"].includes(evt.key) && evt.preventDefault()} // 3. ป้องกันการพิมตัวอักษรที่ไม่จำเป็น
+                    onKeyDown={(evt) => ["e", "E", "+", "-"].includes(evt.key) && evt.preventDefault()} 
                     placeholder="0"
                   />
                   <span>กลุ่ม</span>
@@ -168,7 +198,7 @@ const AdminGroupPage = () => {
                       const val = parseInt(e.target.value) || 0;
                       setCount3(val < 0 ? 0 : val); 
                     }}
-                    onKeyDown={(evt) => ["e", "E", "+", "-"].includes(evt.key) && evt.preventDefault()} // 3. ป้องกันการพิมตัวอักษรที่ไม่จำเป็น
+                    onKeyDown={(evt) => ["e", "E", "+", "-"].includes(evt.key) && evt.preventDefault()} 
                     placeholder="0"
                   />
                   <span>กลุ่ม</span>

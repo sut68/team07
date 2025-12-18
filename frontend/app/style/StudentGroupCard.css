@@ -1,0 +1,183 @@
+/* --- Card Container --- */
+.group-card {
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%; /* ยืดเต็มพื้นที่ Wrapper */
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.group-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* --- Header --- */
+.card-header {
+  background: linear-gradient(135deg, #8A011D 0%, #b91c1c 100%);
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.header-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.group-title {
+  color: white;
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: 0.025em;
+  margin-bottom: 4px;
+}
+
+.member-count {
+  font-size: 0.75rem;
+  color: #fecaca;
+  font-weight: 500;
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 2px 8px;
+  border-radius: 9999px;
+  width: fit-content;
+}
+
+/* --- Buttons & Badges --- */
+.badge-my-group {
+  background-color: #dcfce7;
+  color: #15803d;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 1px solid #86efac;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.btn-join {
+  background-color: white;
+  color: #991b1b;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+}
+
+.btn-join:hover:not(:disabled) {
+  background-color: #fef2f2;
+  transform: scale(1.05);
+}
+
+.btn-join:disabled {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.6);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* --- Body / List --- */
+.card-body {
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+  flex: 1; /* ดันให้เต็มพื้นที่ */
+}
+
+.member-row {
+  height: 56px;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 0.875rem;
+}
+
+.member-row:last-child {
+  border-bottom: none;
+}
+
+/* --- Member Info (Fixed Width & Truncate) --- */
+.member-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-width: 0; /* สำคัญ: เพื่อให้ flex item หดตัวได้ */
+}
+
+.student-id-badge {
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: #4b5563;
+  background-color: #f3f4f6;
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  min-width: 85px;
+  text-align: center;
+  flex-shrink: 0; /* ห้ามหด */
+}
+
+.student-name {
+  font-weight: 500;
+  color: #374151;
+  
+  /* ตัดคำถ้ายาวเกิน */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  
+  flex: 1; /* กินพื้นที่ที่เหลือ */
+}
+
+.badge-leader {
+  font-size: 0.65rem;
+  color: #c2410c;
+  background-color: #ffedd5;
+  border: 1px solid #fed7aa;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-weight: 700;
+  margin-left: 8px;
+  flex-shrink: 0; /* ห้ามหด */
+  white-space: nowrap;
+}
+
+/* --- Empty Slot --- */
+.slot-empty {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.slot-placeholder {
+  color: #9ca3af;
+  font-size: 0.75rem;
+  font-style: italic;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #f9fafb;
+  width: 100%;
+  height: 36px;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px dashed #d1d5db;
+}

@@ -10,7 +10,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// Struct สำหรับรับค่าจากหน้าบ้าน
 type GenerateGroupInput struct {
 	Year   int `json:"year" binding:"required"`
 	Count5 int `json:"count_5"`
@@ -47,14 +46,12 @@ func GetEligibleStudentCount(c *gin.Context) {
 	var count int64
 
 	// เงื่อนไข: Pass = false และ StatusID = 1 (Active) และ RoleID = 3 (Student)
-	// (เพิ่ม RoleID เพื่อความชัวร์ว่าเป็นนักศึกษาจริงๆ)
 	if err := db.Model(&entity.User{}).
 		Where("pass = ? AND status_id = ? AND role_id = ?", false, 1, 3).
 		Count(&count).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
 	c.JSON(http.StatusOK, gin.H{"count": count})
 }
 
@@ -82,7 +79,7 @@ func GenerateGroups(c *gin.Context) {
 		maxGroupNumber = 0
 	}
 
-	// เริ่มต้น Transaction เพื่อความปลอดภัย (ถ้าพังกลางทางจะได้ Rollback)
+	// เริ่มต้น Transaction เพื่อความปลอดภัย
 	tx := db.Begin()
 
 	currentGroupNum := maxGroupNumber + 1
@@ -143,8 +140,6 @@ func GetGroupDetailById(c *gin.Context) {
 	id := c.Param("id")
 	var group entity.GroupProject
 
-	// แก้ไข: ใช้ Preload แบบมีเงื่อนไข เพื่อเรียงลำดับสมาชิก (เก่า -> ใหม่)
-	// จะได้มั่นใจว่าสมาชิกที่เพิ่งเพิ่มเข้ามาจะถูกโหลดมาด้วย
 	if err := db.Preload("GroupMembers", func(db *gorm.DB) *gorm.DB {
 		return db.Order("group_members.id ASC") // เรียงตาม ID
 	}).Preload("GroupMembers.Student").Preload("Teacher").First(&group, id).Error; err != nil {
@@ -169,15 +164,10 @@ func SearchAvailableStudents(c *gin.Context) {
 
 	var students []entity.User
 
-	// --- [จุดที่แก้ไข] ---
-	// เดิม: db.Table("group_members")... (มันรวมตัวที่ถูกลบไปแล้วมาด้วย)
-	// ใหม่: db.Model(&entity.GroupMember{})... (GORM จะตัดตัวที่ deleted_at แล้วออกให้อัตโนมัติ)
-	// หรือถ้าใช้ Table ต้องเพิ่ม .Where("group_members.deleted_at IS NULL") เอง
-
 	subQuery := db.Model(&entity.GroupMember{}). // ใช้ Model เพื่อให้ GORM กรอง Soft Delete
-							Select("group_members.student_id").
-							Joins("JOIN group_projects ON group_members.group_project_id = group_projects.id").
-							Where("group_projects.year = ?", year)
+		Select("group_members.student_id").
+		Joins("JOIN group_projects ON group_members.group_project_id = group_projects.id").
+		Where("group_projects.year = ?", year)
 
 	// Query หลักดึงรายชื่อนักศึกษา
 	if err := db.Model(&entity.User{}).

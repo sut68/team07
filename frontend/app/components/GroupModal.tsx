@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from "react";
 import Swal from "sweetalert2";
+import "../style/AdminGroupModal.css";
+
 import { 
   GroupProject, 
   StudentSearchResult, 
   GroupMember,
   User 
 } from "../interfaces/Group"; 
+
 import { 
   GetGroupDetailById, 
   SearchAvailableStudents, 
@@ -16,10 +19,6 @@ import {
   GetAllTeachers,     
   UpdateGroupAdvisor  
 } from "../services/group"; 
-
-// Import ไฟล์ CSS ที่สร้างใหม่
-import "../style/AdminGroupModal.css";
-
 interface Props {
   isOpen: boolean;
   onClose: () => void;
