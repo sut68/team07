@@ -2,8 +2,13 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
-import api from "../../../services/api";
-import { GetGroupProjectIDByUser } from "../../../services/progress"; // ✅ your new API
+import {
+  GetProgress,
+  AddProgress,
+  UpProgress,
+  EraseProgress,
+  GetGroupProjectIDByUser,
+} from "../../../services/progress";
 
 type Mode = "view" | "submit" | "edit";
 
@@ -18,7 +23,7 @@ export default function ProgressPage() {
 
   const [file, setFile] = useState<File | null>(null);
   const [comment, setComment] = useState("");
-  const [progressTitle, setProgressTitle] = useState(""); // progress title stored in Name/name
+  const [progressTitle, setProgressTitle] = useState("");
 
   const [status, setStatus] = useState("Ready");
   const [isError, setIsError] = useState(false);
@@ -27,7 +32,7 @@ export default function ProgressPage() {
   const getId = (p: any) => Number(p?.id ?? p?.ID ?? p?.progress_id ?? 0) || 0;
   const getProgressTitle = (p: any) => String(p?.Name ?? p?.name ?? "").trim();
   const getFilePath = (p: any) => String(p?.file ?? p?.File ?? "").trim();
-  const getComment = (p: any) => String(p?.comment ?? p?.Comment ?? "").trim();
+  const getCommentText = (p: any) => String(p?.comment ?? p?.Comment ?? "").trim();
   const getUpdatedAt = (p: any) =>
     String(p?.updatedAt ?? p?.UpdatedAt ?? p?.updated_at ?? p?.update_at ?? "").trim();
 
@@ -44,17 +49,11 @@ export default function ProgressPage() {
       return;
     }
 
-    // 🔑 CALL BACKEND TO GET GROUP PROJECT ID
     (async () => {
       try {
         const res = await GetGroupProjectIDByUser({ student_id: cleanUid });
-
-        const gp =
-          Number.isFinite(res?.group_project_id) && res.group_project_id > 0
-            ? res.group_project_id
-            : 0;
-
-        setGroupProjectId(gp);
+        const gp = Number(res?.group_project_id ?? 0);
+        setGroupProjectId(Number.isFinite(gp) && gp > 0 ? gp : 0);
       } catch (err) {
         console.error("Failed to load group project id", err);
         setGroupProjectId(0);
@@ -69,16 +68,14 @@ export default function ProgressPage() {
     if (locked) setMode("view");
   }, [locked]);
 
-  // ---------- refresh ----------
+  // ---------- refresh (uses service) ----------
   const refresh = async () => {
     if (!groupProjectId || groupProjectId <= 0) {
       setProgressList([]);
       return;
     }
-    const res = await api.get("/student/getProcess", {
-      params: { group_project_id: groupProjectId },
-    });
-    setProgressList(Array.isArray(res.data) ? res.data : []);
+    const data = await GetProgress({ group_project_id: groupProjectId });
+    setProgressList(Array.isArray(data) ? data : []);
   };
 
   const handleView = async () => {
@@ -88,7 +85,7 @@ export default function ProgressPage() {
     setStatus("กำลังโหลดความคืบหน้า...");
     try {
       await refresh();
-      setStatus(" โหลดสำเร็จ!!!");
+      setStatus("โหลดสำเร็จ!!!");
     } catch (err: any) {
       console.error(err);
       setIsError(true);
@@ -98,6 +95,13 @@ export default function ProgressPage() {
     }
   };
 
+  // auto load when groupProjectId is ready
+  useEffect(() => {
+    if (!locked && groupProjectId > 0) void handleView();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groupProjectId, locked]);
+
+  // ---------- submit (uses service) ----------
   const handleSubmit = async () => {
     if (locked) return;
     setIsLoading(true);
@@ -109,23 +113,19 @@ export default function ProgressPage() {
       if (!file) throw new Error("ได้โปรดเลือกไฟล์");
       if (!comment.trim()) throw new Error("โปรดใส่ความคิดเห็น");
 
-      const fd = new FormData();
-      fd.append("group_project_id", String(groupProjectId));
-
-      // ✅ your backend may expect Name or name, so send both
-      fd.append("Name", progressTitle.trim());
-      fd.append("name", progressTitle.trim());
-
-      fd.append("comment", comment.trim());
-      fd.append("file", file);
-
-      await api.post("/student/assignProgress", fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      await AddProgress({
+        group_project_id: groupProjectId,
+        Name: progressTitle.trim(),
+        // NOTE: your interface currently uses string for file in some versions.
+        // We pass File anyway; if TS complains, update interface to file: any | File.
+        file: file as any,
+        comment: comment.trim(),
+      } as any);
 
       setFile(null);
       setComment("");
       setProgressTitle("");
+
       await refresh();
       setStatus("ส่งสำเร็จ !!!");
     } catch (err: any) {
@@ -136,6 +136,7 @@ export default function ProgressPage() {
     }
   };
 
+  // ---------- edit (uses service) ----------
   const handleEdit = async () => {
     if (locked) return;
     setIsLoading(true);
@@ -144,33 +145,28 @@ export default function ProgressPage() {
     try {
       if (!selectedId) throw new Error("ได้โปรดเลือกความคืบหน้าที่ต้องการจัดการ");
 
-      const fd = new FormData();
-      fd.append("id", String(selectedId));
-
-      if (progressTitle.trim()) {
-        fd.append("Name", progressTitle.trim());
-        fd.append("name", progressTitle.trim());
-      }
-      if (comment.trim()) fd.append("comment", comment.trim());
-      if (file) fd.append("file", file);
-
-      await api.post("/student/modifyProgress", fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      await UpProgress({
+        id: selectedId,
+        Name: progressTitle.trim(),
+        file: (file ?? undefined) as any,
+        comment: comment.trim(),
+      } as any);
 
       setFile(null);
       setComment("");
       setProgressTitle("");
+
       await refresh();
-      setStatus("Updated!");
+      setStatus("แก้ไขสำเร็จ !!!");
     } catch (err: any) {
       setIsError(true);
-      setStatus(err?.response?.data?.error || err?.message || "Update failed");
+      setStatus(err?.response?.data?.error || err?.message || "แก้ไขไม่สำเร็จ");
     } finally {
       setIsLoading(false);
     }
   };
 
+  // ---------- delete (uses service) ----------
   const handleDelete = async () => {
     if (locked) return;
     setIsLoading(true);
@@ -186,7 +182,7 @@ export default function ProgressPage() {
       }
 
       setStatus(`ลบ #${id}...`);
-      await api.delete("/student/deleteProgress", { params: { id } });
+      await EraseProgress({ id });
 
       await refresh();
       setStatus(`ลบความคืบหน้า #${id} สำเร็จ`);
@@ -198,11 +194,6 @@ export default function ProgressPage() {
       setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    if (!locked && groupProjectId > 0) void handleView();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [groupProjectId, locked]);
 
   const availableIds = useMemo(() => {
     return Array.isArray(progressList)
@@ -266,9 +257,7 @@ export default function ProgressPage() {
           {locked ? (
             <div style={styles.lockCard}>
               <div style={styles.lockTitle}>คุณยังไม่มีกลุ่มโปรเจกต์</div>
-              <div style={styles.lockDesc}>
-                กรุณาเข้าร่วมกลุ่มก่อนเพื่อปลดล็อกหน้านี้
-              </div>
+              <div style={styles.lockDesc}>กรุณาเข้าร่วมกลุ่มก่อนเพื่อปลดล็อกหน้านี้</div>
 
               <div style={styles.lockSteps}>
                 <div style={styles.lockStep}>
@@ -282,9 +271,7 @@ export default function ProgressPage() {
                 </div>
               </div>
 
-              <div style={styles.lockHint}>
-                (หากคิดว่านี่เป็นข้อผิดพลาด โปรดรายงานปัญหา.)
-              </div>
+              <div style={styles.lockHint}>(หากคิดว่านี่เป็นข้อผิดพลาด โปรดรายงานปัญหา.)</div>
             </div>
           ) : (
             <>
@@ -302,7 +289,6 @@ export default function ProgressPage() {
               {mode === "submit" && (
                 <div style={styles.card}>
                   <div style={styles.cardTitle}>ส่งความคืบหน้า</div>
-                  
 
                   <div style={styles.field}>
                     <label style={styles.label}>ชื่อโครงงาน (Progress title)</label>
@@ -439,7 +425,7 @@ export default function ProgressPage() {
                     const id = getId(p);
                     const title = getProgressTitle(p);
                     const filePath = getFilePath(p);
-                    const cmt = getComment(p);
+                    const cmt = getCommentText(p);
                     const updatedAt = getUpdatedAt(p);
 
                     return (
@@ -534,11 +520,7 @@ const styles: Record<string, CSSProperties> = {
     display: "flex",
     flexDirection: "column",
   },
-  status: {
-    borderRadius: 12,
-    padding: "12px 14px",
-    fontSize: 14,
-  },
+  status: { borderRadius: 12, padding: "12px 14px", fontSize: 14 },
   card: {
     background: "white",
     borderRadius: 14,
@@ -602,12 +584,7 @@ const styles: Record<string, CSSProperties> = {
     alignItems: "center",
   },
   list: { padding: 16, display: "flex", flexDirection: "column", gap: 12 },
-  item: {
-    border: "1px solid #eef2f7",
-    borderRadius: 14,
-    padding: 14,
-    background: "#ffffff",
-  },
+  item: { border: "1px solid #eef2f7", borderRadius: 14, padding: 14, background: "#ffffff" },
   itemTop: { display: "flex", gap: 10, alignItems: "center", marginBottom: 6 },
   badge: {
     background: "#f3f4f6",

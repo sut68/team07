@@ -16,18 +16,18 @@ export interface PickProgress {
 
 export interface AssignProgress {
   group_project_id: number;
-  name: string;     
-  file: File;       
+  Name: string;
+  file: File;    
   comment: string;
 }
 
-
 export interface UpdateProgress {
   id: number;
-  name?: string;    
-  file?: File;       
-  comment?: string;  
+  file?: File;   
+  Name?: string;
+  comment?: string;
 }
+
 
 export interface DeleteProgress {
   id: number;
