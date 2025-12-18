@@ -11,6 +11,21 @@ import (
 func TestTopic(t *testing.T) {
 	g := NewGomegaWithT(t)
 
+	t.Run(`True input`, func(t *testing.T) {
+		topic := &entity.Topic{
+			Title:        "System Analysis Topic",
+			Objective:    "Objective",
+			Scope:        "Scope",
+			Description:  "Description about the topic",
+			Status:       "Pending",
+			ProposerRole: "Teacher",
+		}
+
+		ok, err := govalidator.ValidateStruct(topic)
+		g.Expect(ok).To(BeTrue())
+		g.Expect(err).To(BeNil())
+	})
+
 	t.Run(`Title is required`, func(t *testing.T) {
 		topic := &entity.Topic{
 			Title:        "", // ผิดตรงนี้

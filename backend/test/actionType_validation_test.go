@@ -10,7 +10,17 @@ import (
 
 func TestActionType(t *testing.T) {
 	g := NewGomegaWithT(t)
+	t.Run(`True input`, func(t *testing.T) {
+		acstatus := &entity.ActionType{
+			ActionType: "SomeActionType", 
+		}
 
+		ok, err := govalidator.ValidateStruct(acstatus)
+		
+		g.Expect(ok).To(BeTrue())
+		g.Expect(err).To(BeNil())
+	})
+	
 	t.Run(`ActionType is required`, func(t *testing.T) {
 		acstatus := &entity.ActionType{
 			ActionType: "", // ผิดตรงนี้
