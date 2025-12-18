@@ -10,7 +10,7 @@ type Topic struct {
     Objective     string `json:"objective" form:"objective" valid:"required~Objective is required"`
     Scope         string `json:"scope" form:"scope" valid:"required~Scope is required"`
     Description   string `json:"description" form:"description"`
-    Status string `json:"status" form:"status" valid:"in(Pending|Approved|Rejected)~Invalid status"`
+    Status string `json:"status" form:"status" valid:"in(Pending|Approved|Rejected|Closed)~Invalid status"`
     FileAttachment string `json:"file_attachment,omitempty" form:"file_attachment"`
     ProposerRole string `json:"proposer_role" form:"proposer_role" valid:"in(Teacher|Student)~Invalid proposer role"`
 
