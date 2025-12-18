@@ -1,5 +1,5 @@
 import api from "./api";
-import type { PickProgress,AssignProgress,UpdateProgress,DeleteProgress,FullProgress} from "../interfaces/Progress";
+import type { PickProgress,AssignProgress,UpdateProgress,DeleteProgress,FullProgress,GetGroupProjectByUser,GroupProjectIdResponse} from "../interfaces/Progress";
 
 
 
@@ -29,5 +29,13 @@ async function EraseProgress(payload: DeleteProgress) {
     });
 }
 
-export {GetProgress,AddProgress,UpProgress,EraseProgress};
+async function GetGroupProjectIDByUser(payload: GetGroupProjectByUser): Promise<GroupProjectIdResponse> {
+  const res = await api.get<GroupProjectIdResponse>("/student/getProjectbyuser", {
+    params: payload,
+  });
+  return res.data;
+}
+
+
+export {GetProgress,AddProgress,UpProgress,EraseProgress,GetGroupProjectIDByUser};
 

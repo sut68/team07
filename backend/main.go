@@ -136,6 +136,7 @@ func main() {
 		{
 			// ถ้า API ไหนที่นักเรียนเข้าถึงได้ ให้นำไปใส่ในนี้
 			studentGroup.GET("/getProcess", progress.GetProGressByID)
+			studentGroup.GET("/getProjectbyuser",progress.GetGroupProjectIDByStudentID)
 			studentGroup.POST("/assignProgress", progress.AssignProGress)
 			studentGroup.POST("/modifyProgress", progress.UpdateProGress)
 			studentGroup.DELETE("/deleteProgress", progress.DeleteProgress)

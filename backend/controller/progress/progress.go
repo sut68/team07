@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"time"
+	"gorm.io/gorm"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sut68/team07/backend/controller/log"
@@ -13,7 +14,6 @@ import (
 	"github.com/sut68/team07/backend/entity"
 )
 
-// helper: ensure upload dir exists
 func ensureDir(dir string) error {
 	return os.MkdirAll(dir, os.ModePerm)
 }
@@ -30,19 +30,60 @@ func GetProGressByID(c *gin.Context) {
 	c.JSON(http.StatusOK, &group_progress)
 }
 
+func GetGroupProjectIDByStudentID(c *gin.Context) {
+
+	sidStr := c.Query("student_id")
+	if sidStr == "" {
+		sidStr = c.Param("student_id")
+	}
+
+	studentID64, err := strconv.ParseUint(sidStr, 10, 64)
+	if err != nil || studentID64 == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid student_id"})
+		return
+	}
+	studentID := uint(studentID64)
+
+	db:= database.DB()
+
+	var gm entity.GroupMember
+	err = db.
+		Model(&entity.GroupMember{}).
+		Where("student_id = ?", studentID).
+		Where("deleted_at IS NULL").
+		Order("id DESC"). 
+		First(&gm).Error
+
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusOK, gin.H{
+				"group_project_id": 0,
+				"message":"you still don't have a group yet",
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"group_project_id": gm.GroupProjectID,
+	})
+}
+
 func AssignProGress(c *gin.Context) {
 	db := database.DB()
 
-	// ✅ REQUIRED
 	c.Request.ParseMultipartForm(32 << 20)
 
 	group_projectid := c.PostForm("group_project_id")
+	name := c.PostForm("Name")
 	comment := c.PostForm("comment")
 
 	fh, err := c.FormFile("file")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(), 
+			"error": err.Error(),
 		})
 		return
 	}
@@ -74,6 +115,7 @@ func AssignProGress(c *gin.Context) {
 	progress := entity.Progress{
 		GroupProjectID: uint(contoint),
 		File:           "/uploads/progress/" + newName,
+		Name:           name,
 		Comment:        comment,
 	}
 
@@ -87,6 +129,7 @@ func UpdateProGress(c *gin.Context) {
 	db := database.DB()
 
 	idStr := c.PostForm("id")
+	name := c.PostForm("Name")
 	newcomment := c.PostForm("comment")
 
 	pro_id, err := strconv.ParseUint(idStr, 10, 64)
@@ -101,7 +144,6 @@ func UpdateProGress(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
 	}
-
 
 	fh, fileErr := c.FormFile("file")
 	if fileErr == nil && fh != nil {
@@ -123,7 +165,9 @@ func UpdateProGress(c *gin.Context) {
 		prog.File = "/uploads/progress/" + newName
 	}
 
-	
+	if name != "" {
+		prog.Name = name
+	}
 	if newcomment != "" {
 		prog.Comment = newcomment
 	}
