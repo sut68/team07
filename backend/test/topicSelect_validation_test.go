@@ -12,6 +12,19 @@ import (
 func TestTopicSelection(t *testing.T) {
 	g := NewGomegaWithT(t)
 
+	t.Run(`True input`, func(t *testing.T) {
+		selection := &entity.TopicSelection{
+			DateSelected:   time.Now(),
+			TopicID:        1,
+			GroupProjectID: 1,
+			Status:         "Active",
+		}
+
+		ok, err := govalidator.ValidateStruct(selection)
+		g.Expect(ok).To(BeTrue())
+		g.Expect(err).To(BeNil())
+	})
+
 	t.Run(`DateSelected is required`, func(t *testing.T) {
 		selection := &entity.TopicSelection{
 			DateSelected:   time.Time{}, // ผิดตรงนี้ - zero value

@@ -11,6 +11,22 @@ import (
 
 func TestAppointment(t *testing.T) {
 	g := NewGomegaWithT(t)
+	
+	t.Run(`True input`, func(t *testing.T) {
+			appointment := &entity.Appointment{
+			StartDateTime:     time.Now().AddDate(-20, 0, 0),
+			DurationMin:       30,
+			AppointmentStatus: "confirmed",
+			AppointmentTypeID: 1,
+			RoomID:            1,
+			TeacherID:         1,
+			GroupProjectID:     1,
+		}
+		ok, err := govalidator.ValidateStruct(appointment)
+
+		g.Expect(ok).To(BeTrue())
+		g.Expect(err).To(BeNil())
+	})
 
 	t.Run(`StartDateTime is required`, func(t *testing.T) {
 		appointment := &entity.Appointment{

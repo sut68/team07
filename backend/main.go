@@ -66,11 +66,16 @@ func main() {
 		adminGroup.Use(middleware.RoleGuard("Admin"))
 		{
 			// ถ้า API ไหนที่แอดมินเข้าถึงได้ ให้นำไปใส่ในนี้
-			adminGroup.GET("/getGender", users.GetGender)
+			adminGroup.GET("/genders", users.GetGenders)
+			adminGroup.GET("/branches", users.GetBranches)
+			adminGroup.GET("/roles", users.GetRoles)
+			adminGroup.GET("/statuses", users.GetUserStatuses)
 			adminGroup.GET("/getIssueStatus", issues.GetIssueStatus)
 
 			adminGroup.POST("/importUsersCSV", importuser.ImportUsersHandler)
 			adminGroup.PATCH("/issues/:id", issues.UpdateIssueStatus)
+			adminGroup.GET("/users", users.ListUsers)
+			adminGroup.POST("/user", users.CreateUser)
 
 			// Group
 			adminGroup.GET("/studentCount", group.GetEligibleStudentCount)

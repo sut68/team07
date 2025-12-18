@@ -10,6 +10,17 @@ import (
 func TestAcStatus(t *testing.T) {
 	g := NewGomegaWithT(t)
 
+	t.Run(`True input`, func(t *testing.T) {
+		acstatus := &entity.AccountStatus{
+			Status: "Active", 
+		}
+
+		ok, err := govalidator.ValidateStruct(acstatus)
+		
+		g.Expect(ok).To(BeTrue())
+		g.Expect(err).To(BeNil())
+	})
+
 	t.Run(`Status is required`, func(t *testing.T) {
 		acstatus := &entity.AccountStatus{
 			Status: "", // ผิดตรงนี้
