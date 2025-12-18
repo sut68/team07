@@ -126,7 +126,7 @@ var MockTopics = []entity.Topic{
 
 		ProposerRole:   "Student",
 		GroupProjectID: Uint(3),
-		TeacherID:      Uint(2),
+		TeacherID:      Uint(3),
 	},
 	{
 		Title:       "Renewable Energy",
@@ -137,7 +137,7 @@ var MockTopics = []entity.Topic{
 
 		ProposerRole:   "Student",
 		GroupProjectID: Uint(4),
-		TeacherID:      Uint(2),
+		TeacherID:      Uint(4),
 	},
 	{
 		Title:       "Health Monitoring",
@@ -148,7 +148,7 @@ var MockTopics = []entity.Topic{
 
 		ProposerRole:   "Student",
 		GroupProjectID: Uint(5),
-		TeacherID:      Uint(2),
+		TeacherID:      Uint(5),
 	},
 	{
 		Title:       "Smart Home Automation",
@@ -159,7 +159,7 @@ var MockTopics = []entity.Topic{
 
 		ProposerRole:   "Student",
 		GroupProjectID: Uint(6),
-		TeacherID:      Uint(2),
+		TeacherID:      Uint(6),
 	},
 }
 

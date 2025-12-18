@@ -1,9 +1,9 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Typography, Row, Col, Modal, Form, Input, Tag, Space, Empty, message, ConfigProvider, Tabs, Steps, Upload, Tooltip } from 'antd';
-import { ProjectOutlined, SendOutlined, TeamOutlined, FileTextOutlined, CheckCircleOutlined, ExclamationCircleOutlined, ClockCircleOutlined, CloseCircleOutlined, UploadOutlined, EyeOutlined, PaperClipOutlined } from '@ant-design/icons';
+import { ProjectOutlined, SendOutlined, TeamOutlined, FileTextOutlined, CheckCircleOutlined, ExclamationCircleOutlined, ClockCircleOutlined, CloseCircleOutlined, UploadOutlined, EyeOutlined, PaperClipOutlined, PlusOutlined } from '@ant-design/icons';
 import { Topic, TopicApproval } from '@/app/interfaces/Topic';
-import { getTopics, createTopic, updateTopic } from '@/app/services/topic';
+import { getTopics, createTopic, updateTopic, selectTopic, cancelSelection, getStudentTopic } from '@/app/services/topic';
 import { GetMyGroup } from '@/app/services/group';
 import { GetMe } from '@/app/services/login';
 
@@ -25,6 +25,7 @@ export default function StudentTopicPage() {
     // View Details State
     const [viewTopic, setViewTopic] = useState<Topic | null>(null);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const [isProposeModalOpen, setIsProposeModalOpen] = useState(false);
 
     const fetchData = async () => {
         setLoading(true);
@@ -65,19 +66,11 @@ export default function StudentTopicPage() {
             const teacherTopicsRes = await getTopics(topicParams);
             setAvailableTopics(teacherTopicsRes.data || []);
 
-            // 3. Fetch My Proposed Topic
-            const myTopicParams: any = { proposer_role: 'Student' };
+            // 3. Fetch My Proposed Topic / Selection
             if (currentGroupID) {
-                myTopicParams.group_id = currentGroupID;
-            }
-            const myTopicsRes = await getTopics(myTopicParams);
-
-            if (myTopicsRes.data && myTopicsRes.data.length > 0) {
-                const sortedTopics = myTopicsRes.data.sort((a, b) => b.ID - a.ID);
-                const activeTopic = sortedTopics.find(t => t.status !== 'Closed');
-
-                if (activeTopic) {
-                    setMyTopic(activeTopic);
+                const myTopicRes = await getStudentTopic({ group_id: currentGroupID });
+                if (myTopicRes.data) {
+                    setMyTopic(myTopicRes.data);
                 } else {
                     setMyTopic(null);
                 }
@@ -106,31 +99,20 @@ export default function StudentTopicPage() {
         setIsViewModalOpen(false); // Close view modal if open
         Modal.confirm({
             title: 'ยืนยันการเลือกหัวข้อ',
-            content: `คุณต้องการเลือกหัวข้อ "${topic.title}" ใช่หรือไม่? เมื่อเลือกแล้วจะต้องรอการอนุมัติจากอาจารย์ที่ปรึกษา`,
+            content: `คุณต้องการเลือกหัวข้อ "${topic.title}" ใช่หรือไม่?`,
             okText: 'ยืนยัน',
             cancelText: 'ยกเลิก',
             onOk: async () => {
                 setLoading(true);
                 try {
-                    const formData = new FormData();
-                    formData.append('title', topic.title);
-                    formData.append('objective', topic.objective);
-                    formData.append('scope', topic.scope);
-                    formData.append('description', topic.description || '');
-                    formData.append('proposer_role', 'Student');
                     if (groupID) {
-                        formData.append('group_project_id', groupID.toString());
+                        await selectTopic(topic.ID, { group_project_id: groupID });
+                        message.success('ส่งคำขอเลือกหัวข้อเรียบร้อยแล้ว');
+                        fetchData();
+                        setActiveTab('2');
+                    } else {
+                        message.error('ไม่พบข้อมูลกลุ่มโครงงาน');
                     }
-                    if (topic.teacher_id) {
-                        formData.append('teacher_id', topic.teacher_id.toString());
-                    } else if (advisorID) {
-                        formData.append('teacher_id', advisorID.toString());
-                    }
-
-                    await createTopic(formData);
-                    message.success('ส่งคำขอเลือกหัวข้อเรียบร้อยแล้ว');
-                    fetchData();
-                    setActiveTab('2');
                 } catch (error) {
                     console.error(error);
                     message.error('เกิดข้อผิดพลาดในการเลือกหัวข้อ');
@@ -172,6 +154,8 @@ export default function StudentTopicPage() {
                     await createTopic(formData);
                     message.success('เสนอหัวข้อโครงงานเรียบร้อยแล้ว');
                     fetchData();
+                    setIsProposeModalOpen(false);
+                    form.resetFields();
                 } catch (error) {
                     console.error(error);
                     message.error('เกิดข้อผิดพลาดในการเสนอหัวข้อ');
@@ -192,14 +176,21 @@ export default function StudentTopicPage() {
             onOk: async () => {
                 if (myTopic) {
                     try {
-                        const formData = new FormData();
-                        formData.append('status', 'Closed');
-                        formData.append('title', myTopic.title);
-                        formData.append('objective', myTopic.objective);
-                        formData.append('scope', myTopic.scope);
-                        formData.append('description', myTopic.description);
+                        if (myTopic.proposer_role === 'Teacher' && groupID) {
+                            // Cancel Selection
+                            await cancelSelection({ group_project_id: groupID });
+                        } else {
+                            // Cancel Proposal (Student Proposed)
+                            const formData = new FormData();
+                            formData.append('status', 'Closed');
+                            formData.append('title', myTopic.title);
+                            formData.append('objective', myTopic.objective);
+                            formData.append('scope', myTopic.scope);
+                            formData.append('description', myTopic.description);
 
-                        await updateTopic(myTopic.ID, formData);
+                            await updateTopic(myTopic.ID, formData);
+                        }
+
                         message.success('ยกเลิกหัวข้อเรียบร้อยแล้ว');
                         setMyTopic(null);
                         fetchData();
@@ -300,7 +291,7 @@ export default function StudentTopicPage() {
                                             <Paragraph ellipsis={{ rows: 2 }} type="secondary">{topic.scope}</Paragraph>
                                         </div>
 
-                                        <Tooltip title={!!myTopic ? "คุณไม่ได้มีสิทธ์เลือกหัวข้อนี้เนื่องจากได้เสนอหัวข้อไปแล้ว" : ""}>
+                                        <Tooltip title={!!myTopic ? "คุณไม่ได้มีสิทธ์เลือกหัวข้อนี้โครงงานนี้เนื่องจากได้เลือก/เสนอหัวข้อโครงงานไปแล้ว" : ""}>
                                             <Button
                                                 type="primary"
                                                 block
@@ -326,7 +317,7 @@ export default function StudentTopicPage() {
         },
         {
             key: '2',
-            label: 'เสนอหัวข้อเอง / สถานะของฉัน',
+            label: 'สถานะของฉัน',
             children: (
                 <div style={{ maxWidth: 800, margin: '0 auto' }}>
                     {myTopic ? (
@@ -353,67 +344,15 @@ export default function StudentTopicPage() {
                             </Card>
                         </div>
                     ) : (
-                        <Card>
-                            <div style={{ textAlign: 'center', marginBottom: 32 }}>
-                                <Title level={3}>เสนอหัวข้อโครงงานใหม่</Title>
-                                <Text type="secondary">กรอกรายละเอียดหัวข้อโครงงานที่คุณต้องการเสนอให้อาจารย์ที่ปรึกษาพิจารณา</Text>
-                            </div>
-
-                            <Form
-                                form={form}
-                                layout="vertical"
-                                onFinish={handleProposeSubmit}
-                                size="large"
-                            >
-                                <Form.Item
-                                    name="title"
-                                    label="ชื่อหัวข้อโครงงาน"
-                                    rules={[{ required: true, message: 'กรุณากรอกชื่อหัวข้อ' }]}
-                                >
-                                    <Input placeholder="เช่น ระบบบริหารจัดการ..." />
-                                </Form.Item>
-
-                                <Form.Item
-                                    name="objective"
-                                    label="วัตถุประสงค์"
-                                    rules={[{ required: true, message: 'กรุณากรอกวัตถุประสงค์' }]}
-                                >
-                                    <TextArea rows={4} placeholder="ระบุสิ่งที่ต้องการทำให้สำเร็จ" />
-                                </Form.Item>
-
-                                <Form.Item
-                                    name="scope"
-                                    label="ขอบเขตของงาน"
-                                    rules={[{ required: true, message: 'กรุณากรอกขอบเขตของงาน' }]}
-                                >
-                                    <TextArea rows={4} placeholder="ระบุขอบเขต ฟีเจอร์ หรือเทคโนโลยีที่จะใช้" />
-                                </Form.Item>
-
-                                <Form.Item
-                                    name="description"
-                                    label="รายละเอียดเพิ่มเติม / เหตุผลที่สนใจ"
-                                    help="ระบุเหตุผลประกอบการเลือกหัวข้อ หรือรายละเอียดอื่นๆ ที่เป็นประโยชน์"
-                                >
-                                    <TextArea rows={4} placeholder="อธิบายเพิ่มเติม..." />
-                                </Form.Item>
-
-                                <Form.Item
-                                    name="attachment"
-                                    label="แนบไฟล์เอกสารเพิ่มเติม (ถ้ามี)"
-                                >
-                                    <Upload maxCount={1} beforeUpload={() => false}>
-                                        <Button icon={<UploadOutlined />}>คลิกเพื่อแนบไฟล์</Button>
-                                    </Upload>
-                                </Form.Item>
-
-                                <Form.Item>
-                                    <Button type="primary" htmlType="submit" block icon={<SendOutlined />} size="large"
-                                        style={{ background: '#8A011D', borderColor: '#8A011D' }}>
-                                        ส่งข้อเสนอโครงงาน
-                                    </Button>
-                                </Form.Item>
-                            </Form>
-                        </Card>
+                        <Empty
+                            image={Empty.PRESENTED_IMAGE_SIMPLE}
+                            description={
+                                <span>
+                                    คุณยังไม่ได้เลือกหรือเสนอหัวข้อโครงงาน <br />
+                                    เลือกหัวข้อจากอาจารย์ในแถบแรก หรือกดปุ่ม + ด้านล่างขวาเพื่อเสนอหัวข้อเอง
+                                </span>
+                            }
+                        />
                     )}
                 </div>
             ),
@@ -505,6 +444,99 @@ export default function StudentTopicPage() {
                         </div>
                     )}
                 </Modal>
+
+                {/* Propose Modal */}
+                <Modal
+                    title="เสนอหัวข้อโครงงานใหม่"
+                    open={isProposeModalOpen}
+                    onCancel={() => setIsProposeModalOpen(false)}
+                    footer={null}
+                    centered
+                    width={800}
+                >
+                    <div style={{ textAlign: 'center', marginBottom: 24 }}>
+                        <Text type="secondary">กรอกรายละเอียดหัวข้อโครงงานที่คุณต้องการเสนอให้อาจารย์ที่ปรึกษาพิจารณา</Text>
+                    </div>
+
+                    <Form
+                        form={form}
+                        layout="vertical"
+                        onFinish={handleProposeSubmit}
+                        size="large"
+                    >
+                        <Form.Item
+                            name="title"
+                            label="ชื่อหัวข้อโครงงาน"
+                            rules={[{ required: true, message: 'กรุณากรอกชื่อหัวข้อ' }]}
+                        >
+                            <Input placeholder="เช่น ระบบบริหารจัดการ..." />
+                        </Form.Item>
+
+                        <Form.Item
+                            name="objective"
+                            label="วัตถุประสงค์"
+                            rules={[{ required: true, message: 'กรุณากรอกวัตถุประสงค์' }]}
+                        >
+                            <TextArea rows={4} placeholder="ระบุสิ่งที่ต้องการทำให้สำเร็จ" />
+                        </Form.Item>
+
+                        <Form.Item
+                            name="scope"
+                            label="ขอบเขตของงาน"
+                            rules={[{ required: true, message: 'กรุณากรอกขอบเขตของงาน' }]}
+                        >
+                            <TextArea rows={4} placeholder="ระบุขอบเขต ฟีเจอร์ หรือเทคโนโลยีที่จะใช้" />
+                        </Form.Item>
+
+                        <Form.Item
+                            name="description"
+                            label="รายละเอียดเพิ่มเติม / เหตุผลที่สนใจ"
+                            help="ระบุเหตุผลประกอบการเลือกหัวข้อ หรือรายละเอียดอื่นๆ ที่เป็นประโยชน์"
+                        >
+                            <TextArea rows={4} placeholder="อธิบายเพิ่มเติม..." />
+                        </Form.Item>
+
+                        <Form.Item
+                            name="attachment"
+                            label="แนบไฟล์เอกสารเพิ่มเติม (ถ้ามี)"
+                        >
+                            <Upload maxCount={1} beforeUpload={() => false}>
+                                <Button icon={<UploadOutlined />}>คลิกเพื่อแนบไฟล์</Button>
+                            </Upload>
+                        </Form.Item>
+
+                        <Form.Item>
+                            <Button type="primary" htmlType="submit" block icon={<SendOutlined />} size="large"
+                                style={{ background: '#8A011D', borderColor: '#8A011D' }}>
+                                ส่งข้อเสนอโครงงาน
+                            </Button>
+                        </Form.Item>
+                    </Form>
+                </Modal>
+
+                {!myTopic && (
+                    <Button
+                        type="primary"
+                        icon={<PlusOutlined />}
+                        size="large"
+                        onClick={() => setIsProposeModalOpen(true)}
+                        style={{
+                            position: 'fixed',
+                            bottom: 40,
+                            right: 40,
+                            zIndex: 1000,
+                            background: '#8A011D',
+                            borderColor: '#852d3fff',
+                            boxShadow: '0 4px 12px rgba(138, 1, 29, 0.4)',
+                            height: 50,
+                            borderRadius: 25,
+                            paddingLeft: 24,
+                            paddingRight: 24
+                        }}
+                    >
+                        เสนอหัวข้อโครงงาน
+                    </Button>
+                )}
             </div>
         </ConfigProvider>
     );

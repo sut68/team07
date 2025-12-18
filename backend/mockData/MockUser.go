@@ -14,7 +14,7 @@ var (
 var jwtService = service.NewJwtService()
 
 var MockUser = []entity.User{
-	{Username: "Admin@sut.ac.th", Password: jwtService.HashPassword("adm123"), Firstname: "Admin", Lastname: "Security", Email: "pthanathonhodon@gmail.com", Phone: "09622934415", Pass: passNull, GenderID: 1, BranchID: 1, RoleID: 1, StatusID: 1},
+	{Username: "Admin@sut.ac.th", Password: jwtService.HashPassword("adm123"), Firstname: "Admin", Lastname: "Security", Email: "pitsinee.jana@gmail.com", Phone: "0992038066", Pass: passNull, GenderID: 1, BranchID: 1, RoleID: 1, StatusID: 1},
 
 	{Username: "Teacher1@sut.ac.th", Password: jwtService.HashPassword("tch123"), Firstname: "Teacher1", Lastname: "One", Email: "Teacher1@gmail.com", Phone: "0884567891", Pass: passNull, GenderID: 2, BranchID: 1, RoleID: 2, StatusID: 1},
 	{Username: "Teacher2@sut.ac.th", Password: jwtService.HashPassword("tch123"), Firstname: "Teacher2", Lastname: "Two", Email: "Teacher2@gmail.com", Phone: "0696543214", Pass: passNull, GenderID: 1, BranchID: 1, RoleID: 2, StatusID: 1},

@@ -1,0 +1,468 @@
+{
+  "id": "1d21dd0a-18ca-4890-a9d5-213f5fc9fd5d",
+  "version": "2.0",
+  "name": "jn",
+  "url": "http://localhost:5173",
+  "tests": [{
+    "id": "2e54365a-ad3b-4990-b66c-b45c1125ea8d",
+    "name": "negative",
+    "commands": [{
+      "id": "362576e0-81a8-4461-81fd-eeac3d7c0747",
+      "comment": "",
+      "command": "open",
+      "target": "/login",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "f0d30808-8289-4cea-b2bc-a525dfbe7dab",
+      "comment": "",
+      "command": "setWindowSize",
+      "target": "1936x1048",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "cadda58a-7b68-42fa-aeb2-cb0ea64611de",
+      "comment": "",
+      "command": "click",
+      "target": "css=.login-button",
+      "targets": [
+        ["css=.login-button", "css:finder"],
+        ["xpath=//button[@type='submit']", "xpath:attributes"],
+        ["xpath=//div[4]/button", "xpath:position"],
+        ["xpath=//button[contains(.,'เข้าสู่ระบบ')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "c9d0c13d-6410-43ed-9b7e-7398b57e714e",
+      "comment": "",
+      "command": "click",
+      "target": "linkText=หัวข้อโครงงาน",
+      "targets": [
+        ["linkText=หัวข้อโครงงาน", "linkText"],
+        ["css=nav > a:nth-child(3)", "css:finder"],
+        ["xpath=//a[contains(text(),'หัวข้อโครงงาน')]", "xpath:link"],
+        ["xpath=//a[contains(@href, '/teacher/topic')]", "xpath:href"],
+        ["xpath=//a[3]", "xpath:position"],
+        ["xpath=//a[contains(.,'หัวข้อโครงงาน')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "c1becdcb-0c63-4237-bf92-d1aba2b1523f",
+      "comment": "",
+      "command": "mouseOver",
+      "target": "linkText=หัวข้อโครงงาน",
+      "targets": [
+        ["linkText=หัวข้อโครงงาน", "linkText"],
+        ["css=nav > a:nth-child(3)", "css:finder"],
+        ["xpath=//a[contains(text(),'หัวข้อโครงงาน')]", "xpath:link"],
+        ["xpath=//a[contains(@href, '/teacher/topic')]", "xpath:href"],
+        ["xpath=//a[3]", "xpath:position"],
+        ["xpath=//a[contains(.,'หัวข้อโครงงาน')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "1e1d889d-4f0b-4ccc-9afb-2c62076b16dd",
+      "comment": "",
+      "command": "mouseOut",
+      "target": "linkText=หัวข้อโครงงาน",
+      "targets": [
+        ["linkText=หัวข้อโครงงาน", "linkText"],
+        ["css=nav > a:nth-child(3)", "css:finder"],
+        ["xpath=//a[contains(text(),'หัวข้อโครงงาน')]", "xpath:link"],
+        ["xpath=//a[contains(@href, '/teacher/topic')]", "xpath:href"],
+        ["xpath=//a[3]", "xpath:position"],
+        ["xpath=//a[contains(.,'หัวข้อโครงงาน')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "2dc0232d-c9cd-44b5-8b45-34515ddb7ceb",
+      "comment": "",
+      "command": "click",
+      "target": "id=add-topic-btn",
+      "targets": [
+        ["id=add-topic-btn", "id"],
+        ["css=#add-topic-btn", "css:finder"],
+        ["xpath=//button[@id='add-topic-btn']", "xpath:attributes"],
+        ["xpath=//div[@id='rc-tabs-3-panel-1']/div/button", "xpath:idRelative"],
+        ["xpath=//div[2]/div/div/div/button", "xpath:position"],
+        ["xpath=//button[contains(.,'เพิ่มหัวข้อใหม่')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "c0c7aaa1-7532-4076-93df-c0d1fe8c7c62",
+      "comment": "",
+      "command": "click",
+      "target": "id=objective",
+      "targets": [
+        ["id=objective", "id"],
+        ["css=#objective", "css:finder"],
+        ["xpath=//textarea[@id='objective']", "xpath:attributes"],
+        ["xpath=//textarea", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "9f12207a-af8d-4b67-b10f-c08f5145861d",
+      "comment": "",
+      "command": "type",
+      "target": "id=objective",
+      "targets": [
+        ["id=objective", "id"],
+        ["css=#objective", "css:finder"],
+        ["xpath=//textarea[@id='objective']", "xpath:attributes"],
+        ["xpath=//textarea", "xpath:position"]
+      ],
+      "value": "จาน่า"
+    }, {
+      "id": "1798452c-d7e0-48b0-b0a7-d58b0bc1b02c",
+      "comment": "",
+      "command": "click",
+      "target": "id=scope",
+      "targets": [
+        ["id=scope", "id"],
+        ["css=#scope", "css:finder"],
+        ["xpath=//textarea[@id='scope']", "xpath:attributes"],
+        ["xpath=//div[3]/div/div[2]/div/div/textarea", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "d3bc097e-0107-4f65-9e28-dc32f0fa8acf",
+      "comment": "",
+      "command": "type",
+      "target": "id=scope",
+      "targets": [
+        ["id=scope", "id"],
+        ["css=#scope", "css:finder"],
+        ["xpath=//textarea[@id='scope']", "xpath:attributes"],
+        ["xpath=//div[3]/div/div[2]/div/div/textarea", "xpath:position"]
+      ],
+      "value": "จาน่า"
+    }, {
+      "id": "a56caa82-ee04-4028-a803-fcc81745079a",
+      "comment": "",
+      "command": "click",
+      "target": "css=.ant-space-item > .ant-btn-primary > span",
+      "targets": [
+        ["css=.ant-space-item > .ant-btn-primary > span", "css:finder"],
+        ["xpath=//div/div/div/div/div[2]/button/span", "xpath:position"],
+        ["xpath=//span[contains(.,'บันทึกข้อมูล')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "719e52ff-cac8-494d-ab2b-27f1baa87091",
+      "comment": "",
+      "command": "click",
+      "target": "id=objective",
+      "targets": [
+        ["id=objective", "id"],
+        ["css=#objective", "css:finder"],
+        ["xpath=//textarea[@id='objective']", "xpath:attributes"],
+        ["xpath=//textarea", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "04fd8cb8-5a8a-4d6a-be24-77b4400a9337",
+      "comment": "",
+      "command": "click",
+      "target": "id=objective",
+      "targets": [
+        ["id=objective", "id"],
+        ["css=#objective", "css:finder"],
+        ["xpath=//textarea[@id='objective']", "xpath:attributes"],
+        ["xpath=//textarea", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "612f9481-874d-494a-99b3-6babba6165f6",
+      "comment": "",
+      "command": "doubleClick",
+      "target": "id=objective",
+      "targets": [
+        ["id=objective", "id"],
+        ["css=#objective", "css:finder"],
+        ["xpath=//textarea[@id='objective']", "xpath:attributes"],
+        ["xpath=//textarea", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "58ecfaa4-cb36-4bf4-9d02-4aa94c0f2d41",
+      "comment": "",
+      "command": "click",
+      "target": "id=objective",
+      "targets": [
+        ["id=objective", "id"],
+        ["css=#objective", "css:finder"],
+        ["xpath=//textarea[@id='objective']", "xpath:attributes"],
+        ["xpath=//textarea", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "7c6b91cd-8d93-47e3-bc82-4e30347be17b",
+      "comment": "",
+      "command": "type",
+      "target": "id=objective",
+      "targets": [
+        ["id=objective", "id"],
+        ["css=#objective", "css:finder"],
+        ["xpath=//textarea[@id='objective']", "xpath:attributes"],
+        ["xpath=//textarea", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "12080ee5-a716-4f4d-abd2-96b38775905c",
+      "comment": "",
+      "command": "click",
+      "target": "id=scope",
+      "targets": [
+        ["id=scope", "id"],
+        ["css=#scope", "css:finder"],
+        ["xpath=//textarea[@id='scope']", "xpath:attributes"],
+        ["xpath=//div[3]/div/div[2]/div/div/textarea", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "3061cd1d-2c80-49d1-b9cc-2f981a9d2cac",
+      "comment": "",
+      "command": "click",
+      "target": "id=scope",
+      "targets": [
+        ["id=scope", "id"],
+        ["css=#scope", "css:finder"],
+        ["xpath=//textarea[@id='scope']", "xpath:attributes"],
+        ["xpath=//div[3]/div/div[2]/div/div/textarea", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "88ff140c-5456-459c-8df7-84a827d7b18e",
+      "comment": "",
+      "command": "doubleClick",
+      "target": "id=scope",
+      "targets": [
+        ["id=scope", "id"],
+        ["css=#scope", "css:finder"],
+        ["xpath=//textarea[@id='scope']", "xpath:attributes"],
+        ["xpath=//div[3]/div/div[2]/div/div/textarea", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "998763ca-ab96-4b5e-bc61-2d7fe9e8cb51",
+      "comment": "",
+      "command": "click",
+      "target": "id=scope",
+      "targets": [
+        ["id=scope", "id"],
+        ["css=#scope", "css:finder"],
+        ["xpath=//textarea[@id='scope']", "xpath:attributes"],
+        ["xpath=//div[3]/div/div[2]/div/div/textarea", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "a40f9544-0b75-4e77-83f7-b60034dbb17d",
+      "comment": "",
+      "command": "type",
+      "target": "id=scope",
+      "targets": [
+        ["id=scope", "id"],
+        ["css=#scope", "css:finder"],
+        ["xpath=//textarea[@id='scope']", "xpath:attributes"],
+        ["xpath=//div[3]/div/div[2]/div/div/textarea", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "3003b273-9965-4feb-88e6-757189d9c1a3",
+      "comment": "",
+      "command": "click",
+      "target": "id=title",
+      "targets": [
+        ["id=title", "id"],
+        ["css=#title", "css:finder"],
+        ["xpath=//input[@id='title']", "xpath:attributes"],
+        ["xpath=//input", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "2e9ad875-d1b8-43af-9fcb-4610e69350ec",
+      "comment": "",
+      "command": "type",
+      "target": "id=title",
+      "targets": [
+        ["id=title", "id"],
+        ["css=#title", "css:finder"],
+        ["xpath=//input[@id='title']", "xpath:attributes"],
+        ["xpath=//input", "xpath:position"]
+      ],
+      "value": "test"
+    }, {
+      "id": "95cf3e64-1f37-4c06-b72b-ae967fe6a8af",
+      "comment": "",
+      "command": "click",
+      "target": "id=objective",
+      "targets": [
+        ["id=objective", "id"],
+        ["css=#objective", "css:finder"],
+        ["xpath=//textarea[@id='objective']", "xpath:attributes"],
+        ["xpath=//textarea", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "1f9e67a3-6ebd-453b-ac92-a0070dbd4ab0",
+      "comment": "",
+      "command": "click",
+      "target": "id=scope",
+      "targets": [
+        ["id=scope", "id"],
+        ["css=#scope", "css:finder"],
+        ["xpath=//textarea[@id='scope']", "xpath:attributes"],
+        ["xpath=//div[3]/div/div[2]/div/div/textarea", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "c29c5eeb-ab35-482c-92d3-9b81ba7395fb",
+      "comment": "",
+      "command": "type",
+      "target": "id=scope",
+      "targets": [
+        ["id=scope", "id"],
+        ["css=#scope", "css:finder"],
+        ["xpath=//textarea[@id='scope']", "xpath:attributes"],
+        ["xpath=//div[3]/div/div[2]/div/div/textarea", "xpath:position"]
+      ],
+      "value": "test"
+    }, {
+      "id": "7e7d9016-8ed8-46b3-8882-cd761e4daefa",
+      "comment": "",
+      "command": "click",
+      "target": "css=.ant-space-item > .ant-btn-primary > span",
+      "targets": [
+        ["css=.ant-space-item > .ant-btn-primary > span", "css:finder"],
+        ["xpath=//div/div/div/div/div[2]/button/span", "xpath:position"],
+        ["xpath=//span[contains(.,'บันทึกข้อมูล')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "22083a55-4a43-44c7-808c-d71d9721bb22",
+      "comment": "",
+      "command": "mouseOver",
+      "target": "css=.ant-space-item > .ant-btn-primary > span",
+      "targets": [
+        ["css=.ant-space-item > .ant-btn-primary > span", "css:finder"],
+        ["xpath=//div/div/div/div/div[2]/button/span", "xpath:position"],
+        ["xpath=//span[contains(.,'บันทึกข้อมูล')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "e6f61f9f-83ea-473e-9985-8661b613c3da",
+      "comment": "",
+      "command": "mouseOut",
+      "target": "css=.ant-space-item > .ant-btn-primary > span",
+      "targets": [
+        ["css=.ant-space-item > .ant-btn-primary > span", "css:finder"],
+        ["xpath=//div/div/div/div/div[2]/button/span", "xpath:position"],
+        ["xpath=//span[contains(.,'บันทึกข้อมูล')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "f8dd288e-a402-42b7-a71a-8bef0b52d9de",
+      "comment": "",
+      "command": "click",
+      "target": "id=title",
+      "targets": [
+        ["id=title", "id"],
+        ["css=#title", "css:finder"],
+        ["xpath=//input[@id='title']", "xpath:attributes"],
+        ["xpath=//input", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "ac27c2fc-2057-411c-a7f3-71bb2cabf0b7",
+      "comment": "",
+      "command": "click",
+      "target": "id=scope",
+      "targets": [
+        ["id=scope", "id"],
+        ["css=#scope", "css:finder"],
+        ["xpath=//textarea[@id='scope']", "xpath:attributes"],
+        ["xpath=//div[3]/div/div[2]/div/div/textarea", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "06501fff-d122-4df0-8db9-ae889c816473",
+      "comment": "",
+      "command": "type",
+      "target": "id=scope",
+      "targets": [
+        ["id=scope", "id"],
+        ["css=#scope", "css:finder"],
+        ["xpath=//textarea[@id='scope']", "xpath:attributes"],
+        ["xpath=//div[3]/div/div[2]/div/div/textarea", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "0701fe34-48f4-47a6-b96f-1da294f807a7",
+      "comment": "",
+      "command": "click",
+      "target": "id=objective",
+      "targets": [
+        ["id=objective", "id"],
+        ["css=#objective", "css:finder"],
+        ["xpath=//textarea[@id='objective']", "xpath:attributes"],
+        ["xpath=//textarea", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "31414bfe-a878-4a63-970c-c53cdd80f8e5",
+      "comment": "",
+      "command": "type",
+      "target": "id=objective",
+      "targets": [
+        ["id=objective", "id"],
+        ["css=#objective", "css:finder"],
+        ["xpath=//textarea[@id='objective']", "xpath:attributes"],
+        ["xpath=//textarea", "xpath:position"]
+      ],
+      "value": "test"
+    }, {
+      "id": "c0f57931-dbbb-4265-94d6-4efd8b32bf61",
+      "comment": "",
+      "command": "click",
+      "target": "css=.ant-space-item > .ant-btn-primary > span",
+      "targets": [
+        ["css=.ant-space-item > .ant-btn-primary > span", "css:finder"],
+        ["xpath=//div/div/div/div/div[2]/button/span", "xpath:position"],
+        ["xpath=//span[contains(.,'บันทึกข้อมูล')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "8d6febf1-7a3c-4c7d-bffb-59b279b69863",
+      "comment": "",
+      "command": "mouseOver",
+      "target": "css=.ant-space-item > .ant-btn-primary > span",
+      "targets": [
+        ["css=.ant-space-item > .ant-btn-primary > span", "css:finder"],
+        ["xpath=//div/div/div/div/div[2]/button/span", "xpath:position"],
+        ["xpath=//span[contains(.,'บันทึกข้อมูล')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "082c8b14-3c2f-4515-90c3-97e0ea18d606",
+      "comment": "",
+      "command": "mouseOut",
+      "target": "css=.ant-space-item > .ant-btn-primary > span",
+      "targets": [
+        ["css=.ant-space-item > .ant-btn-primary > span", "css:finder"],
+        ["xpath=//div/div/div/div/div[2]/button/span", "xpath:position"],
+        ["xpath=//span[contains(.,'บันทึกข้อมูล')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }]
+  }],
+  "suites": [{
+    "id": "c5f874de-d027-46b4-9dc7-fe1f62a3175d",
+    "name": "Default Suite",
+    "persistSession": false,
+    "parallel": false,
+    "timeout": 300,
+    "tests": ["2e54365a-ad3b-4990-b66c-b45c1125ea8d"]
+  }],
+  "urls": ["http://localhost:5173/"],
+  "plugins": []
+}

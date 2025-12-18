@@ -148,6 +148,11 @@ func main() {
 			studentGroup.GET("/evaluation/form", evaluation.GetStudentEvaluationForm)
 			studentGroup.GET("/evaluation/result", evaluation.GetStudentEvaluationResult)
 			studentGroup.POST("/evaluation/peer", evaluation.SavePeerEvaluation)
+
+			// Topic Selection
+			studentGroup.GET("/topic", topic.GetStudentTopic)
+			studentGroup.POST("/topics/:id/select", topic.SelectTopic)
+			studentGroup.POST("/topics/cancel-selection", topic.CancelSelection)
 		}
 
 		teacherOrStudentGroup := protected.Group("/groupProject")
