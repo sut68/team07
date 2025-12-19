@@ -1,0 +1,237 @@
+{
+  "id": "f4924686-e451-46db-9c14-4e4cfef0f3f5",
+  "version": "2.0",
+  "name": "TEST07",
+  "url": "http://localhost:5173/teacher/appointment",
+  "tests": [{
+    "id": "1a7ac0e3-fa8b-4668-8496-93024b043376",
+    "name": "appointment",
+    "commands": [{
+      "id": "80452bd7-2617-4d99-b169-8cbcc1ffc3ec",
+      "comment": "",
+      "command": "open",
+      "target": "http://localhost:5173/teacher/appointment",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "ee6d5cbb-611a-4408-aeb5-18dd7e04a0af",
+      "comment": "",
+      "command": "setWindowSize",
+      "target": "1282x803",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "c5c609ef-4138-4f9f-900e-0de6140caf14",
+      "comment": "",
+      "command": "click",
+      "target": "css=.anticon-plus > svg",
+      "targets": [
+        ["css=.anticon-plus > svg", "css:finder"]
+      ],
+      "value": ""
+    }, {
+      "id": "db43da60-5a0f-4c82-a94a-8158edd7a385",
+      "comment": "",
+      "command": "click",
+      "target": "id=room_id",
+      "targets": [
+        ["id=room_id", "id"],
+        ["css=#room_id", "css:finder"],
+        ["xpath=//input[@id='room_id']", "xpath:attributes"],
+        ["xpath=//div[2]/div/div/div/div/input", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "6c16fae8-e9f0-4110-82ef-f34d92c838ed",
+      "comment": "",
+      "command": "click",
+      "target": "css=.ant-select-item-option-active > .ant-select-item-option-content",
+      "targets": [
+        ["css=.ant-select-item-option-active > .ant-select-item-option-content", "css:finder"],
+        ["xpath=//body/div[4]/div/div/div[2]/div/div/div/div/div", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "82ab7510-a785-450b-a585-9b8dd262f5e1",
+      "comment": "",
+      "command": "click",
+      "target": "id=type_id",
+      "targets": [
+        ["id=type_id", "id"],
+        ["css=#type_id", "css:finder"],
+        ["xpath=//input[@id='type_id']", "xpath:attributes"],
+        ["xpath=//div[2]/div/div[2]/div/div/div/div/input", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "e75c083a-73ee-42d5-9abc-906d431d1e84",
+      "comment": "",
+      "command": "click",
+      "target": "xpath=//div[5]/div/div/div[2]/div/div/div/div[2]/div",
+      "targets": [
+        ["css=.ant-select-item-option-active:nth-child(2) > .ant-select-item-option-content", "css:finder"],
+        ["xpath=//div[5]/div/div/div[2]/div/div/div/div[2]/div", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "5c336937-f381-4046-b1ac-43e68aa66137",
+      "comment": "",
+      "command": "click",
+      "target": "id=group_id",
+      "targets": [
+        ["id=group_id", "id"],
+        ["css=#group_id", "css:finder"],
+        ["xpath=//input[@id='group_id']", "xpath:attributes"],
+        ["xpath=//div[4]/div/div/div[2]/div/div/div/div/input", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "bbc575ac-2cbb-4843-b62e-e181654e0b16",
+      "comment": "",
+      "command": "click",
+      "target": "xpath=//div[6]/div/div/div[2]/div/div/div/div/div",
+      "targets": [
+        ["css=div:nth-child(22) .ant-select-item-option-content", "css:finder"],
+        ["xpath=//div[6]/div/div/div[2]/div/div/div/div/div", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "51718883-3113-4c49-a660-5787638063d4",
+      "comment": "",
+      "command": "click",
+      "target": "xpath=//div[6]/div/div/div[2]/div/div/div/div/div",
+      "targets": [
+        ["css=div:nth-child(22) .ant-select-item-option-content", "css:finder"],
+        ["xpath=//div[6]/div/div/div[2]/div/div/div/div/div", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "5d34e9bb-4276-41a2-9e44-cf982ac76cfa",
+      "comment": "",
+      "command": "click",
+      "target": "css=.ant-btn-primary > span",
+      "targets": [
+        ["css=.ant-btn-primary > span", "css:finder"],
+        ["xpath=//div[5]/div[2]/button[2]/span", "xpath:position"],
+        ["xpath=//span[contains(.,'บันทึก')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "a9493d51-8d0d-4886-bdb3-dc503d483083",
+      "comment": "",
+      "command": "click",
+      "target": "css=.ant-form-item:nth-child(1) .ant-picker-input",
+      "targets": [
+        ["css=.ant-form-item:nth-child(1) .ant-picker-input", "css:finder"],
+        ["xpath=//div[3]/div/div/div[2]/div/div/div/div", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "dea2d355-12c4-4742-8039-eb8f0b9e886d",
+      "comment": "",
+      "command": "click",
+      "target": "css=.ant-picker-cell-hover > .ant-picker-cell-inner",
+      "targets": [
+        ["css=.ant-picker-cell-hover > .ant-picker-cell-inner", "css:finder"],
+        ["xpath=//tr[3]/td[5]/div", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "fbee52a2-ad66-473d-b8ab-19f26e4810de",
+      "comment": "",
+      "command": "click",
+      "target": "css=.ant-btn-primary > span:nth-child(2)",
+      "targets": [
+        ["css=.ant-btn-primary > span:nth-child(2)", "css:finder"],
+        ["xpath=//button[2]/span[2]", "xpath:position"],
+        ["xpath=//span[contains(.,'บันทึก')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "34ee13af-0a1c-437b-86d5-0bed47af72ab",
+      "comment": "",
+      "command": "click",
+      "target": "css=.ant-picker-clear:nth-child(3) svg",
+      "targets": [
+        ["css=.ant-picker-clear:nth-child(3) svg", "css:finder"]
+      ],
+      "value": ""
+    }, {
+      "id": "7700f28f-cddc-479f-b1cd-164a78753400",
+      "comment": "",
+      "command": "click",
+      "target": "id=date",
+      "targets": [
+        ["id=date", "id"],
+        ["css=#date", "css:finder"],
+        ["xpath=//input[@id='date']", "xpath:attributes"],
+        ["xpath=//div[3]/div/div/div[2]/div/div/div/div/input", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "9b4e2438-45e7-48d2-92ec-192e57f9e9d1",
+      "comment": "",
+      "command": "click",
+      "target": "xpath=//tr[3]/td[4]/div",
+      "targets": [
+        ["css=.ant-picker-cell-hover > .ant-picker-cell-inner", "css:finder"],
+        ["xpath=//tr[3]/td[4]/div", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "3f21deab-8cb5-40b2-9733-68d0bd20bf34",
+      "comment": "",
+      "command": "click",
+      "target": "css=.ant-btn-primary > span",
+      "targets": [
+        ["css=.ant-btn-primary > span", "css:finder"],
+        ["xpath=//div[5]/div[2]/button[2]/span", "xpath:position"],
+        ["xpath=//span[contains(.,'บันทึก')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "8dfc25af-6161-4ba2-b7ec-b1bbb3e7cfaf",
+      "comment": "",
+      "command": "mouseOver",
+      "target": "css=.ant-btn-primary > span",
+      "targets": [
+        ["css=.ant-btn-primary > span", "css:finder"],
+        ["xpath=//div[5]/div[2]/button[2]/span", "xpath:position"],
+        ["xpath=//span[contains(.,'บันทึก')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "38458e5d-4d04-42c4-9873-1fb8353aab03",
+      "comment": "",
+      "command": "mouseOut",
+      "target": "css=.ant-btn > span:nth-child(3)",
+      "targets": [
+        ["css=.ant-btn > span:nth-child(3)", "css:finder"],
+        ["xpath=//button[2]/span[2]", "xpath:position"],
+        ["xpath=//span[contains(.,'บันทึก')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "a3a6d027-e1d2-4295-9c45-2335e3e7b9d4",
+      "comment": "",
+      "command": "click",
+      "target": "css=.btn-primary",
+      "targets": [
+        ["css=.btn-primary", "css:finder"],
+        ["xpath=//div[2]/button[3]", "xpath:position"],
+        ["xpath=//button[contains(.,'สร้างนัดหมาย')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }]
+  }],
+  "suites": [{
+    "id": "7b9b9f82-c4e2-4caf-a0da-4407696d74fd",
+    "name": "Default Suite",
+    "persistSession": false,
+    "parallel": false,
+    "timeout": 300,
+    "tests": []
+  }],
+  "urls": ["http://localhost:5173/", "http://localhost:5173/teacher/appointment"],
+  "plugins": []
+}
