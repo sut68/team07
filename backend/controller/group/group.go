@@ -189,6 +189,7 @@ func GetMyGroup(c *gin.Context) {
 	var member entity.GroupMember
 	// ใช้ Preload เพื่อดึงข้อมูล GroupProject และ Teacher (ที่ปรึกษา)
 	if err := db.Preload("GroupProject").
+		Preload("GroupProject.GroupMembers.Student").
 		Preload("GroupProject.Teacher"). // ดึงข้อมูลอาจารย์ที่ปรึกษา
 		Where("student_id = ?", studentID).
 		First(&member).Error; err != nil {

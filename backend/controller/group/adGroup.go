@@ -55,8 +55,6 @@ func GetEligibleStudentCount(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"count": count})
 }
 
-// POST: /admin/generate-groups
-// สร้างกลุ่มตามจำนวนที่ระบุ โดยรันเลขต่อจากปีนั้นๆ
 func GenerateGroups(c *gin.Context) {
 	db := database.DB()
 	var input GenerateGroupInput
@@ -101,29 +99,24 @@ func GenerateGroups(c *gin.Context) {
 		return nil
 	}
 
-	// 2. สร้างกลุ่ม
-	// กลุ่มละ 5 คน
 	if err := createGroups(input.Count5, 5); err != nil {
 		tx.Rollback()
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create groups (Size 5)"})
 		return
 	}
 
-	// กลุ่มละ 4 คน
 	if err := createGroups(input.Count4, 4); err != nil {
 		tx.Rollback()
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create groups (Size 4)"})
 		return
 	}
 
-	// กลุ่มละ 3 คน
 	if err := createGroups(input.Count3, 3); err != nil {
 		tx.Rollback()
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create groups (Size 3)"})
 		return
 	}
 
-	// บันทึกทั้งหมด
 	tx.Commit()
 
 	c.JSON(http.StatusCreated, gin.H{
@@ -133,7 +126,6 @@ func GenerateGroups(c *gin.Context) {
 	})
 }
 
-// GET: /admin/group/:id
 // ดึงรายละเอียดกลุ่ม + สมาชิก
 func GetGroupDetailById(c *gin.Context) {
 	db := database.DB()
@@ -150,8 +142,6 @@ func GetGroupDetailById(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": group})
 }
 
-// GET: /admin/students/search?q=xxxxx
-// ค้นหานักศึกษาที่ "ยังไม่มีกลุ่ม"
 func SearchAvailableStudents(c *gin.Context) {
 	db := database.DB()
 	yearStr := c.Query("year")

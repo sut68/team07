@@ -6,14 +6,16 @@ interface GroupCardProps {
   group: GroupProject;
   currentUserId: number | null;
   globalUserHasGroup: boolean;
-  onJoin: (groupId: number) => void;
+  onJoin?: (groupId: number) => void;
+  hideAction?: boolean;
 }
 
 const GroupCard: React.FC<GroupCardProps> = ({ 
   group, 
   currentUserId, 
   globalUserHasGroup, 
-  onJoin 
+  onJoin,
+  hideAction
 }) => {
   const members = group.group_members || [];
   const totalSlots = group.membership; 
@@ -40,18 +42,18 @@ const GroupCard: React.FC<GroupCardProps> = ({
         </div>
 
         {/* --- ปุ่ม Action --- */}
-        {isMyGroup ? (
-          <span className="badge-my-group">
-            กลุ่มของคุณ
-          </span>
-        ) : (
-          <button
-            onClick={() => onJoin(group.ID)}
-            disabled={globalUserHasGroup || isFull}
-            className="btn-join"
-          >
-            {isFull ? "เต็ม" : "เข้าร่วม"}
-          </button>
+        {!hideAction && ( // เช็คตรงนี้
+            isMyGroup ? (
+                <span className="badge-my-group">กลุ่มของคุณ</span>
+            ) : (
+                <button
+                    onClick={() => onJoin && onJoin(group.ID)}
+                    disabled={globalUserHasGroup || isFull}
+                    className="btn-join"
+                >
+                    {isFull ? "เต็ม" : "เข้าร่วม"}
+                </button>
+            )
         )}
       </div>
 

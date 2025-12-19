@@ -6,7 +6,6 @@ import { GetGroupProjects, JoinGroup, GetAcademicYears } from "../../../services
 import { GroupProject } from "../../../interfaces/Group";
 import GroupCard from "../../../components/GroupCard";
 
-// Import CSS
 import "../../../style/StudentGroupPage.css"
 
 // Helper: แกะ ID จาก Token
