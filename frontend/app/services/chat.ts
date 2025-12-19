@@ -1,9 +1,10 @@
 import api from "./api";
-import type { FullChat, ChatCreate, GetChat, ChatDelete, ProcessInterface } from "../interfaces/Chat";
+import type { FullChat, ChatCreate, GetChat, ChatDelete } from "../interfaces/Chat";
+import { FullProgress } from "../interfaces/Progress";
 
-async function GetProcessIDByProjectID(group_project_id: number): Promise<ProcessInterface[]> {
+async function GetProcessIDByProjectID(group_project_id: number): Promise<FullProgress[]> {
   try {
-    const response = await api.get<ProcessInterface[]>("/GetProcessID", {
+    const response = await api.get<FullProgress[]>("/GetProcessID", {
       params: { group_project_id },
     });
     return Array.isArray(response.data) ? response.data : [];
@@ -38,4 +39,10 @@ async function DropChat(payload: ChatDelete) {
   });
 }
 
-export { GetAllChat, InsertChat, DropChat, GetProcessIDByProjectID as GetProcessIDbyGroupID };
+async function DropWholechat(payload: GetChat) {
+  await api.delete("/Deletechatbyid",{
+    params: payload,
+  });
+}
+
+export { GetAllChat, InsertChat, DropChat, GetProcessIDByProjectID ,DropWholechat};

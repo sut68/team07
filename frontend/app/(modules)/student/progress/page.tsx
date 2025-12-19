@@ -10,6 +10,8 @@ import {
   GetGroupProjectIDByUser,
 } from "../../../services/progress";
 
+import { DropWholechat } from "@/app/services/chat";
+
 type Mode = "view" | "submit" | "edit";
 
 export default function ProgressPage() {
@@ -166,33 +168,42 @@ export default function ProgressPage() {
 
   
   const handleDelete = async () => {
-    if (locked) return;
-    setIsLoading(true);
-    setIsError(false);
+      if (locked) return;
+      setIsLoading(true);
+      setIsError(false);
 
-    try {
-      const id = selectedId;
-      if (!id) throw new Error("ได้โปรดเลือกความคืบหน้าที่ต้องการลบ");
+      try {
+        const id = selectedId;
 
-      if (!confirm(`ลบความคืบหน้า #${id}?`)) {
+
+
+        if (!id) throw new Error("ได้โปรดเลือกความคืบหน้าที่ต้องการลบ");
+
+        if (!confirm(`ลบความคืบหน้า #${id}?`)) {
+          setIsLoading(false);
+          return;
+        }
+
+        setStatus(`ลบ #${id}...`);
+        await EraseProgress({ id });
+
+      
+        setStatus(`ลบแชทที่เกี่ยวข้อง...`);
+        await DropWholechat({ 
+          process_id: id,          
+          group_project_id: gpji  
+        });
+
+        await refresh();
+        setStatus(`ลบความคืบหน้า #${id} สำเร็จ`);
+      } catch (err: any) {
+        console.error(err);
+        setIsError(true);
+        setStatus(`❌ ${err?.response?.data?.message || err?.message || "เกิดข้อผิดพลาด"}`);
+      } finally {
         setIsLoading(false);
-        return;
       }
-
-      setStatus(`ลบ #${id}...`);
-      await EraseProgress({ id });
-
-      await refresh();
-      setStatus(`ลบความคืบหน้า #${id} สำเร็จ`);
-    } catch (err: any) {
-      console.error(err);
-      setIsError(true);
-      setStatus(`❌ ${err?.response?.data?.message || err?.message || "เกิดข้อผิดพลาด"}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+    };
   const availableIds = useMemo(() => {
     return Array.isArray(processlist)
       ? processlist.map(getId).filter((id) => Number.isFinite(id) && id > 0)

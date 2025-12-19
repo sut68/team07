@@ -53,6 +53,8 @@ func main() {
 		protected.GET("/GetProcessID", chat.GetProcessIDbyGroupID)
 		protected.POST("/SendChat", chat.InsertChat)
 		protected.DELETE("/DeleteChat", chat.DeleteChat)
+		protected.DELETE("/Deletechatbyid",chat.DeleteChatbyProgress)
+
 		protected.GET("/getUserProfile", users.GetUserProfile)
 		protected.PATCH("/updateUserProfile", users.UpdateUserProfile)
 		protected.GET("/me", authHandler.Me)

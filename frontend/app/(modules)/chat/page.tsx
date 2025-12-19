@@ -1,8 +1,12 @@
 "use client";
 
+import { io } from "socket.io-client";
+
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { GetAllChat, InsertChat, GetProcessIDbyGroupID } from "../../services/chat";
-import type { ProcessInterface, FullChat } from "../../interfaces/Chat";
+import { GetAllChat, InsertChat } from "../../services/chat";
+import { GetProgress } from "../../services/progress";
+import type {  FullChat } from "../../interfaces/Chat";
+import { FullProgress } from "../../interfaces/Progress";
 import { GetGroupProjectIDByUser } from "../../services/progress";
 
 const RED = "#9a0120";
@@ -14,7 +18,7 @@ export default function ChatPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [groupProjectId, setGroupProjectId] = useState<number>(0);
 
-  const [processes, setProcesses] = useState<ProcessInterface[]>([]);
+  const [processes, setProcesses] = useState<FullProgress[]>([]);
   const [activeRoomId, setActiveRoomId] = useState<number | null>(null);
 
   const [chats, setChats] = useState<FullChat[]>([]);
@@ -70,15 +74,16 @@ export default function ChatPage() {
     if (!idsOk) return;
 
     (async () => {
-      const res = await GetProcessIDbyGroupID(groupProjectId);
+      const res = await GetProgress({ group_project_id: groupProjectId });
 
       const normalized = (Array.isArray(res) ? res : [])
         .map((p: any) => {
-          const rawId = p?.id ?? p?.ID ?? p?.process_id ?? p?.progress_id;
+          const rawId = p?.id ?? p?.ID;
           return { ...p, id: Number(rawId) };
         })
         .filter((p: any) => Number.isFinite(p.id) && p.id > 0);
 
+      console.warn(normalized)
       setProcesses(normalized);
 
       if (normalized.length > 0) {
@@ -86,6 +91,7 @@ export default function ChatPage() {
       } else {
         setActiveRoomId(null);
       }
+      
     })();
   }, [idsOk, groupProjectId]);
 
@@ -210,7 +216,7 @@ export default function ChatPage() {
                       flex: 1,
                     }}
                   >
-                    {p.file}
+                    {p.Name }
                   </span>
                 </button>
               );

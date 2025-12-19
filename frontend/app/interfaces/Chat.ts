@@ -22,6 +22,7 @@ export interface ProcessInterface {
   id: number;
   file: string;
   group_project_id: number;
+  Name: string;
   updated_at?: string;
   comment?: string;
 }
