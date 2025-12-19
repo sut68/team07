@@ -3,7 +3,6 @@ import type { FullChat, ChatCreate, GetChat, ChatDelete } from "../interfaces/Ch
 
 
 
-
 async function GetAllChat(payload: GetChat): Promise<FullChat[]> {
   const res = await api.get<FullChat[]>("/GetChat", {
     params: payload,

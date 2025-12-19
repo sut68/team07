@@ -1,34 +1,48 @@
 "use client";
 
 import { io } from "socket.io-client";
-
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { GetAllChat, InsertChat } from "../../services/chat";
-import { GetProgress } from "../../services/progress";
-import type {  FullChat } from "../../interfaces/Chat";
+import { GetAllChat, InsertChat, DropChat } from "../../services/chat";
+import { GetProgress, GetGroupProjectIDByUser } from "../../services/progress";
+import type { FullChat } from "../../interfaces/Chat";
 import { FullProgress } from "../../interfaces/Progress";
-import { GetGroupProjectIDByUser } from "../../services/progress";
 
 const RED = "#9a0120";
 const RED_DARK = "#7d0019";
 const BORDER = "#e5e7eb";
 const BG = "#fafafa";
 
+const socket = io("http://localhost:3001", {
+  transports: ["websocket"],
+  autoConnect: true,
+});
+
 export default function ChatPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [groupProjectId, setGroupProjectId] = useState<number>(0);
-
   const [processes, setProcesses] = useState<FullProgress[]>([]);
   const [activeRoomId, setActiveRoomId] = useState<number | null>(null);
-
   const [chats, setChats] = useState<FullChat[]>([]);
   const [message, setMessage] = useState("");
-
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setUserId(localStorage.getItem("user_id"));
   }, []);
+
+
+  const normalizeChat = (data: any): FullChat => {
+    const timeString = data.updated_at || data.UpdatedAt || data.created_at || data.CreatedAt || new Date().toISOString();
+    
+    return {
+      ...data,
+      id: Number(data.id ?? data.ID),
+      sender_id: Number(data.sender_id ?? data.SenderID),
+      message: data.message ?? data.Message,
+      updated_at: timeString, // Ensures time is never null
+      created_at: data.created_at ?? data.CreatedAt ?? timeString,
+    };
+  };
 
   useEffect(() => {
     if (!userId) return;
@@ -62,12 +76,22 @@ export default function ChatPage() {
     const rid = roomId ?? activeRoomId;
     if (!idsOk || rid == null) return;
 
-    const res = await GetAllChat({
-      group_project_id: groupProjectId,
-      process_id: Number(rid),
-    });
+    try {
+      const res = await GetAllChat({
+        group_project_id: groupProjectId,
+        process_id: Number(rid),
+      });
 
-    setChats(Array.isArray(res) ? res : []);
+      const rawData = Array.isArray(res) ? res : [];
+      // Clean the data using our helper
+      setChats(rawData.map(normalizeChat));
+      
+      // Scroll to bottom after loading
+      setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "auto" }), 100);
+    } catch (error) {
+      console.error("Error loading chats:", error);
+      setChats([]);
+    }
   };
 
   useEffect(() => {
@@ -75,15 +99,10 @@ export default function ChatPage() {
 
     (async () => {
       const res = await GetProgress({ group_project_id: groupProjectId });
-
       const normalized = (Array.isArray(res) ? res : [])
-        .map((p: any) => {
-          const rawId = p?.id ?? p?.ID;
-          return { ...p, id: Number(rawId) };
-        })
+        .map((p: any) => ({ ...p, id: Number(p?.id ?? p?.ID) }))
         .filter((p: any) => Number.isFinite(p.id) && p.id > 0);
 
-      console.warn(normalized)
       setProcesses(normalized);
 
       if (normalized.length > 0) {
@@ -91,22 +110,56 @@ export default function ChatPage() {
       } else {
         setActiveRoomId(null);
       }
-      
     })();
   }, [idsOk, groupProjectId]);
 
+-
   useEffect(() => {
     if (!roomJoined) return;
+
+    // 1. Initial Load
     setChats([]);
     void loadChats(activeRoomId as number);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeRoomId]);
 
-  useEffect(() => {
-    if (!roomJoined) return;
-    const t = setInterval(() => void loadChats(), 2000);
-    return () => clearInterval(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const roomIdStr = String(activeRoomId);
+    socket.emit("join_room", roomIdStr);
+
+ 
+    const handleConnect = () => {
+        console.log("Socket connected/reconnected. Syncing data...");
+        void loadChats(activeRoomId as number); 
+    };
+
+    // 3. Handle Incoming Message
+    const handleReceive = (data: any) => {
+      const cleanMsg = normalizeChat(data);
+      
+      setChats((prev) => {
+        // Prevent duplicates
+        const exists = prev.some((msg) => Number(msg.id) === Number(cleanMsg.id));
+        if (exists) return prev;
+        return [...prev, cleanMsg];
+      });
+      setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+    };
+
+    // 4. Handle Deletion
+    const handleDelete = (id: number) => {
+      setChats((prev) => prev.filter((c) => Number(c.id) !== Number(id)));
+    };
+
+    // Attach Listeners
+    socket.on("connect", handleConnect); // <--- This is the key fix
+    socket.on("receive_message", handleReceive);
+    socket.on("delete_message", handleDelete);
+
+    // Cleanup
+    return () => {
+      socket.emit("leave_room", roomIdStr);
+      socket.off("connect", handleConnect);
+      socket.off("receive_message", handleReceive);
+      socket.off("delete_message", handleDelete);
+    };
   }, [activeRoomId]);
 
   const onClickRoom = (roomId: number) => {
@@ -121,16 +174,72 @@ export default function ChatPage() {
     const text = message.trim();
     if (!text) return;
 
-    await InsertChat({
+    const payload = {
       group_project_id: groupProjectId,
       process_id: Number(activeRoomId),
       sender_id: Number(userId),
       message: text,
-    });
+    };
 
+    // Optimistic Update (Show immediately on screen)
+    const socketMsg = {
+      ...payload,
+      id: Date.now(), // Temporary ID
+      updated_at: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+    };
+
+    // Add to UI immediately
+    setChats((prev) => [...prev, socketMsg as unknown as FullChat]);
     setMessage("");
-    await loadChats();
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+
+    // Send to DB
+    await InsertChat(payload);
+    
+    // Send to Socket (other users)
+    socket.emit("send_message", { ...socketMsg, room_id: String(activeRoomId) });
+  };
+
+  const deleteMessage = async (id: number) => {
+    // FIX 1: Safety Check
+    if (!id || isNaN(id)) {
+        alert("Error: Invalid Chat ID. Please refresh.");
+        return;
+    }
+
+    // FIX 2: Popup
+    const isConfirmed = confirm("Are you sure you want to delete this message?");
+    if (!isConfirmed) return;
+
+    try {
+      const payload = {
+        id: id,
+        group_project_id: groupProjectId,
+        process_id: Number(activeRoomId)
+      };
+
+      await DropChat(payload);
+      
+      // Update UI immediately
+      setChats((prev) => prev.filter((c) => Number(c.id) !== id));
+      
+      // Notify others via socket
+      socket.emit("delete_message", { id, room_id: String(activeRoomId) });
+
+    } catch (error) {
+      console.error(error);
+      alert("Failed to delete.");
+    }
+  };
+
+  const formatTime = (dateStr?: string) => {
+    if (!dateStr) return "";
+    try {
+        return new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch (e) {
+        return "";
+    }
   };
 
   if (typeof window === "undefined") return null;
@@ -147,7 +256,7 @@ export default function ChatPage() {
         background: BG,
       }}
     >
-      {/* Sidebar */}
+      {/* SIDEBAR */}
       <aside
         style={{
           width: 280,
@@ -216,7 +325,7 @@ export default function ChatPage() {
                       flex: 1,
                     }}
                   >
-                    {p.Name }
+                    {p.Name}
                   </span>
                 </button>
               );
@@ -225,9 +334,8 @@ export default function ChatPage() {
         </div>
       </aside>
 
-      {/* Main */}
+      {/* MAIN CHAT AREA */}
       <main style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-        {/* Header */}
         <div
           style={{
             padding: 14,
@@ -287,7 +395,6 @@ export default function ChatPage() {
           </div>
         </div>
 
-        {/* Messages */}
         <div
           style={{
             flex: 1,
@@ -310,12 +417,12 @@ export default function ChatPage() {
               <div style={{ marginTop: 6 }}>พิมพ์ข้อความแรกได้เลย</div>
             </div>
           ) : (
-            chats.map((c) => {
+            chats.map((c, index) => {
               const isMe = Number(c.sender_id) === Number(userId);
 
               return (
                 <div
-                  key={c.id}
+                  key={c.id || index}
                   style={{
                     display: "flex",
                     justifyContent: isMe ? "flex-end" : "flex-start",
@@ -337,18 +444,51 @@ export default function ChatPage() {
 
                     <div
                       style={{
-                        display: "inline-block",
+                        display: "flex",
+                        flexDirection: "column",
                         padding: "10px 12px",
                         borderRadius: 14,
                         background: isMe ? RED : "#fff",
                         color: isMe ? "#fff" : "#111827",
                         border: isMe ? `1px solid ${RED}` : `1px solid ${BORDER}`,
-                        whiteSpace: "pre-wrap",
-                        wordBreak: "break-word",
                         boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
                       }}
                     >
-                      {c.message}
+                      <div style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+                        {c.message}
+                      </div>
+
+                      <div style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginTop: 8,
+                        paddingTop: 6,
+                        borderTop: isMe ? "1px solid rgba(255,255,255,0.3)" : `1px solid ${BORDER}`,
+                        gap: 15,
+                        fontSize: 10,
+                        opacity: 0.9
+                      }}>
+                        {/* Display the fixed Time */}
+                        <span>{formatTime(c.updated_at)}</span>
+
+                        {isMe && (
+                          <button
+                            onClick={() => deleteMessage(Number(c.id))}
+                            style={{
+                              background: "transparent",
+                              border: "none",
+                              color: "inherit",
+                              cursor: "pointer",
+                              textDecoration: "underline",
+                              padding: 0,
+                              fontSize: 10
+                            }}
+                          >
+                            ลบ
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -359,7 +499,6 @@ export default function ChatPage() {
           <div ref={bottomRef} />
         </div>
 
-        {/* Composer */}
         <form
           onSubmit={sendChat}
           style={{

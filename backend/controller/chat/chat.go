@@ -44,6 +44,8 @@ func GetAllChat(c *gin.Context) {
 	c.JSON(http.StatusOK, &chat)
 }
 
+
+
 func InsertChat(c *gin.Context) {
 
 	db := database.DB()
