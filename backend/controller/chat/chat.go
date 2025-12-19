@@ -11,39 +11,7 @@ import (
 )
 
 
-func GetProcessIDbyGroupID(c *gin.Context) {
 
-	db := database.DB()
-
-	var groupstr = c.Query("group_project_id") 
-	group, err := strconv.ParseUint(groupstr, 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid (blank) group project ID"})
-		return
-	}
-	
-
-	var processes []entity.Progress 
-	
-
-	result := db.Raw(`
-        SELECT 
-            p.id, p.created_at, p.updated_at, p.deleted_at, 
-            p.group_project_id, p.file, p.comment 
-        FROM progresses p
-        WHERE p.group_project_id = ?
-        ORDER BY p.id
-    `, group).Scan(&processes)
-    
-    if result.Error != nil {
-
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error retrieving processes"})
-        return
-    }
-
-	log.InsertLog(c, 7)
-	c.JSON(http.StatusOK, &processes)
-}
 
 func GetAllChat(c *gin.Context) {
 

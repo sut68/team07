@@ -1,18 +1,8 @@
 import api from "./api";
 import type { FullChat, ChatCreate, GetChat, ChatDelete } from "../interfaces/Chat";
-import { FullProgress } from "../interfaces/Progress";
 
-async function GetProcessIDByProjectID(group_project_id: number): Promise<FullProgress[]> {
-  try {
-    const response = await api.get<FullProgress[]>("/GetProcessID", {
-      params: { group_project_id },
-    });
-    return Array.isArray(response.data) ? response.data : [];
-  } catch (error) {
-    console.error("Failed to fetch process IDs:", error);
-    return [];
-  }
-}
+
+
 
 async function GetAllChat(payload: GetChat): Promise<FullChat[]> {
   const res = await api.get<FullChat[]>("/GetChat", {
@@ -45,4 +35,4 @@ async function DropWholechat(payload: GetChat) {
   });
 }
 
-export { GetAllChat, InsertChat, DropChat, GetProcessIDByProjectID ,DropWholechat};
+export { GetAllChat, InsertChat, DropChat ,DropWholechat};

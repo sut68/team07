@@ -50,7 +50,6 @@ func main() {
 
 		// user ทุก Role สามารถเข้าถึงได้
 		protected.GET("/GetChat", chat.GetAllChat)
-		protected.GET("/GetProcessID", chat.GetProcessIDbyGroupID)
 		protected.POST("/SendChat", chat.InsertChat)
 		protected.DELETE("/DeleteChat", chat.DeleteChat)
 		protected.DELETE("/Deletechatbyid",chat.DeleteChatbyProgress)
