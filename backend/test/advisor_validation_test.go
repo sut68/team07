@@ -10,6 +10,20 @@ import (
 func TestAdvisor(t *testing.T) {
 	g := NewGomegaWithT(t)
 
+	t.Run(`True input`, func(t *testing.T) {
+		acstatus := &entity.SelectAdvisor{
+			No: 1,
+			Title: "Test title",
+			Description: "Test description",
+			GroupProjectID: 1,
+			TeacherID: 1,
+		}
+		ok, err := govalidator.ValidateStruct(acstatus)
+		
+		g.Expect(ok).To(BeTrue())
+		g.Expect(err).To(BeNil())
+	})
+	
 	t.Run(`Number must be between 1 and 10`, func(t *testing.T) {
 		acstatus := &entity.SelectAdvisor{
 			No: 21, // ผิดตรงนี้

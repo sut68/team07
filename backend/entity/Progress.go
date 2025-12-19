@@ -11,5 +11,6 @@ type Progress struct {
 	GroupProject   *GroupProject `gorm:"foreignKey:GroupProjectID" json:"group_project"`
 
 	File     string  	`json:"file" valid:"required~File is required"`
+	Name     string  	`json:"Name" valid:"required~File is required"`
 	Comment  string     `json:"comment" valid:"required~Comment is required"`
 }

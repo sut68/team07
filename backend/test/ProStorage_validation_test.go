@@ -11,6 +11,21 @@ import (
 func TestProjectStorage(t *testing.T) {
 	g := NewGomegaWithT(t)
 
+	t.Run(`True input`, func(t *testing.T) {
+		proStorage := &entity.ProjectStorage{
+			Title:     "Project Storage A",
+			Abstract:  "This is abstract content",
+			Keywords:  "Golang, Storage",
+			Year:      2025,
+			FilePath:  "/files/project_a.pdf",
+			TeacherID: 1,
+		}
+
+		ok, err := govalidator.ValidateStruct(proStorage)
+		g.Expect(ok).To(BeTrue())
+		g.Expect(err).To(BeNil())
+	})
+
 	t.Run(`Title is required`, func(t *testing.T) {
 		proStorage := &entity.ProjectStorage{
 			Title:     "", // ผิดตรงนี้

@@ -47,19 +47,57 @@ func SaveEvaluation(c *gin.Context) {
 	db := database.DB()
 	tx := db.Begin()
 
-	// ลบคะแนนเก่าของ "อาจารย์คนนี้" เท่านั้น
-	if err := tx.Where("appointment_id = ? AND teacher_id = ?", req.AppointmentID, claims.ID).
-		Delete(&entity.EvaResult{}).Error; err != nil {
+	// 1. Get GroupProjectID to ensure we clean up scores across ALL appointments for this project
+	var appointment entity.Appointment
+	if err := db.First(&appointment, req.AppointmentID).Error; err != nil {
 		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to clear old group scores"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "Appointment not found"})
+		return
+	}
+	groupProjectID := appointment.GroupProjectID
+
+	// 2. Find IDs of EvaResult to delete (Scoped by Project, Teacher, and EvaluationName)
+	var evaResultIDs []uint
+	if err := tx.Model(&entity.EvaResult{}).
+		Joins("JOIN appointments ON appointments.id = eva_results.appointment_id").
+		Joins("JOIN criteria ON criteria.id = eva_results.criteria_id").
+		Joins("JOIN evaluations ON evaluations.id = criteria.evaluation_id").
+		Where("appointments.group_project_id = ? AND eva_results.teacher_id = ? AND evaluations.name = ?",
+			groupProjectID, claims.ID, req.EvaluationName).
+		Pluck("eva_results.id", &evaResultIDs).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to find old group scores"})
 		return
 	}
 
-	if err := tx.Where("appointment_id = ? AND teacher_id = ?", req.AppointmentID, claims.ID).
-		Delete(&entity.IndividualScore{}).Error; err != nil {
+	if len(evaResultIDs) > 0 {
+		if err := tx.Delete(&entity.EvaResult{}, evaResultIDs).Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to clear old group scores"})
+			return
+		}
+	}
+
+	// 3. Find IDs of IndividualScore to delete
+	var indScoreIDs []uint
+	if err := tx.Model(&entity.IndividualScore{}).
+		Joins("JOIN appointments ON appointments.id = individual_scores.appointment_id").
+		Joins("JOIN criteria ON criteria.id = individual_scores.criteria_id").
+		Joins("JOIN evaluations ON evaluations.id = criteria.evaluation_id").
+		Where("appointments.group_project_id = ? AND individual_scores.teacher_id = ? AND evaluations.name = ?",
+			groupProjectID, claims.ID, req.EvaluationName).
+		Pluck("individual_scores.id", &indScoreIDs).Error; err != nil {
 		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to clear old individual scores"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to find old individual scores"})
 		return
+	}
+
+	if len(indScoreIDs) > 0 {
+		if err := tx.Delete(&entity.IndividualScore{}, indScoreIDs).Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to clear old individual scores"})
+			return
+		}
 	}
 
 	// บันทึกคะแนนกลุ่ม
@@ -104,7 +142,6 @@ func SaveEvaluation(c *gin.Context) {
 	log.InsertLog(c, 20)
 	c.JSON(http.StatusOK, gin.H{"message": "Evaluation saved successfully"})
 }
-
 
 type PeerEvaluationRequest struct {
 	AppointmentID uint `json:"appointment_id"`

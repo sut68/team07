@@ -92,3 +92,9 @@ export const GetAllTeachers = async () => {
 export const UpdateGroupAdvisor = async (data: { group_project_id: number; teacher_id: number | null }) => {
     return await api.post("/admin/group/updateAdvisor", data);
 };
+
+
+// อัปเดตสถานะกลุ่ม  ของหนึ่งนะเอ อย่าลบ
+export const UpdateGroupStatus = async (groupId: number, status: string) => {
+    return await api.patch(`/teacher/groups/${groupId}/status`, { status });
+};

@@ -11,6 +11,22 @@ import (
 func TestProject(t *testing.T) {
 	g := NewGomegaWithT(t)
 
+	t.Run(`True input`, func(t *testing.T) {
+		project := &entity.Project{
+			Title:       "Project A",
+			Abstract:    "This is abstract",
+			Keywords:    "Golang, Testing",
+			Year:        2025,
+			Status:      "Pending",
+			FilePath:    "/path/to/file.pdf",
+			SelectionID: 1,
+		}
+
+		ok, err := govalidator.ValidateStruct(project)
+		g.Expect(ok).To(BeTrue())
+		g.Expect(err).To(BeNil())
+	})
+
 	t.Run(`Title is required`, func(t *testing.T) {
 		project := &entity.Project{
 			Title:       "", // ผิดตรงนี้

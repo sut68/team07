@@ -1,48 +1,83 @@
 "use client";
-import { useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { ImportUsersCSV } from '../../../services/user'; // เช็ค path ให้ถูกต้อง
-import "../../../style/import-user.css"; // Import CSS
-import { CloudUploadOutlined, FileTextOutlined, DownloadOutlined } from '@ant-design/icons'; // ใช้ Icon จาก Ant Design
+import { useState, useEffect, useRef } from 'react';
+import { GetUsers, ImportUsersCSV, CreateUser, GetGenders, GetBranches, GetRoles, GetUserStatuses, DeleteUser } from '../../../services/user';
+import { UserProfileInterface, GenderInterface, BranchInterface, RoleInterface, StatusInterface, CreateUserInterface } from '../../../interfaces/Users';
+import "../../../style/import-user.css";
+import "../../../style/admin-dashboard.css";
+import { CloudUploadOutlined, FileTextOutlined, DownloadOutlined, TeamOutlined, SearchOutlined, PlusOutlined, SaveOutlined, DeleteOutlined } from '@ant-design/icons';
 
-export default function ImportUsersPage() {
-    const router = useRouter();
+export default function UsersManagePage() {
+    // --- State: Data ---
+    const [users, setUsers] = useState<UserProfileInterface[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState("");
+
+    // --- State: Master Data for Dropdowns ---
+    const [genders, setGenders] = useState<GenderInterface[]>([]);
+    const [branches, setBranches] = useState<BranchInterface[]>([]);
+    const [roles, setRoles] = useState<RoleInterface[]>([]);
+    const [statuses, setStatuses] = useState<StatusInterface[]>([]);
+
+    // --- State: Import Modal ---
+    const [showImport, setShowImport] = useState(false);
     const [file, setFile] = useState<File | null>(null);
     const [isUploading, setIsUploading] = useState(false);
-    
-    // ใช้ Ref เพื่อควบคุม input file ที่ซ่อนอยู่
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // เมื่อคลิกที่กล่อง ให้ไปคลิกที่ input type="file" จริงๆ
-    const handleBoxClick = () => {
-        if (!isUploading) {
-            fileInputRef.current?.click();
+    // --- State: Create User Modal ---
+    const [showCreate, setShowCreate] = useState(false);
+    const [newUser, setNewUser] = useState<CreateUserInterface>({
+        username: "", password: "", firstname: "", lastname: "",
+        email: "", phone: "",
+        gender_id: 1, branch_id: 1, role_id: 3, status_id: 1
+    });
+
+    // 1. Fetch All Data (Users + Master Data)
+    const fetchAllData = async () => {
+        setLoading(true);
+        try {
+            const [usersRes, gendersRes, branchesRes, rolesRes, statusesRes] = await Promise.all([
+                GetUsers(),
+                GetGenders(),
+                GetBranches(),
+                GetRoles(),
+                GetUserStatuses()
+            ]);
+
+            if (usersRes.status === 200) setUsers(usersRes.data);
+            if (gendersRes.status === 200) setGenders(gendersRes.data);
+            if (branchesRes.status === 200) setBranches(branchesRes.data);
+            if (rolesRes.status === 200) setRoles(rolesRes.data);
+            if (statusesRes.status === 200) setStatuses(statusesRes.data);
+        } catch (error) {
+            console.error("Error fetching data:", error);
+        } finally {
+            setLoading(false);
         }
     };
 
-    // เมื่อเลือกไฟล์เสร็จ
+    useEffect(() => {
+        fetchAllData();
+    }, []);
+
+    // 2. Logic Import CSV
+    const handleBoxClick = () => !isUploading && fileInputRef.current?.click();
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
             const selectedFile = e.target.files[0];
-            // ตรวจสอบนามสกุลไฟล์
-            if (selectedFile.type !== "text/csv" && !selectedFile.name.endsWith(".csv")) {
-                alert("❌ กรุณาเลือกไฟล์นามสกุล .csv เท่านั้น");
+            if (!selectedFile.name.endsWith(".csv")) {
+                alert("❌ กรุณาเลือกไฟล์ .csv เท่านั้น");
                 return;
             }
             setFile(selectedFile);
         }
     };
 
-    // ฟังก์ชันสร้างและดาวน์โหลด Template CSV (ไม่ต้องมีไฟล์จริงบน Server)
     const handleDownloadTemplate = () => {
-        // Header ตามที่ Backend ต้องการ
         const csvHeader = "username,password,firstname,lastname,email,phone,gender_id,branch_id,role_id,status_id";
-        // ข้อมูลตัวอย่าง
         const csvExample = "user01,123456,Somchai,Rakdee,somchai@email.com,0811111111,1,1,1,1";
-        
         const csvContent = "data:text/csv;charset=utf-8," + csvHeader + "\n" + csvExample;
         const encodedUri = encodeURI(csvContent);
-        
         const link = document.createElement("a");
         link.setAttribute("href", encodedUri);
         link.setAttribute("download", "users_template.csv");
@@ -51,119 +86,355 @@ export default function ImportUsersPage() {
         document.body.removeChild(link);
     };
 
-    // ฟังก์ชัน Upload
     const handleUpload = async () => {
-        if (!file) {
-            alert("⚠️ กรุณาเลือกไฟล์ก่อนกดอัปโหลด");
-            return;
-        }
-
-        // ยืนยันอีกครั้ง
-        if (!confirm(`คุณต้องการนำเข้าข้อมูลจากไฟล์ "${file.name}" ใช่หรือไม่?`)) {
-            return;
-        }
+        if (!file) return alert("⚠️ กรุณาเลือกไฟล์ก่อน");
+        if (!confirm(`ยืนยันการนำเข้าไฟล์ "${file.name}"?`)) return;
 
         setIsUploading(true);
         try {
             const res = await ImportUsersCSV(file);
-            
             if (res.status === 200) {
-                alert(`✅ นำเข้าสำเร็จ!\n${res.data.message || "เพิ่มข้อมูลเรียบร้อยแล้ว"}`);
+                alert(`✅ นำเข้าสำเร็จ!\n${res.data.message || ""}`);
                 setFile(null);
-                if (fileInputRef.current) fileInputRef.current.value = ""; // เคลียร์ input
-                
-                // กลับไปหน้า Dashboard หรือหน้ารายชื่อ User
-                router.push('/admin/dashboard');
+                setShowImport(false);
+                fetchAllData(); // Refresh Data
             } else {
-                alert(`❌ เกิดข้อผิดพลาด: ${res.data.error || "Unknown Error"}`);
+                alert(`❌ เกิดข้อผิดพลาด: ${res.data.error}`);
             }
         } catch (error) {
-            console.error("Upload Error:", error);
-            alert("❌ ไม่สามารถเชื่อมต่อกับ Server ได้");
+            console.error(error);
+            alert("❌ เชื่อมต่อ Server ไม่ได้");
         } finally {
             setIsUploading(false);
         }
     };
 
+    // 3. Logic Create User
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
+        setNewUser({
+            ...newUser,
+            [name]: name.includes("id") ? Number(value) : value // แปลงเป็นเลขถ้าเป็น ID
+        });
+    };
+
+    const handleCreateSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newUser.username || !newUser.password || !newUser.firstname) {
+            alert("กรุณากรอก Username, Password และ ชื่อจริง");
+            return;
+        }
+
+        try {
+            const res = await CreateUser(newUser);
+            if (res.status === 201) {
+                alert("✅ เพิ่มผู้ใช้งานสำเร็จ!");
+                setShowCreate(false);
+                setNewUser({
+                    username: "", password: "", firstname: "", lastname: "",
+                    email: "", phone: "", gender_id: 1, branch_id: 1, role_id: 3, status_id: 1
+                });
+                fetchAllData(); // Refresh Table
+            } else {
+                alert("❌ เกิดข้อผิดพลาด: " + res.data.error);
+            }
+        } catch (error: any) {
+            console.error(error);
+            // ✅ แสดง Error message ที่โยนมาจาก Service (เช่น ห้ามสร้าง Admin)
+            alert("❌ " + (error.response?.data?.error || error.message || "ไม่สามารถเชื่อมต่อ Server ได้"));
+        }
+    };
+
+    // ✅ 4. Logic Delete User (เพิ่มใหม่)
+    const handleDelete = async (id: number) => {
+        const isConfirmed = confirm("⚠️ คุณแน่ใจหรือไม่ว่าจะลบผู้ใช้งานรายนี้? \nการกระทำนี้ไม่สามารถย้อนกลับได้");
+        if (!isConfirmed) return;
+
+        try {
+            const res = await DeleteUser(id);
+            if (res.status === 200) {
+                alert("✅ ลบผู้ใช้งานสำเร็จ");
+                fetchAllData(); // โหลดข้อมูลใหม่
+            } else {
+                alert("❌ ลบไม่สำเร็จ: " + res.data.error);
+            }
+        } catch (error: any) {
+            console.error(error);
+            alert("❌ เกิดข้อผิดพลาด: " + (error.response?.data?.error || error.message));
+        }
+    };
+
+    // Filter Logic
+    const filteredUsers = users.filter(user =>
+        user.firstname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.lastname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.username?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     return (
-        <div className="import-container">
-            <div className="import-card">
-                
-                {/* Header Section */}
-                <div className="import-header">
-                    <h2>นำเข้าข้อมูลผู้ใช้งาน (Import Users)</h2>
-                    <p>รองรับไฟล์ .csv เท่านั้น</p>
+        <div className="dashboard-container">
+            {/* Header Page */}
+            <div className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                    <h1>จัดการผู้ใช้งาน (Users Management)</h1>
+                    <p>รายชื่อผู้ใช้งานทั้งหมดในระบบ</p>
                 </div>
-
-                <div className="import-content">
-                    
-                    {/* Template Download Section */}
-                    <div className="template-section">
-                        <span>ยังไม่มีไฟล์ต้นแบบ? </span>
-                        <button onClick={handleDownloadTemplate} className="btn-template">
-                            <DownloadOutlined /> ดาวน์โหลด Template CSV
-                        </button>
-                    </div>
-
-                    {/* Upload Area (Clickable Box) */}
-                    <div 
-                        className="upload-area" 
-                        onClick={handleBoxClick}
-                        style={{ opacity: isUploading ? 0.6 : 1, cursor: isUploading ? 'wait' : 'pointer' }}
+                <div style={{ display: 'flex', gap: '10px' }}>
+                    <button
+                        onClick={() => setShowCreate(true)}
+                        style={{
+                            backgroundColor: '#0958d9', color: 'white', padding: '10px 20px',
+                            border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold',
+                            display: 'flex', gap: '8px', alignItems: 'center', boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+                        }}
                     >
-                        {/* Hidden Input */}
-                        <input 
-                            type="file" 
-                            accept=".csv" 
-                            ref={fileInputRef}
-                            style={{ display: 'none' }}
-                            onChange={handleFileChange}
-                            disabled={isUploading}
-                        />
-                        
-                        <div className="upload-icon">
-                            <CloudUploadOutlined />
-                        </div>
-                        
-                        <div className="upload-text-main">
-                            คลิกเพื่อเลือกไฟล์ CSV
-                        </div>
-                        <div className="upload-text-sub">
-                            หรือลากไฟล์มาวางที่นี่
-                        </div>
-
-                        {/* แสดงชื่อไฟล์เมื่อเลือกแล้ว */}
-                        {file && (
-                            <div className="selected-file-badge" onClick={(e) => e.stopPropagation()}>
-                                <FileTextOutlined /> 
-                                <span>{file.name}</span>
-                                <span style={{fontSize:'0.8em', color:'#999'}}>
-                                    ({(file.size / 1024).toFixed(2)} KB)
-                                </span>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="action-buttons">
-                        <button 
-                            className="btn-back" 
-                            onClick={() => router.back()}
-                            disabled={isUploading}
-                        >
-                            ย้อนกลับ
-                        </button>
-                        <button 
-                            className="btn-upload" 
-                            onClick={handleUpload}
-                            disabled={!file || isUploading}
-                        >
-                            {isUploading ? 'กำลังอัปโหลด...' : 'ยืนยันการนำเข้า'}
-                        </button>
-                    </div>
-
+                        <PlusOutlined /> เพิ่มผู้ใช้งาน
+                    </button>
+                    <button
+                        onClick={() => setShowImport(true)}
+                        style={{
+                            backgroundColor: '#9a0120', color: 'white', padding: '10px 20px',
+                            border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold',
+                            display: 'flex', gap: '8px', alignItems: 'center', boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+                        }}
+                    >
+                        <CloudUploadOutlined /> นำเข้า CSV
+                    </button>
                 </div>
             </div>
+
+            {/* Main Content */}
+            <div className="section-main" style={{ marginTop: '20px' }}>
+                <div style={{ marginBottom: '20px', position: 'relative', maxWidth: '300px' }}>
+                    <SearchOutlined style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#999' }} />
+                    <input
+                        type="text"
+                        placeholder="ค้นหาชื่อ หรือ รหัสนักศึกษา..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        style={{
+                            width: '100%', padding: '10px 10px 10px 35px',
+                            border: '1px solid #ddd', borderRadius: '6px', fontSize: '0.9rem'
+                        }}
+                    />
+                </div>
+
+                {/* Table */}
+                {loading ? (
+                    <p style={{ textAlign: 'center', padding: '40px', color: '#666' }}>กำลังโหลดข้อมูล...</p>
+                ) : (
+                    <div style={{ overflowX: 'auto' }}>
+                        <table className="admin-table">
+                            <thead>
+                                <tr>
+                                    <th style={{ width: '80px', textAlign: 'center' }}>ID</th>
+                                    <th>ชื่อผู้ใช้งาน (Username)</th>
+                                    <th>ชื่อ - นามสกุล</th>
+                                    <th>บทบาท (Role)</th>
+                                    <th>สาขา (Branch)</th>
+                                    <th>สถานะ</th>
+                                    {/* ✅ เพิ่มหัวตาราง Action */}
+                                    <th style={{ textAlign: 'center' }}>จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filteredUsers.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={7} style={{ textAlign: 'center', padding: '30px', color: '#999' }}>
+                                            ไม่พบข้อมูลผู้ใช้งาน
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    filteredUsers.map((user) => (
+                                        <tr key={user.ID}>
+                                            <td style={{ fontWeight: 'bold', color: '#9a0120', textAlign: 'center' }}>{user.ID}</td>
+                                            <td>{user.username}</td>
+                                            <td>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <div style={{ width: '30px', height: '30px', background: '#f0f0f0', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                                        <TeamOutlined style={{ color: '#666' }} />
+                                                    </div>
+                                                    {user.firstname} {user.lastname}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span style={{
+                                                    padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 600,
+                                                    backgroundColor: user.role?.role === 'Admin' ? '#333' : (user.role?.role === 'Teacher' ? '#e6f7ff' : '#f6ffed'),
+                                                    color: user.role?.role === 'Admin' ? '#fff' : (user.role?.role === 'Teacher' ? '#096dd9' : '#389e0d')
+                                                }}>
+                                                    {user.role?.role || "-"}
+                                                </span>
+                                            </td>
+                                            <td>{user.branch?.branch_name || "-"}</td>
+                                            <td>
+                                                <span style={{ color: user.status?.status === 'Active' ? 'green' : 'red', fontWeight: 500 }}>
+                                                    {user.status?.status || "-"}
+                                                </span>
+                                            </td>
+                                            {/* ✅ แก้ไขปุ่มลบ: ซ่อนปุ่มถ้าเป็น Admin */}
+                                            <td style={{ textAlign: 'center' }}>
+                                                {user.role?.role !== 'Admin' ? (
+                                                    <button
+                                                        onClick={() => user.ID && handleDelete(user.ID)}
+                                                        style={{
+                                                            backgroundColor: 'transparent',
+                                                            border: 'none',
+                                                            cursor: 'pointer',
+                                                            color: '#ff4d4f',
+                                                            fontSize: '1.2rem',
+                                                            transition: 'color 0.2s'
+                                                        }}
+                                                        title="ลบผู้ใช้งาน"
+                                                    >
+                                                        <DeleteOutlined />
+                                                    </button>
+                                                ) : (
+                                                    // ถ้าเป็น Admin ให้แสดงเครื่องหมายขีด หรือกุญแจล็อคแทน
+                                                    <span style={{ color: '#ccc', fontSize: '1.2rem', cursor: 'not-allowed' }} title="ไม่สามารถลบ Admin ได้">
+                                                        🚫
+                                                    </span>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
+
+            {/* --- Modal 1: Import CSV --- */}
+            {showImport && (
+                <div className="modal-overlay" style={{
+                    position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)',
+                    display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000
+                }}>
+                    <div className="import-card" style={{ width: '90%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
+                        <div className="import-header" style={{ position: 'relative' }}>
+                            <h2>นำเข้าข้อมูลผู้ใช้งาน (Import Users)</h2>
+                            <p>รองรับไฟล์ .csv เท่านั้น</p>
+                            <button
+                                onClick={() => setShowImport(false)}
+                                style={{ position: 'absolute', top: '20px', right: '20px', background: 'none', border: 'none', color: 'white', fontSize: '1.5rem', cursor: 'pointer' }}
+                            >×</button>
+                        </div>
+                        <div className="import-content">
+                            <div className="template-section">
+                                <span>ยังไม่มีไฟล์ต้นแบบ? </span>
+                                <button onClick={handleDownloadTemplate} className="btn-template">
+                                    <DownloadOutlined /> ดาวน์โหลด Template CSV
+                                </button>
+                            </div>
+                            <div
+                                className="upload-area"
+                                onClick={handleBoxClick}
+                                style={{ opacity: isUploading ? 0.6 : 1, cursor: isUploading ? 'wait' : 'pointer' }}
+                            >
+                                <input type="file" accept=".csv" ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileChange} disabled={isUploading} />
+                                <div className="upload-icon"><CloudUploadOutlined /></div>
+                                <div className="upload-text-main">คลิกเพื่อเลือกไฟล์ CSV</div>
+                                <div className="upload-text-sub">หรือลากไฟล์มาวางที่นี่</div>
+                                {file && (
+                                    <div className="selected-file-badge" onClick={(e) => e.stopPropagation()}>
+                                        <FileTextOutlined /> {file.name}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="action-buttons">
+                                <button className="btn-back" onClick={() => setShowImport(false)} disabled={isUploading}>ยกเลิก</button>
+                                <button className="btn-upload" onClick={handleUpload} disabled={!file || isUploading}>
+                                    {isUploading ? 'กำลังอัปโหลด...' : 'ยืนยันการนำเข้า'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* --- Modal 2: Create User (Dynamic Dropdowns) --- */}
+            {showCreate && (
+                <div style={{
+                    position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)',
+                    display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000
+                }}>
+                    <div style={{
+                        backgroundColor: 'white', padding: '30px', borderRadius: '12px',
+                        width: '90%', maxWidth: '700px', maxHeight: '90vh', overflowY: 'auto',
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
+                    }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
+                            <h2 style={{ margin: 0, color: '#333' }}><PlusOutlined /> เพิ่มผู้ใช้งานใหม่</h2>
+                            <button onClick={() => setShowCreate(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#999' }}>×</button>
+                        </div>
+
+                        <form onSubmit={handleCreateSubmit} className="create-user-form">
+                            <div className="form-group">
+                                <label>Username <span style={{ color: 'red' }}>*</span></label>
+                                <input className="form-input" name="username" value={newUser.username} onChange={handleInputChange} required placeholder="เช่น student66" />
+                            </div>
+                            <div className="form-group">
+                                <label>Password <span style={{ color: 'red' }}>*</span></label>
+                                <input className="form-input" type="password" name="password" value={newUser.password} onChange={handleInputChange} required placeholder="กำหนดรหัสผ่าน" />
+                            </div>
+                            <div className="form-group">
+                                <label>ชื่อจริง <span style={{ color: 'red' }}>*</span></label>
+                                <input className="form-input" name="firstname" value={newUser.firstname} onChange={handleInputChange} required placeholder="ชื่อภาษาอังกฤษ" />
+                            </div>
+                            <div className="form-group">
+                                <label>นามสกุล <span style={{ color: 'red' }}>*</span></label>
+                                <input className="form-input" name="lastname" value={newUser.lastname} onChange={handleInputChange} required placeholder="นามสกุลภาษาอังกฤษ" />
+                            </div>
+                            <div className="form-group">
+                                <label>อีเมล</label>
+                                <input className="form-input" type="email" name="email" value={newUser.email} onChange={handleInputChange} placeholder="example@sut.ac.th" />
+                            </div>
+                            <div className="form-group">
+                                <label>เบอร์โทร</label>
+                                <input className="form-input" name="phone" value={newUser.phone} onChange={handleInputChange} placeholder="08xxxxxxxx" />
+                            </div>
+
+                            {/* Dynamic Dropdowns */}
+                            <div className="form-group">
+                                <label>เพศ</label>
+                                <select className="form-input" name="gender_id" value={newUser.gender_id} onChange={handleInputChange}>
+                                    {genders.map(g => <option key={g.ID} value={g.ID}>{g.name}</option>)}
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label>สาขา</label>
+                                <select className="form-input" name="branch_id" value={newUser.branch_id} onChange={handleInputChange}>
+                                    {branches.map(b => <option key={b.ID} value={b.ID}>{b.branch_name}</option>)}
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label>บทบาท (Role)</label>
+                                <select className="form-input" name="role_id" value={newUser.role_id} onChange={handleInputChange}>
+                                    {roles
+                                        .filter(r => r.role !== 'Admin') // กรองเอา Admin ออก
+                                        .map(r => (
+                                            <option key={r.ID} value={r.ID}>{r.role}</option>
+                                        ))
+                                    }
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label>สถานะ</label>
+                                <select className="form-input" name="status_id" value={newUser.status_id} onChange={handleInputChange}>
+                                    {statuses.map(s => <option key={s.ID} value={s.ID}>{s.status}</option>)}
+                                </select>
+                            </div>
+
+                            <div style={{ gridColumn: '1 / -1', marginTop: '15px' }}>
+                                <button type="submit" className="btn-save">
+                                    <SaveOutlined /> บันทึกข้อมูล
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

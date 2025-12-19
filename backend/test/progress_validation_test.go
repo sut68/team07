@@ -4,11 +4,25 @@ import (
 	"testing"
 
 	"github.com/asaskevich/govalidator"
-	"github.com/sut68/team07/backend/entity"
 	. "github.com/onsi/gomega"
+	"github.com/sut68/team07/backend/entity"
 )
+
 func TestProgress(t *testing.T) {
 	g := NewGomegaWithT(t)
+
+	t.Run(`True input`, func(t *testing.T) {
+		progress := &entity.Progress{
+			GroupProjectID: 1,
+			File:           "progress1.pdf",
+			Comment:        "Initial progress submission",
+		}
+
+		ok, err := govalidator.ValidateStruct(progress)
+
+		g.Expect(ok).To(BeTrue())
+		g.Expect(err).To(BeNil())
+	})
 
 	t.Run(`GroupProjectID is required`, func(t *testing.T) {
 		progress := &entity.Progress{
@@ -18,7 +32,7 @@ func TestProgress(t *testing.T) {
 		}
 
 		ok, err := govalidator.ValidateStruct(progress)
-		
+
 		g.Expect(ok).NotTo(BeTrue())
 		g.Expect(err).NotTo(BeNil())
 		g.Expect(err.Error()).To(Equal("GroupProjectID is required"))
@@ -27,12 +41,12 @@ func TestProgress(t *testing.T) {
 	t.Run(`File is required`, func(t *testing.T) {
 		progress := &entity.Progress{
 			GroupProjectID: 1,
-			File:           "",  // ผิดตรงนี้
+			File:           "", // ผิดตรงนี้
 			Comment:        "Initial progress submission",
 		}
 
 		ok, err := govalidator.ValidateStruct(progress)
-		
+
 		g.Expect(ok).NotTo(BeTrue())
 		g.Expect(err).NotTo(BeNil())
 		g.Expect(err.Error()).To(Equal("File is required"))
@@ -46,7 +60,7 @@ func TestProgress(t *testing.T) {
 		}
 
 		ok, err := govalidator.ValidateStruct(progress)
-		
+
 		g.Expect(ok).NotTo(BeTrue())
 		g.Expect(err).NotTo(BeNil())
 		g.Expect(err.Error()).To(Equal("Comment is required"))

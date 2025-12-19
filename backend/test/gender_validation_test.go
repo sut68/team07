@@ -4,11 +4,23 @@ import (
 	"testing"
 
 	"github.com/asaskevich/govalidator"
-	"github.com/sut68/team07/backend/entity"
 	. "github.com/onsi/gomega"
+	"github.com/sut68/team07/backend/entity"
 )
+
 func TestGender(t *testing.T) {
 	g := NewGomegaWithT(t)
+
+	t.Run(`True input`, func(t *testing.T) {
+		gender := &entity.Gender{
+			Name: "Male",
+		}
+
+		ok, err := govalidator.ValidateStruct(gender)
+
+		g.Expect(ok).To(BeTrue())
+		g.Expect(err).To(BeNil())
+	})
 
 	t.Run(`Name is required`, func(t *testing.T) {
 		gender := &entity.Gender{
@@ -16,7 +28,7 @@ func TestGender(t *testing.T) {
 		}
 
 		ok, err := govalidator.ValidateStruct(gender)
-		
+
 		g.Expect(ok).NotTo(BeTrue())
 		g.Expect(err).NotTo(BeNil())
 		g.Expect(err.Error()).To(Equal("Name is required"))

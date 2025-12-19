@@ -36,3 +36,18 @@ export const approveTopic = async (id: number, data: { status: string; comment?:
     const res = await api.patch<{ data: Topic; approval: TopicApproval }>(`/teacher/topics/${id}/approval`, data);
     return res.data;
 };
+
+export const selectTopic = async (id: number, data: { group_project_id: number }) => {
+    const res = await api.post(`/student/topics/${id}/select`, data);
+    return res.data;
+};
+
+export const cancelSelection = async (data: { group_project_id: number }) => {
+    const res = await api.post(`/student/topics/cancel-selection`, data);
+    return res.data;
+};
+
+export const getStudentTopic = async (params: { group_id: number }) => {
+    const res = await api.get(`/student/topic`, { params });
+    return res.data;
+};

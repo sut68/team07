@@ -131,24 +131,35 @@ export default function EvaluationFormPage() {
         }
         setSubmitting(true);
         try {
+            // Filter only scores that belong to the current evaluation criteria
+            const validGroupCriteriaIds = new Set(formData?.group_criteria?.map((c: any) => c.id));
+            const validIndCriteriaIds = new Set(formData?.individual_criteria?.map((c: any) => c.id));
+
             const payload = {
                 appointment_id: appointmentId,
                 evaluation_name: evalType,
-                group_scores: Object.entries(groupScores).map(([cid, val]: any) => ({
-                    criteria_id: Number(cid),
-                    score: val.score,
-                    criteria_level_id: val.levelId,
-                    comment: comments[Number(cid)] || ""
-                })),
-                individual_scores: Object.entries(indScores).map(([key, val]: any) => {
-                    const [sid, cid] = key.split('_');
-                    return {
-                        student_id: Number(sid),
+                group_scores: Object.entries(groupScores)
+                    .filter(([cid]) => validGroupCriteriaIds.has(Number(cid)))
+                    .map(([cid, val]: any) => ({
                         criteria_id: Number(cid),
                         score: val.score,
-                        criteria_level_id: val.levelId
-                    };
-                })
+                        criteria_level_id: val.levelId,
+                        comment: comments[Number(cid)] || ""
+                    })),
+                individual_scores: Object.entries(indScores)
+                    .filter(([key]) => {
+                        const [, cid] = key.split('_');
+                        return validIndCriteriaIds.has(Number(cid));
+                    })
+                    .map(([key, val]: any) => {
+                        const [sid, cid] = key.split('_');
+                        return {
+                            student_id: Number(sid),
+                            criteria_id: Number(cid),
+                            score: val.score,
+                            criteria_level_id: val.levelId
+                        };
+                    })
             };
 
             await SaveEvaluation(payload);
@@ -303,15 +314,25 @@ export default function EvaluationFormPage() {
                                             </td>
                                             {formData?.individual_criteria?.map((cri: any) => (
                                                 <td key={cri.id}>
-                                                    <div className="score-group">
+                                                    <div className="score-group" style={{ gap: '8px' }}>
                                                         {cri.levels.map((lvl: any) => (
                                                             <button
                                                                 key={lvl.id}
                                                                 className="score-btn"
-                                                                title={`ให้ ${lvl.score} ทุกคน`}
+                                                                style={{
+                                                                    width: 'auto',
+                                                                    height: 'auto',
+                                                                    padding: '6px 12px',
+                                                                    borderRadius: '8px',
+                                                                    display: 'flex',
+                                                                    flexDirection: 'column',
+                                                                    alignItems: 'center',
+                                                                    lineHeight: '1.2'
+                                                                }}
                                                                 onClick={() => handleApplyAll(cri.id, lvl.score, lvl.id)}
                                                             >
-                                                                {lvl.score}
+                                                                <span style={{ fontSize: '1.1em', fontWeight: 'bold' }}>{lvl.score}</span>
+                                                                <span style={{ fontSize: '0.7em', fontWeight: 'normal', marginTop: '2px' }}>{lvl.description}</span>
                                                             </button>
                                                         ))}
                                                     </div>

@@ -13,6 +13,7 @@ import (
 	"github.com/sut68/team07/backend/controller/issues"
 	"github.com/sut68/team07/backend/controller/progress"
 	"github.com/sut68/team07/backend/controller/topic"
+	"github.com/sut68/team07/backend/controller/updateStatus"
 	"github.com/sut68/team07/backend/controller/users"
 	"github.com/sut68/team07/backend/database"
 	"github.com/sut68/team07/backend/middleware"
@@ -65,11 +66,17 @@ func main() {
 		adminGroup.Use(middleware.RoleGuard("Admin"))
 		{
 			// ถ้า API ไหนที่แอดมินเข้าถึงได้ ให้นำไปใส่ในนี้
-			adminGroup.GET("/getGender", users.GetGender)
+			adminGroup.GET("/genders", users.GetGenders)
+			adminGroup.GET("/branches", users.GetBranches)
+			adminGroup.GET("/roles", users.GetRoles)
+			adminGroup.GET("/statuses", users.GetUserStatuses)
 			adminGroup.GET("/getIssueStatus", issues.GetIssueStatus)
 
 			adminGroup.POST("/importUsersCSV", importuser.ImportUsersHandler)
 			adminGroup.PATCH("/issues/:id", issues.UpdateIssueStatus)
+			adminGroup.GET("/users", users.ListUsers)
+			adminGroup.POST("/user", users.CreateUser)
+            adminGroup.DELETE("/user/:id", users.DeleteUser)
 
 			// Group
 			adminGroup.GET("/studentCount", group.GetEligibleStudentCount)
@@ -126,7 +133,8 @@ func main() {
 			teacherGroup.POST("/topics", topic.CreateTopic)
 			teacherGroup.PATCH("/topics/:id", topic.UpdateTopic)
 			teacherGroup.DELETE("/topics/:id", topic.DeleteTopic)
-
+			// Status Update
+			teacherGroup.PATCH("/groups/:id/status", updateStatus.UpdateGroupStatus)
 		}
 
 		studentGroup := protected.Group("/student")
@@ -134,6 +142,7 @@ func main() {
 		{
 			// ถ้า API ไหนที่นักเรียนเข้าถึงได้ ให้นำไปใส่ในนี้
 			studentGroup.GET("/getProcess", progress.GetProGressByID)
+			studentGroup.GET("/getProjectbyuser",progress.GetGroupProjectIDByStudentID)
 			studentGroup.POST("/assignProgress", progress.AssignProGress)
 			studentGroup.POST("/modifyProgress", progress.UpdateProGress)
 			studentGroup.DELETE("/deleteProgress", progress.DeleteProgress)
@@ -148,6 +157,11 @@ func main() {
 			studentGroup.GET("/evaluation/form", evaluation.GetStudentEvaluationForm)
 			studentGroup.GET("/evaluation/result", evaluation.GetStudentEvaluationResult)
 			studentGroup.POST("/evaluation/peer", evaluation.SavePeerEvaluation)
+
+			// Topic Selection
+			studentGroup.GET("/topic", topic.GetStudentTopic)
+			studentGroup.POST("/topics/:id/select", topic.SelectTopic)
+			studentGroup.POST("/topics/cancel-selection", topic.CancelSelection)
 		}
 
 		teacherOrStudentGroup := protected.Group("/groupProject")
@@ -178,4 +192,3 @@ func main() {
 
 	r.Run(":8080")
 }
-

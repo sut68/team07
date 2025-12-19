@@ -33,7 +33,9 @@ export default function AdvisorProjectCard({ project, onEvaluate }: Props) {
           <span className="group-tag">Group {project.group_number}</span>
           {project.is_graded ? (
             <Tag color="success" icon={<CheckCircleOutlined />}>
-              ครบถ้วน ({project.graded_count}/{project.total_count})
+              {project.group_status === "Completed" 
+                  ? "จบการศึกษา" 
+                  : `ครบถ้วน (${project.graded_count}/${project.total_count})`}
             </Tag>
           ) : (
             <Tag color="warning" icon={<ClockCircleOutlined />}>
@@ -52,13 +54,19 @@ export default function AdvisorProjectCard({ project, onEvaluate }: Props) {
       </div>
 
       <div className="card-actions">
-        <button
-          className={`btn-card ${project.is_graded ? 'edit' : 'eval'}`}
-          style={{ flex: 1 }}
-          onClick={handleEvaluateClick}
-        >
-          <EditOutlined /> {project.is_graded ? 'แก้ไขคะแนน' : 'ประเมินผล'}
-        </button>
+        {project.appointments && project.appointments.length > 0 ? (
+          <button
+            className={`btn-card ${project.is_graded ? 'edit' : 'eval'}`}
+            style={{ flex: 1 }}
+            onClick={handleEvaluateClick}
+          >
+            <EditOutlined /> {project.is_graded ? 'แก้ไขคะแนน' : 'ประเมินผล'}
+          </button>
+        ) : (
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999', fontSize: '0.9rem', background: '#f5f5f5', borderRadius: '6px' }}>
+             {project.group_status === "Completed" ? "จบการศึกษาแล้ว" : "ไม่มีนัดหมาย"}
+          </div>
+        )}
 
         {project.is_graded && (
           <Link href={`/teacher/evaluation/summary/${project.id}`}>

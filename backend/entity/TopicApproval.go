@@ -7,9 +7,9 @@ import (
 
 type TopicApproval struct {
     gorm.Model
-    Status       string    `json:"status" valid:"required~Status is required"`  
-    Comment      string    `json:"comment" valid:"required~Comment is required"`
-    ApprovalDate time.Time `json:"approval_date" valid:"required~ApprovalDate is required"`
+    Status string `json:"status" valid:"required,in(Approved|Rejected)~Invalid status"`  
+    Comment      string    `json:"comment"`
+    ApprovalDate time.Time `json:"approval_date"`
 
     TeacherID uint    `json:"teacher_id" valid:"required~TeacherID is required"`
     Teacher   *User `gorm:"foreignKey:TeacherID" json:"teacher"`
