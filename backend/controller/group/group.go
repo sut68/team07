@@ -174,7 +174,6 @@ func PostGroupMember(c *gin.Context) {
 	})
 }
 
-// GET: ดึงข้อมูลกลุ่มของนักศึกษาที่ล็อกอินอยู่ (GetMyGroup)
 func GetMyGroup(c *gin.Context) {
 	// 1. ตรวจสอบสิทธิ์และดึง ID นักศึกษา
 	claims, err := middleware.GetClaimsFromContext(c)
@@ -185,19 +184,18 @@ func GetMyGroup(c *gin.Context) {
 	studentID := claims.ID
 	db := database.DB()
 
-	// 2. ค้นหาสมาชิกในกลุ่ม (GroupMember) เพื่อหา GroupProjectID
 	var member entity.GroupMember
-	// ใช้ Preload เพื่อดึงข้อมูล GroupProject และ Teacher (ที่ปรึกษา)
-	if err := db.Preload("GroupProject").
+	if err := db.
+		Preload("GroupProject").
+		Preload("GroupProject.Teacher").              
+		Preload("GroupProject.GroupMembers").            
 		Preload("GroupProject.GroupMembers.Student").
-		Preload("GroupProject.Teacher"). // ดึงข้อมูลอาจารย์ที่ปรึกษา
+
 		Where("student_id = ?", studentID).
 		First(&member).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "คุณยังไม่มีกลุ่มโปรเจค"})
 		return
 	}
-
-	// 3. เตรียมข้อมูลตอบกลับ
 	group := member.GroupProject
 
 	c.JSON(http.StatusOK, gin.H{

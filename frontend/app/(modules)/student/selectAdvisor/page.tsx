@@ -5,27 +5,11 @@ import { useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
 import { GetMyGroup } from '../../../services/group'; 
 import { GetAllTeachers, SaveAdvisorSelection, GetAdvisorSelection } from '../../../services/advisor';
-import { GroupProject } from '../../../interfaces/Group';
+import { GroupProject, GroupMember } from '../../../interfaces/Group';
 import { Teacher } from '../../../interfaces/Advisor';
 import GroupCard from '../../../components/GroupCard';
 import '../../../style/StudentSelectAdvisorPage.css';
-
-// Helper: แกะ ID จาก Token
-const getCurrentUserId = () => {
-    if (typeof window === 'undefined') return null;
-    const token = localStorage.getItem("access_token") || localStorage.getItem("token");
-    if (!token) return null;
-    try {
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(atob(base64).split('').map(c =>
-            '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-        ).join(''));
-        return JSON.parse(jsonPayload).id;
-    } catch (e) {
-        return null;
-    }
-};
+import api from '../../../services/api';
 
 const AdvisorSelectionPage = () => {
     const router = useRouter();
@@ -37,22 +21,39 @@ const AdvisorSelectionPage = () => {
     // State สำหรับฟอร์ม
     const [selections, setSelections] = useState<(number | "")[]>(Array(10).fill(""));
     const [description, setDescription] = useState("");
-    
-    // State เช็คว่าเคยบันทึกไปแล้วหรือยัง
     const [isAlreadySelected, setIsAlreadySelected] = useState(false);
 
+    // 1. เริ่มต้นโหลดข้อมูล
     useEffect(() => {
-        const uid = getCurrentUserId();
-        if (uid) {
-            setCurrentUserId(uid);
-        }
-        initData(uid || 0);
+        initData();
     }, []);
 
-    const initData = async (uid: number) => {
+    const initData = async () => {
         setLoading(true);
         try {
-            // --- 1. ดึงรายชื่ออาจารย์ ---
+            // --- 1. ถาม Server ว่าฉันคือใคร ---
+            let uid = 0;
+            try {
+                const resMe = await api.get("/me");
+                if (resMe.data && resMe.data.id) {
+                    uid = resMe.data.id;
+                    setCurrentUserId(uid);
+                } else {
+                    throw new Error("User ID not found");
+                }
+            } catch (authError) {
+                console.error("DEBUG: Authentication failed:", authError);
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'กรุณาเข้าสู่ระบบ',
+                    text: 'ไม่สามารถระบุตัวตนผู้ใช้ได้',
+                    confirmButtonText: 'ตกลง'
+                });
+                setLoading(false);
+                return; 
+            }
+
+            // --- 2. ดึงรายชื่ออาจารย์ ---
             try {
                 const resTeachers = await GetAllTeachers();
                 const teacherList = (resTeachers.data as any).data || resTeachers.data;
@@ -63,7 +64,7 @@ const AdvisorSelectionPage = () => {
                 console.error("Failed to fetch teachers:", err);
             }
 
-            // --- 2. ดึงข้อมูลกลุ่มของนักศึกษา ---
+            // --- 3. ดึงข้อมูลกลุ่ม ---
             let groupID = 0;
             try {
                 const resGroup = await GetMyGroup();
@@ -77,7 +78,7 @@ const AdvisorSelectionPage = () => {
                 console.log("User has no group yet.");
             }
 
-            // --- 3. ดึงข้อมูลการเลือกอาจารย์เดิม (ถ้ามี) ---
+            // --- 4. ดึงข้อมูลการเลือกเดิม ---
             if (groupID > 0) {
                 try {
                     const resSelection = await GetAdvisorSelection(groupID);
@@ -85,25 +86,18 @@ const AdvisorSelectionPage = () => {
 
                     if (Array.isArray(selectionData) && selectionData.length > 0) {
                         setIsAlreadySelected(true);
-                        
-                        // Map ข้อมูลลง State
                         const newSelections = Array(10).fill("");
-                        // ใส่ข้อมูลตามลำดับ No (1-10)
                         selectionData.forEach((item: any) => {
                             if (item.No >= 1 && item.No <= 10) {
                                 newSelections[item.No - 1] = item.TeacherID || item.teacher_id;
                             }
                         });
                         setSelections(newSelections);
-
-                        // ใส่ Description (เอาจาก row แรก)
-                        if (selectionData[0]?.Description) {
-                            setDescription(selectionData[0].Description);
+                        if (selectionData[0]?.Description || selectionData[0]?.description) {
+                            setDescription(selectionData[0].Description || selectionData[0].description);
                         }
                     }
-                } catch (err) {
-                    console.log("No existing selection found.");
-                }
+                } catch (err) { }
             }
 
         } catch (error) {
@@ -114,9 +108,7 @@ const AdvisorSelectionPage = () => {
     };
 
     const handleSelectChange = (index: number, value: string) => {
-        // ถ้าเคยเลือกไปแล้ว ห้ามแก้ (Optional: ถ้าอยากให้แก้ได้ ลบเงื่อนไขนี้ออก)
-        // if (isAlreadySelected) return; 
-
+        if (isAlreadySelected) return;
         const newSelections = [...selections];
         newSelections[index] = value === "" ? "" : parseInt(value);
         setSelections(newSelections);
@@ -127,113 +119,85 @@ const AdvisorSelectionPage = () => {
     };
 
     const handleClear = () => {
-        if (isAlreadySelected) {
-            Swal.fire("ไม่สามารถล้างข้อมูลได้", "เนื่องจากคุณได้ทำการยืนยันการเลือกไปแล้ว", "warning");
-            return;
-        }
+        if (isAlreadySelected) return;
         setSelections(Array(10).fill(""));
         setDescription("");
         Swal.fire({ icon: 'success', title: 'ล้างข้อมูล', timer: 1000, showConfirmButton: false });
     };
 
+    // --- ฟังก์ชันยืนยัน (แก้ไขส่วนนี้ตาม Request) ---
     const handleSubmit = async () => {
-        // ดึง ID สดๆ อีกรอบเพื่อความชัวร์ แก้ปัญหา "กรุณาเข้าสู่ระบบ" มั่ว
-        const uid = getCurrentUserId(); 
-
-        // 1. เช็ค Login
-        if (!uid) {
-            Swal.fire({
-                icon: "warning",
-                title: "กรุณาเข้าสู่ระบบ",
-                text: "ระบบไม่พบข้อมูลผู้ใช้งานของคุณ",
-                confirmButtonText: "ตกลง"
-            });
+        if (!currentUserId) {
+            Swal.fire({ icon: "warning", title: "กรุณาเข้าสู่ระบบ", text: "ไม่พบข้อมูลผู้ใช้งาน (Session อาจหมดอายุ)", confirmButtonText: "ตกลง" });
             return;
         }
 
-        // 2. เช็คว่ามีกลุ่มไหม
         if (!myGroup) {
-            Swal.fire({
-                icon: "error",
-                title: "คุณยังไม่มีกลุ่มโครงงาน",
-                text: "กรุณาเข้าร่วมกลุ่มหรือสร้างกลุ่มก่อนทำการเลือกอาจารย์ที่ปรึกษา",
-                confirmButtonText: "ตกลง"
-            });
+            Swal.fire({ icon: "error", title: "คุณยังไม่มีกลุ่ม", text: "กรุณาเข้าร่วมกลุ่มก่อน", confirmButtonText: "ตกลง" });
             return;
         }
 
-        // 3. เช็คว่าเป็นหัวหน้ากลุ่มไหม
-        const me = myGroup.group_members?.find((m: any) => m.student_id === uid);
+        const me = myGroup.group_members?.find((m: any) => m.student_id === currentUserId);
         if (!me || !me.leader) {
-            Swal.fire({
-                icon: "error",
-                title: "คุณไม่ใช่หัวหน้ากลุ่มโครงงาน",
-                text: "ไม่มีสิทธิ์ในการเลือกอาจารย์ที่ปรึกษา (เฉพาะหัวหน้ากลุ่มเท่านั้น)",
-                confirmButtonText: "ตกลง"
-            });
+            Swal.fire({ icon: "error", title: "สิทธิ์ไม่เพียงพอ", text: "เฉพาะหัวหน้ากลุ่มเท่านั้นที่สามารถทำรายการได้", confirmButtonText: "ตกลง" });
             return;
         }
 
-        // --- [เงื่อนไขใหม่ 1] เช็คจำนวนสมาชิกในกลุ่ม ---
-        // เช็คจำนวนคนปัจจุบัน vs จำนวนที่รับสมัคร (membership)
-        // เช่น รับ 3 คน ต้องมี 3 คนขึ้นไป (ปกติจะไม่เกินอยู่แล้ว แต่เงื่อนไขบอก 'ไม่น้อยกว่า')
         const currentMemberCount = myGroup.group_members?.length || 0;
         if (currentMemberCount < myGroup.membership) {
-            Swal.fire({
-                icon: "warning",
-                title: "สมาชิกในกลุ่มยังไม่ครบ",
-                text: `กลุ่มของคุณรับสมัคร ${myGroup.membership} คน แต่ปัจจุบันมี ${currentMemberCount} คน กรุณาหาสมาชิกให้ครบก่อน`,
-                confirmButtonText: "เข้าใจแล้ว"
-            });
+            Swal.fire({ icon: "warning", title: "สมาชิกไม่ครบ", text: `ต้องมีสมาชิกอย่างน้อย ${myGroup.membership} คน`, confirmButtonText: "ตกลง" });
             return;
         }
 
-        // --- [เงื่อนไขใหม่ 3] เช็คว่าเคยเลือกไปแล้วหรือยัง ---
         if (isAlreadySelected) {
-            Swal.fire({
-                icon: "info",
-                title: "ดำเนินการไปแล้ว",
-                text: "กลุ่มของคุณได้ทำการเลือกลำดับอาจารย์ที่ปรึกษาเรียบร้อยแล้ว",
-                confirmButtonText: "ตกลง"
-            });
-            return; // จบการทำงาน ไม่ให้บันทึกซ้ำ
+            Swal.fire({ icon: "info", title: "ดำเนินการไปแล้ว", text: "กลุ่มของคุณได้เลือกอาจารย์ไปเรียบร้อยแล้ว", confirmButtonText: "ตกลง" });
+            return;
         }
 
-        // --- [เงื่อนไขใหม่ 2] เช็คข้อมูลครบ 10 คน + รายละเอียด ---
         const selectedAdvisors = selections.filter(s => s !== "") as number[];
-        
-        // ต้องครบ 10 คน
-        if (selectedAdvisors.length < 10) {
-            Swal.fire({
-                icon: "warning",
-                title: "ข้อมูลไม่ครบถ้วน",
-                text: `กรุณาเลือกอาจารย์ที่ปรึกษาให้ครบทั้ง 10 ลำดับ (ปัจจุบันเลือกไป ${selectedAdvisors.length} ท่าน)`,
-                confirmButtonText: "ตกลง"
-            });
+        if (selectedAdvisors.length < 10 || !description.trim()) {
+            Swal.fire({ icon: "warning", title: "ข้อมูลไม่ครบ", text: "กรุณาเลือกให้ครบ 10 ท่าน และระบุรายละเอียด", confirmButtonText: "ตกลง" });
             return;
         }
 
-        // ต้องมีรายละเอียด
-        if (!description.trim()) {
-            Swal.fire({
-                icon: "warning",
-                title: "ข้อมูลไม่ครบถ้วน",
-                text: "กรุณาระบุรายละเอียดโครงงานที่ต้องการทำ",
-                confirmButtonText: "ตกลง"
-            });
-            return;
-        }
+        // --- เตรียม HTML สำหรับแสดงใน Popup ---
+        let advisorListHtml = "";
+        selections.forEach((sel, index) => {
+            if (sel !== "") {
+                const teacher = teachers.find((t: any) => (t.ID || t.id) === sel);
+                const teacherName = teacher ? `${teacher.firstname} ${teacher.lastname}` : "Unknown";
+                advisorListHtml += `
+                    <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #eee;">
+                        <span style="color: #666;">ลำดับที่ ${index + 1}</span>
+                        <span style="font-weight: bold; color: #333;">${teacherName}</span>
+                    </div>
+                `;
+            }
+        });
 
-        // 5. บันทึก
+        // --- แสดง Popup ยืนยันแบบมีรายละเอียด ---
         Swal.fire({
-            title: "ยืนยันการบันทึก?",
-            text: "ข้อมูลลำดับอาจารย์จะถูกบันทึกเข้าระบบ",
+            title: "ยืนยันข้อมูลการเลือก?",
+            html: `
+                <div style="text-align: left; font-size: 14px;">
+                    <p style="font-weight: bold; margin-bottom: 5px; color: #8A011D;">รายละเอียดโครงงาน:</p>
+                    <div style="background-color: #f9f9f9; padding: 10px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #ddd; max-height: 100px; overflow-y: auto;">
+                        ${description}
+                    </div>
+                    
+                    <p style="font-weight: bold; margin-bottom: 5px; color: #8A011D;">ลำดับอาจารย์ที่เลือก:</p>
+                    <div style="max-height: 200px; overflow-y: auto; padding-right: 5px;">
+                        ${advisorListHtml}
+                    </div>
+                </div>
+            `,
             icon: "question",
             showCancelButton: true,
             confirmButtonColor: "#00a8ff",
             cancelButtonColor: "#d33",
             confirmButtonText: "ยืนยัน",
-            cancelButtonText: "ยกเลิก"
+            cancelButtonText: "ยกเลิก",
+            width: '500px' // กำหนดความกว้างให้ดูสวยงาม
         }).then(async (result) => {
             if (result.isConfirmed) {
                 try {
@@ -243,12 +207,8 @@ const AdvisorSelectionPage = () => {
                         advisor_order: selectedAdvisors
                     });
                     
-                    Swal.fire("สำเร็จ", "บันทึกข้อมูลเรียบร้อยแล้ว", "success");
-                    
-                    // อัปเดตสถานะว่าเลือกแล้ว และรีโหลดข้อมูลเพื่อความชัวร์
-                    setIsAlreadySelected(true);
-                    initData(uid);
-
+                    await Swal.fire("สำเร็จ", "บันทึกข้อมูลเรียบร้อยแล้ว", "success");
+                    initData(); // โหลดข้อมูลใหม่เพื่อแสดงผลแบบ Read-only ในหน้าหลัก
                 } catch (error: any) {
                     Swal.fire("เกิดข้อผิดพลาด", error.response?.data?.error || "ไม่สามารถบันทึกได้", "error");
                 }
@@ -269,8 +229,6 @@ const AdvisorSelectionPage = () => {
     return (
         <div className="advisor-selection-container">
             <div className="content-wrapper">
-                
-                {/* Header */}
                 <div className="page-header-advisor">
                     <div className="red-bar"></div>
                     <div className="header-text">
@@ -280,8 +238,6 @@ const AdvisorSelectionPage = () => {
                 </div>
 
                 <div className="columns-container">
-                    
-                    {/* Left Column */}
                     <div className="left-column">
                         <div className="selection-form">
                             {selections.map((sel, index) => (
@@ -291,19 +247,14 @@ const AdvisorSelectionPage = () => {
                                         className="advisor-select"
                                         value={sel}
                                         onChange={(e) => handleSelectChange(index, e.target.value)}
-                                        disabled={isAlreadySelected} // ถ้าเลือกไปแล้ว ห้ามแก้
-                                        style={isAlreadySelected ? { backgroundColor: '#f9f9f9', cursor: 'not-allowed' } : {}}
+                                        disabled={isAlreadySelected}
+                                        style={isAlreadySelected ? { backgroundColor: '#f0f0f0' } : {}}
                                     >
                                         <option value="">-- เลือกอาจารย์ --</option>
                                         {teachers.map((t: any) => {
                                             const tId = t.ID || t.id;
                                             return (
-                                                <option 
-                                                    key={tId} 
-                                                    value={tId}
-                                                    disabled={isTeacherSelected(tId, index)}
-                                                    style={isTeacherSelected(tId, index) ? {color: '#ccc'} : {}}
-                                                >
+                                                <option key={tId} value={tId} disabled={isTeacherSelected(tId, index)}>
                                                     {t.firstname} {t.lastname}
                                                 </option>
                                             );
@@ -311,7 +262,6 @@ const AdvisorSelectionPage = () => {
                                     </select>
                                 </div>
                             ))}
-
                             <div className="form-group">
                                 <label className="form-label">รายละเอียดโครงงานที่ต้องการทำ</label>
                                 <textarea 
@@ -319,31 +269,24 @@ const AdvisorSelectionPage = () => {
                                     placeholder="ระบุรายละเอียด..."
                                     value={description}
                                     onChange={(e) => setDescription(e.target.value)}
-                                    disabled={isAlreadySelected} // ถ้าเลือกไปแล้ว ห้ามแก้
-                                    style={isAlreadySelected ? { backgroundColor: '#f9f9f9', cursor: 'not-allowed' } : {}}
+                                    disabled={isAlreadySelected}
+                                    style={isAlreadySelected ? { backgroundColor: '#f0f0f0' } : {}}
                                 />
                             </div>
-
                             <div className="form-actions">
+                                {!isAlreadySelected && <button className="btn-clear" onClick={handleClear}>เคลียร์ข้อมูล</button>}
                                 <button 
-                                    className="btn-clear" 
-                                    onClick={handleClear}
-                                    disabled={isAlreadySelected}
-                                    style={isAlreadySelected ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+                                    className="btn-submit" 
+                                    onClick={handleSubmit}
+                                    style={isAlreadySelected ? { backgroundColor: '#ccc', cursor: 'not-allowed' } : {}}
                                 >
-                                    เคลียร์ข้อมูล
-                                </button>
-                                <button className="btn-submit" onClick={handleSubmit}>
-                                    {isAlreadySelected ? "บันทึกข้อมูลแล้ว" : "ยืนยัน"}
+                                    {isAlreadySelected ? "ได้เลือกลำดับอาจารย์ที่ปรึกษาไปแล้ว" : "ยืนยัน"}
                                 </button>
                             </div>
                         </div>
                     </div>
 
-                    {/* Right Column */}
                     <div className="right-column">
-                        
-                        {/* Group Card */}
                         {myGroup ? (
                             <div style={{ marginBottom: '20px' }}>
                                 <GroupCard 
@@ -355,13 +298,11 @@ const AdvisorSelectionPage = () => {
                                 />
                             </div>
                         ) : (
-                            <div style={{ padding: '30px', background: 'white', borderRadius: '8px', marginBottom: '20px', textAlign: 'center', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', border: '1px dashed #ccc' }}>
-                                <p style={{color: '#888', margin: 0, fontSize: '16px'}}>ยังไม่มีข้อมูลกลุ่ม</p>
-                                <p style={{color: '#bbb', fontSize: '12px', marginTop: '5px'}}>กรุณาสร้างหรือเข้าร่วมกลุ่มก่อน</p>
+                            <div style={{ padding: '20px', background: 'white', borderRadius: '8px', textAlign: 'center', color: '#888' }}>
+                                ยังไม่มีข้อมูลกลุ่ม
                             </div>
                         )}
 
-                        {/* Summary Card */}
                         <div className="selection-summary-card">
                             <h3 className="summary-title">ลำดับของอาจารย์ที่เลือก</h3>
                             <div style={{ paddingLeft: '10px' }}>
@@ -369,18 +310,17 @@ const AdvisorSelectionPage = () => {
                                     if (sel === "") return null;
                                     const teacher = teachers.find((t: any) => (t.ID || t.id) === sel);
                                     return (
-                                        <div key={index} style={{ marginBottom: '10px', fontSize: '14px', borderBottom: '1px solid #eee', paddingBottom: '5px' }}>
+                                        <div key={index} style={{ marginBottom: '10px', fontSize: '14px', borderBottom: '1px solid #eee' }}>
                                             <span style={{ fontWeight: 'bold', marginRight: '10px', color: '#8A011D' }}>{index + 1}.</span>
                                             {teacher ? `อ.${teacher.firstname} ${teacher.lastname}` : '-'}
                                         </div>
                                     );
                                 })}
-                                {selections.every(s => s === "") && <p style={{ color: '#999', fontStyle: 'italic', textAlign: 'center', marginTop: '20px' }}>ยังไม่ได้เลือกอาจารย์</p>}
+                                {selections.every(s => s === "") && <p style={{ color: '#999', fontStyle: 'italic', textAlign: 'center' }}>ยังไม่ได้เลือกอาจารย์</p>}
                             </div>
                         </div>
-
                     </div>
-                </div> 
+                </div>
             </div>
         </div>
     );
