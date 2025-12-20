@@ -245,7 +245,7 @@ export default function ChatPage() {
         room_id: roomIdStr,
       };
 
-      // 3. Emit the FULL object with ID
+
       socket.emit("send_message", socketPayload);
 
     } catch (err) {
