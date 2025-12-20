@@ -7,6 +7,7 @@ export interface FullChat {
   created_at?: string;
   updated_at?: string;
   deleted_at?: string | null;
+  client_id?: string;
 }
 
 export interface ChatCreate {

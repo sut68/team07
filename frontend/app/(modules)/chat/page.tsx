@@ -1,7 +1,7 @@
 "use client";
 
-import { io } from "socket.io-client";
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { io, Socket } from "socket.io-client";
 import { GetAllChat, InsertChat, DropChat } from "../../services/chat";
 import { GetProgress, GetGroupProjectIDByUser } from "../../services/progress";
 import type { FullChat } from "../../interfaces/Chat";
@@ -11,11 +11,6 @@ const RED = "#9a0120";
 const RED_DARK = "#7d0019";
 const BORDER = "#e5e7eb";
 const BG = "#fafafa";
-
-const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL ?? "http://localhost:3001", {
-  transports: ["websocket"],
-  autoConnect: true,
-});
 
 export default function ChatPage() {
   const [mounted, setMounted] = useState(false);
@@ -28,6 +23,9 @@ export default function ChatPage() {
   const [message, setMessage] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
+  // ✅ ONE socket per tab
+  const socketRef = useRef<Socket | null>(null);
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -35,6 +33,37 @@ export default function ChatPage() {
   useEffect(() => {
     if (!mounted) return;
     setUserId(localStorage.getItem("user_id"));
+  }, [mounted]);
+
+  // ✅ init socket once
+  useEffect(() => {
+    if (!mounted) return;
+    if (socketRef.current) return;
+
+    const url = process.env.NEXT_PUBLIC_SOCKET_URL ?? "http://localhost:3001";
+
+    const s = io(url, {
+      transports: ["websocket"],
+      autoConnect: true,
+    });
+
+    socketRef.current = s;
+
+    s.on("connect", () => {
+      console.log("✅ socket connected:", s.id);
+    });
+
+    s.on("connect_error", (e) => {
+      console.error("❌ socket connect_error:", e);
+    });
+
+    return () => {
+      try {
+        s.removeAllListeners();
+        s.disconnect();
+      } catch {}
+      socketRef.current = null;
+    };
   }, [mounted]);
 
   const normalizeChat = (data: any): FullChat => {
@@ -96,7 +125,7 @@ export default function ChatPage() {
 
       const rawData = Array.isArray(res) ? res : [];
       setChats(rawData.map(normalizeChat));
-      setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "auto" }), 100);
+      setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "auto" }), 50);
     } catch (error) {
       console.error("Error loading chats:", error);
       setChats([]);
@@ -123,38 +152,33 @@ export default function ChatPage() {
     })();
   }, [mounted, idsOk, groupProjectId]);
 
-  // ✅ SOCKET: join correct room `${groupProjectId}:${activeRoomId}`
+  // ✅ join/leave + receive
   useEffect(() => {
     if (!mounted) return;
-    if (!roomJoined) return;
     if (!idsOk) return;
+    if (!roomJoined) return;
 
-    // initial load
+    const socket = socketRef.current;
+    if (!socket) return;
+
     setChats([]);
     void loadChats(activeRoomId as number);
 
-    // ✅ IMPORTANT: room must match backend broadcast
     const roomIdStr = `${groupProjectId}:${activeRoomId}`;
     console.log("JOIN ROOM:", roomIdStr);
-
     socket.emit("join_room", roomIdStr);
-
-    const handleConnect = () => {
-      console.log("Socket connected/reconnected. Syncing data...");
-      void loadChats(activeRoomId as number);
-    };
 
     const handleReceive = (data: any) => {
       console.log("RECEIVE:", data);
       const cleanMsg = normalizeChat(data);
 
       setChats((prev) => {
-        const exists = prev.some((msg) => Number(msg.id) === Number(cleanMsg.id));
-        if (exists) return prev;
-        return [...prev, cleanMsg];
+        // ✅ FIX: Remove old message with same ID, add new one (Handles Updates/Dupes)
+        const otherMessages = prev.filter((msg) => Number(msg.id) !== Number(cleanMsg.id));
+        return [...otherMessages, cleanMsg];
       });
 
-      setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+      setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
     };
 
     const handleDelete = (payload: any) => {
@@ -163,30 +187,37 @@ export default function ChatPage() {
       setChats((prev) => prev.filter((c) => Number(c.id) !== id));
     };
 
-    socket.on("connect", handleConnect);
     socket.on("receive_message", handleReceive);
     socket.on("delete_message", handleDelete);
 
     return () => {
       console.log("LEAVE ROOM:", roomIdStr);
       socket.emit("leave_room", roomIdStr);
-      socket.off("connect", handleConnect);
       socket.off("receive_message", handleReceive);
       socket.off("delete_message", handleDelete);
     };
-  }, [mounted, idsOk, groupProjectId, activeRoomId]); // ✅ dependency fixed
+  }, [mounted, idsOk, groupProjectId, activeRoomId, roomJoined]);
 
   const onClickRoom = (roomId: number) => {
     if (roomId === activeRoomId) return;
     setActiveRoomId(roomId);
   };
 
+  // ✅ FIXED sendChat Function (With Duplicate/Race Condition Fix)
   const sendChat = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!roomJoined || !idsOk) return;
 
     const text = message.trim();
     if (!text) return;
+
+    const socket = socketRef.current;
+    if (!socket) {
+      alert("Socket not connected");
+      return;
+    }
+
+    const roomIdStr = `${groupProjectId}:${activeRoomId}`;
 
     const payload = {
       group_project_id: groupProjectId,
@@ -195,25 +226,32 @@ export default function ChatPage() {
       message: text,
     };
 
-    // ✅ optimistic UI
-    const optimistic = {
-      ...payload,
-      id: Date.now(), // temp
-      updated_at: new Date().toISOString(),
-      created_at: new Date().toISOString(),
-    };
-
-    setChats((prev) => [...prev, optimistic as unknown as FullChat]);
     setMessage("");
-    setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
 
-    // ✅ Save to DB. Backend will broadcast to socket.
-    await InsertChat(payload);
+    try {
+      // 1. Insert into DB first
+      // Cast to 'any' to avoid TS "Property 'id' does not exist" error
+      const savedMessage = (await InsertChat(payload)) as any;
 
-    // OPTIONAL:
-    // If your backend broadcast is working, you DO NOT need this.
-    // Keeping it can cause duplicates.
-    // socket.emit("send_message", { ...optimistic, room_id: `${groupProjectId}:${activeRoomId}` });
+      // 2. Generate Fallback ID if DB is slow or returns 0
+      // This ensures the UI *always* has a unique ID to render
+      const dbId = Number(savedMessage?.id || savedMessage?.ID || 0);
+      const uniqueId = dbId > 0 ? dbId : Date.now() + Math.random();
+
+      const socketPayload = {
+        ...payload,
+        ...(typeof savedMessage === 'object' ? savedMessage : {}),
+        id: uniqueId, // <--- CRITICAL FIX
+        room_id: roomIdStr,
+      };
+
+      // 3. Emit the FULL object with ID
+      socket.emit("send_message", socketPayload);
+
+    } catch (err) {
+      console.error("InsertChat failed:", err);
+      alert("ส่งข้อความไม่สำเร็จ");
+    }
   };
 
   const deleteMessage = async (id: number) => {
@@ -233,11 +271,12 @@ export default function ChatPage() {
       };
 
       await DropChat(payload);
-
       setChats((prev) => prev.filter((c) => Number(c.id) !== id));
 
-      // Optional: backend should broadcast delete too
-      // socket.emit("delete_message", { id, room_id: `${groupProjectId}:${activeRoomId}` });
+      // optional realtime delete broadcast
+      const roomIdStr = `${groupProjectId}:${activeRoomId}`;
+      const socket = socketRef.current;
+      if (socket) socket.emit("delete_message", { id, room_id: roomIdStr });
     } catch (error) {
       console.error(error);
       alert("Failed to delete.");
@@ -408,9 +447,7 @@ export default function ChatPage() {
               คุณยังไม่มีกลุ่ม โปรดเข้าร่วมกลุ่มก่อนจึงจะใช้งานแชทได้
             </div>
           ) : !roomJoined ? (
-            <div style={{ textAlign: "center", marginTop: 90, color: "#6b7280" }}>
-              เลือกหัวข้อทางซ้าย
-            </div>
+            <div style={{ textAlign: "center", marginTop: 90, color: "#6b7280" }}>เลือกหัวข้อทางซ้าย</div>
           ) : chats.length === 0 ? (
             <div style={{ textAlign: "center", marginTop: 90, color: "#6b7280" }}>
               <div style={{ fontWeight: 800, color: "#111827" }}>ยังไม่มีข้อความ</div>
@@ -421,8 +458,9 @@ export default function ChatPage() {
               const isMe = Number(c.sender_id) === Number(userId);
 
               return (
+                // ✅ KEY FIX: Combine ID + Index to prevent "Same Key" crash
                 <div
-                  key={c.id || index}
+                  key={`${c.id}-${index}`}
                   style={{
                     display: "flex",
                     justifyContent: isMe ? "flex-end" : "flex-start",
