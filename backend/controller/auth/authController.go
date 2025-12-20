@@ -80,13 +80,18 @@ func (h *LoginHandler) Login(c *gin.Context) {
 	var user entity.User
 
 	// ใช้ normalizedUsername ในการค้นหา DB
-	if err := h.DB.Preload("Role").Where("username = ?", normalizedUsername).First(&user).Error; err != nil {
+	if err := h.DB.Preload("Role").Preload("Status").Where("username = ?", normalizedUsername).First(&user).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Username or Password invalid"})
 			return
 		}
 		logSys.Printf("DB ERROR: Failed to query user for login: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal error during login"})
+		return
+	}
+
+	if user.Status == nil || user.Status.Status != "Active" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Account is not active"})
 		return
 	}
 
