@@ -4,25 +4,43 @@ import (
 	"testing"
 
 	"github.com/asaskevich/govalidator"
-	"github.com/sut68/team07/backend/entity"
 	. "github.com/onsi/gomega"
+	"github.com/sut68/team07/backend/entity"
 )
 
 func TestUser(t *testing.T) {
 	g := NewGomegaWithT(t)
 
+	t.Run(`Case 1: User Data is all correct`, func(t *testing.T) {
+		users := &entity.User{
+			Username:  "b6640205@sut.ac.th",
+			Password:  "R@123456",
+			Firstname: "Rattsat",
+			Lastname:  "Sangthong",
+			Email:     "a@gmail.com",
+			Phone:     "0912345678",
+			GenderID:  1,
+			BranchID:  1,
+			RoleID:    1,
+			StatusID:  1,
+		}
+		ok, err := govalidator.ValidateStruct(users)
+		g.Expect(ok).To(BeTrue()) // คาดหวังว่าเป็น True
+		g.Expect(err).To(BeNil()) // คาดหวังว่าไม่มี Error
+	})
+
 	t.Run(`Username is required`, func(t *testing.T) {
 		users := &entity.User{
-			Username: "", // ผิดตรงนี้
+			Username:  "", // ผิดตรงนี้
 			Password:  "R@123456",
-			Firstname:  "Rattsat",
-			Lastname:   "Sangthong",
-			Email: "a@gmail.com",
-			Phone: "0912345678",
+			Firstname: "Rattsat",
+			Lastname:  "Sangthong",
+			Email:     "a@gmail.com",
+			Phone:     "0912345678",
 
 			GenderID: 1,
 			BranchID: 1,
-			RoleID: 1,
+			RoleID:   1,
 			StatusID: 1,
 		}
 
@@ -34,16 +52,16 @@ func TestUser(t *testing.T) {
 
 	t.Run(`Password is required`, func(t *testing.T) {
 		users := &entity.User{
-			Username: "b6640205@sut.ac.th",
+			Username:  "b6640205@sut.ac.th",
 			Password:  "", // ผิดตรงนี้
-			Firstname:  "Rattsat",
-			Lastname:   "Sangthong",
-			Email: "a@gmail.com",
-			Phone: "0912345678",
+			Firstname: "Rattsat",
+			Lastname:  "Sangthong",
+			Email:     "a@gmail.com",
+			Phone:     "0912345678",
 
 			GenderID: 1,
 			BranchID: 1,
-			RoleID: 1,
+			RoleID:   1,
 			StatusID: 1,
 		}
 
@@ -55,16 +73,16 @@ func TestUser(t *testing.T) {
 
 	t.Run(`Firstname is required`, func(t *testing.T) {
 		users := &entity.User{
-			Username: "b6640205@sut.ac.th",
+			Username:  "b6640205@sut.ac.th",
 			Password:  "R@123456",
-			Firstname:  "", // ผิดตรงนี้
-			Lastname:   "Sangthong",
-			Email: "a@gmail.com",
-			Phone: "0912345678",
+			Firstname: "", // ผิดตรงนี้
+			Lastname:  "Sangthong",
+			Email:     "a@gmail.com",
+			Phone:     "0912345678",
 
 			GenderID: 1,
 			BranchID: 1,
-			RoleID: 1,
+			RoleID:   1,
 			StatusID: 1,
 		}
 
@@ -76,16 +94,16 @@ func TestUser(t *testing.T) {
 
 	t.Run(`Lastname is required`, func(t *testing.T) {
 		users := &entity.User{
-			Username: "b6640205@sut.ac.th",
+			Username:  "b6640205@sut.ac.th",
 			Password:  "R@123456",
-			Firstname:  "Rattsat",
-			Lastname:   "", // ผิดตรงนี้
-			Email: "a@gmail.com",
-			Phone: "0912345678",
+			Firstname: "Rattsat",
+			Lastname:  "", // ผิดตรงนี้
+			Email:     "a@gmail.com",
+			Phone:     "0912345678",
 
 			GenderID: 1,
 			BranchID: 1,
-			RoleID: 1,
+			RoleID:   1,
 			StatusID: 1,
 		}
 
@@ -97,16 +115,16 @@ func TestUser(t *testing.T) {
 
 	t.Run(`Email and Phone can be empty`, func(t *testing.T) {
 		users := &entity.User{
-			Username: "b6640205@sut.ac.th",
+			Username:  "b6640205@sut.ac.th",
 			Password:  "R@123456",
-			Firstname:  "Rattsat",
-			Lastname:   "Sangthong",
-			Email: "", // ว่างได้ ไม่ error
-			Phone: "", // ว่างได้ ไม่ error
+			Firstname: "Rattsat",
+			Lastname:  "Sangthong",
+			Email:     "", // ว่างได้ ไม่ error
+			Phone:     "", // ว่างได้ ไม่ error
 
 			GenderID: 1,
 			BranchID: 1,
-			RoleID: 1,
+			RoleID:   1,
 			StatusID: 1,
 		}
 
@@ -117,16 +135,16 @@ func TestUser(t *testing.T) {
 
 	t.Run(`GenderID is required`, func(t *testing.T) {
 		users := &entity.User{
-			Username: "b6640205@sut.ac.th",
+			Username:  "b6640205@sut.ac.th",
 			Password:  "R@123456",
-			Firstname:  "Rattsat",
-			Lastname:   "Thong",
-			Email: "a@gmail.com",
-			Phone: "0912345678",
+			Firstname: "Rattsat",
+			Lastname:  "Thong",
+			Email:     "a@gmail.com",
+			Phone:     "0912345678",
 
 			GenderID: 0, // ผิดตรงนี้
 			BranchID: 1,
-			RoleID: 1,
+			RoleID:   1,
 			StatusID: 1,
 		}
 
@@ -138,16 +156,16 @@ func TestUser(t *testing.T) {
 
 	t.Run(`BranchID is required`, func(t *testing.T) {
 		users := &entity.User{
-			Username: "b6640205@sut.ac.th",
+			Username:  "b6640205@sut.ac.th",
 			Password:  "R@123456",
-			Firstname:  "Rattsat",
-			Lastname:   "Thong",
-			Email: "a@gmail.com",
-			Phone: "0912345678",
+			Firstname: "Rattsat",
+			Lastname:  "Thong",
+			Email:     "a@gmail.com",
+			Phone:     "0912345678",
 
 			GenderID: 1,
 			BranchID: 0, // ผิดตรงนี้
-			RoleID: 1,
+			RoleID:   1,
 			StatusID: 1,
 		}
 
@@ -159,16 +177,16 @@ func TestUser(t *testing.T) {
 
 	t.Run(`RoleID is required`, func(t *testing.T) {
 		users := &entity.User{
-			Username: "b6640205@sut.ac.th",
+			Username:  "b6640205@sut.ac.th",
 			Password:  "R@123456",
-			Firstname:  "Rattsat",
-			Lastname:   "Thong",
-			Email: "a@gmail.com",
-			Phone: "0912345678",
+			Firstname: "Rattsat",
+			Lastname:  "Thong",
+			Email:     "a@gmail.com",
+			Phone:     "0912345678",
 
 			GenderID: 1,
 			BranchID: 1,
-			RoleID: 0, // ผิดตรงนี้
+			RoleID:   0, // ผิดตรงนี้
 			StatusID: 1,
 		}
 
@@ -180,16 +198,16 @@ func TestUser(t *testing.T) {
 
 	t.Run(`StatusID is required`, func(t *testing.T) {
 		users := &entity.User{
-			Username: "b6640205@sut.ac.th",
+			Username:  "b6640205@sut.ac.th",
 			Password:  "R@123456",
-			Firstname:  "Rattsat",
-			Lastname:   "Thong",
-			Email: "a@gmail.com",
-			Phone: "0912345678",
+			Firstname: "Rattsat",
+			Lastname:  "Thong",
+			Email:     "a@gmail.com",
+			Phone:     "0912345678",
 
 			GenderID: 1,
 			BranchID: 1,
-			RoleID: 1,
+			RoleID:   1,
 			StatusID: 0, // ผิดตรงนี้
 		}
 
