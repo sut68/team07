@@ -11,7 +11,7 @@ import (
 func TestUser(t *testing.T) {
 	g := NewGomegaWithT(t)
 
-	t.Run(`True input`, func(t *testing.T) {
+	t.Run(`Case 1: User Data is all correct`, func(t *testing.T) {
 		users := &entity.User{
 			Username:  "b6640205@sut.ac.th",
 			Password:  "R@123456",
@@ -19,16 +19,14 @@ func TestUser(t *testing.T) {
 			Lastname:  "Sangthong",
 			Email:     "a@gmail.com",
 			Phone:     "0912345678",
-
-			GenderID: 1,
-			BranchID: 1,
-			RoleID:   1,
-			StatusID: 1,
+			GenderID:  1,
+			BranchID:  1,
+			RoleID:    1,
+			StatusID:  1,
 		}
-
 		ok, err := govalidator.ValidateStruct(users)
-		g.Expect(ok).To(BeTrue())
-		g.Expect(err).To(BeNil())
+		g.Expect(ok).To(BeTrue()) // คาดหวังว่าเป็น True
+		g.Expect(err).To(BeNil()) // คาดหวังว่าไม่มี Error
 	})
 
 	t.Run(`Username is required`, func(t *testing.T) {

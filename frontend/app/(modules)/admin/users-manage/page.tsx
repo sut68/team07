@@ -32,7 +32,7 @@ export default function UsersManagePage() {
         gender_id: 1, branch_id: 1, role_id: 3, status_id: 1
     });
 
-    // 1. Fetch All Data (Users + Master Data)
+    // Fetch All Data (Users + Master Data)
     const fetchAllData = async () => {
         setLoading(true);
         try {
@@ -60,7 +60,7 @@ export default function UsersManagePage() {
         fetchAllData();
     }, []);
 
-    // 2. Logic Import CSV
+    // Logic Import CSV
     const handleBoxClick = () => !isUploading && fileInputRef.current?.click();
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
@@ -75,7 +75,7 @@ export default function UsersManagePage() {
 
     const handleDownloadTemplate = () => {
         const csvHeader = "username,password,firstname,lastname,email,phone,gender_id,branch_id,role_id,status_id";
-        const csvExample = "user01,123456,Somchai,Rakdee,somchai@email.com,0811111111,1,1,1,1";
+        const csvExample = "B6600001,123456,Somchai,Rakdee,somchai@email.com,0811111111,1,1,1,1"; // ปรับตัวอย่างให้ตรง format
         const csvContent = "data:text/csv;charset=utf-8," + csvHeader + "\n" + csvExample;
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");
@@ -109,9 +109,24 @@ export default function UsersManagePage() {
         }
     };
 
-    // 3. Logic Create User
+    // 3. Logic Create User (แก้ไขเพิ่ม Validation ตอนพิมพ์)
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
+
+        // บังคับเบอร์โทร: พิมพ์ได้แค่ตัวเลข และไม่เกิน 10 ตัว
+        if (name === "phone") {
+            const numericValue = value.replace(/\D/g, ""); // ลบตัวที่ไม่ใช่ตัวเลขออก
+            if (numericValue.length > 10) return; // ห้ามเกิน 10 ตัว
+            setNewUser({ ...newUser, [name]: numericValue });
+            return;
+        }
+
+        // บังคับ Username: ให้เป็นตัวพิมพ์ใหญ่เสมอ (เช่น b65 -> B65)
+        if (name === "username") {
+            setNewUser({ ...newUser, [name]: value.toUpperCase() });
+            return;
+        }
+
         setNewUser({
             ...newUser,
             [name]: name.includes("id") ? Number(value) : value // แปลงเป็นเลขถ้าเป็น ID
@@ -120,8 +135,24 @@ export default function UsersManagePage() {
 
     const handleCreateSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Basic Check
         if (!newUser.username || !newUser.password || !newUser.firstname) {
             alert("กรุณากรอก Username, Password และ ชื่อจริง");
+            return;
+        }
+
+        // ตรวจสอบรูปแบบ Username (B65xxxxx หรือ B66xxxxx)
+        const usernameRegex = /^B(65|66)\d{5}$/;
+        if (!usernameRegex.test(newUser.username)) {
+            alert("❌ รูปแบบ Username ไม่ถูกต้อง\n\nต้องขึ้นต้นด้วย B65 หรือ B66 ตามด้วยตัวเลข 5 หลัก\nตัวอย่าง: B6510920, B6610583");
+            return;
+        }
+
+        // ตรวจสอบรูปแบบ Phone (ต้องมี 10 ตัว)
+        const phoneRegex = /^\d{10}$/;
+        if (newUser.phone && !phoneRegex.test(newUser.phone)) {
+            alert("❌ เบอร์โทรศัพท์ต้องเป็นตัวเลข 10 หลักเท่านั้น");
             return;
         }
 
@@ -130,6 +161,7 @@ export default function UsersManagePage() {
             if (res.status === 201) {
                 alert("✅ เพิ่มผู้ใช้งานสำเร็จ!");
                 setShowCreate(false);
+                // Reset Form
                 setNewUser({
                     username: "", password: "", firstname: "", lastname: "",
                     email: "", phone: "", gender_id: 1, branch_id: 1, role_id: 3, status_id: 1
@@ -140,12 +172,11 @@ export default function UsersManagePage() {
             }
         } catch (error: any) {
             console.error(error);
-            // ✅ แสดง Error message ที่โยนมาจาก Service (เช่น ห้ามสร้าง Admin)
             alert("❌ " + (error.response?.data?.error || error.message || "ไม่สามารถเชื่อมต่อ Server ได้"));
         }
     };
 
-    // ✅ 4. Logic Delete User (เพิ่มใหม่)
+    // Logic Delete User
     const handleDelete = async (id: number) => {
         const isConfirmed = confirm("⚠️ คุณแน่ใจหรือไม่ว่าจะลบผู้ใช้งานรายนี้? \nการกระทำนี้ไม่สามารถย้อนกลับได้");
         if (!isConfirmed) return;
@@ -233,7 +264,6 @@ export default function UsersManagePage() {
                                     <th>บทบาท (Role)</th>
                                     <th>สาขา (Branch)</th>
                                     <th>สถานะ</th>
-                                    {/* ✅ เพิ่มหัวตาราง Action */}
                                     <th style={{ textAlign: 'center' }}>จัดการ</th>
                                 </tr>
                             </thead>
@@ -247,7 +277,7 @@ export default function UsersManagePage() {
                                 ) : (
                                     filteredUsers.map((user) => (
                                         <tr key={user.ID}>
-                                            <td style={{ fontWeight: 'bold', color: '#9a0120', textAlign: 'center' }}>{user.ID}</td>
+                                            <td style={{ fontWeight: 'bold', color: '#9a0120', textAlign: 'center' }}>#{user.ID}</td>
                                             <td>{user.username}</td>
                                             <td>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -272,7 +302,6 @@ export default function UsersManagePage() {
                                                     {user.status?.status || "-"}
                                                 </span>
                                             </td>
-                                            {/* ✅ แก้ไขปุ่มลบ: ซ่อนปุ่มถ้าเป็น Admin */}
                                             <td style={{ textAlign: 'center' }}>
                                                 {user.role?.role !== 'Admin' ? (
                                                     <button
@@ -290,7 +319,6 @@ export default function UsersManagePage() {
                                                         <DeleteOutlined />
                                                     </button>
                                                 ) : (
-                                                    // ถ้าเป็น Admin ให้แสดงเครื่องหมายขีด หรือกุญแจล็อคแทน
                                                     <span style={{ color: '#ccc', fontSize: '1.2rem', cursor: 'not-allowed' }} title="ไม่สามารถลบ Admin ได้">
                                                         🚫
                                                     </span>
@@ -372,7 +400,7 @@ export default function UsersManagePage() {
                         <form onSubmit={handleCreateSubmit} className="create-user-form">
                             <div className="form-group">
                                 <label>Username <span style={{ color: 'red' }}>*</span></label>
-                                <input className="form-input" name="username" value={newUser.username} onChange={handleInputChange} required placeholder="เช่น student66" />
+                                <input className="form-input" name="username" value={newUser.username} onChange={handleInputChange} required placeholder="ต้องขึ้นต้น B65 หรือ B66" />
                             </div>
                             <div className="form-group">
                                 <label>Password <span style={{ color: 'red' }}>*</span></label>
@@ -391,7 +419,7 @@ export default function UsersManagePage() {
                                 <input className="form-input" type="email" name="email" value={newUser.email} onChange={handleInputChange} placeholder="example@sut.ac.th" />
                             </div>
                             <div className="form-group">
-                                <label>เบอร์โทร</label>
+                                <label>เบอร์โทร (10 หลัก)</label>
                                 <input className="form-input" name="phone" value={newUser.phone} onChange={handleInputChange} placeholder="08xxxxxxxx" />
                             </div>
 
@@ -412,7 +440,7 @@ export default function UsersManagePage() {
                                 <label>บทบาท (Role)</label>
                                 <select className="form-input" name="role_id" value={newUser.role_id} onChange={handleInputChange}>
                                     {roles
-                                        .filter(r => r.role !== 'Admin') // กรองเอา Admin ออก
+                                        .filter(r => r.role !== 'Admin')
                                         .map(r => (
                                             <option key={r.ID} value={r.ID}>{r.role}</option>
                                         ))
