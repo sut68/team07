@@ -17,3 +17,4 @@ export interface SelectAdvisor {
     teacher_id: number;
     teacher?: Teacher;
 }
+

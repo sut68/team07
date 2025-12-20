@@ -5,11 +5,11 @@ import { useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
 import { GetMyGroup } from '../../../services/group'; 
 import { GetAllTeachers, SaveAdvisorSelection, GetAdvisorSelection } from '../../../services/advisor';
-import { GroupProject, GroupMember } from '../../../interfaces/Group';
+import { GroupProject } from '../../../interfaces/Group';
 import { Teacher } from '../../../interfaces/Advisor';
 import GroupCard from '../../../components/GroupCard';
 import '../../../style/StudentSelectAdvisorPage.css';
-import api from '../../../services/api';
+import api from '../../../services/api'; 
 
 const AdvisorSelectionPage = () => {
     const router = useRouter();
@@ -31,7 +31,7 @@ const AdvisorSelectionPage = () => {
     const initData = async () => {
         setLoading(true);
         try {
-            // --- 1. ถาม Server ว่าฉันคือใคร ---
+            // --- 1. ถาม Server ว่าฉันคือใคร (Authentication) ---
             let uid = 0;
             try {
                 const resMe = await api.get("/me");
@@ -52,8 +52,7 @@ const AdvisorSelectionPage = () => {
                 setLoading(false);
                 return; 
             }
-
-            // --- 2. ดึงรายชื่ออาจารย์ ---
+            // --- 2. ดึงรายชื่ออาจารย์ทั้งหมด ---
             try {
                 const resTeachers = await GetAllTeachers();
                 const teacherList = (resTeachers.data as any).data || resTeachers.data;
@@ -78,7 +77,7 @@ const AdvisorSelectionPage = () => {
                 console.log("User has no group yet.");
             }
 
-            // --- 4. ดึงข้อมูลการเลือกเดิม ---
+            // --- 4. ดึงข้อมูลการเลือกเดิม (ถ้ามี) ---
             if (groupID > 0) {
                 try {
                     const resSelection = await GetAdvisorSelection(groupID);
@@ -88,16 +87,19 @@ const AdvisorSelectionPage = () => {
                         setIsAlreadySelected(true);
                         const newSelections = Array(10).fill("");
                         selectionData.forEach((item: any) => {
-                            if (item.No >= 1 && item.No <= 10) {
-                                newSelections[item.No - 1] = item.TeacherID || item.teacher_id;
+                            const itemNo = item.no || item.No; 
+                            const itemTeacherID = item.teacher_id || item.TeacherID;
+                            if (itemNo >= 1 && itemNo <= 10) {
+                                newSelections[itemNo - 1] = itemTeacherID;
                             }
                         });
                         setSelections(newSelections);
+                        
                         if (selectionData[0]?.Description || selectionData[0]?.description) {
                             setDescription(selectionData[0].Description || selectionData[0].description);
                         }
                     }
-                } catch (err) { }
+                } catch (err) { /* No previous selection */ }
             }
 
         } catch (error) {
@@ -122,10 +124,9 @@ const AdvisorSelectionPage = () => {
         if (isAlreadySelected) return;
         setSelections(Array(10).fill(""));
         setDescription("");
-        Swal.fire({ icon: 'success', title: 'ล้างข้อมูล', timer: 1000, showConfirmButton: false });
+        Swal.fire({ icon: 'success', title: 'ล้างข้อมูลสำเร็จ', timer: 1000, showConfirmButton: false });
     };
 
-    // --- ฟังก์ชันยืนยัน (แก้ไขส่วนนี้ตาม Request) ---
     const handleSubmit = async () => {
         if (!currentUserId) {
             Swal.fire({ icon: "warning", title: "กรุณาเข้าสู่ระบบ", text: "ไม่พบข้อมูลผู้ใช้งาน (Session อาจหมดอายุ)", confirmButtonText: "ตกลง" });
@@ -133,7 +134,7 @@ const AdvisorSelectionPage = () => {
         }
 
         if (!myGroup) {
-            Swal.fire({ icon: "error", title: "คุณยังไม่มีกลุ่ม", text: "กรุณาเข้าร่วมกลุ่มก่อน", confirmButtonText: "ตกลง" });
+            Swal.fire({ icon: "error", title: "คุณยังไม่มีกลุ่มโครงงาน", text: "กรุณาเข้าร่วมกลุ่มโครงงาน", confirmButtonText: "ตกลง" });
             return;
         }
 
@@ -145,7 +146,7 @@ const AdvisorSelectionPage = () => {
 
         const currentMemberCount = myGroup.group_members?.length || 0;
         if (currentMemberCount < myGroup.membership) {
-            Swal.fire({ icon: "warning", title: "สมาชิกไม่ครบ", text: `ต้องมีสมาชิกอย่างน้อย ${myGroup.membership} คน`, confirmButtonText: "ตกลง" });
+            Swal.fire({ icon: "warning", title: "สมาชิกกลุ่มยังไม่ครบ", text: `กลุ่มโครงงานของคุณต้องมีสมาชิกอย่างน้อย ${myGroup.membership} คน`, confirmButtonText: "ตกลง" });
             return;
         }
 
@@ -156,7 +157,7 @@ const AdvisorSelectionPage = () => {
 
         const selectedAdvisors = selections.filter(s => s !== "") as number[];
         if (selectedAdvisors.length < 10 || !description.trim()) {
-            Swal.fire({ icon: "warning", title: "ข้อมูลไม่ครบ", text: "กรุณาเลือกให้ครบ 10 ท่าน และระบุรายละเอียด", confirmButtonText: "ตกลง" });
+            Swal.fire({ icon: "warning", title: "ข้อมูลไม่ครบ", text: "กรุณาเลือกให้ครบ 10 ท่าน และระบุรายละเอียดโครงงาน", confirmButtonText: "ตกลง" });
             return;
         }
 
@@ -175,7 +176,7 @@ const AdvisorSelectionPage = () => {
             }
         });
 
-        // --- แสดง Popup ยืนยันแบบมีรายละเอียด ---
+        // --- แสดง Popup ยืนยัน ---
         Swal.fire({
             title: "ยืนยันข้อมูลการเลือก?",
             html: `
@@ -197,7 +198,7 @@ const AdvisorSelectionPage = () => {
             cancelButtonColor: "#d33",
             confirmButtonText: "ยืนยัน",
             cancelButtonText: "ยกเลิก",
-            width: '500px' // กำหนดความกว้างให้ดูสวยงาม
+            width: '500px'
         }).then(async (result) => {
             if (result.isConfirmed) {
                 try {
@@ -208,7 +209,7 @@ const AdvisorSelectionPage = () => {
                     });
                     
                     await Swal.fire("สำเร็จ", "บันทึกข้อมูลเรียบร้อยแล้ว", "success");
-                    initData(); // โหลดข้อมูลใหม่เพื่อแสดงผลแบบ Read-only ในหน้าหลัก
+                    initData();
                 } catch (error: any) {
                     Swal.fire("เกิดข้อผิดพลาด", error.response?.data?.error || "ไม่สามารถบันทึกได้", "error");
                 }
@@ -244,7 +245,7 @@ const AdvisorSelectionPage = () => {
                                 <div key={index} className="form-group">
                                     <label className="form-label">ลำดับที่ {index + 1}</label>
                                     <select 
-                                        className="advisor-select"
+                                        className={`advisor-select ${sel !== "" ? "has-value" : ""}`} 
                                         value={sel}
                                         onChange={(e) => handleSelectChange(index, e.target.value)}
                                         disabled={isAlreadySelected}
@@ -265,7 +266,7 @@ const AdvisorSelectionPage = () => {
                             <div className="form-group">
                                 <label className="form-label">รายละเอียดโครงงานที่ต้องการทำ</label>
                                 <textarea 
-                                    className="project-desc-textarea"
+                                    className={`project-desc-textarea ${description.trim() !== "" ? "has-value" : ""}`}
                                     placeholder="ระบุรายละเอียด..."
                                     value={description}
                                     onChange={(e) => setDescription(e.target.value)}
@@ -293,30 +294,52 @@ const AdvisorSelectionPage = () => {
                                     group={myGroup} 
                                     currentUserId={currentUserId}
                                     globalUserHasGroup={true}
-                                    hideAction={true} 
+                                    // hideAction={true} 
                                     onJoin={() => {}} 
                                 />
                             </div>
                         ) : (
-                            <div style={{ padding: '20px', background: 'white', borderRadius: '8px', textAlign: 'center', color: '#888' }}>
-                                ยังไม่มีข้อมูลกลุ่ม
+                            <div style={{ padding: '20px', background: 'white', borderRadius: '8px', textAlign: 'center', color: '#888', border: '1px dashed #ccc', marginBottom: '20px' }}>
+                                --- ยังไม่มีข้อมูลกลุ่มโครงงาน ---
                             </div>
                         )}
 
+                        {/* Summary Card */}
                         <div className="selection-summary-card">
-                            <h3 className="summary-title">ลำดับของอาจารย์ที่เลือก</h3>
+                            <h3 className="summary-title">รายละเอียดการเลือกอาจารย์ที่ปรึกษา</h3>
                             <div style={{ paddingLeft: '10px' }}>
-                                {selections.map((sel, index) => {
-                                    if (sel === "") return null;
-                                    const teacher = teachers.find((t: any) => (t.ID || t.id) === sel);
-                                    return (
-                                        <div key={index} style={{ marginBottom: '10px', fontSize: '14px', borderBottom: '1px solid #eee' }}>
-                                            <span style={{ fontWeight: 'bold', marginRight: '10px', color: '#8A011D' }}>{index + 1}.</span>
-                                            {teacher ? `อ.${teacher.firstname} ${teacher.lastname}` : '-'}
+                                
+                                {isAlreadySelected ? (
+                                    <>
+                                        <div style={{ marginBottom: '15px', borderBottom: '1px dashed #ccc', paddingBottom: '10px' }}>
+                                            <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#666', marginBottom: '5px' }}>
+                                                รายละเอียดโครงงาน:
+                                            </p>
+                                            <p style={{ fontSize: '14px', color: '#333', whiteSpace: 'pre-wrap' }}>
+                                                {description || "-"}
+                                            </p>
                                         </div>
-                                    );
-                                })}
-                                {selections.every(s => s === "") && <p style={{ color: '#999', fontStyle: 'italic', textAlign: 'center' }}>ยังไม่ได้เลือกอาจารย์</p>}
+
+                                        <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#666', marginBottom: '10px' }}>
+                                            ลำดับอาจารย์:
+                                        </p>
+                                        {selections.map((sel, index) => {
+                                            if (sel === "") return null;
+                                            const teacher = teachers.find((t: any) => (t.ID || t.id) === sel);
+                                            return (
+                                                <div key={index} style={{ marginBottom: '10px', fontSize: '14px', borderBottom: '1px solid #eee', paddingBottom: '5px' }}>
+                                                    <span style={{ fontWeight: 'bold', marginRight: '10px', color: '#8A011D' }}>{index + 1}.</span>
+                                                    {teacher ? `อ.${teacher.firstname} ${teacher.lastname}` : '-'}
+                                                </div>
+                                            );
+                                        })}
+                                    </>
+                                ) : (
+                                    <div style={{ textAlign: 'center', padding: '20px 0', color: '#999' }}>
+                                        <p style={{ fontStyle: 'italic', marginBottom: '5px' }}>--- ยังไม่มีการบันทึกข้อมูล ---</p>
+                                    </div>
+                                )}
+                                
                             </div>
                         </div>
                     </div>

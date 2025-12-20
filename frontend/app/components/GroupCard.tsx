@@ -17,14 +17,21 @@ const GroupCard: React.FC<GroupCardProps> = ({
   onJoin,
   hideAction
 }) => {
-  const members = group.group_members || [];
+  const rawMembers = group.group_members || [];
+  
+  // --- [แก้ไข] เรียงลำดับสมาชิก: ให้ Leader (true) มาก่อน ---
+  const members = [...rawMembers].sort((a, b) => {
+    // ถ้า a เป็นหัวหน้า ให้ a มาก่อน (return -1)
+    if (a.leader && !b.leader) return -1;
+    // ถ้า b เป็นหัวหน้า ให้ b มาก่อน (return 1)
+    if (!a.leader && b.leader) return 1;
+    return 0; // ถ้าสถานะเหมือนกัน ไม่ต้องสลับ
+  });
+
   const totalSlots = group.membership; 
   const filledCount = members.length;
   const isFull = filledCount >= totalSlots;
-
-  // Logic เดิม: หาค่ามากสุดเพื่อสร้าง Loop
   const rowsToRender = Math.max(totalSlots, filledCount);
-
   const isMyGroup = members.some((m) => m.student_id === currentUserId);
 
   return (
@@ -42,7 +49,7 @@ const GroupCard: React.FC<GroupCardProps> = ({
         </div>
 
         {/* --- ปุ่ม Action --- */}
-        {!hideAction && ( // เช็คตรงนี้
+        {!hideAction && (
             isMyGroup ? (
                 <span className="badge-my-group">กลุ่มของคุณ</span>
             ) : (
@@ -65,7 +72,6 @@ const GroupCard: React.FC<GroupCardProps> = ({
           return (
             <div key={index} className="member-row">
               {member ? (
-                // --- กรณีมีคนนั่ง ---
                 <div className="member-info">
                   {/* รหัสนักศึกษา */}
                   <span className="student-id-badge">

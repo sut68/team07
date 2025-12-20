@@ -126,7 +126,7 @@ func PostGroupMember(c *gin.Context) {
 	var existingCount int64
 	err = db.Table("group_members").
 		Joins("JOIN group_projects ON group_members.group_project_id = group_projects.id").
-		Where("group_members.student_id = ? AND group_projects.year = ?", studentID, groupProject.Year).
+		Where("group_members.student_id = ? AND group_projects.year = ? AND group_members.deleted_at IS NULL", studentID, groupProject.Year).
 		Count(&existingCount).Error
 
 	if err != nil {

@@ -1,52 +1,57 @@
 /* Layout หลัก */
 .advisor-selection-container {
     min-height: 100vh;
-    background-color: #f0f0f0;
+    background-color: #f8f9fa;
     padding: 40px 20px;
     font-family: 'Noto Sans Thai', sans-serif;
 }
 
-/* แก้ไข: content-wrapper ไม่ใช้ flex แล้ว ให้ทำหน้าที่แค่คุมความกว้าง */
 .content-wrapper {
     max-width: 1200px;
     margin: 0 auto;
-    /* เอา display: flex ออก */
 }
 
-/* เพิ่ม: Container สำหรับจัดเรียงซ้ายขวา */
 .columns-container {
     display: flex;
     gap: 30px;
     align-items: flex-start;
 }
 
-/* Header (ปรับ style นิดหน่อยให้สวยงามเมื่ออยู่นอกกล่อง) */
 .page-header-advisor {
     display: flex;
-    align-items: center;
+    align-items: flex-start; 
     gap: 15px;
-    margin-bottom: 30px;
-    /* ไม่ต้องมี background-color เพราะจะลอยอยู่บนพื้นหลังสีเทา */
+    margin-bottom: 40px; 
+    padding-bottom: 20px;
 }
 
 .red-bar {
-    width: 6px;
-    height: 40px;
-    background-color: #8A011D;
-    border-radius: 4px;
+  width: 8px;
+  background-color: #8A011D;
+  border-radius: 4px;
+  flex-shrink: 0;
+  align-self: stretch; 
+}
+
+.header-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .header-text h1 {
-    font-size: 28px; /* เพิ่มขนาดตัวอักษรนิดนึง */
-    font-weight: 700;
-    margin: 0;
-    color: #333;
+  font-size: 36px; 
+  font-weight: 700;
+  color: #111;
+  margin: 0;
+  line-height: 1.2;
 }
 
 .header-text p {
-    font-size: 14px;
-    color: #666;
-    margin: 0;
+    font-size: 18px; 
+    font-weight: 500;
+    color: #6b7280; 
+    margin: 4px 0 0 0;
 }
 
 /* --- Left Column (แบบฟอร์มเลือก) --- */
@@ -78,6 +83,12 @@
     font-size: 14px;
     outline: none;
     background-color: white;
+    transition: all 0.3s ease;
+}
+
+.advisor-select.has-value {
+    border-color: #8A011D; 
+    box-shadow: 0 0 2px rgba(138, 1, 29, 0.4); 
 }
 
 .advisor-select:disabled {
@@ -93,6 +104,12 @@
     border-radius: 4px;
     resize: vertical;
     font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.project-desc-textarea.has-value {
+    border-color: #8A011D;
+    box-shadow: 0 0 2px rgba(138, 1, 29, 0.4); 
 }
 
 .form-actions {
@@ -102,7 +119,7 @@
 }
 
 .btn-clear {
-    background-color: #f39c12; /* สีส้ม */
+    background-color: #f39c12; 
     color: white;
     padding: 10px 24px;
     border: none;
@@ -117,7 +134,7 @@
 }
 
 .btn-submit {
-    background-color: #00a8ff; /* สีฟ้า */
+    background-color: #00a8ff; 
     color: white;
     padding: 10px 24px;
     border: none;
@@ -128,7 +145,7 @@
 }
 
 .btn-submit:hover {
-    background-color: #0097e6;
+    background-color: #0f73a9;
 }
 
 /* --- Right Column --- */
@@ -151,35 +168,10 @@
     font-size: 18px;
     font-weight: 600;
     margin-bottom: 15px;
-    color: #333;
-}
-
-/* Header */
-.page-header-advisor {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    margin-bottom: 30px;
-}
-
-.red-bar {
-    width: 6px;
-    height: 40px;
-    background-color: #8A011D;
-    border-radius: 4px;
-}
-
-.header-text h1 {
-    font-size: 24px;
-    font-weight: 700;
-    margin: 0;
-    color: #333;
-}
-
-.header-text p {
-    font-size: 14px;
-    color: #777;
-    margin: 0;
+    color: #8A011D;
+    border-bottom: #8A011D 2px solid;
+    padding-bottom: 5px;
+    text-align: center;
 }
 
 /* Responsive */
