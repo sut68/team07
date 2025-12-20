@@ -12,12 +12,14 @@ const RED_DARK = "#7d0019";
 const BORDER = "#e5e7eb";
 const BG = "#fafafa";
 
-const socket = io("http://localhost:3001", {
+const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL ?? "http://localhost:3001", {
   transports: ["websocket"],
   autoConnect: true,
 });
 
 export default function ChatPage() {
+  const [mounted, setMounted] = useState(false);
+
   const [userId, setUserId] = useState<string | null>(null);
   const [groupProjectId, setGroupProjectId] = useState<number>(0);
   const [processes, setProcesses] = useState<FullProgress[]>([]);
@@ -27,24 +29,34 @@ export default function ChatPage() {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setUserId(localStorage.getItem("user_id"));
+    setMounted(true);
   }, []);
 
+  useEffect(() => {
+    if (!mounted) return;
+    setUserId(localStorage.getItem("user_id"));
+  }, [mounted]);
 
   const normalizeChat = (data: any): FullChat => {
-    const timeString = data.updated_at || data.UpdatedAt || data.created_at || data.CreatedAt || new Date().toISOString();
-    
+    const timeString =
+      data.updated_at ||
+      data.UpdatedAt ||
+      data.created_at ||
+      data.CreatedAt ||
+      new Date().toISOString();
+
     return {
       ...data,
-      id: Number(data.id ?? data.ID),
-      sender_id: Number(data.sender_id ?? data.SenderID),
-      message: data.message ?? data.Message,
-      updated_at: timeString, // Ensures time is never null
+      id: Number(data.id ?? data.ID ?? 0),
+      sender_id: Number(data.sender_id ?? data.SenderID ?? 0),
+      message: data.message ?? data.Message ?? "",
+      updated_at: timeString,
       created_at: data.created_at ?? data.CreatedAt ?? timeString,
     };
   };
 
   useEffect(() => {
+    if (!mounted) return;
     if (!userId) return;
 
     const uid = Number(userId);
@@ -62,7 +74,7 @@ export default function ChatPage() {
         setGroupProjectId(0);
       }
     })();
-  }, [userId]);
+  }, [mounted, userId]);
 
   const idsOk = groupProjectId > 0 && Number(userId) > 0;
   const roomJoined = activeRoomId !== null;
@@ -83,10 +95,7 @@ export default function ChatPage() {
       });
 
       const rawData = Array.isArray(res) ? res : [];
-      // Clean the data using our helper
       setChats(rawData.map(normalizeChat));
-      
-      // Scroll to bottom after loading
       setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "auto" }), 100);
     } catch (error) {
       console.error("Error loading chats:", error);
@@ -95,6 +104,7 @@ export default function ChatPage() {
   };
 
   useEffect(() => {
+    if (!mounted) return;
     if (!idsOk) return;
 
     (async () => {
@@ -111,56 +121,60 @@ export default function ChatPage() {
         setActiveRoomId(null);
       }
     })();
-  }, [idsOk, groupProjectId]);
+  }, [mounted, idsOk, groupProjectId]);
 
--
+  // ✅ SOCKET: join correct room `${groupProjectId}:${activeRoomId}`
   useEffect(() => {
+    if (!mounted) return;
     if (!roomJoined) return;
+    if (!idsOk) return;
 
-    // 1. Initial Load
+    // initial load
     setChats([]);
     void loadChats(activeRoomId as number);
 
-    const roomIdStr = String(activeRoomId);
+    // ✅ IMPORTANT: room must match backend broadcast
+    const roomIdStr = `${groupProjectId}:${activeRoomId}`;
+    console.log("JOIN ROOM:", roomIdStr);
+
     socket.emit("join_room", roomIdStr);
 
- 
     const handleConnect = () => {
-        console.log("Socket connected/reconnected. Syncing data...");
-        void loadChats(activeRoomId as number); 
+      console.log("Socket connected/reconnected. Syncing data...");
+      void loadChats(activeRoomId as number);
     };
 
-    // 3. Handle Incoming Message
     const handleReceive = (data: any) => {
+      console.log("RECEIVE:", data);
       const cleanMsg = normalizeChat(data);
-      
+
       setChats((prev) => {
-        // Prevent duplicates
         const exists = prev.some((msg) => Number(msg.id) === Number(cleanMsg.id));
         if (exists) return prev;
         return [...prev, cleanMsg];
       });
+
       setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
     };
 
-    // 4. Handle Deletion
-    const handleDelete = (id: number) => {
-      setChats((prev) => prev.filter((c) => Number(c.id) !== Number(id)));
+    const handleDelete = (payload: any) => {
+      const id = Number(payload?.id ?? payload);
+      if (!id) return;
+      setChats((prev) => prev.filter((c) => Number(c.id) !== id));
     };
 
-    // Attach Listeners
-    socket.on("connect", handleConnect); // <--- This is the key fix
+    socket.on("connect", handleConnect);
     socket.on("receive_message", handleReceive);
     socket.on("delete_message", handleDelete);
 
-    // Cleanup
     return () => {
+      console.log("LEAVE ROOM:", roomIdStr);
       socket.emit("leave_room", roomIdStr);
       socket.off("connect", handleConnect);
       socket.off("receive_message", handleReceive);
       socket.off("delete_message", handleDelete);
     };
-  }, [activeRoomId]);
+  }, [mounted, idsOk, groupProjectId, activeRoomId]); // ✅ dependency fixed
 
   const onClickRoom = (roomId: number) => {
     if (roomId === activeRoomId) return;
@@ -169,7 +183,7 @@ export default function ChatPage() {
 
   const sendChat = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!roomJoined) return;
+    if (!roomJoined || !idsOk) return;
 
     const text = message.trim();
     if (!text) return;
@@ -181,52 +195,49 @@ export default function ChatPage() {
       message: text,
     };
 
-    // Optimistic Update (Show immediately on screen)
-    const socketMsg = {
+    // ✅ optimistic UI
+    const optimistic = {
       ...payload,
-      id: Date.now(), // Temporary ID
+      id: Date.now(), // temp
       updated_at: new Date().toISOString(),
       created_at: new Date().toISOString(),
     };
 
-    // Add to UI immediately
-    setChats((prev) => [...prev, socketMsg as unknown as FullChat]);
+    setChats((prev) => [...prev, optimistic as unknown as FullChat]);
     setMessage("");
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
 
-    // Send to DB
+    // ✅ Save to DB. Backend will broadcast to socket.
     await InsertChat(payload);
-    
-    // Send to Socket (other users)
-    socket.emit("send_message", { ...socketMsg, room_id: String(activeRoomId) });
+
+    // OPTIONAL:
+    // If your backend broadcast is working, you DO NOT need this.
+    // Keeping it can cause duplicates.
+    // socket.emit("send_message", { ...optimistic, room_id: `${groupProjectId}:${activeRoomId}` });
   };
 
   const deleteMessage = async (id: number) => {
-    // FIX 1: Safety Check
     if (!id || isNaN(id)) {
-        alert("Error: Invalid Chat ID. Please refresh.");
-        return;
+      alert("Error: Invalid Chat ID. Please refresh.");
+      return;
     }
 
-    // FIX 2: Popup
     const isConfirmed = confirm("Are you sure you want to delete this message?");
     if (!isConfirmed) return;
 
     try {
       const payload = {
-        id: id,
+        id,
         group_project_id: groupProjectId,
-        process_id: Number(activeRoomId)
+        process_id: Number(activeRoomId),
       };
 
       await DropChat(payload);
-      
-      // Update UI immediately
-      setChats((prev) => prev.filter((c) => Number(c.id) !== id));
-      
-      // Notify others via socket
-      socket.emit("delete_message", { id, room_id: String(activeRoomId) });
 
+      setChats((prev) => prev.filter((c) => Number(c.id) !== id));
+
+      // Optional: backend should broadcast delete too
+      // socket.emit("delete_message", { id, room_id: `${groupProjectId}:${activeRoomId}` });
     } catch (error) {
       console.error(error);
       alert("Failed to delete.");
@@ -234,15 +245,15 @@ export default function ChatPage() {
   };
 
   const formatTime = (dateStr?: string) => {
-    if (!dateStr) return "";
+    if (!mounted || !dateStr) return "";
     try {
-        return new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } catch (e) {
-        return "";
+      return new Date(dateStr).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    } catch {
+      return "";
     }
   };
 
-  if (typeof window === "undefined") return null;
+  if (!mounted) return null;
 
   const locked = !idsOk;
 
@@ -288,7 +299,7 @@ export default function ChatPage() {
                   key={p.id}
                   type="button"
                   onClick={() => onClickRoom(Number(p.id))}
-                  title={p.file}
+                  title={(p as any).file}
                   style={{
                     width: "100%",
                     display: "flex",
@@ -325,7 +336,7 @@ export default function ChatPage() {
                       flex: 1,
                     }}
                   >
-                    {p.Name}
+                    {(p as any).Name ?? (p as any).file ?? `Room ${p.id}`}
                   </span>
                 </button>
               );
@@ -358,14 +369,10 @@ export default function ChatPage() {
                 whiteSpace: "nowrap",
               }}
             >
-              {locked ? "ยังไม่พร้อมใช้งาน" : currentRoom ? currentRoom.file : "เลือกหัวข้อ"}
+              {locked ? "ยังไม่พร้อมใช้งาน" : currentRoom ? (currentRoom as any).file : "เลือกหัวข้อ"}
             </div>
             <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>
-              {locked
-                ? "โปรดเข้าร่วมกลุ่มก่อน"
-                : roomJoined
-                ? `${chats.length} ข้อความ`
-                : "คลิกหัวข้อทางซ้าย"}
+              {locked ? "โปรดเข้าร่วมกลุ่มก่อน" : roomJoined ? `${chats.length} ข้อความ` : "คลิกหัวข้อทางซ้าย"}
             </div>
           </div>
 
@@ -395,14 +402,7 @@ export default function ChatPage() {
           </div>
         </div>
 
-        <div
-          style={{
-            flex: 1,
-            padding: 16,
-            overflowY: "auto",
-            background: BG,
-          }}
-        >
+        <div style={{ flex: 1, padding: 16, overflowY: "auto", background: BG }}>
           {locked ? (
             <div style={{ textAlign: "center", marginTop: 90, color: "#6b7280" }}>
               คุณยังไม่มีกลุ่ม โปรดเข้าร่วมกลุ่มก่อนจึงจะใช้งานแชทได้
@@ -454,22 +454,21 @@ export default function ChatPage() {
                         boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
                       }}
                     >
-                      <div style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
-                        {c.message}
-                      </div>
+                      <div style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{c.message}</div>
 
-                      <div style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        marginTop: 8,
-                        paddingTop: 6,
-                        borderTop: isMe ? "1px solid rgba(255,255,255,0.3)" : `1px solid ${BORDER}`,
-                        gap: 15,
-                        fontSize: 10,
-                        opacity: 0.9
-                      }}>
-                        {/* Display the fixed Time */}
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          marginTop: 8,
+                          paddingTop: 6,
+                          borderTop: isMe ? "1px solid rgba(255,255,255,0.3)" : `1px solid ${BORDER}`,
+                          gap: 15,
+                          fontSize: 10,
+                          opacity: 0.9,
+                        }}
+                      >
                         <span>{formatTime(c.updated_at)}</span>
 
                         {isMe && (
@@ -482,7 +481,7 @@ export default function ChatPage() {
                               cursor: "pointer",
                               textDecoration: "underline",
                               padding: 0,
-                              fontSize: 10
+                              fontSize: 10,
                             }}
                           >
                             ลบ
@@ -514,13 +513,7 @@ export default function ChatPage() {
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             disabled={locked || !roomJoined}
-            placeholder={
-              locked
-                ? "ยังไม่สามารถส่งข้อความได้"
-                : !roomJoined
-                ? "กรุณาเลือกหัวข้อก่อน"
-                : "พิมพ์ข้อความ..."
-            }
+            placeholder={locked ? "ยังไม่สามารถส่งข้อความได้" : !roomJoined ? "กรุณาเลือกหัวข้อก่อน" : "พิมพ์ข้อความ..."}
             style={{
               flex: 1,
               height: 42,
