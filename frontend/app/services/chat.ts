@@ -1,5 +1,6 @@
 import api from "./api";
-import type { FullChat, ChatCreate, GetChat, ChatDelete } from "../interfaces/Chat";
+import type { FullChat, ChatCreate, GetChat, ChatDelete, Getteacher ,GroupProject } from "../interfaces/Chat";
+import { promises } from "dns";
 
 
 
@@ -34,4 +35,9 @@ async function DropWholechat(payload: GetChat) {
   });
 }
 
-export { GetAllChat, InsertChat, DropChat ,DropWholechat};
+async function Getteachergroup(payload: Getteacher): Promise<GroupProject[]> {
+  const res = await api.get<GroupProject[]>("/get_teacher_id", { params: payload });
+  return res.data;
+}
+
+export { GetAllChat, InsertChat, DropChat ,DropWholechat, Getteachergroup};

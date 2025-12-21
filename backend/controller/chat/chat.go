@@ -205,3 +205,27 @@ func DeleteChatbyProgress(c *gin.Context) {
 	log.InsertLog(c, 10)
 	c.JSON(http.StatusOK, gin.H{"message": "successfully deleted"})
 }
+
+func GetGroupbyteacherid (c *gin.Context ){
+
+	db := database.DB()
+
+	userstr := c.Query("teacher_id")
+	us, err := strconv.ParseUint(userstr, 10, 64)
+	if err != nil || us == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid (blank) teacher ID"})
+		return
+	}
+
+	var group_proj []entity.GroupProject
+
+	result := db.Where("teacher_id = ? ", us).Find(&group_proj)
+
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get id"})
+		return
+	}
+	log.InsertLog(c, 4)
+	c.JSON(http.StatusOK, group_proj)
+	
+}

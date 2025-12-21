@@ -118,7 +118,7 @@ export default function StudentTopbar({ userRole, children }: { userRole: string
                 </Link>
 
                 <div style={{ position: 'absolute', right: 200, display: 'flex', gap: 40, alignItems: 'center' }}>
-                    <Link href="/chat" style={getNavStyle('/chat')}>แชท</Link>
+                    <Link href="/student/chat" style={getNavStyle('/chat')}>แชท</Link>
                     {/* <Link href="/student/chat" style={navLinkStyle}>แชท</Link> */}
                     <Link href="/student/appointment" style={getNavStyle('/student/appointment')}>การนัดหมาย</Link>
                     <Link href="/student/evaluation" style={getNavStyle('/student/evaluation')}>การประเมิน</Link>
