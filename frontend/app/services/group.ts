@@ -57,7 +57,6 @@ export const GenerateGroups = async (data: GenerateGroupRequest) => {
 
 // 3. ค้นหานักศึกษาที่ยังไม่มีกลุ่ม (ต้องส่งปีไปด้วย)
 export const SearchAvailableStudents = async (year: number) => {
-    // ส่ง query และ year ไปค้นหา เช่น ?q=B630001&year=2567
     return await api.get<StudentSearchResult[]>(`/admin/students/search?year=${year}`);
 };
 
@@ -68,7 +67,6 @@ export const AdminAddMember = async (data: AddMemberRequest) => {
 
 // 5. ลบสมาชิกออกจากกลุ่ม
 export const AdminRemoveMember = async (data: RemoveMemberRequest) => {
-    // ใช้ POST หรือ DELETE ก็ได้ แต่แนะนำ POST เพื่อส่ง body ได้ง่ายกว่าในบาง Framework
     return await api.post("/admin/group/removeMember", data);
 };
 
@@ -84,7 +82,6 @@ export const AdminDeleteGroup = async (id: number) => {
 
 // ส่วนในการดึงข้อมูลอาจารย์
 export const GetAllTeachers = async () => {
-    // Backend ส่งมาเป็น { data: User[] }
     return await api.get<{ data: User[] }>("/admin/teachers/search");
 };
 

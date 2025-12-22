@@ -35,6 +35,8 @@ func GetGroupProject(c *gin.Context) {
 		query = query.Where("year = ?", year)
 	}
 
+	query = query.Order("group_number asc")
+
 	// 4. สั่งค้นหา
 	if err := query.Find(&group).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -124,7 +126,7 @@ func PostGroupMember(c *gin.Context) {
 	var existingCount int64
 	err = db.Table("group_members").
 		Joins("JOIN group_projects ON group_members.group_project_id = group_projects.id").
-		Where("group_members.student_id = ? AND group_projects.year = ?", studentID, groupProject.Year).
+		Where("group_members.student_id = ? AND group_projects.year = ? AND group_members.deleted_at IS NULL", studentID, groupProject.Year).
 		Count(&existingCount).Error
 
 	if err != nil {
@@ -172,7 +174,6 @@ func PostGroupMember(c *gin.Context) {
 	})
 }
 
-// GET: ดึงข้อมูลกลุ่มของนักศึกษาที่ล็อกอินอยู่ (GetMyGroup)
 func GetMyGroup(c *gin.Context) {
 	// 1. ตรวจสอบสิทธิ์และดึง ID นักศึกษา
 	claims, err := middleware.GetClaimsFromContext(c)
@@ -183,18 +184,17 @@ func GetMyGroup(c *gin.Context) {
 	studentID := claims.ID
 	db := database.DB()
 
-	// 2. ค้นหาสมาชิกในกลุ่ม (GroupMember) เพื่อหา GroupProjectID
 	var member entity.GroupMember
-	// ใช้ Preload เพื่อดึงข้อมูล GroupProject และ Teacher (ที่ปรึกษา)
-	if err := db.Preload("GroupProject").
-		Preload("GroupProject.Teacher"). // ดึงข้อมูลอาจารย์ที่ปรึกษา
+	if err := db.
+		Preload("GroupProject").
+		Preload("GroupProject.Teacher").
+		Preload("GroupProject.GroupMembers").
+		Preload("GroupProject.GroupMembers.Student").
 		Where("student_id = ?", studentID).
 		First(&member).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "คุณยังไม่มีกลุ่มโปรเจค"})
 		return
 	}
-
-	// 3. เตรียมข้อมูลตอบกลับ
 	group := member.GroupProject
 
 	c.JSON(http.StatusOK, gin.H{
