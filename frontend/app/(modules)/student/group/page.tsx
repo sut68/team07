@@ -34,11 +34,9 @@ const GroupSelectionPage = () => {
     }
   };
 
-  // ฟังก์ชันเริ่มต้น (โหลด User ID + ปีการศึกษา + กลุ่ม)
   const initData = async () => {
     setLoading(true);
     try {
-      // 1. ดึงข้อมูล User ID จาก Server (แก้ปัญหา HttpOnly Cookie)
       try {
         const resMe = await api.get("/me");
         if (resMe.data && resMe.data.id) {
@@ -46,16 +44,13 @@ const GroupSelectionPage = () => {
         }
       } catch (e) {
         console.error("Failed to fetch user profile:", e);
-        // ถ้าดึงไม่ได้ อาจจะ Redirect ไป Login หรือปล่อยให้เป็น null (ดูได้แต่กดไม่ได้)
       }
 
-      // 2. ดึงปีการศึกษา
       const resYear = await GetAcademicYears();
       if (resYear.data && resYear.data.length > 0) {
         setAcademicYears(resYear.data);
         const latestYear = resYear.data[0];
         setSelectedYear(latestYear);
-        // 3. ดึงกลุ่มของปีล่าสุด
         await fetchGroups(latestYear);
       } else {
         setGroups([]);
@@ -67,7 +62,6 @@ const GroupSelectionPage = () => {
     }
   };
 
-  // เรียกใช้ครั้งแรกเมื่อเข้าหน้าเว็บ
   useEffect(() => {
     initData();
   }, []);
@@ -85,7 +79,6 @@ const GroupSelectionPage = () => {
   });
 
   const handleJoinRequest = async (groupId: number) => {
-    // เช็คก่อนกดว่ามี ID ไหม
     if (!currentUserId) {
         Swal.fire("กรุณาเข้าสู่ระบบ", "ไม่พบข้อมูลผู้ใช้งาน", "warning");
         return;

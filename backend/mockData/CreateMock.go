@@ -72,10 +72,10 @@ var MockActionType = []entity.ActionType{
 func Uint(v uint) *uint { return &v }
 
 var MockGroupProject = []entity.GroupProject{
-	{GroupNumber: 1, Year: 2568, GroupStatus: "In Process", Membership: 5, TeacherID: Uint(2)},
+	{GroupNumber: 1, Year: 2568, GroupStatus: "Pending", Membership: 5, TeacherID: Uint(2)},
 	{GroupNumber: 2, Year: 2568, GroupStatus: "Pending", Membership: 5, TeacherID: Uint(2)},
-	{GroupNumber: 3, Year: 2568, GroupStatus: "Completed", Membership: 5, TeacherID: Uint(3)},
-	{GroupNumber: 4, Year: 2568, GroupStatus: "In Process", Membership: 5, TeacherID: Uint(4)},
+	{GroupNumber: 3, Year: 2568, GroupStatus: "Pending", Membership: 5, TeacherID: Uint(3)},
+	{GroupNumber: 4, Year: 2568, GroupStatus: "Pending", Membership: 5, TeacherID: Uint(4)},
 	{GroupNumber: 5, Year: 2568, GroupStatus: "Pending", Membership: 5, TeacherID: Uint(5)},
 	{GroupNumber: 6, Year: 2568, GroupStatus: "Pending", Membership: 3, TeacherID: Uint(6)},
 }

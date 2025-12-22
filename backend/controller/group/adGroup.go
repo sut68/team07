@@ -20,7 +20,7 @@ type GenerateGroupInput struct {
 type AddMemberInput struct {
 	GroupProjectID uint `json:"group_project_id" binding:"required"`
 	StudentID      uint `json:"student_id" binding:"required"`
-	BypassQuota    bool `json:"bypass_quota"` // true = ยัดสมาชิกเกินโควตา
+	BypassQuota    bool `json:"bypass_quota"` 
 }
 
 type RemoveMemberInput struct {
@@ -30,17 +30,14 @@ type RemoveMemberInput struct {
 
 type ChangeLeaderInput struct {
 	GroupProjectID uint `json:"group_project_id" binding:"required"`
-	NewLeaderID    uint `json:"new_leader_id" binding:"required"` // ID ของ Student ที่จะเป็นหัวหน้า
+	NewLeaderID    uint `json:"new_leader_id" binding:"required"` 
 }
 
-// Struct สำหรับรับค่าอัปเดตอาจารย์
 type UpdateAdvisorInput struct {
 	GroupProjectID uint  `json:"group_project_id" binding:"required"`
-	TeacherID      *uint `json:"teacher_id"` // ใช้ pointer เพื่อรองรับค่า null (กรณีปลดอาจารย์)
+	TeacherID      *uint `json:"teacher_id"` 
 }
 
-// GET: /admin/student-count
-// ดึงจำนวนนักศึกษาทั้งหมดที่มีสิทธิ์ (Pass=false, StatusID=1, RoleID=3)
 func GetEligibleStudentCount(c *gin.Context) {
 	db := database.DB()
 	var count int64
@@ -64,7 +61,6 @@ func GenerateGroups(c *gin.Context) {
 		return
 	}
 
-	// 1. หาเลขกลุ่มล่าสุดของปีการศึกษานั้น (Max GroupNumber)
 	var maxGroupNumber int
 	// ใช้ COALESCE เพื่อจัดการกรณีที่ยังไม่มีกลุ่มในปีนั้น (ให้ค่าเป็น 0)
 	row := db.Model(&entity.GroupProject{}).
@@ -73,7 +69,6 @@ func GenerateGroups(c *gin.Context) {
 		Row()
 
 	if err := row.Scan(&maxGroupNumber); err != nil {
-		// กรณี Error หรือไม่มีข้อมูล ให้เริ่มที่ 0
 		maxGroupNumber = 0
 	}
 
@@ -82,7 +77,6 @@ func GenerateGroups(c *gin.Context) {
 
 	currentGroupNum := maxGroupNumber + 1
 
-	// ฟังก์ชันช่วยสร้างกลุ่ม
 	createGroups := func(amount int, size int) error {
 		for i := 0; i < amount; i++ {
 			group := entity.GroupProject{
@@ -126,7 +120,6 @@ func GenerateGroups(c *gin.Context) {
 	})
 }
 
-// ดึงรายละเอียดกลุ่ม + สมาชิก
 func GetGroupDetailById(c *gin.Context) {
 	db := database.DB()
 	id := c.Param("id")
@@ -174,8 +167,6 @@ func SearchAvailableStudents(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": students})
 }
 
-// POST: /admin/group/add-member
-// เพิ่มสมาชิก (รองรับ Admin Override Quota)
 func AddMemberToGroup(c *gin.Context) {
 	db := database.DB()
 	var input AddMemberInput
@@ -185,14 +176,12 @@ func AddMemberToGroup(c *gin.Context) {
 		return
 	}
 
-	// 1. ตรวจสอบกลุ่ม และดึงปีการศึกษา
 	var group entity.GroupProject
 	if err := db.Preload("GroupMembers").First(&group, input.GroupProjectID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Group not found"})
 		return
 	}
 
-	// 2. ตรวจสอบว่านักศึกษามีกลุ่ม "ในปีนั้น" หรือยัง? (เหมือนเดิม)
 	var count int64
 	err := db.Table("group_members").
 		Joins("JOIN group_projects ON group_members.group_project_id = group_projects.id").
@@ -212,8 +201,6 @@ func AddMemberToGroup(c *gin.Context) {
 		return
 	}
 
-	// 3. ตรวจสอบโควตา (เหมือนเดิม)
-	// เช็คเฉพาะสมาชิกที่ยังไม่ถูกลบ (Active)
 	activeMembersCount := 0
 	for _, m := range group.GroupMembers {
 		if m.DeletedAt.Time.IsZero() { // เช็คว่ายังไม่ถูกลบ
@@ -231,7 +218,7 @@ func AddMemberToGroup(c *gin.Context) {
 		}
 	}
 
-	// 4. [สำคัญมาก] ตรวจสอบว่าเคยเป็นสมาชิกกลุ่มนี้แล้วถูกลบไปหรือไม่? (Soft Delete check)
+	// ตรวจสอบว่าเคยเป็นสมาชิกกลุ่มนี้แล้วถูกลบไปหรือไม่? (Soft Delete check)
 	var existingDeletedMember entity.GroupMember
 
 	// ใช้ Unscoped() เพื่อค้นหาข้อมูลที่ถูกลบไปแล้ว
@@ -240,13 +227,9 @@ func AddMemberToGroup(c *gin.Context) {
 		First(&existingDeletedMember).Error
 
 	if checkErr == nil {
-		// พบประวัติเก่า! (ไม่ว่าจะถูกลบหรือไม่)
-
 		if !existingDeletedMember.DeletedAt.Time.IsZero() {
 			// กรณี: เคยอยู่ -> ถูกลบ -> เพิ่มใหม่
 			// ให้ทำการ "กู้คืน" (Restore) โดยปรับ deleted_at เป็น NULL
-
-			// อัปเดตข้อมูล: กู้คืนสถานะ + รีเซ็ตไม่ให้เป็นหัวหน้า
 			if err := db.Model(&existingDeletedMember).Unscoped().Updates(map[string]interface{}{
 				"deleted_at": nil,
 				"leader":     false,
@@ -258,13 +241,10 @@ func AddMemberToGroup(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{"message": "Member restored successfully"})
 			return
 		} else {
-			// กรณี: ข้อมูลมีอยู่แล้ว และยังไม่ถูกลบ (Active)
 			c.JSON(http.StatusBadRequest, gin.H{"error": "User already in this group"})
 			return
 		}
 	}
-
-	// 5. ถ้าไม่เคยมีประวัติเลย -> สร้างใหม่ (Create)
 	newMember := entity.GroupMember{
 		GroupProjectID: input.GroupProjectID,
 		StudentID:      input.StudentID,
@@ -279,8 +259,6 @@ func AddMemberToGroup(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Member added successfully"})
 }
 
-// POST: /admin/group/remove-member
-// ลบสมาชิก
 func RemoveMemberFromGroup(c *gin.Context) {
 	db := database.DB()
 	var input RemoveMemberInput
@@ -290,7 +268,6 @@ func RemoveMemberFromGroup(c *gin.Context) {
 		return
 	}
 
-	// 1. ค้นหาสมาชิก
 	var member entity.GroupMember
 	if err := db.Where("group_project_id = ? AND student_id = ?", input.GroupProjectID, input.StudentID).
 		First(&member).Error; err != nil {
@@ -298,7 +275,6 @@ func RemoveMemberFromGroup(c *gin.Context) {
 		return
 	}
 
-	// 2. ตรวจสอบว่าเป็นหัวหน้าหรือไม่
 	if member.Leader {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error":   "CANNOT_REMOVE_LEADER",
@@ -307,7 +283,6 @@ func RemoveMemberFromGroup(c *gin.Context) {
 		return
 	}
 
-	// 3. ลบ
 	if err := db.Delete(&member).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to remove member"})
 		return
@@ -316,8 +291,6 @@ func RemoveMemberFromGroup(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Member removed successfully"})
 }
 
-// POST: /admin/group/change-leader
-// เปลี่ยนหัวหน้ากลุ่ม
 func ChangeLeader(c *gin.Context) {
 	db := database.DB()
 	var input ChangeLeaderInput
@@ -326,17 +299,15 @@ func ChangeLeader(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
-	// ใช้ Transaction เพื่อความปลอดภัย (ปลดคนเก่า + ตั้งคนใหม่ ต้องสำเร็จพร้อมกัน)
 	err := db.Transaction(func(tx *gorm.DB) error {
-		// 1. ปลดหัวหน้าทุกคนในกลุ่มนี้ (Set Leader = false)
+		// ปลดหัวหน้าทุกคนในกลุ่มนี้ (Set Leader = false)
 		if err := tx.Model(&entity.GroupMember{}).
 			Where("group_project_id = ?", input.GroupProjectID).
 			Update("leader", false).Error; err != nil {
 			return err
 		}
 
-		// 2. ตั้งคนใหม่เป็นหัวหน้า (Set Leader = true)
+		// ตั้งคนใหม่เป็นหัวหน้า (Set Leader = true)
 		result := tx.Model(&entity.GroupMember{}).
 			Where("group_project_id = ? AND student_id = ?", input.GroupProjectID, input.NewLeaderID).
 			Update("leader", true)
@@ -359,20 +330,17 @@ func ChangeLeader(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Leader changed successfully"})
 }
 
-// DELETE: /admin/group/:id
-// ลบกลุ่ม (Danger Zone)
 func DeleteGroup(c *gin.Context) {
 	db := database.DB()
 	id := c.Param("id")
 
-	// ใช้ Transaction: ลบสมาชิกก่อน -> ลบกลุ่ม
 	err := db.Transaction(func(tx *gorm.DB) error {
-		// 1. ลบสมาชิกทั้งหมด
+		// ลบสมาชิกทั้งหมด
 		if err := tx.Where("group_project_id = ?", id).Delete(&entity.GroupMember{}).Error; err != nil {
 			return err
 		}
 
-		// 2. ลบตัวกลุ่ม
+		// ลบตัวกลุ่ม
 		if err := tx.Delete(&entity.GroupProject{}, id).Error; err != nil {
 			return err
 		}
@@ -388,13 +356,10 @@ func DeleteGroup(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Group deleted successfully"})
 }
 
-// GET: /admin/teachers
-// ดึงรายชื่ออาจารย์ทั้งหมด (RoleID = 2)
 func GetAllTeachers(c *gin.Context) {
 	db := database.DB()
 	var teachers []entity.User
 
-	// เลือกเฉพาะ RoleID = 2 (Teacher)
 	if err := db.Where("role_id = ?", 2).Find(&teachers).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -403,7 +368,6 @@ func GetAllTeachers(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": teachers})
 }
 
-// POST: /admin/group/update-advisor
 // อัปเดตอาจารย์ที่ปรึกษาประจำกลุ่ม
 func UpdateGroupAdvisor(c *gin.Context) {
 	db := database.DB()
@@ -421,8 +385,6 @@ func UpdateGroupAdvisor(c *gin.Context) {
 		return
 	}
 
-	// อัปเดต TeacherID (GORM จะจัดการเรื่อง Null ให้ถ้าส่ง nil มา)
-	// ใช้ Select("TeacherID") เพื่อบังคับให้ update แม้ค่าจะเป็นศูนย์หรือ null
 	if err := db.Model(&group).Select("TeacherID").Updates(map[string]interface{}{
 		"TeacherID": input.TeacherID,
 	}).Error; err != nil {

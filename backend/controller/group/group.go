@@ -187,10 +187,9 @@ func GetMyGroup(c *gin.Context) {
 	var member entity.GroupMember
 	if err := db.
 		Preload("GroupProject").
-		Preload("GroupProject.Teacher").              
-		Preload("GroupProject.GroupMembers").            
+		Preload("GroupProject.Teacher").
+		Preload("GroupProject.GroupMembers").
 		Preload("GroupProject.GroupMembers.Student").
-
 		Where("student_id = ?", studentID).
 		First(&member).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "คุณยังไม่มีกลุ่มโปรเจค"})

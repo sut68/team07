@@ -136,6 +136,12 @@ func main() {
 			teacherGroup.DELETE("/topics/:id", topic.DeleteTopic)
 			// Status Update
 			teacherGroup.PATCH("/groups/:id/status", updateStatus.UpdateGroupStatus)
+
+			// Select Group Advisor
+			teacherGroup.GET("/requests", advisor.GetAdvisorRequests)
+			teacherGroup.POST("/request/accept", advisor.AcceptRequest)
+			teacherGroup.POST("/request/reject", advisor.RejectRequest)
+			teacherGroup.POST("/status/toggle", advisor.ToggleAdvisorStatus)
 		}
 
 		studentGroup := protected.Group("/student")
