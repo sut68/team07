@@ -31,7 +31,7 @@ func GetAdvisorRequests(c *gin.Context) {
 	}
 
 	descriptionMap := make(map[uint]string)
-	
+
 	// เก็บ ID ของกลุ่มที่เราดูแลอยู่ เพื่อเอาไป Query หา Description ทีเดียว (Optimization)
 	var groupIDs []uint
 	for _, g := range myGroups {
@@ -40,16 +40,12 @@ func GetAdvisorRequests(c *gin.Context) {
 
 	if len(groupIDs) > 0 {
 		var existingRequests []entity.SelectAdvisor
-		// ค้นหาใบคำร้องของกลุ่มเหล่านี้ (ไม่สนว่าส่งหาใคร หรือสถานะเป็นอะไร ขอแค่มี Description)
-		// ใช้ Order เพื่อเอาใบที่อาจจะดูสำคัญสุด เช่น ใบที่ 1
 		if err := db.Select("group_project_id, description").
 			Where("group_project_id IN ? AND description != ''", groupIDs).
-			Order("no asc"). // ถ้ามีหลายใบ เอาใบแรกๆ มาใช้เป็น Description หลัก
+			Order("no asc").
 			Find(&existingRequests).Error; err == nil {
 
 			for _, req := range existingRequests {
-				// ใส่ลง Map: GroupID -> Description
-				// ถ้ามีหลายใบ มันจะทับกัน แต่ปกติ Description โครงงานเดียวกันมักจะเหมือนกัน
 				descriptionMap[req.GroupProjectID] = req.Description
 			}
 		}
@@ -60,7 +56,7 @@ func GetAdvisorRequests(c *gin.Context) {
 
 		realDescription := "" // ค่า Default กรณี Admin ยัดให้
 		if val, ok := descriptionMap[group.ID]; ok {
-			realDescription = val // ถ้ามี ให้ใช้ของจริง
+			realDescription = val
 		}
 
 		assignedItem := entity.SelectAdvisor{
