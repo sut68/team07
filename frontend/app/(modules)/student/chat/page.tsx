@@ -265,7 +265,7 @@ export default function ChatPage() {
 
     try {
       const payload = {
-        id,
+        id : Number(userId),
         group_project_id: groupProjectId,
         process_id: Number(activeRoomId),
       };
