@@ -229,12 +229,10 @@ export default function ChatPage() {
     setMessage("");
 
     try {
-      // 1. Insert into DB first
-      // Cast to 'any' to avoid TS "Property 'id' does not exist" error
+
       const savedMessage = (await InsertChat(payload)) as any;
 
-      // 2. Generate Fallback ID if DB is slow or returns 0
-      // This ensures the UI *always* has a unique ID to render
+
       const dbId = Number(savedMessage?.id || savedMessage?.ID || 0);
       const uniqueId = dbId > 0 ? dbId : Date.now() + Math.random();
 
@@ -273,7 +271,7 @@ export default function ChatPage() {
       await DropChat(payload);
       setChats((prev) => prev.filter((c) => Number(c.id) !== id));
 
-      // optional realtime delete broadcast
+
       const roomIdStr = `${groupProjectId}:${activeRoomId}`;
       const socket = socketRef.current;
       if (socket) socket.emit("delete_message", { id, room_id: roomIdStr });
