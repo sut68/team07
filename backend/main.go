@@ -9,6 +9,7 @@ import (
 	"github.com/sut68/team07/backend/controller/chat"
 	"github.com/sut68/team07/backend/controller/evaluation"
 	"github.com/sut68/team07/backend/controller/group"
+	"github.com/sut68/team07/backend/controller/advisor"
 	"github.com/sut68/team07/backend/controller/importuser"
 	"github.com/sut68/team07/backend/controller/issues"
 	"github.com/sut68/team07/backend/controller/progress"
@@ -145,6 +146,12 @@ func main() {
 			teacherGroup.DELETE("/topics/:id", topic.DeleteTopic)
 			// Status Update
 			teacherGroup.PATCH("/groups/:id/status", updateStatus.UpdateGroupStatus)
+
+			// Select Group Advisor
+			teacherGroup.GET("/requests", advisor.GetAdvisorRequests)
+			teacherGroup.POST("/request/accept", advisor.AcceptRequest)
+			teacherGroup.POST("/request/reject", advisor.RejectRequest)
+			teacherGroup.POST("/status/toggle", advisor.ToggleAdvisorStatus)
 		}
 
 		studentGroup := protected.Group("/student")
@@ -161,6 +168,11 @@ func main() {
 			//studentGroup.GET("/group", group.GetGroupProject)
 			studentGroup.GET("/myGroup", group.GetMyGroup)
 			studentGroup.POST("/addMember", group.PostGroupMember)
+
+			//Select Advisor
+			studentGroup.POST("/select", advisor.SaveAdvisorSelection)
+			studentGroup.GET("/selection/:groupId", advisor.GetAdvisorSelection)
+			studentGroup.GET("/teachers/search", advisor.GetAllTeachers)
 
 			// Evaluation and Appointment
 			studentGroup.GET("/myAppointment", appointment.GetMyProjectAndAppointment)

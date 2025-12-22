@@ -5,25 +5,9 @@ import Swal from "sweetalert2";
 import { GetGroupProjects, JoinGroup, GetAcademicYears } from "../../../services/group";
 import { GroupProject } from "../../../interfaces/Group";
 import GroupCard from "../../../components/GroupCard";
+import api from "../../../services/api"; // เรียกใช้ axios instance เพื่อยิง /me
 
-// Import CSS
 import "../../../style/StudentGroupPage.css"
-
-// Helper: แกะ ID จาก Token
-const getCurrentUserId = () => {
-  const token = localStorage.getItem("access_token") || localStorage.getItem("token");
-  if (!token) return null;
-  try {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(atob(base64).split('').map(c =>
-      '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-    ).join(''));
-    return JSON.parse(jsonPayload).id;
-  } catch (e) {
-    return null;
-  }
-};
 
 const GroupSelectionPage = () => {
   const [groups, setGroups] = useState<GroupProject[]>([]);
@@ -32,6 +16,7 @@ const GroupSelectionPage = () => {
   const [academicYears, setAcademicYears] = useState<number[]>([]);
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear() + 543);
 
+  // ฟังก์ชันดึงข้อมูลกลุ่ม
   const fetchGroups = async (year: number) => {
     setLoading(true);
     try {
@@ -52,6 +37,15 @@ const GroupSelectionPage = () => {
   const initData = async () => {
     setLoading(true);
     try {
+      try {
+        const resMe = await api.get("/me");
+        if (resMe.data && resMe.data.id) {
+          setCurrentUserId(resMe.data.id);
+        }
+      } catch (e) {
+        console.error("Failed to fetch user profile:", e);
+      }
+
       const resYear = await GetAcademicYears();
       if (resYear.data && resYear.data.length > 0) {
         setAcademicYears(resYear.data);
@@ -60,17 +54,15 @@ const GroupSelectionPage = () => {
         await fetchGroups(latestYear);
       } else {
         setGroups([]);
+        setLoading(false);
       }
     } catch (error) {
       console.error("Error initializing:", error);
-    } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    const uid = getCurrentUserId();
-    setCurrentUserId(uid);
     initData();
   }, []);
 
@@ -80,12 +72,18 @@ const GroupSelectionPage = () => {
     fetchGroups(year);
   };
 
+  // คำนวณว่า user ปัจจุบันมีกลุ่มอยู่แล้วหรือไม่ (ใน list ที่แสดงอยู่)
   const globalUserHasGroup = groups.some((group) => {
     const members = group.group_members || [];
     return members.some((m: any) => m.student_id === currentUserId);
   });
 
   const handleJoinRequest = async (groupId: number) => {
+    if (!currentUserId) {
+        Swal.fire("กรุณาเข้าสู่ระบบ", "ไม่พบข้อมูลผู้ใช้งาน", "warning");
+        return;
+    }
+
     Swal.fire({
       title: 'ยืนยันการลงชื่อ ?',
       text: `คุณต้องการเข้าร่วมกลุ่มนี้ใช่หรือไม่`,
@@ -112,6 +110,7 @@ const GroupSelectionPage = () => {
               timer: 1500,
               showConfirmButton: false
             });
+            // โหลดข้อมูลใหม่เพื่อให้ UI อัปเดตสถานะกลุ่มทันที
             fetchGroups(selectedYear);
           }
         } catch (error: any) {
@@ -122,8 +121,7 @@ const GroupSelectionPage = () => {
           });
         }
       }
-    }
-    )
+    })
   };
 
   return (
@@ -133,10 +131,7 @@ const GroupSelectionPage = () => {
         <div className="page-header">
           {/* ฝั่งซ้าย: Title + Subtitle */}
           <div className="header-left">
-            {/* 1. แท่งสีแดง (ย้ายมาไว้ตรงนี้ เพื่อให้เป็นแท่งยาวแท่งเดียว) */}
             <div className="thick-red-bar"></div>
-
-            {/* 2. สร้าง div ใหม่คลุมตัวหนังสือทั้ง 2 บรรทัด */}
             <div className="header-text-content">
               <h1 className="page-title">เลือกกลุ่มโครงงาน</h1>
               <p className="page-subtitle">ประจำปีการศึกษา {selectedYear}</p>
@@ -177,7 +172,7 @@ const GroupSelectionPage = () => {
                 <div key={group.ID} className="group-card-wrapper">
                   <GroupCard
                     group={group}
-                    currentUserId={currentUserId}
+                    currentUserId={currentUserId} // ส่ง ID ที่ได้จาก API /me เข้าไป
                     globalUserHasGroup={globalUserHasGroup}
                     onJoin={handleJoinRequest}
                   />
