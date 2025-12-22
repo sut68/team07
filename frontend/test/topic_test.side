@@ -1,0 +1,419 @@
+{
+  "id": "037e85bf-ec83-4581-88ab-cef67f51e1e2",
+  "version": "2.0",
+  "name": "topic",
+  "url": "http://localhost:5173",
+  "tests": [{
+    "id": "2424bfc1-4f06-42f5-9655-5cfc1b8e55d4",
+    "name": "create",
+    "commands": [{
+      "id": "0827f48e-6904-4bd2-9c22-d18c96faecc0",
+      "comment": "",
+      "command": "open",
+      "target": "/login",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "4eff118a-9579-49d1-9029-d9b0084c781e",
+      "comment": "",
+      "command": "setWindowSize",
+      "target": "1217x1032",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "5b50a44d-0f59-4e20-8edf-c11936ebc3e2",
+      "comment": "",
+      "command": "click",
+      "target": "css=.login-button",
+      "targets": [
+        ["css=.login-button", "css:finder"],
+        ["xpath=//button[@type='submit']", "xpath:attributes"],
+        ["xpath=//div[4]/button", "xpath:position"],
+        ["xpath=//button[contains(.,'เข้าสู่ระบบ')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "71dbeb1c-51b7-44bb-a0dc-cbf49f75c052",
+      "comment": "",
+      "command": "click",
+      "target": "linkText=หัวข้อโครงงาน",
+      "targets": [
+        ["linkText=หัวข้อโครงงาน", "linkText"],
+        ["css=nav > a:nth-child(3)", "css:finder"],
+        ["xpath=//a[contains(text(),'หัวข้อโครงงาน')]", "xpath:link"],
+        ["xpath=//a[contains(@href, '/teacher/topic')]", "xpath:href"],
+        ["xpath=//a[3]", "xpath:position"],
+        ["xpath=//a[contains(.,'หัวข้อโครงงาน')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "7db0fa71-2d27-43af-85d3-b5d52ee745cf",
+      "comment": "",
+      "command": "mouseOver",
+      "target": "linkText=หัวข้อโครงงาน",
+      "targets": [
+        ["linkText=หัวข้อโครงงาน", "linkText"],
+        ["css=nav > a:nth-child(3)", "css:finder"],
+        ["xpath=//a[contains(text(),'หัวข้อโครงงาน')]", "xpath:link"],
+        ["xpath=//a[contains(@href, '/teacher/topic')]", "xpath:href"],
+        ["xpath=//a[3]", "xpath:position"],
+        ["xpath=//a[contains(.,'หัวข้อโครงงาน')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "d26c4346-5e3e-4977-86ab-d75e033b4e8c",
+      "comment": "",
+      "command": "mouseOut",
+      "target": "linkText=หัวข้อโครงงาน",
+      "targets": [
+        ["linkText=หัวข้อโครงงาน", "linkText"],
+        ["css=nav > a:nth-child(3)", "css:finder"],
+        ["xpath=//a[contains(text(),'หัวข้อโครงงาน')]", "xpath:link"],
+        ["xpath=//a[contains(@href, '/teacher/topic')]", "xpath:href"],
+        ["xpath=//a[3]", "xpath:position"],
+        ["xpath=//a[contains(.,'หัวข้อโครงงาน')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "c1f845ce-083d-4e97-8d19-1b06589ce433",
+      "comment": "",
+      "command": "click",
+      "target": "css=#add-topic-btn > span:nth-child(2)",
+      "targets": [
+        ["css=#add-topic-btn > span:nth-child(2)", "css:finder"],
+        ["xpath=//button[@id='add-topic-btn']/span[2]", "xpath:idRelative"],
+        ["xpath=//button/span[2]", "xpath:position"],
+        ["xpath=//span[contains(.,'เพิ่มหัวข้อใหม่')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "bbb59ddb-a080-4912-b2c0-9937381614d1",
+      "comment": "",
+      "command": "mouseOver",
+      "target": "css=#add-topic-btn > span:nth-child(2)",
+      "targets": [
+        ["css=#add-topic-btn > span:nth-child(2)", "css:finder"],
+        ["xpath=//button[@id='add-topic-btn']/span[2]", "xpath:idRelative"],
+        ["xpath=//button/span[2]", "xpath:position"],
+        ["xpath=//span[contains(.,'เพิ่มหัวข้อใหม่')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "0176fad8-1ce6-4bc9-a15d-dae45bd9dbde",
+      "comment": "",
+      "command": "mouseOut",
+      "target": "css=#add-topic-btn > span:nth-child(2)",
+      "targets": [
+        ["css=#add-topic-btn > span:nth-child(2)", "css:finder"],
+        ["xpath=//button[@id='add-topic-btn']/span[2]", "xpath:idRelative"],
+        ["xpath=//button/span[2]", "xpath:position"],
+        ["xpath=//span[contains(.,'เพิ่มหัวข้อใหม่')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "2e09c09e-1710-4c9e-8837-d89d8ff5f82d",
+      "comment": "",
+      "command": "click",
+      "target": "id=title",
+      "targets": [
+        ["id=title", "id"],
+        ["css=#title", "css:finder"],
+        ["xpath=//input[@id='title']", "xpath:attributes"],
+        ["xpath=//input", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "7c1f7dbb-855b-44f3-a9f3-6d27977542c9",
+      "comment": "",
+      "command": "type",
+      "target": "id=title",
+      "targets": [
+        ["id=title", "id"],
+        ["css=#title", "css:finder"],
+        ["xpath=//input[@id='title']", "xpath:attributes"],
+        ["xpath=//input", "xpath:position"]
+      ],
+      "value": "test"
+    }, {
+      "id": "da242e0a-b8e3-4dd1-8ac4-4cae5e48fe0a",
+      "comment": "",
+      "command": "click",
+      "target": "id=objective",
+      "targets": [
+        ["id=objective", "id"],
+        ["css=#objective", "css:finder"],
+        ["xpath=//textarea[@id='objective']", "xpath:attributes"],
+        ["xpath=//textarea", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "33fa0c7d-68a7-48a6-a189-4a96eb3d1ae5",
+      "comment": "",
+      "command": "type",
+      "target": "id=objective",
+      "targets": [
+        ["id=objective", "id"],
+        ["css=#objective", "css:finder"],
+        ["xpath=//textarea[@id='objective']", "xpath:attributes"],
+        ["xpath=//textarea", "xpath:position"]
+      ],
+      "value": "test"
+    }, {
+      "id": "a93916f2-07c9-429f-8e57-dc3c74acbf89",
+      "comment": "",
+      "command": "click",
+      "target": "id=scope",
+      "targets": [
+        ["id=scope", "id"],
+        ["css=#scope", "css:finder"],
+        ["xpath=//textarea[@id='scope']", "xpath:attributes"],
+        ["xpath=//div[3]/div/div[2]/div/div/textarea", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "92811223-a1d7-47ec-99f6-e3066ae84eae",
+      "comment": "",
+      "command": "type",
+      "target": "id=scope",
+      "targets": [
+        ["id=scope", "id"],
+        ["css=#scope", "css:finder"],
+        ["xpath=//textarea[@id='scope']", "xpath:attributes"],
+        ["xpath=//div[3]/div/div[2]/div/div/textarea", "xpath:position"]
+      ],
+      "value": "test"
+    }, {
+      "id": "20e375d6-8717-49d7-a2b5-22aa3c4c085c",
+      "comment": "",
+      "command": "click",
+      "target": "css=.ant-space-item > .ant-btn-primary > span",
+      "targets": [
+        ["css=.ant-space-item > .ant-btn-primary > span", "css:finder"],
+        ["xpath=//div/div/div/div/div[2]/button/span", "xpath:position"],
+        ["xpath=//span[contains(.,'บันทึกข้อมูล')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }]
+  }, {
+    "id": "052c2f6b-854c-4297-8fbb-f626d4d6ab02",
+    "name": "delete",
+    "commands": [{
+      "id": "25769980-fedc-42c3-bbcb-e60ce8d98b90",
+      "comment": "",
+      "command": "open",
+      "target": "/login",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "fd214031-6520-4ae7-8267-0b8b47a426f3",
+      "comment": "",
+      "command": "setWindowSize",
+      "target": "1217x1032",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "2a0ceacf-2e99-4b7e-9f61-d82ba37482ac",
+      "comment": "",
+      "command": "click",
+      "target": "css=.login-button",
+      "targets": [
+        ["css=.login-button", "css:finder"],
+        ["xpath=//button[@type='submit']", "xpath:attributes"],
+        ["xpath=//div[4]/button", "xpath:position"],
+        ["xpath=//button[contains(.,'เข้าสู่ระบบ')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "9d0da9ee-ff3f-4374-b243-62c31b269fa3",
+      "comment": "",
+      "command": "click",
+      "target": "linkText=หัวข้อโครงงาน",
+      "targets": [
+        ["linkText=หัวข้อโครงงาน", "linkText"],
+        ["css=nav > a:nth-child(3)", "css:finder"],
+        ["xpath=//a[contains(text(),'หัวข้อโครงงาน')]", "xpath:link"],
+        ["xpath=//a[contains(@href, '/teacher/topic')]", "xpath:href"],
+        ["xpath=//a[3]", "xpath:position"],
+        ["xpath=//a[contains(.,'หัวข้อโครงงาน')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "add17b83-7351-41a5-81c6-458f4e5149da",
+      "comment": "",
+      "command": "mouseOver",
+      "target": "linkText=หัวข้อโครงงาน",
+      "targets": [
+        ["linkText=หัวข้อโครงงาน", "linkText"],
+        ["css=nav > a:nth-child(3)", "css:finder"],
+        ["xpath=//a[contains(text(),'หัวข้อโครงงาน')]", "xpath:link"],
+        ["xpath=//a[contains(@href, '/teacher/topic')]", "xpath:href"],
+        ["xpath=//a[3]", "xpath:position"],
+        ["xpath=//a[contains(.,'หัวข้อโครงงาน')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "4bb6fc31-9785-406b-a56f-b383cb8c195d",
+      "comment": "",
+      "command": "mouseOut",
+      "target": "linkText=หัวข้อโครงงาน",
+      "targets": [
+        ["linkText=หัวข้อโครงงาน", "linkText"],
+        ["css=nav > a:nth-child(3)", "css:finder"],
+        ["xpath=//a[contains(text(),'หัวข้อโครงงาน')]", "xpath:link"],
+        ["xpath=//a[contains(@href, '/teacher/topic')]", "xpath:href"],
+        ["xpath=//a[3]", "xpath:position"],
+        ["xpath=//a[contains(.,'หัวข้อโครงงาน')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "3dbdadb3-f709-4179-ba8b-e9ddb2f93e6d",
+      "comment": "",
+      "command": "click",
+      "target": "css=.ant-col:nth-child(1) li:nth-child(2) svg",
+      "targets": [
+        ["css=.ant-col:nth-child(1) li:nth-child(2) svg", "css:finder"]
+      ],
+      "value": ""
+    }, {
+      "id": "e6291a69-8189-4841-a030-113532c31c93",
+      "comment": "",
+      "command": "click",
+      "target": "css=.ant-btn-dangerous",
+      "targets": [
+        ["css=.ant-btn-dangerous", "css:finder"],
+        ["xpath=(//button[@type='button'])[4]", "xpath:attributes"],
+        ["xpath=//button[2]", "xpath:position"],
+        ["xpath=//button[contains(.,'ลบ')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }]
+  }, {
+    "id": "8018d1f9-483f-4fe4-af01-2147d4c765ba",
+    "name": "update",
+    "commands": [{
+      "id": "63babe86-fbd8-4832-ba0f-877f6370e091",
+      "comment": "",
+      "command": "open",
+      "target": "/login",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "260ba1cb-ff5d-46d5-b6ae-64c7249ce7ac",
+      "comment": "",
+      "command": "setWindowSize",
+      "target": "1217x1032",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "60555194-7056-4d9a-a3b3-34e8b140962a",
+      "comment": "",
+      "command": "click",
+      "target": "css=.login-button",
+      "targets": [
+        ["css=.login-button", "css:finder"],
+        ["xpath=//button[@type='submit']", "xpath:attributes"],
+        ["xpath=//div[4]/button", "xpath:position"],
+        ["xpath=//button[contains(.,'เข้าสู่ระบบ')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "6a203606-47df-434a-98b3-e64c4eb5fc8b",
+      "comment": "",
+      "command": "click",
+      "target": "linkText=หัวข้อโครงงาน",
+      "targets": [
+        ["linkText=หัวข้อโครงงาน", "linkText"],
+        ["css=nav > a:nth-child(3)", "css:finder"],
+        ["xpath=//a[contains(text(),'หัวข้อโครงงาน')]", "xpath:link"],
+        ["xpath=//a[contains(@href, '/teacher/topic')]", "xpath:href"],
+        ["xpath=//a[3]", "xpath:position"],
+        ["xpath=//a[contains(.,'หัวข้อโครงงาน')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "2355ec79-2a05-452a-bc5c-1897cc8d1bc5",
+      "comment": "",
+      "command": "mouseOver",
+      "target": "linkText=หัวข้อโครงงาน",
+      "targets": [
+        ["linkText=หัวข้อโครงงาน", "linkText"],
+        ["css=nav > a:nth-child(3)", "css:finder"],
+        ["xpath=//a[contains(text(),'หัวข้อโครงงาน')]", "xpath:link"],
+        ["xpath=//a[contains(@href, '/teacher/topic')]", "xpath:href"],
+        ["xpath=//a[3]", "xpath:position"],
+        ["xpath=//a[contains(.,'หัวข้อโครงงาน')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "bdec401a-f085-4ace-af69-00c9e247f8ec",
+      "comment": "",
+      "command": "mouseOut",
+      "target": "linkText=หัวข้อโครงงาน",
+      "targets": [
+        ["linkText=หัวข้อโครงงาน", "linkText"],
+        ["css=nav > a:nth-child(3)", "css:finder"],
+        ["xpath=//a[contains(text(),'หัวข้อโครงงาน')]", "xpath:link"],
+        ["xpath=//a[contains(@href, '/teacher/topic')]", "xpath:href"],
+        ["xpath=//a[3]", "xpath:position"],
+        ["xpath=//a[contains(.,'หัวข้อโครงงาน')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "053c1fb0-5aae-4df5-a8dd-519f8ea9cc4c",
+      "comment": "",
+      "command": "click",
+      "target": "css=.ant-col:nth-child(1) li:nth-child(1) .anticon",
+      "targets": [
+        ["css=.ant-col:nth-child(1) li:nth-child(1) .anticon", "css:finder"],
+        ["xpath=//div[@id='rc-tabs-3-panel-1']/div/div/div/div/ul/li/span/span", "xpath:idRelative"],
+        ["xpath=//li/span/span", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "55e6c441-500f-49c7-884c-12050b01c4dd",
+      "comment": "",
+      "command": "click",
+      "target": "id=title",
+      "targets": [
+        ["id=title", "id"],
+        ["css=#title", "css:finder"],
+        ["xpath=//input[@id='title']", "xpath:attributes"],
+        ["xpath=//input", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "f215a0e8-3e2e-4118-9cff-ccc333f28809",
+      "comment": "",
+      "command": "type",
+      "target": "id=title",
+      "targets": [
+        ["id=title", "id"],
+        ["css=#title", "css:finder"],
+        ["xpath=//input[@id='title']", "xpath:attributes"],
+        ["xpath=//input", "xpath:position"]
+      ],
+      "value": "test123"
+    }, {
+      "id": "7f8bacc3-b27b-4b62-8270-0e5ca5fd5c09",
+      "comment": "",
+      "command": "click",
+      "target": "css=.ant-space-item > .ant-btn-primary > span",
+      "targets": [
+        ["css=.ant-space-item > .ant-btn-primary > span", "css:finder"],
+        ["xpath=//div/div/div/div/div[2]/button/span", "xpath:position"],
+        ["xpath=//span[contains(.,'บันทึกการแก้ไข')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }]
+  }],
+  "suites": [{
+    "id": "90addb70-5583-4784-bef9-f4ca49ce1b52",
+    "name": "Default Suite",
+    "persistSession": false,
+    "parallel": false,
+    "timeout": 300,
+    "tests": ["2424bfc1-4f06-42f5-9655-5cfc1b8e55d4"]
+  }],
+  "urls": ["http://localhost:5173/"],
+  "plugins": []
+}
