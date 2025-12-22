@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Button, Modal, message } from 'antd';
 import { CheckCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { UpdateGroupStatus } from '../../../../../services/group';
-
+import { Toast_success,Toast_fail } from '../../../../../components/Webmessage';
 interface ConfirmGroupCompletionProps {
     groupId: number;
     onSuccess?: () => void;
@@ -28,13 +28,13 @@ export default function ConfirmGroupCompletion({ groupId, onSuccess }: ConfirmGr
         try {
             const res = await UpdateGroupStatus(groupId, "Completed");
             if (res) {
-                message.success("อัปเดตสถานะกลุ่มเรียบร้อยแล้ว");
+                Toast_success("อัปเดตสถานะกลุ่มเรียบร้อยแล้ว");
                 if (onSuccess) onSuccess();
             } else {
-                 message.error("เกิดข้อผิดพลาดในการอัปเดตสถานะ");
+                Toast_fail("เกิดข้อผิดพลาดในการอัปเดตสถานะ");
             }
         } catch (error: any) {
-            message.error(error?.response?.data?.error || "เกิดข้อผิดพลาดในการอัปเดตสถานะ");
+            Toast_fail(error?.response?.data?.error || "เกิดข้อผิดพลาดในการอัปเดตสถานะ");
         } finally {
             setLoading(false);
         }
