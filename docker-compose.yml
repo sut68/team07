@@ -20,7 +20,21 @@ services:
       - app-network
 
   # -------------------------------------------------------------------
-  # 2. Go Backend API Service (Production Build)
+  # 2. Socket.IO Server (NEW – REQUIRED)
+  # -------------------------------------------------------------------
+  socket:
+    build:
+      context: ./frontend/socket-server
+      dockerfile: Dockerfile
+    container_name: capstone_socket
+    restart: always
+    ports:
+      - "3001:3001"
+    networks:
+      - app-network
+
+  # -------------------------------------------------------------------
+  # 3. Go Backend API Service (Production Build)
   # -------------------------------------------------------------------
   backend:
     build:
@@ -30,9 +44,10 @@ services:
     restart: always
     depends_on:
       - db
+      - socket
     environment:
       DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}?sslmode=disable
-      
+
       SECRET_KEY: ${SECRET_KEY}
       REFRESH_SECRET_KEY: ${REFRESH_SECRET_KEY}
       FRONTEND_URL: ${FRONTEND_URL}
@@ -42,7 +57,7 @@ services:
       SMTP_PORT: ${SMTP_PORT}
       SMTP_PASSWORD: ${SMTP_PASSWORD}
       SMTP_USERNAME: ${SMTP_USERNAME} 
-      
+
       GIN_MODE: release
       PORT: 8080
     ports:
@@ -51,7 +66,7 @@ services:
       - app-network
 
   # -------------------------------------------------------------------
-  # 3. Next.js Frontend Service (Production Build)
+  # 4. Next.js Frontend Service (Production Build)
   # -------------------------------------------------------------------
   frontend:
     build:
@@ -62,19 +77,25 @@ services:
     container_name: capstone_frontend
     restart: always
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8080 
+      NEXT_PUBLIC_API_URL: http://localhost:8080
+      NEXT_PUBLIC_SOCKET_URL: http://localhost:3001
     ports:
       - "80:5173"
     depends_on:
       - backend
+      - socket
     networks:
       - app-network
       
-# Volume สำหรับ Persistent Data
+# -------------------------------------------------------------------
+# Volumes
+# -------------------------------------------------------------------
 volumes:
   pgdata:
 
-# Network สำหรับให้ Services คุยกัน
+# -------------------------------------------------------------------
+# Network
+# -------------------------------------------------------------------
 networks:
   app-network:
     driver: bridge

@@ -7,6 +7,7 @@ export interface FullChat {
   created_at?: string;
   updated_at?: string;
   deleted_at?: string | null;
+  client_id?: string;
 }
 
 export interface ChatCreate {
@@ -22,6 +23,7 @@ export interface ProcessInterface {
   id: number;
   file: string;
   group_project_id: number;
+  Name: string;
   updated_at?: string;
   comment?: string;
 }
@@ -30,7 +32,7 @@ export interface GetChat {
   process_id: number;
   group_project_id: number;
 
-  // ✅ DO NOT add sender_id here (backend doesn't need it, and TS will complain)
+  
 }
 
 export interface ChatDelete {
@@ -38,3 +40,17 @@ export interface ChatDelete {
   group_project_id: number;
   process_id: number;
 }
+
+export interface Getteacher {
+  teacher_id: number;
+}
+
+export interface GroupProject {
+  id: number;
+  group_number: number;
+  group_status: string;
+  year: number;
+  membership: number;
+  teacher_id: number;
+}
+

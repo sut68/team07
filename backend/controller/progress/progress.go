@@ -24,7 +24,7 @@ func GetProGressByID(c *gin.Context) {
 	group_projectid := c.Query("group_project_id")
 	var group_progress []entity.Progress
 
-	db.Where("group_project_id = ?", group_projectid).Find(&group_progress)
+	db.Where("group_project_id = ? and deleted_at is null", group_projectid).Find(&group_progress)
 	log.InsertLog(c, 4)
 
 	c.JSON(http.StatusOK, &group_progress)

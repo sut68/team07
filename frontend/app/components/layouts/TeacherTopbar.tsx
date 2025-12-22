@@ -116,7 +116,7 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
                 </Link>
 
                 <div style={{ position: 'absolute', right: 200, display: 'flex', gap: 40, alignItems: 'center' }}>
-                    <Link href="/chat" style={getNavStyle('/chat')}>แชท</Link>
+                    <Link href="/teacher/chat" style={getNavStyle('/teacher/chat')}>แชท</Link>
                     <Link href="/teacher/appointment" style={getNavStyle('/teacher/appointment')}>การนัดหมาย</Link>
                     <Link href="/teacher/evaluation" style={getNavStyle('/teacher/evaluation')}>การประเมิน</Link>
                     <Link href="/teacher/storage" style={getNavStyle('/teacher/storage')}>คลังโครงงาน</Link>

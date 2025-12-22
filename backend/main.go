@@ -51,12 +51,22 @@ func main() {
 
 		// user ทุก Role สามารถเข้าถึงได้
 		protected.GET("/GetChat", chat.GetAllChat)
-		protected.GET("/GetProcessID", chat.GetProcessIDbyGroupID)
+		protected.GET("/get_teacher_id",chat.GetGroupbyteacherid)
 		protected.POST("/SendChat", chat.InsertChat)
 		protected.DELETE("/DeleteChat", chat.DeleteChat)
+		protected.DELETE("/Deletechatbyid",chat.DeleteChatbyProgress)
+		
+
 		protected.GET("/getUserProfile", users.GetUserProfile)
 		protected.PATCH("/updateUserProfile", users.UpdateUserProfile)
 		protected.GET("/me", authHandler.Me)
+
+		protected.GET("/getProcess", progress.GetProGressByID)
+		protected.GET("/getProjectbyuser",progress.GetGroupProjectIDByStudentID)
+		protected.POST("/assignProgress", progress.AssignProGress)
+		protected.POST("/modifyProgress", progress.UpdateProGress)
+		protected.DELETE("/deleteProgress", progress.DeleteProgress)
+
 
 		// Group
 		protected.GET("/academicYears", group.GetAcademicYears)

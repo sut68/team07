@@ -10,12 +10,14 @@ import {
   GetGroupProjectIDByUser,
 } from "../../../services/progress";
 
+import { DropWholechat } from "@/app/services/chat";
+
 type Mode = "view" | "submit" | "edit";
 
 export default function ProgressPage() {
   const [mode, setMode] = useState<Mode>("view");
 
-  const [gpji, setgpji] = useState<number>(0); // group pro id
+  const [gpji, setgpji] = useState<number>(0);
   const [userid, setuserid] = useState<number>(0);
 
   const [processlist, setprocesslist] = useState<any[]>([]);
@@ -29,13 +31,12 @@ export default function ProgressPage() {
   const [isError, setIsError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const getId = (p: any) =>            Number(p?.id ?? p?.ID ??  0) || 0;
+  const getId = (p: any) => Number(p?.id ?? p?.ID ?? 0) || 0;
   const getProgressTitle = (p: any) => String(p?.Name ?? "").trim();
-  const getFilePath = (p: any) =>      String(p?.file ?? p?.File ?? "").trim();
-  const getCommentText = (p: any) =>   String(p?.comment ??  "").trim();
-  const getUpdatedAt = (p: any) =>     String(p?.update_at ?? "").trim();
+  const getFilePath = (p: any) => String(p?.file ?? p?.File ?? "").trim();
+  const getCommentText = (p: any) => String(p?.comment ?? "").trim();
+  const getUpdatedAt = (p: any) => String(p?.update_at ?? "").trim();
 
- 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -53,7 +54,6 @@ export default function ProgressPage() {
         const res = await GetGroupProjectIDByUser({ student_id: cleanUid });
         const gp = Number(res?.group_project_id ?? 0);
         setgpji(Number.isFinite(gp) && gp > 0 ? gp : 0);
-
       } catch (err) {
         console.error("load id fail", err);
         setgpji(0);
@@ -63,12 +63,10 @@ export default function ProgressPage() {
 
   const locked = gpji <= 0 || userid <= 0;
 
-
   useEffect(() => {
     if (locked) setMode("view");
   }, [locked]);
 
-  
   const refresh = async () => {
     if (gpji == 0) {
       setprocesslist([]);
@@ -95,13 +93,11 @@ export default function ProgressPage() {
     }
   };
 
-  // auto load when groupProjectId is ready
   useEffect(() => {
     if (!locked && gpji > 0) void handleView();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gpji, locked]);
 
-  // ---------- submit (uses service) ----------
   const handleSubmit = async () => {
     if (locked) return;
     setIsLoading(true);
@@ -116,15 +112,15 @@ export default function ProgressPage() {
       await AddProgress({
         group_project_id: gpji,
         Name: progressTitle.trim(),
-        file: file as any,
+        file: file!,
         comment: comment.trim(),
-      } as any);
+      });
 
       setFile(null);
       setComment("");
       setProgressTitle("");
 
-      await refresh(); 
+      await refresh();
       setStatus("ส่งสำเร็จ !!!");
     } catch (err: any) {
       setIsError(true);
@@ -133,7 +129,6 @@ export default function ProgressPage() {
       setIsLoading(false);
     }
   };
-
 
   const handleEdit = async () => {
     if (locked) return;
@@ -146,7 +141,7 @@ export default function ProgressPage() {
       await UpProgress({
         id: selectedId,
         Name: progressTitle.trim(),
-        file: (file ?? undefined) as any,
+        file: file ?? undefined,
         comment: comment.trim(),
       } as any);
 
@@ -164,7 +159,6 @@ export default function ProgressPage() {
     }
   };
 
-  
   const handleDelete = async () => {
     if (locked) return;
     setIsLoading(true);
@@ -172,6 +166,7 @@ export default function ProgressPage() {
 
     try {
       const id = selectedId;
+
       if (!id) throw new Error("ได้โปรดเลือกความคืบหน้าที่ต้องการลบ");
 
       if (!confirm(`ลบความคืบหน้า #${id}?`)) {
@@ -181,6 +176,12 @@ export default function ProgressPage() {
 
       setStatus(`ลบ #${id}...`);
       await EraseProgress({ id });
+
+      setStatus(`ลบแชทที่เกี่ยวข้อง...`);
+      await DropWholechat({
+        process_id: id,
+        group_project_id: gpji,
+      });
 
       await refresh();
       setStatus(`ลบความคืบหน้า #${id} สำเร็จ`);
@@ -239,7 +240,6 @@ export default function ProgressPage() {
       </div>
 
       <div style={styles.content}>
-        {/* LEFT */}
         <div style={styles.left}>
           <div
             style={{
@@ -399,7 +399,6 @@ export default function ProgressPage() {
           )}
         </div>
 
-        {/* RIGHT */}
         <div style={styles.right}>
           {locked ? (
             <div style={styles.lockRight}>

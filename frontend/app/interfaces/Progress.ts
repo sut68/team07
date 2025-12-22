@@ -2,7 +2,7 @@ export interface FullProgress {
   id: number;
   group_project_id: number;
   file: string;     
-  name: string;    
+  Name: string;    
   comment: string;
   updated_at?: string;
   created_at?: string;
@@ -34,13 +34,7 @@ export interface DeleteProgress {
 }
 
 
-export interface DisplayProgress {
-  id: number;
-  name: string;
-  file: string;
-  comment: string;
-  updated_at?: string;
-}
+
 
 export interface GetGroupProjectByUser {
   student_id: number;

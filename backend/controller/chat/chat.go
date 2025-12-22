@@ -1,6 +1,8 @@
 package chat
 
 import (
+	"bytes"
+	"encoding/json"
 	"net/http"
 	"strconv"
 
@@ -10,219 +12,220 @@ import (
 	"github.com/sut68/team07/backend/entity"
 )
 
+const socketBroadcastBaseURL = "http://socket:3001"
 
-func GetProcessIDbyGroupID(c *gin.Context) {
+type InsertChatBody struct {
+	GroupProjectID uint   `json:"group_project_id"`
+	ProcessID      uint   `json:"process_id"`
+	SenderID       uint   `json:"sender_id"`
+	Message        string `json:"message"`
+}
 
-	db := database.DB()
+func roomKey(gp uint, pid uint) string {
+	return strconv.FormatUint(uint64(gp), 10) + ":" + strconv.FormatUint(uint64(pid), 10)
+}
 
-	var groupstr = c.Query("group_project_id") 
-	group, err := strconv.ParseUint(groupstr, 10, 64)
+func broadcast(path string, payload any) {
+	b, err := json.Marshal(payload)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid (blank) group project ID"})
 		return
 	}
-	
-
-	var processes []entity.Progress 
-	
-
-	result := db.Raw(`
-        SELECT 
-            p.id, p.created_at, p.updated_at, p.deleted_at, 
-            p.group_project_id, p.file, p.comment 
-        FROM progresses p
-        WHERE p.group_project_id = ?
-        ORDER BY p.id
-    `, group).Scan(&processes)
-    
-    if result.Error != nil {
-
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error retrieving processes"})
-        return
-    }
-
-	log.InsertLog(c, 7)
-	c.JSON(http.StatusOK, &processes)
+	// fire-and-forget (don’t block request)
+	go func() {
+		_, _ = http.Post(socketBroadcastBaseURL+path, "application/json", bytes.NewBuffer(b))
+	}()
 }
 
 func GetAllChat(c *gin.Context) {
-
 	db := database.DB()
 
-	var groupstr = c.Query("group_project_id") 
+	groupstr := c.Query("group_project_id")
 	group, err := strconv.ParseUint(groupstr, 10, 64)
-	if err != nil {
+	if err != nil || group == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid (blank) group project ID"})
 		return
 	}
 
-	var prostr = c.Query("process_id")
+	prostr := c.Query("process_id")
 	pro, err := strconv.ParseUint(prostr, 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid (blank) progress_id"})
+	if err != nil || pro == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid (blank) process_id"})
 		return
 	}
 
-	var chat []entity.Chat
-
-	result := db.Where("group_project_id = ? and process_id = ?", group, pro).Find(&chat)
-    
-    if result.Error != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error retrieving chats"})
-        return
-    }
+	var chats []entity.Chat
+	result := db.Where("group_project_id = ? AND process_id = ?", group, pro).Order("id ASC").Find(&chats)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error retrieving chats"})
+		return
+	}
 
 	log.InsertLog(c, 8)
-	c.JSON(http.StatusOK, &chat)
+	c.JSON(http.StatusOK, &chats)
 }
 
 func InsertChat(c *gin.Context) {
-
 	db := database.DB()
 
+	// ✅ Prefer JSON body
+	var body InsertChatBody
+	_ = c.ShouldBindJSON(&body)
 
-	var groupstr = c.Query("group_project_id")
-	group, err := strconv.ParseUint(groupstr, 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid (blank) group project ID"})
+	// ✅ Fallback to query params (your old style)
+	if body.GroupProjectID == 0 {
+		groupstr := c.Query("group_project_id")
+		if v, err := strconv.ParseUint(groupstr, 10, 64); err == nil {
+			body.GroupProjectID = uint(v)
+		}
+	}
+	if body.ProcessID == 0 {
+		prostr := c.Query("process_id")
+		if v, err := strconv.ParseUint(prostr, 10, 64); err == nil {
+			body.ProcessID = uint(v)
+		}
+	}
+	if body.SenderID == 0 {
+		senderstr := c.Query("sender_id")
+		if v, err := strconv.ParseUint(senderstr, 10, 64); err == nil {
+			body.SenderID = uint(v)
+		}
+	}
+
+	// ✅ FIX typo: support both "message" and legacy "messege"
+	if body.Message == "" {
+		body.Message = c.Query("message")
+	}
+	if body.Message == "" {
+		body.Message = c.Query("messege")
+	}
+
+	// ✅ Validate
+	if body.GroupProjectID == 0 || body.ProcessID == 0 || body.SenderID == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing ids"})
+		return
+	}
+	if body.Message == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "blank message"})
 		return
 	}
 
-	var prostr = c.Query("process_id")
-	pro, err := strconv.ParseUint(prostr, 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid (blank) progress_id"})
+	chat := entity.Chat{
+		GroupProjectID: body.GroupProjectID,
+		ProcessID:      body.ProcessID,
+		SenderID:       body.SenderID,
+		Message:        body.Message,
+	}
+
+	result := db.Create(&chat)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save chat"})
 		return
 	}
 
-	var senderstr = c.Query("sender_id")
-	sender, err := strconv.ParseUint(senderstr, 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Blank sender id!"})
-		return
-	}
-
-	var message = c.Query("messege")
-	if message == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "blank messege at least type ' '"})
-		return
-	}
-
-	Chat := entity.Chat{ 
-	
-		GroupProjectID: uint(group),
-		ProcessID: 	    uint(pro),
-		SenderID: 	    uint(sender),
-		Message: 	    message,
-	}
-
-
-	result := db.Create(&Chat)
-    if result.Error != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save chat"})
-        return
-    }
+	// ✅ Broadcast the SAVED message (real DB id!)
+	rk := roomKey(chat.GroupProjectID, chat.ProcessID)
+	broadcast("/broadcast/chat", gin.H{
+		"room_id":          rk,
+		"id":               chat.ID,
+		"group_project_id": chat.GroupProjectID,
+		"process_id":       chat.ProcessID,
+		"sender_id":        chat.SenderID,
+		"message":          chat.Message,
+		"created_at":       chat.CreatedAt,
+		"updated_at":       chat.UpdatedAt,
+	})
 
 	log.InsertLog(c, 9)
-	c.JSON(http.StatusOK, &Chat)
+	c.JSON(http.StatusOK, &chat)
 }
 
 func DeleteChat(c *gin.Context) {
-
 	db := database.DB()
 
-	var groupstr = c.Query("group_project_id")
+	groupstr := c.Query("group_project_id")
 	group, err := strconv.ParseUint(groupstr, 10, 64)
-	if err != nil {
+	if err != nil || group == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid (blank) group project ID"})
 		return
 	}
 
-	var prostr = c.Query("process_id")
+	prostr := c.Query("process_id")
 	pro, err := strconv.ParseUint(prostr, 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid (blank) progress_id"})
+	if err != nil || pro == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid (blank) process_id"})
 		return
 	}
 
-	var chatstr = c.Query("id")
+	chatstr := c.Query("id")
 	chatid, err := strconv.ParseUint(chatstr, 10, 64)
-	if err != nil {
+	if err != nil || chatid == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid (blank) chat id"})
 		return
 	}
 
+	result := db.Where("group_project_id = ? AND process_id = ? AND id = ?", group, pro, chatid).Delete(&entity.Chat{})
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete chat"})
+		return
+	}
 
-	result := db.Where("group_project_id = ? and process_id = ? and id = ?", group, pro, chatid).Delete(&entity.Chat{})
-
-    if result.Error != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete chat"})
-        return
-    }
+	rk := strconv.FormatUint(group, 10) + ":" + strconv.FormatUint(pro, 10)
+	broadcast("/broadcast/delete", gin.H{
+		"room_id": rk,
+		"id":      chatid,
+	})
 
 	log.InsertLog(c, 10)
-	c.JSON(http.StatusOK, gin.H{"message": "suscessfully to delete"}) 
+	c.JSON(http.StatusOK, gin.H{"message": "successfully deleted"})
 }
 
+func DeleteChatbyProgress(c *gin.Context) {
+	db := database.DB()
 
+	groupstr := c.Query("group_project_id")
+	group, err := strconv.ParseUint(groupstr, 10, 64)
+	if err != nil || group == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid (blank) group project ID"})
+		return
+	}
 
+	prostr := c.Query("process_id")
+	pro, err := strconv.ParseUint(prostr, 10, 64)
+	if err != nil || pro == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid (blank) process_id"})
+		return
+	}
 
-type UserGroupAccess struct {
-    GroupProjectID uint `json:"group_project_id"`
-    RoleName string `json:"role_name"`
+	result := db.Where("group_project_id = ? AND process_id = ?", group, pro).Delete(&entity.Chat{})
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete chat"})
+		return
+	}
+
+	log.InsertLog(c, 10)
+	c.JSON(http.StatusOK, gin.H{"message": "successfully deleted"})
 }
 
+func GetGroupbyteacherid (c *gin.Context ){
 
-func GetAccessIDByUserID(c *gin.Context) {
-    db := database.DB()
-    var user entity.User
-    
-   
-    userIDstr := c.Query("user_id")
-    userID, err := strconv.ParseUint(userIDstr, 10, 64)
-    if err != nil || userID == 0 {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid or missing user_id"})
-        return
-    }
-    
+	db := database.DB()
 
-    if err := db.Preload("Role").First(&user, userID).Error; err != nil {
-        c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-        return
-    }
-    
- 
-    var accessID uint
-    var roleName string
-    
-    if user.RoleID == 3 { // Student
-        // Student accesses chat via their GroupMember entry -> GroupProjectID
-        var groupMember entity.GroupMember
-        db.Where("student_id = ?", userID).First(&groupMember)
-        accessID = groupMember.GroupProjectID
-        roleName = "Student"
-        
-    } else if user.RoleID == 2 { // Teacher/Advisor
-        // Teacher/Advisor accesses chat via the GroupProject table
-        var groupProject entity.GroupProject
-        db.Where("teacher_id = ?", userID).First(&groupProject)
-        accessID = groupProject.ID
-        roleName = "Teacher"
-        
-    } else {
-        c.JSON(http.StatusForbidden, gin.H{"error": "Access denied for this role"})
-        return
-    }
-    
-    if accessID == 0 {
-        c.JSON(http.StatusNotFound, gin.H{"error": "User is not assigned to a project group"})
-        return
-    }
-    
-    log.InsertLog(c, 11) 
-    
-    c.JSON(http.StatusOK, UserGroupAccess{
-        GroupProjectID: accessID,
-        RoleName: roleName,
-    })
+	userstr := c.Query("teacher_id")
+	us, err := strconv.ParseUint(userstr, 10, 64)
+	if err != nil || us == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid (blank) teacher ID"})
+		return
+	}
+
+	var group_proj []entity.GroupProject
+
+	result := db.Where("teacher_id = ? ", us).Find(&group_proj)
+
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get id"})
+		return
+	}
+	log.InsertLog(c, 4)
+	c.JSON(http.StatusOK, group_proj)
+	
 }

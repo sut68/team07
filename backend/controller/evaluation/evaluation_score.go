@@ -223,8 +223,6 @@ func GetStudentEvaluationResult(c *gin.Context) {
 	studentID := claims.ID
 
 	db := database.DB()
-
-	// 1. Find Student's Group Project ID
 	var member entity.GroupMember
 	if err := db.Where("student_id = ?", studentID).First(&member).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Student not in a group"})
@@ -232,9 +230,9 @@ func GetStudentEvaluationResult(c *gin.Context) {
 	}
 	projectID := member.GroupProjectID
 
-	// 2. Calculate Group Scores (EvaResult)
 	var groupResults []entity.EvaResult
 	if err := db.Preload("Criteria.Evaluation").
+		Preload("Teacher").
 		Joins("JOIN appointments ON appointments.id = eva_results.appointment_id").
 		Where("appointments.group_project_id = ?", projectID).
 		Find(&groupResults).Error; err != nil {
@@ -243,6 +241,7 @@ func GetStudentEvaluationResult(c *gin.Context) {
 	}
 
 	groupScoresMap := make(map[string]map[uint]float64)
+	var comments []gin.H
 
 	for _, res := range groupResults {
 		evalName := res.Criteria.Evaluation.Name
@@ -252,6 +251,15 @@ func GetStudentEvaluationResult(c *gin.Context) {
 			groupScoresMap[evalName] = make(map[uint]float64)
 		}
 		groupScoresMap[evalName][teacherID] += res.Score
+
+		if res.Comment != "" {
+			comments = append(comments, gin.H{
+				"evaluation_name": evalName,
+				"teacher_name":    fmt.Sprintf("%s %s", res.Teacher.Firstname, res.Teacher.Lastname),
+				"criteria":        res.Criteria.Name,
+				"comment":         res.Comment,
+			})
+		}
 	}
 
 	var totalGroupScore float64 = 0
@@ -276,7 +284,6 @@ func GetStudentEvaluationResult(c *gin.Context) {
 		})
 	}
 
-	// 3. Calculate Individual Scores (IndividualScore) for this student
 	var indResults []entity.IndividualScore
 	if err := db.Preload("Criteria.Evaluation").
 		Where("student_id = ?", studentID).
@@ -321,6 +328,7 @@ func GetStudentEvaluationResult(c *gin.Context) {
 		"status":             "completed",
 		"group_details":      groupDetails,
 		"individual_details": individualDetails,
+		"comments":           comments,
 	})
 }
 

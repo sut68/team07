@@ -15,6 +15,7 @@ func TestProgress(t *testing.T) {
 		progress := &entity.Progress{
 			GroupProjectID: 1,
 			File:           "progress1.pdf",
+			Name:           "hi",
 			Comment:        "Initial progress submission",
 		}
 
@@ -28,6 +29,7 @@ func TestProgress(t *testing.T) {
 		progress := &entity.Progress{
 			GroupProjectID: 0, // ผิดตรงนี้
 			File:           "progress1.pdf",
+			Name:           "hi",
 			Comment:        "Initial progress submission",
 		}
 
@@ -42,6 +44,7 @@ func TestProgress(t *testing.T) {
 		progress := &entity.Progress{
 			GroupProjectID: 1,
 			File:           "", // ผิดตรงนี้
+			Name:           "hi",
 			Comment:        "Initial progress submission",
 		}
 
@@ -56,6 +59,7 @@ func TestProgress(t *testing.T) {
 		progress := &entity.Progress{
 			GroupProjectID: 1,
 			File:           "progress1.pdf",
+			Name:           "hi",
 			Comment:        "", // ผิดตรงนี้
 		}
 

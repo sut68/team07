@@ -10,12 +10,12 @@ import type {
 } from "../interfaces/Progress";
 
 async function GetProgress(payload: PickProgress): Promise<FullProgress[]> {
-  const res = await api.get<FullProgress[]>("/student/getProcess", { params: payload });
+  const res = await api.get<FullProgress[]>("/getProcess", { params: payload });
   return res.data;
 }
 
 async function GetGroupProjectIDByUser(payload: GetGroupProjectByUser): Promise<GroupProjectIdResponse> {
-  const res = await api.get<GroupProjectIdResponse>("/student/getProjectbyuser", { params: payload });
+  const res = await api.get<GroupProjectIdResponse>("/getProjectbyuser", { params: payload });
   return res.data;
 }
 
@@ -26,7 +26,7 @@ async function AddProgress(payload: AssignProgress) {
   fd.append("comment", payload.comment);
   fd.append("file", payload.file as any);  
 
-  await api.post("/student/assignProgress", fd, {
+  await api.post("/assignProgress", fd, {
     headers: { "Content-Type": "multipart/form-data" },
   });
 }
@@ -40,13 +40,13 @@ async function UpProgress(payload: UpdateProgress) {
   if (payload.comment?.trim()) fd.append("comment", payload.comment.trim());
   if (payload.file) fd.append("file", payload.file as any);
 
-  await api.post("/student/modifyProgress", fd, {
+  await api.post("/modifyProgress", fd, {
     headers: { "Content-Type": "multipart/form-data" },
   });
 }
 
 async function EraseProgress(payload: DeleteProgress) {
-  await api.delete("/student/deleteProgress", { params: payload });
+  await api.delete("/deleteProgress", { params: payload });
 }
 
 
