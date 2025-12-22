@@ -1,12 +1,9 @@
 version: '3.8'
 
 services:
-  # -------------------------------------------------------------------
-  # 1. PostgreSQL Database Service
-  # -------------------------------------------------------------------
   db:
-    image: postgres:15-alpine 
-    container_name: capstone_postgres
+    image: postgres:15-alpine
+    container_name: se68_postgres
     restart: always
     environment:
       POSTGRES_USER: ${DB_USER}
@@ -14,71 +11,48 @@ services:
       POSTGRES_DB: ${DB_NAME}
     volumes:
       - pgdata:/var/lib/postgresql/data
-    ports:
-      - "5433:5432"
     networks:
       - app-network
 
-  # -------------------------------------------------------------------
-  # 2. Socket.IO Server (NEW – REQUIRED)
-  # -------------------------------------------------------------------
   socket:
-    build:
-      context: ./frontend/socket-server
-      dockerfile: Dockerfile
-    container_name: capstone_socket
+    build: ./frontend/socket-server
+    container_name: se68_socket
     restart: always
     ports:
       - "3001:3001"
     networks:
       - app-network
 
-  # -------------------------------------------------------------------
-  # 3. Go Backend API Service (Production Build)
-  # -------------------------------------------------------------------
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: capstone_backend
+    build: ./backend
+    container_name: se68_backend
     restart: always
     depends_on:
       - db
-      - socket
+    volumes:
+      - ./backend/uploads:/app/uploads
     environment:
       DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}?sslmode=disable
-
-      SECRET_KEY: ${SECRET_KEY}
-      REFRESH_SECRET_KEY: ${REFRESH_SECRET_KEY}
-      FRONTEND_URL: ${FRONTEND_URL}
+      FRONTEND_URL: http://${DOMAIN_NAME}
       SMTP_SENDER_EMAIL: ${SMTP_SENDER_EMAIL}
       SMTP_SENDER_NAME: ${SMTP_SENDER_NAME}
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
       SMTP_PASSWORD: ${SMTP_PASSWORD}
-      SMTP_USERNAME: ${SMTP_USERNAME} 
-
-      GIN_MODE: release
-      PORT: 8080
+      SMTP_USERNAME: ${SMTP_USERNAME}
     ports:
       - "8080:8080"
     networks:
       - app-network
 
-  # -------------------------------------------------------------------
-  # 4. Next.js Frontend Service (Production Build)
-  # -------------------------------------------------------------------
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: http://localhost:8080
-    container_name: capstone_frontend
+        NEXT_PUBLIC_API_URL: http://${DOMAIN_NAME}:8080
+        NEXT_PUBLIC_SOCKET_URL: http://${DOMAIN_NAME}:3001
+    container_name: se68_frontend
     restart: always
-    environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8080
-      NEXT_PUBLIC_SOCKET_URL: http://localhost:3001
     ports:
       - "80:5173"
     depends_on:
@@ -86,16 +60,10 @@ services:
       - socket
     networks:
       - app-network
-      
-# -------------------------------------------------------------------
-# Volumes
-# -------------------------------------------------------------------
+
 volumes:
   pgdata:
 
-# -------------------------------------------------------------------
-# Network
-# -------------------------------------------------------------------
 networks:
   app-network:
     driver: bridge

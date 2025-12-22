@@ -4,32 +4,22 @@ WORKDIR /app
 
 RUN apk add --no-cache git
 
-COPY go.mod .
-COPY go.sum .
-
+COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
 
-# -ldflags "-s -w" ช่วยลดขนาดไฟล์ Binary
-RUN CGO_ENABLED=0 go build -o /goapp -ldflags "-s -w" ./main.go
+# Build Binary (CGO_ENABLED=0 คือ Build แบบ Static ไม่ต้องพึ่ง Library เครื่อง)
+RUN CGO_ENABLED=0 GOOS=linux go build -o /goapp -ldflags "-s -w" ./main.go
 
 FROM alpine:latest
-
-ENV GIN_MODE=release
 
 WORKDIR /app
 
 COPY --from=builder /goapp /app/goapp
 
-RUN chmod +x /app/goapp
+RUN mkdir -p /app/uploads
 
 EXPOSE 8080
 
 CMD ["/app/goapp"]
-
-# docker compose up -d --build
-# docker exec -it capstone_backend ./goapp --seed   (ครั้งแรกเท่านั้น)
-# docker compose down หยุดข้อมูลยังอยู๋
-#docker compose down -v ถ้าจะหยุด + ลบข้อมูล DB
-# docker compose up -d กลับมารันใหม่
