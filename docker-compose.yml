@@ -1,6 +1,39 @@
 version: '3.8'
 
 services:
+  nginx-proxy:
+    image: nginxproxy/nginx-proxy:alpine
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - certs:/etc/nginx/certs
+      - vhost:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    networks:
+      - app-network
+    restart: always
+
+  nginx-proxy-letsencrypt:
+    image: nginxproxy/acme-companion
+    container_name: nginx-proxy-letsencrypt
+    depends_on:
+      - nginx-proxy
+    volumes:
+      - certs:/etc/nginx/certs:rw
+      - vhost:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - acme:/etc/acme.sh
+    environment:
+      DEFAULT_EMAIL: b6640583@g.sut.ac.th # <-- เปลี่ยนเป็นอีเมลคุณ
+    networks:
+      - app-network
+    restart: always
+
+  # --- Database (เหมือนเดิม) ---
   db:
     image: postgres:15-alpine
     container_name: se68_postgres
@@ -14,12 +47,18 @@ services:
     networks:
       - app-network
 
+  # --- Socket (เปลี่ยนวิธีเข้า) ---
   socket:
     build: ./frontend/socket-server
     container_name: se68_socket
     restart: always
-    ports:
-      - "3001:3001"
+    expose:
+      - "3001"
+    environment:
+      # บอก Nginx ว่า ถ้าใครเข้า socket.capstonehub.me ให้มาที่นี่
+      VIRTUAL_HOST: socket.capstonehub.me
+      VIRTUAL_PORT: 3001
+      LETSENCRYPT_HOST: socket.capstonehub.me
     networks:
       - app-network
 
@@ -33,15 +72,18 @@ services:
       - ./backend/uploads:/app/uploads
     environment:
       DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}?sslmode=disable
-      FRONTEND_URL: http://${DOMAIN_NAME}
+      FRONTEND_URL: https://capstonehub.me
       SMTP_SENDER_EMAIL: ${SMTP_SENDER_EMAIL}
       SMTP_SENDER_NAME: ${SMTP_SENDER_NAME}
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
       SMTP_PASSWORD: ${SMTP_PASSWORD}
       SMTP_USERNAME: ${SMTP_USERNAME}
-    ports:
-      - "8080:8080"
+      VIRTUAL_HOST: api.capstonehub.me
+      VIRTUAL_PORT: 8080
+      LETSENCRYPT_HOST: api.capstonehub.me
+    expose:
+      - "8080"
     networks:
       - app-network
 
@@ -49,20 +91,28 @@ services:
     build:
       context: ./frontend
       args:
-        NEXT_PUBLIC_API_URL: http://${DOMAIN_NAME}:8080
-        NEXT_PUBLIC_SOCKET_URL: http://${DOMAIN_NAME}:3001
+        NEXT_PUBLIC_API_URL: https://api.capstonehub.me
+        NEXT_PUBLIC_SOCKET_URL: https://socket.capstonehub.me
     container_name: se68_frontend
     restart: always
-    ports:
-      - "80:5173"
+    expose:
+      - "5173"
     depends_on:
       - backend
       - socket
+    environment:
+      VIRTUAL_HOST: capstonehub.me,www.capstonehub.me
+      VIRTUAL_PORT: 5173
+      LETSENCRYPT_HOST: capstonehub.me,www.capstonehub.me
     networks:
       - app-network
 
 volumes:
   pgdata:
+  certs:
+  vhost:
+  html:
+  acme:
 
 networks:
   app-network:
