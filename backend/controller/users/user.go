@@ -2,16 +2,15 @@ package users
 
 import (
 	"encoding/csv"
-	"fmt" // ✅ ต้องมี fmt
-	"net/http"
-	"regexp" // ✅ ต้องมี regexp
-	"strconv"
-
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/sut68/team07/backend/database"
 	"github.com/sut68/team07/backend/entity"
 	"github.com/sut68/team07/backend/middleware"
 	"golang.org/x/crypto/bcrypt"
+	"net/http"
+	"regexp"
+	"strconv"
 )
 
 // HashPassword ทำการเข้ารหัสรหัสผ่าน
@@ -22,7 +21,6 @@ func HashPassword(password string) (string, error) {
 
 // POST: /users/import-csv
 func ImportUsersCSV(c *gin.Context) {
-	// ✅ LOG จุดที่ 1: เช็คว่า Request เข้ามาถึงฟังก์ชันนี้ไหม
 	fmt.Println("🚀 [DEBUG] Start ImportUsersCSV Function...")
 
 	db := database.DB()
@@ -50,10 +48,9 @@ func ImportUsersCSV(c *gin.Context) {
 		return
 	}
 
-	// ✅ LOG จุดที่ 2: เช็คจำนวนแถวที่อ่านได้
-	fmt.Printf("🚀 [DEBUG] อ่าน CSV ได้ทั้งหมด %d แถว (กำลังเริ่มตรวจสอบ Regex...)\n", len(records))
+	fmt.Printf("🚀 [DEBUG] อ่าน CSV ได้ %d แถว (เริ่มตรวจสอบ Validation...)\n", len(records))
 
-	var usernameRegex = regexp.MustCompile(`^B(65|66)\d{5}$`)
+	// Phone Regex
 	var phoneRegex = regexp.MustCompile(`^\d{10}$`)
 
 	var users []entity.User
@@ -70,20 +67,10 @@ func ImportUsersCSV(c *gin.Context) {
 		}
 
 		username := row[0]
-		// ✅ Validation 1: ตรวจ Username
-		if !usernameRegex.MatchString(username) {
-			fmt.Printf("❌ [DEBUG] Row %d Username ผิด: %s\n", i+1, username)
-			tx.Rollback()
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": fmt.Sprintf("Row %d: Username '%s' ไม่ถูกต้อง (ต้องขึ้นต้นด้วย B65 หรือ B66 ตามด้วยเลข 5 หลัก)", i+1, username),
-			})
-			return
-		}
-
 		phone := row[5]
-		// ✅ Validation 2: ตรวจ Phone
+		// Validation: ตรวจ Phone
 		if !phoneRegex.MatchString(phone) {
-			fmt.Printf("❌ [DEBUG] Row %d Phone ผิด: %s\n", i+1, phone)
+			fmt.Printf("❌ [DEBUG] Row %d Phone ผิด format: %s\n", i+1, phone)
 			tx.Rollback()
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": fmt.Sprintf("Row %d: Phone '%s' ไม่ถูกต้อง (ต้องเป็นตัวเลข 10 หลัก)", i+1, phone),
@@ -96,7 +83,7 @@ func ImportUsersCSV(c *gin.Context) {
 		roleID, _ := strconv.Atoi(row[8])
 		statusID, _ := strconv.Atoi(row[9])
 
-		// ✅ Validation 3: ห้าม Import Admin
+		// Validation: ห้าม Import Admin
 		if roleID == 1 {
 			tx.Rollback()
 			c.JSON(http.StatusForbidden, gin.H{
@@ -129,7 +116,7 @@ func ImportUsersCSV(c *gin.Context) {
 	}
 
 	tx.Commit()
-	fmt.Println("✅ [DEBUG] Import สำเร็จลง Database เรียบร้อย!")
+	fmt.Println("✅ [DEBUG] Import สำเร็จ!")
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Imported " + strconv.Itoa(len(users)) + " users successfully",
@@ -170,7 +157,7 @@ type CreateUserInput struct {
 	StatusID  uint   `json:"status_id"`
 }
 
-// POST: /admin/user (Create User ทีละคน - เพิ่ม Validation แล้ว)
+// POST: /admin/user (Create User ทีละคน)
 func CreateUser(c *gin.Context) {
 	db := database.DB()
 	var input CreateUserInput
@@ -185,14 +172,8 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	// ✅ เพิ่ม Validation Regex ตรงนี้ด้วย
-	var usernameRegex = regexp.MustCompile(`^B(65|66)\d{5}$`)
+	// Phone Regex
 	var phoneRegex = regexp.MustCompile(`^\d{10}$`)
-
-	if !usernameRegex.MatchString(input.Username) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Username ไม่ถูกต้อง (ต้องขึ้นต้นด้วย B65 หรือ B66 ตามด้วยเลข 5 หลัก)"})
-		return
-	}
 
 	if !phoneRegex.MatchString(input.Phone) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "เบอร์โทรศัพท์ไม่ถูกต้อง (ต้องเป็นตัวเลข 10 หลัก)"})
@@ -265,7 +246,7 @@ func UpdateUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "User updated successfully", "data": user})
 }
 
-// UpdateUserProfile (สำหรับ User แก้ไขตัวเอง - แค่ Email/Phone)
+// UpdateUserProfile (User แก้ไขตัวเอง)
 type UpdateUserProfileInput struct {
 	Email string `json:"email"`
 	Phone string `json:"phone"`
