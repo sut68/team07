@@ -16,11 +16,7 @@ async function ImportUsersCSV(file: File) {
     const formData = new FormData();
     formData.append("file", file); // ชื่อ "file" ต้องตรงกับ backend c.FormFile("file")
 
-    return await api.post("/admin/importUsersCSV", formData, {
-        headers: {
-            "Content-Type": "multipart/form-data",
-        },
-    });
+    return await api.post("/admin/importUsersCSV", formData);
 }
 
 // GET: ดึงข้อมูล User ทั้งหมด (Admin)

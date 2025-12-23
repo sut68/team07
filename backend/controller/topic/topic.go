@@ -1,7 +1,6 @@
 package topic
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -90,11 +89,7 @@ func CreateTopic(c *gin.Context) {
 		}
 
 		if len(fileList) > 0 {
-			// Marshal to JSON
-			jsonBytes, err := json.Marshal(fileList)
-			if err == nil {
-				topic.FileAttachment = string(jsonBytes)
-			}
+			topic.FileAttachment = fileList[0] // เก็บแค่ชื่อไฟล์แรก "170000_file.pdf"
 		}
 	}
 
@@ -224,8 +219,7 @@ func UpdateTopic(c *gin.Context) {
 	}
 	
 	if len(finalFileList) > 0 {
-		jsonBytes, _ := json.Marshal(finalFileList)
-		payload.FileAttachment = string(jsonBytes)
+		payload.FileAttachment = finalFileList[0]
 	} else if c.Request.MultipartForm != nil {
 		payload.FileAttachment = topic.FileAttachment
 	} else {
@@ -388,37 +382,39 @@ func CancelSelection(c *gin.Context) {
 
 	db := database.DB()
 
-	// 1. หา selection ที่ยัง active
+	// 1. หา selection ที่ยัง active (สำหรับหัวข้อที่อาจารย์เสนอ)
 	var selection entity.TopicSelection
-	if err := db.
-		Where("group_project_id = ? AND status = ?", payload.GroupProjectID, "Active").
-		First(&selection).Error; err != nil {
+	err := db.Where("group_project_id = ? AND status = ?", payload.GroupProjectID, "Active").First(&selection).Error
 
-		c.JSON(http.StatusNotFound, gin.H{"error": "No active selection found"})
-		return
-	}
-
-	// 2. ปิด selection เสมอ
-	selection.Status = "Cancelled"
-	if err := db.Save(&selection).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	// 3. หา topic ที่ถูกเลือก
-	var topic entity.Topic
-	if err := db.First(&topic, selection.TopicID).Error; err == nil {
-
-		// 4. ถ้าเป็น Student Topic → ปิดหัวข้อถาวร
-		if topic.ProposerRole == "Student" {
-			topic.Status = "Closed"
-			db.Save(&topic)
+	if err == nil {
+		// Case A: Found Active Selection -> Cancel it
+		selection.Status = "Cancelled"
+		if err := db.Save(&selection).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
 		}
+		c.JSON(http.StatusOK, gin.H{"message": "Selection cancelled successfully"})
+		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Selection cancelled successfully",
-	})
+	// 2. หา Student Proposal ที่ยังไม่ Closed (สำหรับหัวข้อที่นักศึกษาเสนอเอง)
+	// ใช้ Update เพื่อปิดทุกรายการที่ค้างอยู่ (กันกรณีมีหลายรายการที่ Rejected/Pending ค้างไว้)
+	result := db.Model(&entity.Topic{}).
+		Where("group_project_id = ? AND proposer_role = ? AND status != ?", payload.GroupProjectID, "Student", "Closed").
+		Update("status", "Closed")
+
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		return
+	}
+
+	if result.RowsAffected > 0 {
+		c.JSON(http.StatusOK, gin.H{"message": "Student proposal(s) cancelled successfully"})
+		return
+	}
+
+	// Case C: Nothing found
+	c.JSON(http.StatusNotFound, gin.H{"error": "No active selection or proposal found to cancel"})
 }
 
 

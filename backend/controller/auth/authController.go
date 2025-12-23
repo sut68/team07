@@ -3,7 +3,7 @@ package auth
 import (
 	logSys "log"
 	"net/http"
-
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/sut68/team07/backend/config"
 	"github.com/sut68/team07/backend/controller/log"
@@ -220,33 +220,32 @@ func (h *LoginHandler) Refresh(c *gin.Context) {
 	})
 }
 func setSingleCSRFToken(c *gin.Context, csrfToken string) {
-	//cookieDomain := config.CookieDomain()
-	//isProd := config.IsProduction()
+	cookieDomain := config.CookieDomain() 
 
 	http.SetCookie(c.Writer, &http.Cookie{
 		Name:     "csrf_token",
 		Value:    csrfToken,
 		Path:     "/",
-		Domain:   "",
+		Domain:   cookieDomain,
 		MaxAge:   int(config.RefreshTokenTTL().Seconds()),
-		Secure:   false,
+		Secure:   true,
 		HttpOnly: false,
 		SameSite: http.SameSiteLaxMode,
 	})
 }
 
 func setAuthCookies(c *gin.Context, accessToken, refreshToken, csrfToken string) {
-	//cookieDomain := config.CookieDomain()
-	//isProd := config.IsProduction()
+	fmt.Println("!!! DEBUG: HELLO FROM NEW CODE !!! Domain is:", config.CookieDomain())
+	cookieDomain := config.CookieDomain()
 
 	// Access Token (HTTP-Only)
 	http.SetCookie(c.Writer, &http.Cookie{
 		Name:     "access_token",
 		Value:    accessToken,
 		Path:     "/",
-		Domain:   "", // make ngrok possible
+		Domain:   cookieDomain,
 		MaxAge:   int(config.AccessTokenTTL().Seconds()),
-		Secure:   false,
+		Secure:   true,
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
 	})
@@ -256,14 +255,13 @@ func setAuthCookies(c *gin.Context, accessToken, refreshToken, csrfToken string)
 		Name:     "refresh_token",
 		Value:    refreshToken,
 		Path:     "/",
-		Domain:   "",
+		Domain:   cookieDomain,
 		MaxAge:   int(config.RefreshTokenTTL().Seconds()),
-		Secure:   false,
+		Secure:   true,
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
 	})
 
-	// CSRF Token (Non-HTTP-Only)
 	setSingleCSRFToken(c, csrfToken)
 }
 

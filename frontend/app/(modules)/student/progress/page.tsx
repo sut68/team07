@@ -433,7 +433,16 @@ export default function ProgressPage() {
                         </div>
 
                         {filePath ? (
-                          <div style={{ fontSize: 12, opacity: 0.75 }}>File: {filePath}</div>
+                          <div style={{ fontSize: 12, opacity: 0.75 }}>
+                            File:{" "}
+                            <a
+                              href={`${process.env.NEXT_PUBLIC_API_URL}${filePath}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              {filePath}
+                            </a>
+                          </div>
                         ) : null}
 
                         <div style={styles.itemComment}>{cmt}</div>
