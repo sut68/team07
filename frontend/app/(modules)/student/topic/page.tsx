@@ -113,9 +113,10 @@ export default function StudentTopicPage() {
                     } else {
                         message.error('ไม่พบข้อมูลกลุ่มโครงงาน');
                     }
-                } catch (error) {
+                } catch (error: any) {
                     console.error(error);
-                    message.error('เกิดข้อผิดพลาดในการเลือกหัวข้อ');
+                    const errMsg = error?.response?.data?.error || 'เกิดข้อผิดพลาดในการเลือกหัวข้อ';
+                    message.error(errMsg);
                 } finally {
                     setLoading(false);
                 }

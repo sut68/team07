@@ -35,6 +35,7 @@ var MockIssueStatus = []entity.IssueStatus{
 var MockIssueType = []entity.IssueType{
 	{Type: "Bug"},
 	{Type: "Feature Request"},
+	{Type: "Other"},
 }
 
 var MockActionType = []entity.ActionType{
@@ -167,12 +168,12 @@ var MockTopics = []entity.Topic{
 }
 
 var MockTopicSelections = []entity.TopicSelection{
-	{DateSelected: time.Now().AddDate(0, -4, 0), TopicID: 1, GroupProjectID: 1},
-	{DateSelected: time.Now().AddDate(0, -4, 0), TopicID: 2, GroupProjectID: 2},
-	{DateSelected: time.Now().AddDate(0, -4, 0), TopicID: 3, GroupProjectID: 3},
-	{DateSelected: time.Now().AddDate(0, -3, 0), TopicID: 4, GroupProjectID: 4},
-	{DateSelected: time.Now().AddDate(0, -3, 0), TopicID: 5, GroupProjectID: 5},
-	{DateSelected: time.Now().AddDate(0, -2, 0), TopicID: 6, GroupProjectID: 6},
+	{DateSelected: time.Now().AddDate(0, -4, 0), TopicID: 1, GroupProjectID: 1, Status: "Active"},
+	{DateSelected: time.Now().AddDate(0, -4, 0), TopicID: 2, GroupProjectID: 2, Status: "Active"},
+	{DateSelected: time.Now().AddDate(0, -4, 0), TopicID: 3, GroupProjectID: 3, Status: "Active"},
+	{DateSelected: time.Now().AddDate(0, -3, 0), TopicID: 4, GroupProjectID: 4, Status: "Active"},
+	{DateSelected: time.Now().AddDate(0, -3, 0), TopicID: 5, GroupProjectID: 5, Status: "Active"},
+	{DateSelected: time.Now().AddDate(0, -2, 0), TopicID: 6, GroupProjectID: 6, Status: "Active"},
 }
 
 var MockProjects = []entity.Project{
