@@ -28,13 +28,12 @@ services:
       - ./nginx_config/custom.conf:/etc/nginx/conf.d/custom.conf:ro
       - acme:/etc/acme.sh
     environment:
-      DEFAULT_EMAIL: b6640583@g.sut.ac.th # <-- เปลี่ยนเป็นอีเมลคุณ
+      DEFAULT_EMAIL: b6640583@g.sut.ac.th
       NGINX_PROXY_CONTAINER: nginx-proxy
     networks:
       - app-network
     restart: always
 
-  # --- Database (เหมือนเดิม) ---
   db:
     image: postgres:15-alpine
     container_name: se68_postgres
