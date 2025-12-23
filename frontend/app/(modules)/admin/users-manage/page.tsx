@@ -133,11 +133,11 @@ export default function UsersManagePage() {
             [name]: name.includes("id") ? Number(value) : value
         });
     };
+
     const handleCreateSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newUser.username || !newUser.password || !newUser.firstname) return alert("กรุณากรอกข้อมูลสำคัญให้ครบ");
-        const usernameRegex = /^B(65|66)\d{5}$/;
-        if (!usernameRegex.test(newUser.username)) return alert("❌ รูปแบบ Username ไม่ถูกต้อง (เช่น B66xxxxx)");
+        
         const phoneRegex = /^\d{10}$/;
         if (newUser.phone && !phoneRegex.test(newUser.phone)) return alert("❌ เบอร์โทรต้องมี 10 หลัก");
 
