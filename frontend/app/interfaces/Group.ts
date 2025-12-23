@@ -1,17 +1,15 @@
-// interfaces/IGroup.ts
-
 export interface User {
   ID: number;
   firstname?: string;
   lastname?: string;
   username?: string;
-  // เพิ่ม field อื่นๆ ของ User ตามต้องการ
+
 }
 
 export interface GroupMember {
   ID: number;
   student_id: number;
-  student?: User; // Preloaded มาจาก Backend
+  student?: User; 
   leader: boolean;
   group_project_id: number;
 }
@@ -21,7 +19,7 @@ export interface GroupProject {
   group_number: number;
   year: number;
   group_status: string;
-  membership: number; // จำนวนที่รับ (3 หรือ 5)
+  membership: number; 
   teacher_id?: number;
   teacher?: User;
   group_members: GroupMember[]; // รายชื่อสมาชิกในกลุ่ม
@@ -35,20 +33,20 @@ export interface StudentSearchResult {
   ID: number;
   firstname: string;
   lastname: string;
-  username: string; // รหัสนักศึกษา
+  username: string; 
 }
 
 // Payload: เพิ่มสมาชิก (Admin)
 export interface AddMemberRequest {
   group_project_id: number;
-  student_id: number; // หรือจะใช้ username ก็ได้ ขึ้นอยู่กับ Backend
-  bypass_quota?: boolean; // true = ยัดเข้ากลุ่มแม้จะเต็มแล้ว
+  student_id: number; 
+  bypass_quota?: boolean; 
 }
 
 // Payload: เปลี่ยนหัวหน้า
 export interface ChangeLeaderRequest {
   group_project_id: number;
-  new_leader_id: number; // ID ของสมาชิกคนที่จะให้เป็นหัวหน้า
+  new_leader_id: number; 
 }
 
 // Payload: ลบสมาชิก

@@ -19,13 +19,11 @@ const GroupCard: React.FC<GroupCardProps> = ({
 }) => {
   const rawMembers = group.group_members || [];
   
-  // --- [แก้ไข] เรียงลำดับสมาชิก: ให้ Leader (true) มาก่อน ---
+
   const members = [...rawMembers].sort((a, b) => {
-    // ถ้า a เป็นหัวหน้า ให้ a มาก่อน (return -1)
     if (a.leader && !b.leader) return -1;
-    // ถ้า b เป็นหัวหน้า ให้ b มาก่อน (return 1)
     if (!a.leader && b.leader) return 1;
-    return 0; // ถ้าสถานะเหมือนกัน ไม่ต้องสลับ
+    return 0; 
   });
 
   const totalSlots = group.membership; 
@@ -42,6 +40,9 @@ const GroupCard: React.FC<GroupCardProps> = ({
         <div className="header-content">
           <div className="group-title">
             กลุ่มที่ {group.group_number}
+          </div>
+          <div className="group-year">
+            ปีการศึกษา {group.year}
           </div>
           <div className="member-count">
             สมาชิก {filledCount} / {totalSlots}
