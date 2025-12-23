@@ -10,7 +10,7 @@ import (
 	"github.com/sut68/team07/backend/controller/evaluation"
 	"github.com/sut68/team07/backend/controller/group"
 	"github.com/sut68/team07/backend/controller/advisor"
-	"github.com/sut68/team07/backend/controller/importuser"
+	//"github.com/sut68/team07/backend/controller/importuser"
 	"github.com/sut68/team07/backend/controller/issues"
 	"github.com/sut68/team07/backend/controller/progress"
 	"github.com/sut68/team07/backend/controller/topic"
@@ -83,10 +83,11 @@ func main() {
 			adminGroup.GET("/statuses", users.GetUserStatuses)
 			adminGroup.GET("/getIssueStatus", issues.GetIssueStatus)
 
-			adminGroup.POST("/importUsersCSV", importuser.ImportUsersHandler)
+			adminGroup.POST("/importUsersCSV", users.ImportUsersCSV)
 			adminGroup.PATCH("/issues/:id", issues.UpdateIssueStatus)
 			adminGroup.GET("/users", users.ListUsers)
 			adminGroup.POST("/user", users.CreateUser)
+			adminGroup.PATCH("/user/:id", users.UpdateUser)
             adminGroup.DELETE("/user/:id", users.DeleteUser)
 
 			// Group

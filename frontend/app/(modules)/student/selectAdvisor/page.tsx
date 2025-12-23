@@ -31,7 +31,6 @@ const AdvisorSelectionPage = () => {
     const initData = async () => {
         setLoading(true);
         try {
-            // --- 1. ถาม Server ว่าฉันคือใคร (Authentication) ---
             let uid = 0;
             try {
                 const resMe = await api.get("/me");
@@ -52,7 +51,6 @@ const AdvisorSelectionPage = () => {
                 setLoading(false);
                 return; 
             }
-            // --- 2. ดึงรายชื่ออาจารย์ทั้งหมด ---
             try {
                 const resTeachers = await GetAllTeachers();
                 const teacherList = (resTeachers.data as any).data || resTeachers.data;
@@ -63,7 +61,6 @@ const AdvisorSelectionPage = () => {
                 console.error("Failed to fetch teachers:", err);
             }
 
-            // --- 3. ดึงข้อมูลกลุ่ม ---
             let groupID = 0;
             try {
                 const resGroup = await GetMyGroup();

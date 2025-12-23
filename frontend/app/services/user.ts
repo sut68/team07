@@ -36,6 +36,11 @@ async function CreateUser(data: CreateUserInterface) {
     return await api.post("/admin/user", data);
 }
 
+// ✅ เพิ่ม: ฟังก์ชันแก้ไขข้อมูล User (Admin)
+async function UpdateUser(id: number, data: { firstname: string; lastname: string }) {
+    return await api.patch(`/admin/user/${id}`, data);
+}
+
 // ✅ ใหม่: DELETE ลบ User ตาม ID
 async function DeleteUser(id: number) {
     return await api.delete(`/admin/user/${id}`);
@@ -67,5 +72,6 @@ export {
     UpdateUserProfile,
     ImportUsersCSV,
     CreateUser,
-    DeleteUser
+    DeleteUser,
+    UpdateUser
 };
