@@ -40,11 +40,16 @@ export default function ChatPage() {
     if (!mounted) return;
     if (socketRef.current) return;
 
+    // ⚠️ IMPORTANT: In production, ensure NEXT_PUBLIC_SOCKET_URL is set to your https://api... domain
+    // If not set, it defaults to localhost which will fail on a real server.
     const url = process.env.NEXT_PUBLIC_SOCKET_URL ?? "http://localhost:3001";
 
     const s = io(url, {
       transports: ["websocket"],
       autoConnect: true,
+      // 👇 FIXED: Added this to match your Axios config. 
+      // This sends cookies/session data to the backend during the handshake.
+      withCredentials: true, 
     });
 
     socketRef.current = s;
@@ -54,7 +59,7 @@ export default function ChatPage() {
     });
 
     s.on("connect_error", (e) => {
-      console.error("❌ socket connect_error:", e);
+      console.error("❌ socket connect_error:", e.message);
     });
 
     return () => {
@@ -229,9 +234,7 @@ export default function ChatPage() {
     setMessage("");
 
     try {
-
       const savedMessage = (await InsertChat(payload)) as any;
-
 
       const dbId = Number(savedMessage?.id || savedMessage?.ID || 0);
       const uniqueId = dbId > 0 ? dbId : Date.now() + Math.random();
@@ -242,7 +245,6 @@ export default function ChatPage() {
         id: uniqueId, // <--- CRITICAL FIX
         room_id: roomIdStr,
       };
-
 
       socket.emit("send_message", socketPayload);
 
@@ -270,7 +272,6 @@ export default function ChatPage() {
 
       await DropChat(payload);
       setChats((prev) => prev.filter((c) => Number(c.id) !== id));
-
 
       const roomIdStr = `${groupProjectId}:${activeRoomId}`;
       const socket = socketRef.current;
