@@ -234,20 +234,7 @@ export default function ChatPage() {
     setMessage("");
 
     try {
-      const savedMessage = (await InsertChat(payload)) as any;
-
-      const dbId = Number(savedMessage?.id || savedMessage?.ID || 0);
-      const uniqueId = dbId > 0 ? dbId : Date.now() + Math.random();
-
-      const socketPayload = {
-        ...payload,
-        ...(typeof savedMessage === 'object' ? savedMessage : {}),
-        id: uniqueId, // <--- CRITICAL FIX
-        room_id: roomIdStr,
-      };
-
-      socket.emit("send_message", socketPayload);
-
+      await InsertChat(payload);
     } catch (err) {
       console.error("InsertChat failed:", err);
       alert("ส่งข้อความไม่สำเร็จ");
