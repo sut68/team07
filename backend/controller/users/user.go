@@ -3,14 +3,15 @@ package users
 import (
 	"encoding/csv"
 	"fmt"
+	"net/http"
+	"regexp"
+	"strconv"
 	"github.com/gin-gonic/gin"
+	"github.com/sut68/team07/backend/controller/log"
 	"github.com/sut68/team07/backend/database"
 	"github.com/sut68/team07/backend/entity"
 	"github.com/sut68/team07/backend/middleware"
 	"github.com/sut68/team07/backend/service"
-	"net/http"
-	"regexp"
-	"strconv"
 )
 
 // POST: /users/import-csv
@@ -150,7 +151,8 @@ func ImportUsersCSV(c *gin.Context) {
 	}
 
 	tx.Commit()
-
+	fmt.Println("[DEBUG] Import สำเร็จ!")
+	log.InsertLog(c,28)
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Imported " + strconv.Itoa(len(users)) + " users successfully",
 	})
@@ -274,7 +276,7 @@ func CreateUser(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
+	log.InsertLog(c,28)
 	c.JSON(http.StatusCreated, gin.H{"message": "User created successfully", "data": user})
 }
 

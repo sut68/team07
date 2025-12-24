@@ -24,11 +24,12 @@ async function AddProgress(payload: AssignProgress) {
   fd.append("group_project_id", String(payload.group_project_id));
   fd.append("Name", payload.Name);       
   fd.append("comment", payload.comment);
-  fd.append("file", payload.file as any);  
+  
+  if (payload.file) {
+      fd.append("file", payload.file);  
+  }
 
-  await api.post("/assignProgress", fd, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  await api.post("/assignProgress", fd);
 }
 
 
@@ -38,11 +39,12 @@ async function UpProgress(payload: UpdateProgress) {
 
   if (payload.Name?.trim()) fd.append("Name", payload.Name.trim());
   if (payload.comment?.trim()) fd.append("comment", payload.comment.trim());
-  if (payload.file) fd.append("file", payload.file as any);
+  
+  if (payload.file) {
+      fd.append("file", payload.file);
+  }
 
-  await api.post("/modifyProgress", fd, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  await api.post("/modifyProgress", fd);
 }
 
 async function EraseProgress(payload: DeleteProgress) {

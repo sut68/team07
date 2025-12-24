@@ -1,8 +1,6 @@
 package mockdata
 
 import (
-	"time"
-
 	"github.com/sut68/team07/backend/entity"
 )
 
@@ -35,6 +33,7 @@ var MockIssueStatus = []entity.IssueStatus{
 var MockIssueType = []entity.IssueType{
 	{Type: "Bug"},
 	{Type: "Feature Request"},
+	{Type: "Other"},
 }
 
 var MockActionType = []entity.ActionType{
@@ -66,6 +65,7 @@ var MockActionType = []entity.ActionType{
 	{ActionType: "UpdateCriteriaLevel"},
 	{ActionType: "UpdateUserStatus"},
 	{ActionType: "UpdateGroupStatus"},
+	{ActionType: "ImportUser"},
 	
 }
 
@@ -166,20 +166,20 @@ var MockTopics = []entity.Topic{
 	},
 }
 
-var MockTopicSelections = []entity.TopicSelection{
-	{DateSelected: time.Now().AddDate(0, -4, 0), TopicID: 1, GroupProjectID: 1},
-	{DateSelected: time.Now().AddDate(0, -4, 0), TopicID: 2, GroupProjectID: 2},
-	{DateSelected: time.Now().AddDate(0, -4, 0), TopicID: 3, GroupProjectID: 3},
-	{DateSelected: time.Now().AddDate(0, -3, 0), TopicID: 4, GroupProjectID: 4},
-	{DateSelected: time.Now().AddDate(0, -3, 0), TopicID: 5, GroupProjectID: 5},
-	{DateSelected: time.Now().AddDate(0, -2, 0), TopicID: 6, GroupProjectID: 6},
-}
+// var MockTopicSelections = []entity.TopicSelection{
+// 	{DateSelected: time.Now().AddDate(0, -4, 0), TopicID: 1, GroupProjectID: 1, Status: "Active"},
+// 	{DateSelected: time.Now().AddDate(0, -4, 0), TopicID: 2, GroupProjectID: 2, Status: "Active"},
+// 	{DateSelected: time.Now().AddDate(0, -4, 0), TopicID: 3, GroupProjectID: 3, Status: "Active"},
+// 	{DateSelected: time.Now().AddDate(0, -3, 0), TopicID: 4, GroupProjectID: 4, Status: "Active"},
+// 	{DateSelected: time.Now().AddDate(0, -3, 0), TopicID: 5, GroupProjectID: 5, Status: "Active"},
+// 	{DateSelected: time.Now().AddDate(0, -2, 0), TopicID: 6, GroupProjectID: 6, Status: "Active"},
+// }
 
-var MockProjects = []entity.Project{
-	{Title: "Complete Report: Smart Farm System", Abstract: "This project aims to develop an IOT solution...", Keywords: "IOT, Smart Farm, Arduino", Year: 2025, Status: "Completed", FilePath: "/uploads/projects/group1_final.pdf", SelectionID: 1},
-	{Title: "Complete Report: AI Face Recognition", Abstract: "A system to automate attendance tracking...", Keywords: "AI, Computer Vision, Python", Year: 2025, Status: "Completed", FilePath: "/uploads/projects/group2_final.pdf", SelectionID: 2},
-	{Title: "Complete Report: E-Commerce App", Abstract: "Development of a mobile application...", Keywords: "E-Commerce, Mobile App, Flutter", Year: 2025, Status: "In Progress", FilePath: "/uploads/projects/group3_draft.pdf", SelectionID: 3},
-	{Title: "Complete Report: Renewable Energy", Abstract: "Designing a hybrid solar-wind energy system...", Keywords: "Renewable Energy, Solar, Wind", Year: 2025, Status: "Pending", FilePath: "", SelectionID: 4},
-	{Title: "Complete Report: Health Monitoring", Abstract: "Creating a wearable device for health tracking...", Keywords: "Wearable, Health Monitoring, IoT", Year: 2025, Status: "Pending", FilePath: "", SelectionID: 5},
-	{Title: "Complete Report: Smart Home Automation", Abstract: "Implementing an IoT-based home automation system...", Keywords: "Smart Home, IoT, Automation", Year: 2025, Status: "Pending", FilePath: "", SelectionID: 6},
-}
+// var MockProjects = []entity.Project{
+// 	{Title: "Complete Report: Smart Farm System", Abstract: "This project aims to develop an IOT solution...", Keywords: "IOT, Smart Farm, Arduino", Year: 2025, Status: "Completed", FilePath: "/uploads/projects/group1_final.pdf", SelectionID: 1},
+// 	{Title: "Complete Report: AI Face Recognition", Abstract: "A system to automate attendance tracking...", Keywords: "AI, Computer Vision, Python", Year: 2025, Status: "Completed", FilePath: "/uploads/projects/group2_final.pdf", SelectionID: 2},
+// 	{Title: "Complete Report: E-Commerce App", Abstract: "Development of a mobile application...", Keywords: "E-Commerce, Mobile App, Flutter", Year: 2025, Status: "In Progress", FilePath: "/uploads/projects/group3_draft.pdf", SelectionID: 3},
+// 	{Title: "Complete Report: Renewable Energy", Abstract: "Designing a hybrid solar-wind energy system...", Keywords: "Renewable Energy, Solar, Wind", Year: 2025, Status: "Pending", FilePath: "", SelectionID: 4},
+// 	{Title: "Complete Report: Health Monitoring", Abstract: "Creating a wearable device for health tracking...", Keywords: "Wearable, Health Monitoring, IoT", Year: 2025, Status: "Pending", FilePath: "", SelectionID: 5},
+// 	{Title: "Complete Report: Smart Home Automation", Abstract: "Implementing an IoT-based home automation system...", Keywords: "Smart Home, IoT, Automation", Year: 2025, Status: "Pending", FilePath: "", SelectionID: 6},
+// }

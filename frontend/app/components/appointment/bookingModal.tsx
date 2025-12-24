@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { Modal, Form, Select, DatePicker, Button, message, TimePicker, Tabs, Divider, Spin } from 'antd';
-import { UserOutlined, RobotOutlined, DeploymentUnitOutlined, DeleteOutlined, SaveOutlined } from '@ant-design/icons';
+import { UserOutlined, RobotOutlined, DeploymentUnitOutlined, DeleteOutlined, SaveOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { Toast_success, Toast_fail } from '../Webmessage';
 import {
@@ -131,53 +131,62 @@ export default function BookingModal({ visible, onClose, onSuccess, rooms, types
 
     // บันทึก
     const handleSubmit = async (values: any) => {
-        setLoading(true);
-        try {
-            if (mode === 'manual') {
-                // --- Manual ---
-                const date = values.date.format('YYYY-MM-DD');
-                const startTime = values.time_range[0].format('HH:mm:00');
-                const endTime = values.time_range[1];
-                const duration = endTime.diff(values.time_range[0], 'minute');
+        Modal.confirm({
+            title: initialData ? 'ยืนยันการแก้ไขนัดหมาย' : 'ยืนยันการสร้างนัดหมาย',
+            icon: <ExclamationCircleOutlined />,
+            content: initialData ? 'คุณต้องการบันทึกการแก้ไขใช่หรือไม่?' : 'คุณต้องการสร้างนัดหมายนี้ใช่หรือไม่?',
+            okText: 'ยืนยัน',
+            cancelText: 'ยกเลิก',
+            onOk: async () => {
+                setLoading(true);
+                try {
+                    if (mode === 'manual') {
+                        // --- Manual ---
+                        const date = values.date.format('YYYY-MM-DD');
+                        const startTime = values.time_range[0].format('HH:mm:00');
+                        const endTime = values.time_range[1];
+                        const duration = endTime.diff(values.time_range[0], 'minute');
 
-                const payload = {
-                    start_date_time: `${date}T${startTime}+07:00`,
-                    duration_min: duration,
-                    appointment_status: "scheduled",
-                    appointment_type_id: values.type_id,
-                    room_id: values.room_id,
-                    group_project_id: values.group_id,
-                    evaluation_id: values.evaluation_id
-                };
+                        const payload = {
+                            start_date_time: `${date}T${startTime}+07:00`,
+                            duration_min: duration,
+                            appointment_status: "scheduled",
+                            appointment_type_id: values.type_id,
+                            room_id: values.room_id,
+                            group_project_id: values.group_id,
+                            evaluation_id: values.evaluation_id
+                        };
 
-                if (initialData) {
-                    await UpdateAppointment(initialData.id, payload);
-                    Toast_success("แก้ไขเรียบร้อย");
-                } else {
-                    await CreateAppointment(payload);
-                    Toast_success("สร้างนัดหมายเรียบร้อย");
+                        if (initialData) {
+                            await UpdateAppointment(initialData.id, payload);
+                            Toast_success("แก้ไขเรียบร้อย");
+                        } else {
+                            await CreateAppointment(payload);
+                            Toast_success("สร้างนัดหมายเรียบร้อย");
+                        }
+                    } else {
+                        // --- Auto ---
+                        const start = values.date_range[0].toISOString();
+                        const end = values.date_range[1].toISOString();
+
+                        await AutoCreateAppointments({
+                            start_date_time: start,
+                            end_date_time: end,
+                            duration_min: values.duration_auto,
+                            room_id: values.room_id,
+                            appointment_type_id: values.type_id
+                        });
+                        Toast_success("จัดตารางอัตโนมัติสำเร็จ!");
+                    }
+                    onSuccess();
+                    onClose();
+                } catch (error: any) {
+                    Toast_fail(error.response?.data?.error || "เกิดข้อผิดพลาด");
+                } finally {
+                    setLoading(false);
                 }
-            } else {
-                // --- Auto ---
-                const start = values.date_range[0].toISOString();
-                const end = values.date_range[1].toISOString();
-
-                await AutoCreateAppointments({
-                    start_date_time: start,
-                    end_date_time: end,
-                    duration_min: values.duration_auto,
-                    room_id: values.room_id,
-                    appointment_type_id: values.type_id
-                });
-                Toast_success("จัดตารางอัตโนมัติสำเร็จ!");
             }
-            onSuccess();
-            onClose();
-        } catch (error: any) {
-            Toast_fail(error.response?.data?.error || "เกิดข้อผิดพลาด");
-        } finally {
-            setLoading(false);
-        }
+        });
     };
 
     // ลบ

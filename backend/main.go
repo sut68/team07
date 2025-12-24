@@ -4,14 +4,14 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sut68/team07/backend/controller/advisor"
 	"github.com/sut68/team07/backend/controller/appointment"
 	"github.com/sut68/team07/backend/controller/auth"
 	"github.com/sut68/team07/backend/controller/chat"
 	"github.com/sut68/team07/backend/controller/evaluation"
 	"github.com/sut68/team07/backend/controller/group"
-	"github.com/sut68/team07/backend/controller/advisor"
-	//"github.com/sut68/team07/backend/controller/importuser"
 	"github.com/sut68/team07/backend/controller/issues"
+	"github.com/sut68/team07/backend/controller/news"
 	"github.com/sut68/team07/backend/controller/progress"
 	"github.com/sut68/team07/backend/controller/topic"
 	"github.com/sut68/team07/backend/controller/updateStatus"
@@ -35,6 +35,7 @@ func main() {
 	service.InitEmailConfig()
 	service.StartCleanupWorker(database.DB())
 	r := gin.Default()
+	r.Static("/uploads", "./uploads")
 	r.Use(database.CORSMiddleware())
 	r.Static("/uploads", "./uploads")
 
@@ -51,22 +52,26 @@ func main() {
 
 		// user ทุก Role สามารถเข้าถึงได้
 		protected.GET("/GetChat", chat.GetAllChat)
-		protected.GET("/get_teacher_id",chat.GetGroupbyteacherid)
+		protected.GET("/get_teacher_id", chat.GetGroupbyteacherid)
 		protected.POST("/SendChat", chat.InsertChat)
 		protected.DELETE("/DeleteChat", chat.DeleteChat)
-		protected.DELETE("/Deletechatbyid",chat.DeleteChatbyProgress)
-		
+		protected.DELETE("/Deletechatbyid", chat.DeleteChatbyProgress)
 
 		protected.GET("/getUserProfile", users.GetUserProfile)
 		protected.PATCH("/updateUserProfile", users.UpdateUserProfile)
 		protected.GET("/me", authHandler.Me)
 
 		protected.GET("/getProcess", progress.GetProGressByID)
-		protected.GET("/getProjectbyuser",progress.GetGroupProjectIDByStudentID)
+		protected.GET("/getProjectbyuser", progress.GetGroupProjectIDByStudentID)
 		protected.POST("/assignProgress", progress.AssignProGress)
 		protected.POST("/modifyProgress", progress.UpdateProGress)
 		protected.DELETE("/deleteProgress", progress.DeleteProgress)
 
+		// News
+		protected.POST("/news", news.CreateNews)
+		protected.GET("/news", news.GetNews)
+		protected.PATCH("/news/:id", news.UpdateNews)
+		protected.DELETE("/news/:id", news.DeleteNews)
 
 		// Group
 		protected.GET("/academicYears", group.GetAcademicYears)
@@ -88,7 +93,7 @@ func main() {
 			adminGroup.GET("/users", users.ListUsers)
 			adminGroup.POST("/user", users.CreateUser)
 			adminGroup.PATCH("/user/:id", users.UpdateUser)
-            adminGroup.DELETE("/user/:id", users.DeleteUser)
+			adminGroup.DELETE("/user/:id", users.DeleteUser)
 
 			// Group
 			adminGroup.GET("/studentCount", group.GetEligibleStudentCount)
@@ -160,7 +165,7 @@ func main() {
 		{
 			// ถ้า API ไหนที่นักเรียนเข้าถึงได้ ให้นำไปใส่ในนี้
 			studentGroup.GET("/getProcess", progress.GetProGressByID)
-			studentGroup.GET("/getProjectbyuser",progress.GetGroupProjectIDByStudentID)
+			studentGroup.GET("/getProjectbyuser", progress.GetGroupProjectIDByStudentID)
 			studentGroup.POST("/assignProgress", progress.AssignProGress)
 			studentGroup.POST("/modifyProgress", progress.UpdateProGress)
 			studentGroup.DELETE("/deleteProgress", progress.DeleteProgress)
