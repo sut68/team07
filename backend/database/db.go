@@ -102,6 +102,7 @@ func SetUpDatabase() {
         &entity.IssueReport{},
         &entity.Chat{},
         &entity.Log{},
+		&entity.News{},
     )
 
 	db.AutoMigrate(

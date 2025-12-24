@@ -1,28 +1,32 @@
+"use client";
+
+import React, { useState } from 'react';
 import './dashboard.css';
+import NewsList from '../../../components/news/NewsList';
+import { useAuth } from '../../roleCheck/authContext';
 
 export default function StudentDashboardPage() {
+    const { user } = useAuth();
+
     return (
         <div className="container">
             
-            {/* 1. ส่วนบน (ข่าวสาร) */}
-            <div className="section top">
-                <h1>
-                    ข่าวสาร ของส่วนรวมใครจะเสนอตัว(News) สร้าง entity news เชื่อม user 
-                    *student get ให้ดีควรมีรูปภาพ ส่งไฟล์ได้ นักศึกษาสามารถดาวโหลดไฟล์ได้
-                </h1>
+            {/* --- ส่วนซ้าย: ข่าวสาร (40%) --- */}
+            <div className="news-section">
+                <NewsList currentUserId={user?.id} role="Student" />
             </div>
 
-            {/* 2. ส่วนล่าง (Container สำหรับแถวล่าง) */}
-            <div className="row-container">
+            {/* --- ส่วนขวา: รวม 2 ส่วน (60%) --- */}
+            <div className="right-panel">
                 
-                {/* 2.1 โครงงาน (ด้านซ้าย - กว้าง) */}
-                <div className="section middle">
-                    <h1>โครงงานของ Jornor</h1>
+                {/* นัดหมาย (Top) */}
+                <div className="section top-right">
+                    <h1>แจ้งนัดหมาย ของ หนึ่ง</h1>
                 </div>
 
-                {/* 2.2 แจ้งนัดหมาย (ด้านขวา - แคบ) */}
-                <div className="section bottom">
-                    <h1>แจ้งนัดหมาย ของ หนึ่ง</h1>
+                {/* โครงงาน (Bottom) */}
+                <div className="section bottom-right">
+                    <h1>โครงงานของ Jornor</h1>
                 </div>
 
             </div>

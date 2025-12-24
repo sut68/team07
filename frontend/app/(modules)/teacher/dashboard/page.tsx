@@ -1,17 +1,48 @@
 "use client";
 
+import { useState } from 'react';
 import './dashboard.css';
+import NewsList from '../../../components/news/NewsList';
+import NewsModal from '../../../components/news/NewsModal';
+import { News } from '../../../interfaces/News';
+import { useAuth } from '../../roleCheck/authContext';
 
 export default function TeacherDashboardPage() {
+    const { user } = useAuth();
+    const [editingNews, setEditingNews] = useState<News | null>(null);
+    const [isNewsModalOpen, setIsNewsModalOpen] = useState(false);
+    const [refreshNewsTrigger, setRefreshNewsTrigger] = useState(0);
+
+    const handleEditNews = (news: News) => {
+        setEditingNews(news);
+        setIsNewsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsNewsModalOpen(false);
+        setEditingNews(null);
+    };
+
+    const handleNewsSuccess = () => {
+        setRefreshNewsTrigger(prev => prev + 1);
+    };
+
     return (
         <div className="container">
-            
+            <NewsModal 
+                isOpen={isNewsModalOpen} 
+                onClose={handleCloseModal} 
+                onSuccess={handleNewsSuccess}
+                initialData={editingNews}
+            />
             {/* --- ส่วนซ้าย: ข่าวสาร (50%) --- */}
             <div className="news-section">
-                <h1>
-                    ข่าวสาร (News) มันจะเเสดงข่าวสารทั้งหมดที่อาจารย์อัพเดต ควรมี ลบ เเก้ไข ถ้ามันเกินหน้าให้ทำเป็น ตัวเลื่อน ตัวเพื่มข่าวสารอยู่ที่ Dropdown ตรงโปรไฟล์
-                    ของส่วนรวมใครจะเสนอตัว(News) สร้าง entity news เชื่อม user *teacher api get,post,update,delete
-                </h1>
+                <NewsList 
+                    currentUserId={user?.id} 
+                    role="Teacher" 
+                    onEditClick={handleEditNews}
+                    refreshTrigger={refreshNewsTrigger}
+                />
             </div>
 
             {/* --- ส่วนขวา: รวม 3 ส่วนเดิม (50%) --- */}
