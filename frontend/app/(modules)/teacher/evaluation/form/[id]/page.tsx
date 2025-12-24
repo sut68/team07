@@ -129,9 +129,19 @@ export default function EvaluationFormPage() {
             Toast_fail("กรุณาเลือกประเภทการประเมิน");
             return;
         }
+
+        const isGroupComplete = !formData?.group_criteria || formData.group_criteria.every((c: any) => groupScores[c.id]);
+        const isIndComplete = !formData?.individual_criteria || !formData?.students || formData.students.every((std: any) => 
+            formData.individual_criteria.every((c: any) => indScores[`${std.student_id}_${c.id}`])
+        );
+
+        if (!isGroupComplete || !isIndComplete) {
+            Toast_fail("โปรดกรอกแบบประเมินให้ครบถ้วน");
+            return;
+        }
+
         setSubmitting(true);
         try {
-            // Filter only scores that belong to the current evaluation criteria
             const validGroupCriteriaIds = new Set(formData?.group_criteria?.map((c: any) => c.id));
             const validIndCriteriaIds = new Set(formData?.individual_criteria?.map((c: any) => c.id));
 

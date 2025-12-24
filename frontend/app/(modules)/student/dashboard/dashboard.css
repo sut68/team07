@@ -1,0 +1,44 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  margin: 0;
+  padding: 10;
+  overflow: hidden;
+}
+
+.section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+/* --- ส่วนบน (ข่าวสาร) --- */
+.top {
+  flex: 1;
+  width: 100%;
+  background-color: #f8d7da;
+  border-bottom: 10px solid #fff;
+}
+
+/* --- กล่องคลุมแถวล่าง --- */
+.row-container {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+}
+
+/* --- โครงงาน (Project CSS - 60%) --- */
+.middle {
+  flex: 0 0 60%; 
+  background-color: #d1ecf1;
+  border-right: 10px solid #fff; /* เส้นคั่นแนวตั้ง */
+}
+
+/* --- แจ้งนัดหมาย (Appointment CSS - 40%) --- */
+.bottom {
+  flex: 0 0 40%; 
+  background-color: #d4edda;
+}

@@ -3,8 +3,8 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
-import { Dropdown, Avatar } from 'antd';
-import { DownOutlined, UserOutlined, ExclamationCircleOutlined, LogoutOutlined, BellOutlined } from '@ant-design/icons';
+import { Dropdown, Avatar, Modal } from 'antd';
+import { DownOutlined, UserOutlined, ExclamationCircleOutlined, LogoutOutlined, BellOutlined ,NotificationOutlined} from '@ant-design/icons';
 import { GetUserProfile } from '../../services/user'; // Path ของ service คุณ
 import { Logout } from '../../services/login';
 import { useAuth } from "../../(modules)/roleCheck/authContext";
@@ -36,6 +36,11 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
             label: <Link href="/profile" style={{ color: 'inherit' }}>โปรไฟล์ของฉัน</Link>,
         },
         {
+            key: 'notification',
+            icon: <NotificationOutlined />,
+            label: <Link href="/teacher/news" style={{ color: 'inherit' }}>แจ้งข่าวสาร</Link>,
+        },
+        {
             key: 'report',
             icon: <ExclamationCircleOutlined />,
             label: <Link href="/teacher/issueReport" style={{ color: 'inherit' }}>รายงานปัญหา</Link>,
@@ -58,7 +63,14 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
 
     const onMenuClick = ({ key }: { key: string }) => {
         if (key === 'logout') {
-            handleLogout();
+            Modal.confirm({
+                title: 'ยืนยันการออกจากระบบ',
+                icon: <ExclamationCircleOutlined />,
+                content: 'คุณต้องการออกจากระบบใช่หรือไม่?',
+                okText: 'ยืนยัน',
+                cancelText: 'ยกเลิก',
+                onOk: handleLogout,
+            });
         }
     };
     useEffect(() => {

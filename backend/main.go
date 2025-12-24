@@ -10,7 +10,6 @@ import (
 	"github.com/sut68/team07/backend/controller/evaluation"
 	"github.com/sut68/team07/backend/controller/group"
 	"github.com/sut68/team07/backend/controller/advisor"
-	//"github.com/sut68/team07/backend/controller/importuser"
 	"github.com/sut68/team07/backend/controller/issues"
 	"github.com/sut68/team07/backend/controller/progress"
 	"github.com/sut68/team07/backend/controller/topic"

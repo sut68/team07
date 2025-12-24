@@ -3,14 +3,16 @@ package users
 import (
 	"encoding/csv"
 	"fmt"
+	"net/http"
+	"regexp"
+	"strconv"
+
 	"github.com/gin-gonic/gin"
+	"github.com/sut68/team07/backend/controller/log"
 	"github.com/sut68/team07/backend/database"
 	"github.com/sut68/team07/backend/entity"
 	"github.com/sut68/team07/backend/middleware"
 	"golang.org/x/crypto/bcrypt"
-	"net/http"
-	"regexp"
-	"strconv"
 )
 
 // HashPassword ทำการเข้ารหัสรหัสผ่าน
@@ -116,8 +118,8 @@ func ImportUsersCSV(c *gin.Context) {
 	}
 
 	tx.Commit()
-	fmt.Println("✅ [DEBUG] Import สำเร็จ!")
-
+	fmt.Println("[DEBUG] Import สำเร็จ!")
+	log.InsertLog(c,28)
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Imported " + strconv.Itoa(len(users)) + " users successfully",
 	})
@@ -202,7 +204,7 @@ func CreateUser(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
+	log.InsertLog(c,28)
 	c.JSON(http.StatusCreated, gin.H{"message": "User created successfully", "data": user})
 }
 
@@ -210,7 +212,7 @@ func CreateUser(c *gin.Context) {
 type UpdateUserInfoInput struct {
 	Firstname string `json:"firstname"`
 	Lastname  string `json:"lastname"`
-	StatusID  uint   `json:"status_id"` // ✅ เพิ่มบรรทัดนี้: เพื่อให้รับ StatusID ได้
+	StatusID  uint   `json:"status_id"` // เพิ่มบรรทัดนี้: เพื่อให้รับ StatusID ได้
 }
 
 // PATCH: Update User
@@ -235,7 +237,7 @@ func UpdateUser(c *gin.Context) {
 		return
 	}
 
-	// ✅ แก้ไขตรงนี้: เพิ่ม StatusID ลงไปในการอัปเดต
+	// แก้ไขตรงนี้: เพิ่ม StatusID ลงไปในการอัปเดต
 	if err := db.Model(&user).Updates(map[string]interface{}{
 		"Firstname": input.Firstname,
 		"Lastname":  input.Lastname,

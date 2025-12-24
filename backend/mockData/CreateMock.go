@@ -1,8 +1,6 @@
 package mockdata
 
 import (
-	"time"
-
 	"github.com/sut68/team07/backend/entity"
 )
 
@@ -67,6 +65,7 @@ var MockActionType = []entity.ActionType{
 	{ActionType: "UpdateCriteriaLevel"},
 	{ActionType: "UpdateUserStatus"},
 	{ActionType: "UpdateGroupStatus"},
+	{ActionType: "ImportUser"},
 	
 }
 

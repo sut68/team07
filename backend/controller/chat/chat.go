@@ -67,11 +67,11 @@ func GetAllChat(c *gin.Context) {
 func InsertChat(c *gin.Context) {
 	db := database.DB()
 
-	// ✅ Prefer JSON body
+	// Prefer JSON body
 	var body InsertChatBody
 	_ = c.ShouldBindJSON(&body)
 
-	// ✅ Fallback to query params (your old style)
+	// Fallback to query params (your old style)
 	if body.GroupProjectID == 0 {
 		groupstr := c.Query("group_project_id")
 		if v, err := strconv.ParseUint(groupstr, 10, 64); err == nil {
@@ -91,7 +91,7 @@ func InsertChat(c *gin.Context) {
 		}
 	}
 
-	// ✅ FIX typo: support both "message" and legacy "messege"
+	// FIX typo: support both "message" and legacy "messege"
 	if body.Message == "" {
 		body.Message = c.Query("message")
 	}
@@ -99,7 +99,7 @@ func InsertChat(c *gin.Context) {
 		body.Message = c.Query("messege")
 	}
 
-	// ✅ Validate
+	// Validate
 	if body.GroupProjectID == 0 || body.ProcessID == 0 || body.SenderID == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "missing ids"})
 		return
@@ -122,7 +122,7 @@ func InsertChat(c *gin.Context) {
 		return
 	}
 
-	// ✅ Broadcast the SAVED message (real DB id!)
+	// Broadcast the SAVED message (real DB id!)
 	rk := roomKey(chat.GroupProjectID, chat.ProcessID)
 	broadcast("/broadcast/chat", gin.H{
 		"room_id":          rk,

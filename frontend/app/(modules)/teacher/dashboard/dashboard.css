@@ -1,0 +1,52 @@
+.container {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+  margin: 0;
+  padding: 10px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* --- ส่วนซ้าย: ข่าวสาร --- */
+.news-section {
+  flex: 0 0 60%;
+  background-color: #fff3cd;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-right: 10px solid #ffffff;
+}
+
+/* --- ส่วนขวา: กล่องรวม 3 ชั้น --- */
+.right-panel {
+  flex: 0 0 40%;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* --- สไตล์ของ 3 กล่องด้านขวา --- */
+.section {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-bottom: 10px solid #ffffff; 
+}
+
+.section:last-child {
+  border-bottom: none;
+}
+
+.top { background-color: #f8d7da; }
+.middle { background-color: #d1ecf1; }
+.bottom { background-color: #d4edda; }
+
+/* News css */
+
+/* Appointment css */
+
+/* group css */
+
+/* progress css */

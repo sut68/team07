@@ -206,8 +206,15 @@ func GetEvaluationSummary(c *gin.Context) {
 		})
 	}
 
+	var groupProject entity.GroupProject
+	if err := db.First(&groupProject, projectID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Project not found"})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"project_id":         projectID,
+		"group_status":       groupProject.GroupStatus,
 		"group_total_score":  fmt.Sprintf("%.2f", totalGroupScore),
 		"group_details":      groupSummary,
 		"individual_details": individualSummary,
