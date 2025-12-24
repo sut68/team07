@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
-import { GetIssues, UpdateIssueStatus } from "../../../services/issue";
+import { useRouter } from "next/navigation"; 
+import { GetIssues } from "../../../services/issue"; 
 import { GetUsers } from "../../../services/user";
 import { IssueReportInterface } from "../../../interfaces/Issue";
 import { UserProfileInterface } from "../../../interfaces/Users";
@@ -8,6 +9,8 @@ import { LoadingOutlined, FileTextOutlined, UserOutlined, TeamOutlined, ReadOutl
 import "../../../style/admin-dashboard.css";
 
 export default function AdminDashboardPage() {
+    const router = useRouter(); 
+
     // State สำหรับ Issues 
     const [issues, setIssues] = useState<IssueReportInterface[]>([]);
     const [loading, setLoading] = useState(true);
@@ -34,11 +37,10 @@ export default function AdminDashboardPage() {
             const res = await GetUsers();
             if (res.status === 200) {
                 const users: UserProfileInterface[] = res.data;
-
                 // นับจำนวนตาม Role
                 const students = users.filter(u => u.role?.role === "Student").length;
                 const teachers = users.filter(u => u.role?.role === "Teacher").length;
-
+                
                 setStudentCount(students);
                 setTeacherCount(teachers);
             }
@@ -50,7 +52,6 @@ export default function AdminDashboardPage() {
     // รวมการโหลดข้อมูลไว้ที่เดียว
     const fetchAllData = async () => {
         setLoading(true);
-        // โหลดพร้อมกันทั้ง 2 อย่าง
         await Promise.all([fetchIssues(), fetchUserCounts()]);
         setLoading(false);
     };
@@ -59,20 +60,11 @@ export default function AdminDashboardPage() {
         fetchAllData();
     }, []);
 
-    // ฟังก์ชันเปลี่ยนสถานะ Issue
-    const handleStatusChange = async (id: number, newStatusID: number) => {
-        try {
-            const res = await UpdateIssueStatus(id, newStatusID);
-            if (res.status === 200) {
-                alert("✅ อัปเดตสถานะเรียบร้อย!");
-                fetchIssues(); // โหลดตารางใหม่
-            } else {
-                alert("เกิดข้อผิดพลาด: " + res.data.error);
-            }
-        } catch (error) {
-            console.error("Update error:", error);
-            alert("ไม่สามารถเชื่อมต่อ Server ได้");
-        }
+    // ฟังก์ชันคลิกแถวเพื่อไปหน้าจัดการ Issue
+    const handleRowClick = (id: number) => {
+        // ไปที่ path /admin/issue ตามที่คุณต้องการ
+        // หมายเหตุ: ถ้าต้องการส่ง ID ไปด้วย อาจจะใช้ router.push(`/admin/issue/${id}`) หรือ router.push(`/admin/issue?id=${id}`) แทนได้ครับ
+        router.push('/admin/issue'); 
     };
 
     return (
@@ -83,6 +75,7 @@ export default function AdminDashboardPage() {
             </div>
 
             <div className="dashboard-layout">
+                {/* ส่วน 70%: รายงานปัญหา */}
                 <div className="section-main">
                     <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '0 0 20px 0' }}>
                         <FileTextOutlined /> รายการแจ้งปัญหาล่าสุด
@@ -103,13 +96,18 @@ export default function AdminDashboardPage() {
                                         <th style={{ width: '120px' }}>ประเภท</th>
                                         <th>รายละเอียด</th>
                                         <th style={{ width: '150px' }}>ผู้แจ้ง</th>
-                                        <th style={{ width: '140px' }}>สถานะ</th>
+                                        <th style={{ width: '120px' }}>สถานะ</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {issues.map((item) => (
-                                        <tr key={item.ID}>
-                                            <td>{item.ID}</td>
+                                        <tr 
+                                            key={item.ID} 
+                                            onClick={() => item.ID && handleRowClick(item.ID)} 
+                                            style={{ cursor: 'pointer', transition: 'background 0.2s' }} 
+                                            className="hover:bg-gray-50" 
+                                        >
+                                            <td>#{item.ID}</td>
                                             <td><span style={{ fontWeight: 500 }}>{item.type?.type}</span></td>
                                             <td className="col-detail" title={item.detail}>{item.detail}</td>
                                             <td>
@@ -119,16 +117,20 @@ export default function AdminDashboardPage() {
                                                 </div>
                                             </td>
                                             <td>
-                                                <select
+                                                <span 
                                                     className={`status-badge status-${item.status?.status?.toLowerCase().replace(" ", "-") || "pending"}`}
-                                                    style={{ width: '100%', border: 'none', cursor: 'pointer', outline: 'none' }}
-                                                    value={item.status_id}
-                                                    onChange={(e) => item.ID && handleStatusChange(item.ID, Number(e.target.value))}
+                                                    style={{ 
+                                                        padding: '4px 8px', 
+                                                        borderRadius: '6px', 
+                                                        fontSize: '0.85rem',
+                                                        fontWeight: 600,
+                                                        display: 'inline-block',
+                                                        textAlign: 'center',
+                                                        minWidth: '80px'
+                                                    }}
                                                 >
-                                                    <option value={1}>Completed</option>
-                                                    <option value={2}>In Progress</option>
-                                                    <option value={3}>Pending</option>
-                                                </select>
+                                                    {item.status?.status || "Pending"}
+                                                </span>
                                             </td>
                                         </tr>
                                     ))}
@@ -138,29 +140,30 @@ export default function AdminDashboardPage() {
                     )}
                 </div>
 
+                {/* ส่วน 30%: Side Content (แสดงจำนวน Teacher/Student) */}
                 <div className="section-side">
                     <h3 style={{ margin: '0 0 20px 0' }}>สรุปจำนวนผู้ใช้งาน</h3>
-
+                    
                     {/* การ์ด Teacher */}
-                    <div style={{
-                        backgroundColor: '#fff',
-                        borderRadius: '12px',
-                        padding: '20px',
+                    <div style={{ 
+                        backgroundColor: '#fff', 
+                        borderRadius: '12px', 
+                        padding: '20px', 
                         marginBottom: '15px',
                         boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                        borderLeft: '5px solid #1890ff' // สีฟ้า
+                        borderLeft: '5px solid #1890ff' 
                     }}>
                         <div>
                             <p style={{ margin: 0, color: '#888', fontSize: '0.9rem' }}>อาจารย์ (Teachers)</p>
                             <h2 style={{ margin: '5px 0 0 0', fontSize: '2rem', color: '#333' }}>{teacherCount}</h2>
                         </div>
-                        <div style={{
-                            width: '50px', height: '50px',
-                            borderRadius: '50%',
-                            backgroundColor: '#e6f7ff',
+                        <div style={{ 
+                            width: '50px', height: '50px', 
+                            borderRadius: '50%', 
+                            backgroundColor: '#e6f7ff', 
                             display: 'flex', alignItems: 'center', justifyContent: 'center'
                         }}>
                             <TeamOutlined style={{ fontSize: '24px', color: '#1890ff' }} />
@@ -168,24 +171,24 @@ export default function AdminDashboardPage() {
                     </div>
 
                     {/* การ์ด Student */}
-                    <div style={{
-                        backgroundColor: '#fff',
-                        borderRadius: '12px',
-                        padding: '20px',
+                    <div style={{ 
+                        backgroundColor: '#fff', 
+                        borderRadius: '12px', 
+                        padding: '20px', 
                         boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                        borderLeft: '5px solid #52c41a'
+                        borderLeft: '5px solid #52c41a' 
                     }}>
                         <div>
                             <p style={{ margin: 0, color: '#888', fontSize: '0.9rem' }}>นักศึกษา (Students)</p>
                             <h2 style={{ margin: '5px 0 0 0', fontSize: '2rem', color: '#333' }}>{studentCount}</h2>
                         </div>
-                        <div style={{
-                            width: '50px', height: '50px',
-                            borderRadius: '50%',
-                            backgroundColor: '#f6ffed',
+                        <div style={{ 
+                            width: '50px', height: '50px', 
+                            borderRadius: '50%', 
+                            backgroundColor: '#f6ffed', 
                             display: 'flex', alignItems: 'center', justifyContent: 'center'
                         }}>
                             <ReadOutlined style={{ fontSize: '24px', color: '#52c41a' }} />

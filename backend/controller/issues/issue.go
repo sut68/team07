@@ -10,9 +10,6 @@ import (
 	"github.com/sut68/team07/backend/middleware"
 )
 
-// CreateIssueInput ใช้สำหรับรับค่าจากหน้าบ้าน
-// ไม่ต้องรับ StatusID เพราะตอนสร้างควรเป็นค่าเริ่มต้น (เช่น Pending)
-// ไม่ต้องรับ ReportDate เพราะควรใช้วันเวลาปัจจุบัน (time.Now)
 type CreateIssueInput struct {
 	Detail string `json:"detail" binding:"required"`
 	TypeID uint   `json:"type_id" binding:"required"`
@@ -47,8 +44,8 @@ func CreateIssue(c *gin.Context) {
 	// สร้าง Object IssueReport
 	issue := entity.IssueReport{
 		Detail:     input.Detail,
-		ReportDate: time.Now(), // ใช้วันเวลาปัจจุบัน
-		StatusID:   3,          // Default Status 3 = Pending
+		ReportDate: time.Now(), 
+		StatusID:   3,          
 		TypeID:     input.TypeID,
 		UserID:     input.UserID,
 	}
@@ -71,10 +68,6 @@ func GetIssueReports(c *gin.Context) {
 	db := database.DB()
 	var issues []entity.IssueReport
 
-	// Preload ข้อมูลที่เกี่ยวข้อง: User, Status, Type
-	// Preload("User") ทำให้เห็นว่าใครเป็นคนแจ้ง
-	// Preload("Status") ทำให้เห็นสถานะเป็น text (เช่น Completed)
-	// Preload("Type") ทำให้เห็นประเภทเป็น text (เช่น Bug, Feature)
 	if err := db.Preload("User").Preload("Status").Preload("Type").Find(&issues).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -169,5 +162,3 @@ func GetIssueStatus(c *gin.Context) {
 
 	c.JSON(http.StatusOK, &issueStatus)
 }
-
-//yeah

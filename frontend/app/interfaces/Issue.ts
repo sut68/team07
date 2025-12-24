@@ -27,7 +27,7 @@ export interface IssueReportInterface {
     status?: IssueStatusInterface;
     
     user_id?: number;
-    user?: UserProfileInterface; // ✅ แก้มาใช้ Interface ของคุณ
+    user?: UserProfileInterface; 
 }
 
 
