@@ -390,17 +390,17 @@ func CancelSelection(c *gin.Context) {
 	db := database.DB()
 	cancelled := false
 
-	// 1. หา selection ที่ยัง active (สำหรับหัวข้อที่อาจารย์เสนอ)
-	var selection entity.TopicSelection
-	err := db.Where("group_project_id = ? AND status = ?", payload.GroupProjectID, "Active").First(&selection).Error
-
-	if err == nil {
-		// Case A: Found Active Selection -> Cancel it
-		selection.Status = "Cancelled"
-		if err := db.Save(&selection).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
+	// 1. Cancel ALL active selections for this group
+	// Using Update to ensure all active selections are cancelled (handling potential duplicates)
+	resultSel := db.Model(&entity.TopicSelection{}).
+		Where("group_project_id = ? AND status = ?", payload.GroupProjectID, "Active").
+		Update("status", "Cancelled")
+	
+	if resultSel.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": resultSel.Error.Error()})
+		return
+	}
+	if resultSel.RowsAffected > 0 {
 		cancelled = true
 	}
 
@@ -422,7 +422,9 @@ func CancelSelection(c *gin.Context) {
 	if cancelled {
 		c.JSON(http.StatusOK, gin.H{"message": "Selection/Proposal cancelled successfully"})
 	} else {
-		c.JSON(http.StatusNotFound, gin.H{"error": "No active selection or proposal found to cancel"})
+		// If nothing was cancelled, it might be because it was already cancelled.
+		// Return success anyway to allow frontend to proceed/refresh.
+		c.JSON(http.StatusOK, gin.H{"message": "No active selection found, but treated as success"})
 	}
 }
 
@@ -440,8 +442,16 @@ func GetStudentTopic(c *gin.Context) {
 	// 1. Check for Selection (Active only)
 	var selection entity.TopicSelection
 	if err := db.Preload("Topic").Where("group_project_id = ? AND status = ?", groupID, "Active").First(&selection).Error; err == nil {
+		// Self-healing: If the selected topic is Closed or Cancelled (e.g. by teacher), 
+		// the selection should be invalidated.
+		if selection.Topic != nil && (selection.Topic.Status == "Closed" || selection.Topic.Status == "Cancelled") {
+			// Auto-cancel this selection
+			db.Model(&selection).Update("status", "Cancelled")
+			// Fall through to check for proposal or return nil
+		} else {
 			c.JSON(http.StatusOK, gin.H{"data": selection.Topic, "source": "selection"})
 			return
+		}
 	}
 
 	// 2. Check for Student Proposal
