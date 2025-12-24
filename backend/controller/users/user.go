@@ -50,7 +50,6 @@ func ImportUsersCSV(c *gin.Context) {
 
 	fmt.Printf("🚀 [DEBUG] อ่าน CSV ได้ %d แถว (เริ่มตรวจสอบ Validation...)\n", len(records))
 
-	// Phone Regex
 	var phoneRegex = regexp.MustCompile(`^\d{10}$`)
 
 	var users []entity.User
@@ -68,6 +67,7 @@ func ImportUsersCSV(c *gin.Context) {
 
 		username := row[0]
 		phone := row[5]
+
 		// Validation: ตรวจ Phone
 		if !phoneRegex.MatchString(phone) {
 			fmt.Printf("❌ [DEBUG] Row %d Phone ผิด format: %s\n", i+1, phone)
@@ -172,7 +172,6 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	// Phone Regex
 	var phoneRegex = regexp.MustCompile(`^\d{10}$`)
 
 	if !phoneRegex.MatchString(input.Phone) {
@@ -211,6 +210,7 @@ func CreateUser(c *gin.Context) {
 type UpdateUserInfoInput struct {
 	Firstname string `json:"firstname"`
 	Lastname  string `json:"lastname"`
+	StatusID  uint   `json:"status_id"` // ✅ เพิ่มบรรทัดนี้: เพื่อให้รับ StatusID ได้
 }
 
 // PATCH: Update User
@@ -235,9 +235,11 @@ func UpdateUser(c *gin.Context) {
 		return
 	}
 
+	// ✅ แก้ไขตรงนี้: เพิ่ม StatusID ลงไปในการอัปเดต
 	if err := db.Model(&user).Updates(map[string]interface{}{
 		"Firstname": input.Firstname,
 		"Lastname":  input.Lastname,
+		"StatusID":  input.StatusID, // บันทึกสถานะใหม่
 	}).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user"})
 		return

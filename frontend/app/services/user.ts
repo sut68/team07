@@ -41,7 +41,7 @@ async function CreateUser(data: CreateUserInterface) {
 }
 
 // ✅ เพิ่ม: ฟังก์ชันแก้ไขข้อมูล User (Admin)
-async function UpdateUser(id: number, data: { firstname: string; lastname: string }) {
+async function UpdateUser(id: number, data: { firstname: string; lastname: string; status_id: number }) {
     return await api.patch(`/admin/user/${id}`, data);
 }
 
