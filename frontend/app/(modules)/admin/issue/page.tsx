@@ -10,7 +10,7 @@ import {
     CalendarOutlined,
     EyeOutlined,
     CloseOutlined,
-    CheckCircleOutlined 
+    CheckCircleOutlined
 } from "@ant-design/icons";
 import "../../../style/admin-dashboard.css";
 
@@ -20,7 +20,7 @@ export default function AdminIssuePage() {
 
     // State สำหรับข้อความตอบกลับ
     const [replyMessage, setReplyMessage] = useState("");
-    
+
     // State สำหรับเก็บสถานะชั่วคราวใน Modal (ยังไม่บันทึกจนกว่าจะกดปุ่ม)
     const [tempStatus, setTempStatus] = useState<number>(3);
 
@@ -55,20 +55,20 @@ export default function AdminIssuePage() {
         try {
             // ส่งทั้ง StatusID และ replyMessage ไปที่ Backend
             const res = await UpdateIssueStatus(id, newStatusID, replyMessage);
-            
+
             if (res.status === 200) {
                 Toast_success("อัปเดตและแจ้งเตือนผู้ใช้เรียบร้อย!");
-                
+
                 // อัปเดตข้อมูลในหน้าเว็บ
                 fetchIssues();
-                
+
                 // อัปเดตข้อมูลใน Modal (เผื่อยังเปิดอยู่)
                 if (selectedIssue && selectedIssue.ID === id) {
                     setSelectedIssue({ ...selectedIssue, status_id: newStatusID });
                 }
-                
+
                 // ปิด Modal หลังจากบันทึกสำเร็จ
-                setShowModal(false); 
+                setShowModal(false);
             } else {
                 Toast_fail("เกิดข้อผิดพลาด: " + res.data.error);
             }
@@ -82,7 +82,7 @@ export default function AdminIssuePage() {
     const handleViewDetail = (issue: IssueReportInterface) => {
         setSelectedIssue(issue);
         setReplyMessage("");
-        setTempStatus(issue.status_id || 3); 
+        setTempStatus(issue.status_id || 3);
         setShowModal(true);
     };
 
@@ -145,7 +145,7 @@ export default function AdminIssuePage() {
                                     <th style={{ width: '140px' }}>ประเภท</th>
                                     <th>รายละเอียดปัญหา</th>
                                     <th style={{ width: '200px' }}>ผู้แจ้ง</th>
-                                    <th style={{ width: '160px', textAlign: 'center' }}>สถานะ</th>
+                                    <th style={{ width: '160px' }}>สถานะ</th>
                                     <th style={{ width: '80px', textAlign: 'center' }}>ดูข้อมูล</th>
                                 </tr>
                             </thead>
@@ -200,7 +200,7 @@ export default function AdminIssuePage() {
                                                 </div>
                                             </div>
                                         </td>
-                                        <td style={{ textAlign: 'center' }}>
+                                        <td>
                                             <span
                                                 className={`status-badge ${getStatusClass(item.status_id || 3)}`}
                                                 style={{ fontSize: '0.85rem' }}
@@ -239,7 +239,7 @@ export default function AdminIssuePage() {
                         backgroundColor: 'white', padding: '30px', borderRadius: '16px',
                         width: '90%', maxWidth: '600px', boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
                         animation: 'fadeIn 0.2s',
-                        maxHeight: '90vh', overflowY: 'auto' 
+                        maxHeight: '90vh', overflowY: 'auto'
                     }}>
                         {/* Header */}
                         <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #eee', paddingBottom: '15px', marginBottom: '20px' }}>
@@ -297,7 +297,7 @@ export default function AdminIssuePage() {
                                         {formatDate(selectedIssue.report_date || (selectedIssue as any).CreatedAt)}
                                     </div>
                                 </div>
-                                
+
                                 <div style={{ flex: 2, minWidth: '250px' }}>
                                     {/* --- ส่วนตอบกลับ --- */}
                                     <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>ข้อความตอบกลับ (ถึงผู้แจ้ง)</div>

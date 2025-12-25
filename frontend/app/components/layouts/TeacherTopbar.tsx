@@ -8,7 +8,9 @@ import { DownOutlined, UserOutlined, ExclamationCircleOutlined, LogoutOutlined, 
 import { GetUserProfile } from '../../services/user';
 import { Logout } from '../../services/login';
 import { useAuth } from "../../(modules)/roleCheck/authContext";
-import NewsModal from '../news/NewsModal'; 
+import NewsModal from '../news/NewsModal';
+import NotificationBell from '../notification/NotificationBell';
+import ReportIssueContent from '../issue/issueReport';
 
 export default function TeacherTopbar({ userRole, children }: { userRole: string; children?: React.ReactNode }) {
     const topbarHeight = 72;
@@ -16,10 +18,12 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
     const pathname = usePathname() || '';
 
     const [isNewsModalOpen, setIsNewsModalOpen] = useState(false);
-    
+
+    const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+
     const [userInitial, setUserInitial] = useState("?");
     const { logoutClient } = useAuth();
-    
+
     const navLinkStyle: React.CSSProperties = { color: 'rgba(255,255,255,0.95)', textDecoration: 'none', fontWeight: 700 };
 
     const getNavStyle = (href: string): React.CSSProperties => {
@@ -47,7 +51,7 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
         {
             key: 'report',
             icon: <ExclamationCircleOutlined />,
-            label: <Link href="/teacher/issueReport" style={{ color: 'inherit' }}>รายงานปัญหา</Link>,
+            label: 'รายงานปัญหา',
         },
         {
             key: 'logout',
@@ -78,6 +82,9 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
             });
         } else if (key === 'create_news') {
             setIsNewsModalOpen(true);
+        } else if (key === 'report') {
+            // ✅ 4. สั่งเปิด Modal เมื่อกดปุ่มรายงานปัญหา
+            setIsReportModalOpen(true);
         }
     };
 
@@ -99,11 +106,29 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
 
     return (
         <div style={{ fontFamily: "'Noto Sans Thai', sans-serif", minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-            
-            <NewsModal 
-                isOpen={isNewsModalOpen} 
-                onClose={() => setIsNewsModalOpen(false)} 
+
+            <NewsModal
+                isOpen={isNewsModalOpen}
+                onClose={() => setIsNewsModalOpen(false)}
             />
+
+            <Modal
+                title={
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <ExclamationCircleOutlined style={{ color: '#8A011D' }} /> 
+                        แจ้งปัญหาการใช้งาน / ติดตามสถานะ
+                    </div>
+                }
+                open={isReportModalOpen}
+                onCancel={() => setIsReportModalOpen(false)}
+                footer={null}
+                width={700}
+                centered
+                destroyOnClose
+            >
+                {/* เรียกใช้ Component ตัวเดียวกับที่ใช้ใน NotificationBell */}
+                <ReportIssueContent />
+            </Modal>
 
             <header
                 style={{
@@ -120,10 +145,10 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
                 }}
             >
                 <nav style={{ position: 'absolute', left: 120, display: 'flex', gap: 40 }}>
-                     <Link href="/teacher/dashboard" style={getNavStyle('/teacher/dashboard')}>หน้าหลัก</Link>
-                     <Link href="/teacher/group" style={getNavStyle('/teacher/group')}>กลุ่มในที่ปรึกษา</Link>
-                     <Link href="/teacher/topic" style={getNavStyle('/teacher/topic')}>หัวข้อโครงงาน</Link>
-                     <Link href="/teacher/progress" style={getNavStyle('/teacher/progress')}>ความคืบหน้า</Link>
+                    <Link href="/teacher/dashboard" style={getNavStyle('/teacher/dashboard')}>หน้าหลัก</Link>
+                    <Link href="/teacher/group" style={getNavStyle('/teacher/group')}>กลุ่มในที่ปรึกษา</Link>
+                    <Link href="/teacher/topic" style={getNavStyle('/teacher/topic')}>หัวข้อโครงงาน</Link>
+                    <Link href="/teacher/progress" style={getNavStyle('/teacher/progress')}>ความคืบหน้า</Link>
                 </nav>
 
                 <Link href="/teacher/dashboard" className="topbar-logo" style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -138,7 +163,9 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
                 </div>
 
                 <div style={{ position: 'absolute', right: 30, display: 'flex', alignItems: 'center', gap: 16 }}>
-                    <BellOutlined style={{ fontSize: '20px', cursor: 'pointer', color: '#fff' }} />
+
+                    <NotificationBell />
+
                     <Dropdown
                         menu={{ items: menuItems, onClick: onMenuClick }}
                         placement="bottomRight"

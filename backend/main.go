@@ -11,8 +11,8 @@ import (
 	"github.com/sut68/team07/backend/controller/evaluation"
 	"github.com/sut68/team07/backend/controller/group"
 	"github.com/sut68/team07/backend/controller/issues"
-	"github.com/sut68/team07/backend/controller/notification"
 	"github.com/sut68/team07/backend/controller/news"
+	"github.com/sut68/team07/backend/controller/notification"
 	"github.com/sut68/team07/backend/controller/progress"
 	"github.com/sut68/team07/backend/controller/topic"
 	"github.com/sut68/team07/backend/controller/updateStatus"
@@ -224,4 +224,5 @@ func main() {
 	}
 
 	r.Run(":8080")
+
 }

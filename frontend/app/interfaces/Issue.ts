@@ -18,6 +18,8 @@ export interface IssueReportInterface {
     ID?: number;
     detail?: string;
     report_date?: string;
+
+    admin_reply?: string;
     
     // Foreign Keys & Relations
     type_id?: number;

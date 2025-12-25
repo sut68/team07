@@ -251,7 +251,7 @@ func CreateUser(c *gin.Context) {
 
 	// กำหนดค่า Pass
 	var pass *bool
-	if input.RoleID == 3 { // Student
+	if input.RoleID == 3 {
 		isPass := false
 		pass = &isPass
 	} else {
@@ -323,7 +323,7 @@ func UpdateUser(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user"})
 		return
 	}
-
+	log.InsertLog(c, 29)
 	c.JSON(http.StatusOK, gin.H{"message": "User updated successfully", "data": user})
 }
 
@@ -374,7 +374,7 @@ func UpdateUserProfile(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update profile"})
 		return
 	}
-
+	log.InsertLog(c, 29)
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Update profile successfully",
 		"data":    user,
@@ -401,7 +401,7 @@ func DeleteUser(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete user"})
 		return
 	}
-
+	log.InsertLog(c,30)
 	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
 }
 

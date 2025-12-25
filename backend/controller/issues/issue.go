@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sut68/team07/backend/controller/log"
 	"github.com/sut68/team07/backend/database"
 	"github.com/sut68/team07/backend/entity"
 	"github.com/sut68/team07/backend/middleware"
@@ -56,7 +57,7 @@ func CreateIssue(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
+	log.InsertLog(c, 31)
 	// ส่งผลลัพธ์กลับ
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Issue reported successfully",
@@ -102,11 +103,11 @@ func GetMyIssues(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Invalid Token"})
 		return
 	}
-	userId := claims.ID // ดึง ID จาก Claims
+	userId := claims.ID 
 
 	// ค้นหา Issue โดยใส่เงื่อนไข WHERE user_id = ?
 	if err := db.Preload("User").Preload("Status").Preload("Type").
-		Where("user_id = ?", userId). // userId ที่ได้จาก Token
+		Where("user_id = ?", userId). 
 		Find(&issues).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -126,31 +127,31 @@ func UpdateIssueStatus(c *gin.Context) {
 	db := database.DB()
 	id := c.Param("id")
 
-	// 1. รับค่า Input (StatusID + AdminReply)
+	// รับค่า Input (StatusID + AdminReply)
 	var input UpdateIssueStatusInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// 2. ค้นหา Issue ที่จะอัปเดต
+	// ค้นหา Issue ที่จะอัปเดต
 	var issue entity.IssueReport
 	if err := db.Preload("Type").First(&issue, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Issue not found"})
 		return
 	}
 
-	// 3. ตรวจสอบ StatusID
+	// ตรวจสอบ StatusID
 	var status entity.IssueStatus
 	if err := db.First(&status, input.StatusID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Status not found"})
 		return
 	}
 
-	// 4. เริ่ม Transaction (เพื่อให้แน่ใจว่าบันทึกทั้ง Issue และ Notification สำเร็จพร้อมกัน)
+	// เริ่ม Transaction (เพื่อให้แน่ใจว่าบันทึกทั้ง Issue และ Notification สำเร็จพร้อมกัน)
 	tx := db.Begin()
 
-	// 4.1 อัปเดตข้อมูล Issue
+	// อัปเดตข้อมูล Issue
 	issue.StatusID = input.StatusID
 	if input.AdminReply != "" {
 		issue.AdminReply = input.AdminReply
@@ -162,7 +163,7 @@ func UpdateIssueStatus(c *gin.Context) {
 		return
 	}
 
-	// 4.2 ✅ สร้าง Notification แจ้งเตือนผู้ใช้
+	// สร้าง Notification แจ้งเตือนผู้ใช้
 	notificationMsg := fmt.Sprintf("สถานะปัญหา '%s' เปลี่ยนเป็น '%s'", issue.Type.Type, status.Status)
 	if input.AdminReply != "" {
 		notificationMsg = fmt.Sprintf("Admin ตอบกลับ: %s", input.AdminReply)
@@ -170,7 +171,7 @@ func UpdateIssueStatus(c *gin.Context) {
 
 	notification := entity.Notification{
 		UserID:  issue.UserID, // ส่งแจ้งเตือนไปหาเจ้าของ Issue
-		Title:   "มีการอัปเดตรายงานปัญหา #" + id,
+		Title:   "มีการอัปเดตรายงานปัญหา #",
 		Message: notificationMsg,
 		IsRead:  false,
 	}

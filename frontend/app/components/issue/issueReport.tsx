@@ -1,117 +1,114 @@
 "use client";
 import { useState, useEffect } from "react";
-// Import Services
-import { CreateIssue, GetMyIssues } from "../../services/issue"; // เช็ค path ให้ถูกต้อง
-import { GetUserProfile } from "../../services/user"; // ✅ เพิ่มการเรียก User เพื่อเอา ID
-
-// Import Interfaces
+import { CreateIssue, GetMyIssues } from "../../services/issue"; 
+import { GetUserProfile } from "../../services/user"; 
 import { IssueReportInterface, CreateIssueInterface } from "../../interfaces/Issue";
-
-// Import Icons & CSS
 import { BugOutlined, FileTextOutlined, LoadingOutlined } from "@ant-design/icons";
-import "../../style/issue-report.css"; 
+import "../../style/issue-report.css";
+import Swal from "sweetalert2";
 
 export default function ReportIssueContent() {
-  const [issues, setIssues] = useState<IssueReportInterface[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
-  
-  // Form State
-  const [detail, setDetail] = useState("");
-  const [typeID, setTypeID] = useState<number>(1); // Default 1 = Bug
+    const [issues, setIssues] = useState<IssueReportInterface[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [currentUserId, setCurrentUserId] = useState<number | null>(null);
 
-  // 1. โหลดข้อมูล User และ รายการปัญหาเมื่อเข้าหน้าเว็บ
-  useEffect(() => {
-    const fetchInitialData = async () => {
-        try {
-            // 1.1 ดึงข้อมูล User ปัจจุบันเพื่อเอา ID
-            const userRes = await GetUserProfile();
-            if (userRes.status === 200 && userRes.data) {
-                // เช็คโครงสร้างว่า backend ส่งมาเป็น { data: user } หรือ user โดยตรง
-                const userData = userRes.data.data || userRes.data;
-                setCurrentUserId(userData.ID);
+    // Form State
+    const [detail, setDetail] = useState("");
+    const [typeID, setTypeID] = useState<number>(1); 
+
+    useEffect(() => {
+        const fetchInitialData = async () => {
+            try {
+                const userRes = await GetUserProfile();
+                if (userRes.status === 200 && userRes.data) {
+                    const userData = userRes.data.data || userRes.data;
+                    setCurrentUserId(userData.ID);
+                }
+                await fetchIssues();
+            } catch (error) {
+                console.error("Error initializing data:", error);
+            } finally {
+                setLoading(false);
             }
+        };
+        fetchInitialData();
+    }, []);
 
-            // 1.2 ดึงรายการปัญหาทั้งหมด
-            await fetchIssues();
-
+    const fetchIssues = async () => {
+        try {
+            const res = await GetMyIssues();
+            if (res.status === 200) {
+                setIssues(res.data);
+            }
         } catch (error) {
-            console.error("Error initializing data:", error);
-        } finally {
-            setLoading(false);
+            console.error("Error fetching issues:", error);
         }
     };
 
-    fetchInitialData();
-  }, []);
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
 
-  // ฟังก์ชันดึงรายการปัญหา (แยกออกมาเพื่อให้เรียกใช้ซ้ำได้ตอนกด Submit)
-  const fetchIssues = async () => {
-      try {
-        const res = await GetMyIssues();
-        if (res.status === 200) {
-            setIssues(res.data);
+        if (!currentUserId) {
+            Swal.fire({ icon: 'error', title: 'ไม่พบข้อมูลผู้ใช้งาน', text: 'กรุณา Login ใหม่' });
+            return;
         }
-      } catch (error) {
-          console.error("Error fetching issues:", error);
-      }
-  };
+        if (!detail) {
+            Swal.fire({ icon: 'warning', title: 'ข้อมูลไม่ครบถ้วน', text: 'กรุณากรอกรายละเอียดปัญหา' });
+            return;
+        }
 
-  // 2. ฟังก์ชันบันทึกข้อมูล
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!currentUserId) {
-        alert("❌ ไม่พบข้อมูลผู้ใช้งาน กรุณา Login ใหม่");
-        return;
-    }
+        const confirmResult = await Swal.fire({
+            title: 'ยืนยันการแจ้งปัญหา?',
+            text: "คุณตรวจสอบรายละเอียดถูกต้องแล้วใช่ไหม?",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'ใช่, ส่งเรื่องเลย!',
+            cancelButtonText: 'ยกเลิก',
+            // ✅ กำหนด zIndex ให้สูงกว่า Modal ของ Antd (Modal ปกติ ~1000)
+            customClass: {
+                container: 'swal-z-index-high' 
+            }
+        });
 
-    if (!detail) {
-        alert("⚠️ กรุณากรอกรายละเอียดปัญหา");
-        return;
-    }
+        if (confirmResult.isConfirmed) {
+            const data: CreateIssueInterface = {
+                detail: detail,
+                type_id: Number(typeID),
+                user_id: currentUserId,
+            };
 
-    const data: CreateIssueInterface = {
-        detail: detail,
-        type_id: Number(typeID),
-        user_id: currentUserId, // ✅ ส่ง ID ของคนที่ Login อยู่จริง
+            try {
+                Swal.fire({ title: 'กำลังส่งข้อมูล...', didOpen: () => Swal.showLoading() });
+                const res = await CreateIssue(data);
+
+                if (res.status === 201) {
+                    Swal.close();
+                    await Swal.fire({ icon: 'success', title: 'แจ้งปัญหาสำเร็จ!', timer: 1500, showConfirmButton: false });
+                    setDetail("");
+                    fetchIssues();
+                } else {
+                    Swal.close();
+                    Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: res.data.error });
+                }
+            } catch (error) {
+                Swal.close();
+                Swal.fire({ icon: 'error', title: 'การเชื่อมต่อล้มเหลว' });
+            }
+        }
     };
 
-    try {
-        const res = await CreateIssue(data);
-        if (res.status === 201) {
-            alert("✅ แจ้งปัญหาสำเร็จ!");
-            setDetail(""); // เคลียร์ฟอร์ม
-            fetchIssues(); // โหลดข้อมูลใหม่มาแสดงทันที
-        } else {
-            alert("❌ เกิดข้อผิดพลาด: " + (res.data.error || "Unknown Error"));
-        }
-    } catch (error) {
-        console.error("Submit Error:", error);
-        alert("❌ ไม่สามารถเชื่อมต่อ Server ได้");
-    }
-  };
-
-  return (
-    <div className="report-container">
-      <div className="report-card">
-        
-        {/* Header Section */}
-        <div className="report-header">
-          <h2>แจ้งปัญหาการใช้งาน (Report Issue)</h2>
-          <p>พบเจอปัญหาหรือข้อเสนอแนะ แจ้งให้เราทราบได้ที่นี่</p>
-        </div>
-
-        <div className="report-content">
-            
+    // ✅ ปรับ Layout ให้เหมาะกับการอยู่ใน Modal (ตัด container ใหญ่ออก)
+    return (
+        <div style={{ padding: '0 10px' }}>
             {/* Form Section */}
-            <form onSubmit={handleSubmit} className="issue-form">
+            <form onSubmit={handleSubmit} className="issue-form" style={{ marginBottom: '20px' }}>
                 <div className="form-group">
-                    <label>หัวข้อ/ประเภทปัญหา</label>
+                    <label>ประเภทปัญหา</label>
                     <select 
                         className="form-input" 
                         value={typeID} 
                         onChange={(e) => setTypeID(Number(e.target.value))}
+                        style={{ width: '100%', padding: '8px', marginBottom: '10px' }}
                     >
                         <option value={1}>Bug (ข้อผิดพลาดของระบบ)</option>
                         <option value={2}>Feature Request (ขอฟีเจอร์เพิ่ม)</option>
@@ -122,66 +119,73 @@ export default function ReportIssueContent() {
                     <label>รายละเอียด</label>
                     <textarea 
                         className="form-input" 
-                        rows={4}
-                        placeholder="อธิบายปัญหาที่พบ หรือระบุขั้นตอนที่ทำให้เกิด Error..." 
+                        rows={3}
+                        placeholder="ระบุรายละเอียด..." 
                         value={detail}
                         onChange={(e) => setDetail(e.target.value)}
+                        style={{ width: '100%', padding: '8px' }}
                     />
                 </div>
 
                 <button 
                     type="submit" 
                     className="btn-submit"
-                    disabled={!currentUserId} // ป้องกันการกดถ้ายังโหลด User ไม่เสร็จ
+                    disabled={!currentUserId}
+                    style={{ 
+                        width: '100%', padding: '10px', backgroundColor: '#8A011D', color: '#fff', 
+                        border: 'none', borderRadius: '5px', cursor: 'pointer', marginTop: '10px' 
+                    }}
                 >
-                    {currentUserId ? "ส่งเรื่องแจ้งปัญหา" : "กำลังโหลดข้อมูลผู้ใช้..."}
+                    {currentUserId ? "ส่งเรื่องแจ้งปัญหา" : "กำลังโหลด..."}
                 </button>
             </form>
 
-            <hr className="divider" />
+            <hr style={{ margin: '20px 0', border: '0', borderTop: '1px solid #eee' }} />
 
             {/* List Section */}
-            <h3>ประวัติการแจ้งปัญหา</h3>
-            <div className="issue-list">
+            <h4 style={{ marginBottom: '15px' }}>ประวัติการแจ้งปัญหา</h4>
+            <div className="issue-list" style={{ maxHeight: '300px', overflowY: 'auto' }}>
                 {loading ? (
-                    <div style={{textAlign: 'center', padding: 20}}>
-                        <LoadingOutlined style={{fontSize: 24, color: '#9a0120'}} /> กำลังโหลด...
+                    <div style={{ textAlign: 'center', padding: 20 }}>
+                        <LoadingOutlined /> กำลังโหลด...
                     </div>
                 ) : issues.length === 0 ? (
-                    <p className="no-data">ยังไม่มีรายการแจ้งปัญหา</p>
+                    <p style={{ textAlign: 'center', color: '#999' }}>ยังไม่มีรายการแจ้งปัญหา</p>
                 ) : (
                     issues.map((item) => (
-                        <div key={item.ID} className="issue-item">
-                            <div className="issue-icon">
-                                {/* เลือก Icon ตามประเภทปัญหา */}
+                        <div key={item.ID} className="issue-item" style={{ 
+                            border: '1px solid #eee', borderRadius: '8px', padding: '10px', marginBottom: '10px',
+                            display: 'flex', gap: '10px', alignItems: 'flex-start'
+                        }}>
+                            <div style={{ fontSize: '20px', color: '#555' }}>
                                 {item.type?.type === 'Bug' ? <BugOutlined /> : <FileTextOutlined />}
                             </div>
-                            <div className="issue-info">
-                                <div className="issue-header-row">
-                                    <span className="issue-type">{item.type?.type || "General"}</span>
-                                    {/* จัดการสีของ Badge ตาม Status */}
-                                    <span className={`issue-status status-${item.status?.status.toLowerCase().replace(" ", "-") || "pending"}`}>
+                            <div style={{ flex: 1 }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                                    <span style={{ fontWeight: 'bold', fontSize: '14px' }}>{item.type?.type || "General"}</span>
+                                    <span style={{ 
+                                        fontSize: '12px', padding: '2px 8px', borderRadius: '10px',
+                                        backgroundColor: item.status?.status === 'Completed' ? '#f6ffed' : '#fffbe6',
+                                        color: item.status?.status === 'Completed' ? '#52c41a' : '#faad14',
+                                        border: `1px solid ${item.status?.status === 'Completed' ? '#b7eb8f' : '#ffe58f'}`
+                                    }}>
                                         {item.status?.status || "Pending"}
                                     </span>
                                 </div>
-                                <p className="issue-detail">{item.detail}</p>
-                                <div className="issue-footer">
-                                    <span>แจ้งโดย: {item.user?.firstname} {item.user?.lastname}</span>
-                                    <span>
-                                        วันที่: {item.report_date 
-                                            ? new Date(item.report_date).toLocaleDateString('th-TH', {
-                                                year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute:'2-digit'
-                                              }) 
-                                            : "-"}
-                                    </span>
+                                <p style={{ fontSize: '13px', color: '#666', margin: 0 }}>{item.detail}</p>
+                                <div style={{ fontSize: '11px', color: '#999', marginTop: '5px' }}>
+                                    {item.report_date ? new Date(item.report_date).toLocaleDateString('th-TH') : "-"}
                                 </div>
+                                {item.admin_reply && (
+                                    <div style={{ marginTop: '8px', padding: '8px', backgroundColor: '#f9f9f9', borderRadius: '4px', fontSize: '12px' }}>
+                                        <strong>Admin ตอบกลับ:</strong> <span style={{ color: '#1890ff' }}>{item.admin_reply}</span>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     ))
                 )}
             </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 }
