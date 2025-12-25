@@ -65,6 +65,51 @@ func CreateIssue(c *gin.Context) {
 	})
 }
 
+// PATCH: ผู้ใช้แก้ไขรายละเอียดปัญหาของตัวเอง (เฉพาะสถานะ In Progress)
+func UpdateIssueReport(c *gin.Context) {
+	db := database.DB()
+	id := c.Param("id")
+
+	// รับค่า Input (ใช้ struct เดิมได้ ถ้า field เหมือนกัน)
+	var input CreateIssueInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// ค้นหา Issue เดิม
+	var issue entity.IssueReport
+	if err := db.Preload("Status").First(&issue, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Issue not found"})
+		return
+	}
+
+	// ✅ เช็คสิทธิ์: ต้องเป็นเจ้าของ Issue เท่านั้น
+	if issue.UserID != input.UserID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "You are not allowed to edit this issue"})
+		return
+	}
+
+	// ✅ เช็คสถานะ: ต้องเป็น "In Progress" เท่านั้นถึงจะแก้ได้ (StatusID = 2 สมมติ)
+	// หรือถ้าอยากให้แก้ตอน Pending ได้ด้วย ก็ใช้เงื่อนไข issue.StatusID != 1 (Completed)
+	if issue.StatusID != 3 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Can only edit issues that are Pending"})
+		return
+	}
+
+	// อัปเดตข้อมูล
+	issue.Detail = input.Detail
+	issue.TypeID = input.TypeID
+	// (วันที่ ReportDate ไม่ควรอัปเดต หรือจะอัปเดตเป็น Now ก็ได้แล้วแต่ Policy)
+
+	if err := db.Save(&issue).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Issue updated successfully", "data": issue})
+}
+
 // GET: ดึงข้อมูลรายการแจ้งปัญหาทั้งหมด
 func GetIssueReports(c *gin.Context) {
 	db := database.DB()
@@ -103,11 +148,11 @@ func GetMyIssues(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Invalid Token"})
 		return
 	}
-	userId := claims.ID 
+	userId := claims.ID
 
 	// ค้นหา Issue โดยใส่เงื่อนไข WHERE user_id = ?
 	if err := db.Preload("User").Preload("Status").Preload("Type").
-		Where("user_id = ?", userId). 
+		Where("user_id = ?", userId).
 		Find(&issues).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

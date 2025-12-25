@@ -29,10 +29,16 @@ async function UpdateIssueStatus(id: number, statusID: number, adminReply?: stri
     });
 }
 
+// PATCH: แก้ไขรายละเอียดปัญหา (User Edit)
+async function UpdateIssue(id: number, data: CreateIssueInterface) {
+    return await api.patch(`/issues/${id}`, data);
+}
+
 export {
     GetIssues,
     GetIssueById,
     CreateIssue,
     GetMyIssues,
-    UpdateIssueStatus
+    UpdateIssueStatus,
+    UpdateIssue
 };

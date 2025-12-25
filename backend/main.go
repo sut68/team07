@@ -214,10 +214,11 @@ func main() {
 		// อนุญาตให้ Admin, Teacher, Student เข้าถึงได้
 		issueGroup.Use(middleware.RoleGuard("Admin", "Teacher", "Student"))
 		{
-			issueGroup.GET("", issues.GetIssueReports)        // GET /issues (List)
-			issueGroup.POST("", issues.CreateIssue)           // POST /issues (Create)
-			issueGroup.GET("/:id", issues.GetIssueReportByID) // GET /issues/:id (Get By ID)
-			issueGroup.GET("/my", issues.GetMyIssues)         // GET /issues/my (Get My Issues)
+			issueGroup.GET("", issues.GetIssueReports)         // GET /issues (List)
+			issueGroup.POST("", issues.CreateIssue)            // POST /issues (Create)
+			issueGroup.GET("/:id", issues.GetIssueReportByID)  // GET /issues/:id (Get By ID)
+			issueGroup.GET("/my", issues.GetMyIssues)          // GET /issues/my (Get My Issues)
+			issueGroup.PATCH("/:id", issues.UpdateIssueReport) // PATCH /issues/:id (User Edit)
 		}
 
 		protected.POST("/logout", authHandler.Logout)
