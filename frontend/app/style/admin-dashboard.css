@@ -140,7 +140,7 @@
 
 .status-select:focus {
     outline: none;
-    box-shadow: 0 0 0 2px rgba(154, 1, 32, 0.2);
+    box-shadow: 0 0 0 2px rgba(166, 166, 166, 0.318);
 }
 
 /* Responsive: มือถือให้เรียงลงมา */

@@ -73,6 +73,7 @@ func SetUpDatabase() {
         &entity.ActionType{},
         &entity.Room{},
         &entity.AppointmentType{},
+		&entity.Notification{},
     )
 
 	db.AutoMigrate(

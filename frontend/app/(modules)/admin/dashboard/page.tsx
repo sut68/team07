@@ -62,8 +62,6 @@ export default function AdminDashboardPage() {
 
     // ฟังก์ชันคลิกแถวเพื่อไปหน้าจัดการ Issue
     const handleRowClick = (id: number) => {
-        // ไปที่ path /admin/issue ตามที่คุณต้องการ
-        // หมายเหตุ: ถ้าต้องการส่ง ID ไปด้วย อาจจะใช้ router.push(`/admin/issue/${id}`) หรือ router.push(`/admin/issue?id=${id}`) แทนได้ครับ
         router.push('/admin/issue'); 
     };
 
@@ -96,7 +94,7 @@ export default function AdminDashboardPage() {
                                         <th style={{ width: '120px' }}>ประเภท</th>
                                         <th>รายละเอียด</th>
                                         <th style={{ width: '150px' }}>ผู้แจ้ง</th>
-                                        <th style={{ width: '120px' }}>สถานะ</th>
+                                        <th style={{ width: '140px' }}>สถานะ</th>
                                     </tr>
                                 </thead>
                                 <tbody>
