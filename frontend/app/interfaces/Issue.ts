@@ -18,6 +18,8 @@ export interface IssueReportInterface {
     ID?: number;
     detail?: string;
     report_date?: string;
+
+    admin_reply?: string;
     
     // Foreign Keys & Relations
     type_id?: number;
@@ -27,7 +29,7 @@ export interface IssueReportInterface {
     status?: IssueStatusInterface;
     
     user_id?: number;
-    user?: UserProfileInterface; // ✅ แก้มาใช้ Interface ของคุณ
+    user?: UserProfileInterface; 
 }
 
 

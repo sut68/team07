@@ -6,26 +6,20 @@ import (
 	"net/http"
 	"regexp"
 	"strconv"
-
 	"github.com/gin-gonic/gin"
 	"github.com/sut68/team07/backend/controller/log"
 	"github.com/sut68/team07/backend/database"
 	"github.com/sut68/team07/backend/entity"
 	"github.com/sut68/team07/backend/middleware"
-	"golang.org/x/crypto/bcrypt"
+	"github.com/sut68/team07/backend/service"
 )
-
-// HashPassword ทำการเข้ารหัสรหัสผ่าน
-func HashPassword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
-	return string(bytes), err
-}
 
 // POST: /users/import-csv
 func ImportUsersCSV(c *gin.Context) {
-	fmt.Println("🚀 [DEBUG] Start ImportUsersCSV Function...")
 
 	db := database.DB()
+
+	jwtService := service.NewJwtService()
 
 	// รับไฟล์จาก Form-Data
 	file, err := c.FormFile("file")
@@ -50,8 +44,6 @@ func ImportUsersCSV(c *gin.Context) {
 		return
 	}
 
-	fmt.Printf("🚀 [DEBUG] อ่าน CSV ได้ %d แถว (เริ่มตรวจสอบ Validation...)\n", len(records))
-
 	var phoneRegex = regexp.MustCompile(`^\d{10}$`)
 
 	var users []entity.User
@@ -69,10 +61,12 @@ func ImportUsersCSV(c *gin.Context) {
 
 		username := row[0]
 		phone := row[5]
+		firstname := row[2]
+		lastname := row[3]
+		email := row[4]
 
-		// Validation: ตรวจ Phone
+		// Validation: ตรวจ Phone Regex
 		if !phoneRegex.MatchString(phone) {
-			fmt.Printf("❌ [DEBUG] Row %d Phone ผิด format: %s\n", i+1, phone)
 			tx.Rollback()
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": fmt.Sprintf("Row %d: Phone '%s' ไม่ถูกต้อง (ต้องเป็นตัวเลข 10 หลัก)", i+1, phone),
@@ -94,19 +88,58 @@ func ImportUsersCSV(c *gin.Context) {
 			return
 		}
 
-		hashedPassword, _ := HashPassword(row[1])
+		// Validation: ตรวจสอบข้อมูลซ้ำ (Unique Check)
+		var checkUser entity.User
+		// Username
+		if err := db.Where("username = ?", username).First(&checkUser).Error; err == nil {
+			tx.Rollback()
+			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Row %d: Username '%s' มีอยู่ในระบบแล้ว", i+1, username)})
+			return
+		}
+		// Email
+		if email != "" {
+			if err := db.Where("email = ?", email).First(&checkUser).Error; err == nil {
+				tx.Rollback()
+				c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Row %d: Email '%s' มีอยู่ในระบบแล้ว", i+1, email)})
+				return
+			}
+		}
+		// Phone
+		if err := db.Where("phone = ?", phone).First(&checkUser).Error; err == nil {
+			tx.Rollback()
+			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Row %d: Phone '%s' มีอยู่ในระบบแล้ว", i+1, phone)})
+			return
+		}
+		// Firstname + Lastname
+		if err := db.Where("firstname = ? AND lastname = ?", firstname, lastname).First(&checkUser).Error; err == nil {
+			tx.Rollback()
+			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Row %d: ชื่อ-นามสกุล '%s %s' มีอยู่ในระบบแล้ว", i+1, firstname, lastname)})
+			return
+		}
+
+		hashedPassword := jwtService.HashPassword(row[1])
+
+		// กำหนดค่า Pass
+		var pass *bool
+		if roleID == 3 { // Student
+			isPass := false
+			pass = &isPass
+		} else {
+			pass = nil
+		}
 
 		user := entity.User{
 			Username:  username,
 			Password:  hashedPassword,
-			Firstname: row[2],
-			Lastname:  row[3],
-			Email:     row[4],
+			Firstname: firstname,
+			Lastname:  lastname,
+			Email:     email,
 			Phone:     phone,
 			GenderID:  uint(genderID),
 			BranchID:  uint(branchID),
 			RoleID:    uint(roleID),
 			StatusID:  uint(statusID),
+			Pass:      pass,
 		}
 		users = append(users, user)
 	}
@@ -164,6 +197,8 @@ func CreateUser(c *gin.Context) {
 	db := database.DB()
 	var input CreateUserInput
 
+	jwtService := service.NewJwtService()
+
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -181,10 +216,46 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), 14)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+	// -----------------------------------------------------
+	// ตรวจสอบข้อมูลซ้ำ (Unique Check)
+	// -----------------------------------------------------
+	var checkUser entity.User
+
+	// Username
+	if err := db.Where("username = ?", input.Username).First(&checkUser).Error; err == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Username นี้มีอยู่ในระบบแล้ว"})
 		return
+	}
+	// Email
+	if input.Email != "" {
+		if err := db.Where("email = ?", input.Email).First(&checkUser).Error; err == nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Email นี้มีอยู่ในระบบแล้ว"})
+			return
+		}
+	}
+	// Phone
+	if input.Phone != "" {
+		if err := db.Where("phone = ?", input.Phone).First(&checkUser).Error; err == nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "เบอร์โทรศัพท์นี้มีอยู่ในระบบแล้ว"})
+			return
+		}
+	}
+	// Firstname + Lastname
+	if err := db.Where("firstname = ? AND lastname = ?", input.Firstname, input.Lastname).First(&checkUser).Error; err == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ชื่อและนามสกุลนี้มีอยู่ในระบบแล้ว"})
+		return
+	}
+	// -----------------------------------------------------
+
+	hashedPassword := jwtService.HashPassword(input.Password)
+
+	// กำหนดค่า Pass
+	var pass *bool
+	if input.RoleID == 3 {
+		isPass := false
+		pass = &isPass
+	} else {
+		pass = nil
 	}
 
 	user := entity.User{
@@ -198,6 +269,7 @@ func CreateUser(c *gin.Context) {
 		BranchID:  input.BranchID,
 		RoleID:    input.RoleID,
 		StatusID:  input.StatusID,
+		Pass:      pass,
 	}
 
 	if err := db.Create(&user).Error; err != nil {
@@ -212,7 +284,7 @@ func CreateUser(c *gin.Context) {
 type UpdateUserInfoInput struct {
 	Firstname string `json:"firstname"`
 	Lastname  string `json:"lastname"`
-	StatusID  uint   `json:"status_id"` // เพิ่มบรรทัดนี้: เพื่อให้รับ StatusID ได้
+	StatusID  uint   `json:"status_id"`
 }
 
 // PATCH: Update User
@@ -237,16 +309,21 @@ func UpdateUser(c *gin.Context) {
 		return
 	}
 
-	// แก้ไขตรงนี้: เพิ่ม StatusID ลงไปในการอัปเดต
+	var checkUser entity.User
+	if err := db.Where("firstname = ? AND lastname = ? AND id != ?", input.Firstname, input.Lastname, id).First(&checkUser).Error; err == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ชื่อและนามสกุลนี้มีอยู่แล้วในระบบ"})
+		return
+	}
+
 	if err := db.Model(&user).Updates(map[string]interface{}{
 		"Firstname": input.Firstname,
 		"Lastname":  input.Lastname,
-		"StatusID":  input.StatusID, // บันทึกสถานะใหม่
+		"StatusID":  input.StatusID,
 	}).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user"})
 		return
 	}
-
+	log.InsertLog(c, 29)
 	c.JSON(http.StatusOK, gin.H{"message": "User updated successfully", "data": user})
 }
 
@@ -277,11 +354,27 @@ func UpdateUserProfile(c *gin.Context) {
 		return
 	}
 
+	// เช็ค Email ซ้ำกับคนอื่น (ไม่รวมตัวเอง)
+	var checkUser entity.User
+	if input.Email != "" {
+		if err := db.Where("email = ? AND id != ?", input.Email, userId).First(&checkUser).Error; err == nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Email นี้ถูกใช้งานแล้ว"})
+			return
+		}
+	}
+	// เช็ค Phone ซ้ำกับคนอื่น (ไม่รวมตัวเอง)
+	if input.Phone != "" {
+		if err := db.Where("phone = ? AND id != ?", input.Phone, userId).First(&checkUser).Error; err == nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "เบอร์โทรศัพท์นี้ถูกใช้งานแล้ว"})
+			return
+		}
+	}
+
 	if err := db.Model(&user).Updates(input).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update profile"})
 		return
 	}
-
+	log.InsertLog(c, 29)
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Update profile successfully",
 		"data":    user,
@@ -308,7 +401,7 @@ func DeleteUser(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete user"})
 		return
 	}
-
+	log.InsertLog(c,30)
 	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
 }
 

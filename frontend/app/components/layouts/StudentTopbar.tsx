@@ -1,30 +1,35 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { GetUserProfile } from '../../services/user'; // Path ของ service คุณ
+import { GetUserProfile } from '../../services/user';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { Dropdown, Avatar, Modal } from 'antd';
-import { DownOutlined, UserOutlined, ExclamationCircleOutlined, LogoutOutlined, BellOutlined } from '@ant-design/icons';
+import { DownOutlined, UserOutlined, ExclamationCircleOutlined, LogoutOutlined } from '@ant-design/icons';
 import { Logout } from '../../services/login';
 import { useAuth } from "../../(modules)/roleCheck/authContext";
-export default function StudentTopbar({ userRole, children }: { userRole: string; children?: React.ReactNode }) {
+import NotificationBell from '../notification/NotificationBell';
+import ReportIssueContent from '../issue/issueReport';
+
+export default function StudentTopbar({ children }: { userRole: string; children?: React.ReactNode }) {
     const topbarHeight = 72;
     const router = useRouter();
     const { logoutClient } = useAuth();
 
+    const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+
+    // --- State Declarations (ประกาศตัวแปร State ไว้บนสุด) ---
     const [userInitial, setUserInitial] = useState("?");
 
+    // --- Effects ---
     useEffect(() => {
+        // ฟังก์ชันดึงข้อมูลผู้ใช้
         const fetchUserData = async () => {
             try {
                 const res = await GetUserProfile();
-                // โครงสร้างข้อมูล: res.data.data.firstname (ตามที่คุยกันรอบก่อน)
                 if (res.status === 200 && res.data && res.data.data) {
                     const userData = res.data.data;
-                    // ใช้ firstname เป็นหลัก ถ้าไม่มีให้ใช้ username
                     const nameToShow = userData.firstname || userData.username || "?";
-                    // ตัดเอาตัวแรก และแปลงเป็นตัวพิมพ์ใหญ่
                     setUserInitial(nameToShow.charAt(0).toUpperCase());
                 }
             } catch (error) {
@@ -33,11 +38,12 @@ export default function StudentTopbar({ userRole, children }: { userRole: string
         };
 
         fetchUserData();
+
     }, []);
 
+    // --- Styles ---
     const navLinkStyle: React.CSSProperties = { color: 'rgba(255,255,255,0.95)', textDecoration: 'none', fontWeight: 700 };
     const pathname = usePathname() || '';
-
     const getNavStyle = (href: string): React.CSSProperties => {
         const isActive = pathname === href || (href !== '/' && pathname.startsWith(href));
         return {
@@ -48,15 +54,18 @@ export default function StudentTopbar({ userRole, children }: { userRole: string
             transition: 'border-color 150ms ease, padding-bottom 150ms ease',
         };
     };
+
+    // --- Handlers ---
     const handleLogout = async () => {
         try {
             await Logout();
-            router.replace('/login'); // เปลี่ยนหน้าก่อน
-            logoutClient(); // 2. *** สำคัญ *** แจ้ง Client ให้ลบ State ทิ้งทันที
+            router.replace('/login');
+            logoutClient();
         } catch (error) {
             router.replace('/login');
         }
     };
+
     const menuItems = [
         {
             key: 'profile',
@@ -66,7 +75,7 @@ export default function StudentTopbar({ userRole, children }: { userRole: string
         {
             key: 'report',
             icon: <ExclamationCircleOutlined />,
-            label: <Link href="/student/issueReport" style={{ color: 'inherit' }}>รายงานปัญหา</Link>,
+            label: 'รายงานปัญหา',
         },
         {
             key: 'logout',
@@ -85,6 +94,9 @@ export default function StudentTopbar({ userRole, children }: { userRole: string
                 cancelText: 'ยกเลิก',
                 onOk: handleLogout,
             });
+        } else if (key === 'report') {
+            // ✅ 4. สั่งเปิด Modal เมื่อกดปุ่มรายงานปัญหา
+            setIsReportModalOpen(true);
         }
     };
 
@@ -97,6 +109,25 @@ export default function StudentTopbar({ userRole, children }: { userRole: string
                 flexDirection: 'column',
             }}
         >
+
+            <Modal
+                title={
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <ExclamationCircleOutlined style={{ color: '#8A011D' }} />
+                        แจ้งปัญหาการใช้งาน / ติดตามสถานะ
+                    </div>
+                }
+                open={isReportModalOpen}
+                onCancel={() => setIsReportModalOpen(false)}
+                footer={null}
+                width={700}
+                centered
+                destroyOnClose
+            >
+                {/* เรียกใช้ Component ตัวเดียวกับที่ใช้ใน NotificationBell */}
+                <ReportIssueContent />
+            </Modal>
+
             <header
                 style={{
                     height: topbarHeight,
@@ -123,17 +154,16 @@ export default function StudentTopbar({ userRole, children }: { userRole: string
                 <Link href="/student/dashboard" aria-label="หน้าหลัก" className="topbar-logo" style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
                     <Image src="/image/logo1.png" alt="SUT" width={90} height={38} priority />
                 </Link>
-
                 <div style={{ position: 'absolute', right: 200, display: 'flex', gap: 40, alignItems: 'center' }}>
                     <Link href="/student/chat" style={getNavStyle('/chat')}>แชท</Link>
-                    {/* <Link href="/student/chat" style={navLinkStyle}>แชท</Link> */}
                     <Link href="/student/appointment" style={getNavStyle('/student/appointment')}>การนัดหมาย</Link>
                     <Link href="/student/evaluation" style={getNavStyle('/student/evaluation')}>การประเมิน</Link>
                     <Link href="/student/storage" style={getNavStyle('/student/storage')}>คลังโครงงาน</Link>
                 </div>
-                
                 <div style={{ position: 'absolute', right: 30, display: 'flex', alignItems: 'center', gap: 16 }}>
-                    <BellOutlined style={{ fontSize: '20px', cursor: 'pointer', color: '#fff' }} />
+
+                    <NotificationBell />
+
                     <Dropdown
                         menu={{ items: menuItems, onClick: onMenuClick }}
                         placement="bottomRight"
@@ -151,7 +181,6 @@ export default function StudentTopbar({ userRole, children }: { userRole: string
                     </Dropdown>
                 </div>
             </header>
-
             <main style={{ padding: 20, paddingTop: 30, flexGrow: 1 }}>
                 {children}
             </main>
