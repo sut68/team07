@@ -12,6 +12,7 @@ import (
 	"github.com/sut68/team07/backend/controller/importuser"
 	"github.com/sut68/team07/backend/controller/issues"
 	"github.com/sut68/team07/backend/controller/progress"
+	"github.com/sut68/team07/backend/controller/storage"
 	"github.com/sut68/team07/backend/controller/topic"
 	"github.com/sut68/team07/backend/controller/updateStatus"
 	"github.com/sut68/team07/backend/controller/users"
@@ -133,6 +134,12 @@ func main() {
 			teacherGroup.POST("/topics", topic.CreateTopic)
 			teacherGroup.PATCH("/topics/:id", topic.UpdateTopic)
 			teacherGroup.DELETE("/topics/:id", topic.DeleteTopic)
+			// == Storage ===========================
+			teacherGroup.GET("/storage/projects", storage.ListProjects)
+			teacherGroup.GET("/storage/projects/:id", storage.GetProject)
+			teacherGroup.POST("/storage/projects", storage.CreateProject)
+			teacherGroup.PATCH("/storage/projects/:id", storage.UpdateProject)
+			teacherGroup.DELETE("/storage/projects/:id", storage.DeleteProject)
 			// Status Update
 			teacherGroup.PATCH("/groups/:id/status", updateStatus.UpdateGroupStatus)
 		}
@@ -162,6 +169,10 @@ func main() {
 			studentGroup.GET("/topic", topic.GetStudentTopic)
 			studentGroup.POST("/topics/:id/select", topic.SelectTopic)
 			studentGroup.POST("/topics/cancel-selection", topic.CancelSelection)
+
+			// Storage (Read-only for students)
+			studentGroup.GET("/storage/projects", storage.ListProjectsStudent)
+			studentGroup.GET("/storage/projects/:id", storage.GetProjectStudent)
 		}
 
 		teacherOrStudentGroup := protected.Group("/groupProject")

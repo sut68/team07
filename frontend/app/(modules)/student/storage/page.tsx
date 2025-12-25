@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Typography, Row, Col, Modal, Tag, Space, Empty, message, ConfigProvider, Select, Descriptions } from 'antd';
 import { BookOutlined, FileTextOutlined, UserOutlined, CalendarOutlined, DownloadOutlined, SearchOutlined } from '@ant-design/icons';
-import { ProjectStorage } from '@/app/interfaces/Repository';
-import { getProjects } from '@/app/services/repository';
+import { ProjectStorage } from '@/app/interfaces/storage';
+import { getProjects } from '@/app/services/storage';
 
 const { Title, Text, Paragraph } = Typography;
 const { Search } = Input;
@@ -22,7 +22,7 @@ export default function StudentStoragePage() {
     const fetchProjects = async () => {
         setLoading(true);
         try {
-            const res = await getProjects({ year: selectedYear, keyword: searchKeyword });
+            const res = await getProjects({ year: selectedYear, keyword: searchKeyword, role: 'Student' });
             setProjects(res.data);
             setFilteredProjects(res.data);
         } catch (error) {
@@ -153,7 +153,7 @@ export default function StudentStoragePage() {
 
                                     <div style={{ marginBottom: 12 }}>
                                         <Text type="secondary" style={{ fontSize: 12 }}>
-                                            <UserOutlined /> อาจารย์ที่ปรึกษา: {project.teacher?.first_name} {project.teacher?.last_name}
+                                            <UserOutlined /> อาจารย์ที่ปรึกษา: {project.teacher?.firstname} {project.teacher?.lastname}
                                         </Text>
                                     </div>
 
@@ -221,7 +221,7 @@ export default function StudentStoragePage() {
                                 <Descriptions.Item label="อาจารย์ที่ปรึกษา">
                                     <Space>
                                         <UserOutlined />
-                                        <Text>{selectedProject.teacher?.first_name} {selectedProject.teacher?.last_name}</Text>
+                                        <Text>{selectedProject.teacher?.firstname} {selectedProject.teacher?.lastname}</Text>
                                     </Space>
                                 </Descriptions.Item>
                                 <Descriptions.Item label="บทคัดย่อ">

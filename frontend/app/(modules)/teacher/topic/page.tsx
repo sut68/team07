@@ -33,10 +33,6 @@ export default function TeacherTopicPage() {
             let currentTeacherID = teacherID;
             if (!currentTeacherID) {
                 const user = await GetMe();
-                // Assuming User definition has ID, or map it.
-                // Backend response for GetMe usually returns { id: ..., role: ... } directly or wrapped.
-                // Checking interfaces/Login.ts: UserDataInterface { id: number ... }
-                // The service GetMe returns res.data which IS UserDataInterface.
                 currentTeacherID = user.id;
                 setTeacherID(user.id);
             }

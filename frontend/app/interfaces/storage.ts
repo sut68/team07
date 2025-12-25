@@ -7,9 +7,9 @@ export interface ProjectStorage {
     file_path: string;
     teacher_id: number;
     teacher?: {
-        id: number;
-        first_name: string;
-        last_name: string;
+        ID: number;
+        firstname: string;
+        lastname: string;
     };
     CreatedAt: string;
     UpdatedAt: string;
