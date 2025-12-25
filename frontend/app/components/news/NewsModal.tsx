@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import './news.css'; 
+import '../../style/news.css';
 import { News } from '../../interfaces/News';
 import { createNews, updateNews } from '../../services/news';
 import { Toast_success, Toast_fail } from '../Webmessage';
