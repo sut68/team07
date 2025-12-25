@@ -70,7 +70,7 @@ func GetIssueReports(c *gin.Context) {
 	db := database.DB()
 	var issues []entity.IssueReport
 
-	if err := db.Preload("User").Preload("Status").Preload("Type").Find(&issues).Error; err != nil {
+	if err := db.Preload("User").Preload("User.Role").Preload("Status").Preload("Type").Find(&issues).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -171,7 +171,7 @@ func UpdateIssueStatus(c *gin.Context) {
 
 	notification := entity.Notification{
 		UserID:  issue.UserID, // ส่งแจ้งเตือนไปหาเจ้าของ Issue
-		Title:   "มีการอัปเดตรายงานปัญหา #",
+		Title:   "มีการอัปเดตรายงานปัญหา",
 		Message: notificationMsg,
 		IsRead:  false,
 	}

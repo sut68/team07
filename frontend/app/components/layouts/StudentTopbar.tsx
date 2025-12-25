@@ -9,11 +9,14 @@ import { DownOutlined, UserOutlined, ExclamationCircleOutlined, LogoutOutlined }
 import { Logout } from '../../services/login';
 import { useAuth } from "../../(modules)/roleCheck/authContext";
 import NotificationBell from '../notification/NotificationBell';
+import ReportIssueContent from '../issue/issueReport';
 
 export default function StudentTopbar({ children }: { userRole: string; children?: React.ReactNode }) {
     const topbarHeight = 72;
     const router = useRouter();
     const { logoutClient } = useAuth();
+
+    const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
     // --- State Declarations (ประกาศตัวแปร State ไว้บนสุด) ---
     const [userInitial, setUserInitial] = useState("?");
@@ -72,7 +75,7 @@ export default function StudentTopbar({ children }: { userRole: string; children
         {
             key: 'report',
             icon: <ExclamationCircleOutlined />,
-            label: <Link href="/student/issueReport" style={{ color: 'inherit' }}>รายงานปัญหา</Link>,
+            label: 'รายงานปัญหา',
         },
         {
             key: 'logout',
@@ -91,6 +94,9 @@ export default function StudentTopbar({ children }: { userRole: string; children
                 cancelText: 'ยกเลิก',
                 onOk: handleLogout,
             });
+        } else if (key === 'report') {
+            // ✅ 4. สั่งเปิด Modal เมื่อกดปุ่มรายงานปัญหา
+            setIsReportModalOpen(true);
         }
     };
 
@@ -103,6 +109,25 @@ export default function StudentTopbar({ children }: { userRole: string; children
                 flexDirection: 'column',
             }}
         >
+
+            <Modal
+                title={
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <ExclamationCircleOutlined style={{ color: '#8A011D' }} />
+                        แจ้งปัญหาการใช้งาน / ติดตามสถานะ
+                    </div>
+                }
+                open={isReportModalOpen}
+                onCancel={() => setIsReportModalOpen(false)}
+                footer={null}
+                width={700}
+                centered
+                destroyOnClose
+            >
+                {/* เรียกใช้ Component ตัวเดียวกับที่ใช้ใน NotificationBell */}
+                <ReportIssueContent />
+            </Modal>
+
             <header
                 style={{
                     height: topbarHeight,

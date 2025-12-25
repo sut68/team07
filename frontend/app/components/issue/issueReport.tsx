@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
-import { CreateIssue, GetMyIssues } from "../../services/issue"; 
-import { GetUserProfile } from "../../services/user"; 
+import { CreateIssue, GetMyIssues } from "../../services/issue";
+import { GetUserProfile } from "../../services/user";
 import { IssueReportInterface, CreateIssueInterface } from "../../interfaces/Issue";
 import { BugOutlined, FileTextOutlined, LoadingOutlined } from "@ant-design/icons";
 import "../../style/issue-report.css";
@@ -14,7 +14,7 @@ export default function ReportIssueContent() {
 
     // Form State
     const [detail, setDetail] = useState("");
-    const [typeID, setTypeID] = useState<number>(1); 
+    const [typeID, setTypeID] = useState<number>(1);
 
     useEffect(() => {
         const fetchInitialData = async () => {
@@ -66,7 +66,7 @@ export default function ReportIssueContent() {
             cancelButtonText: 'ยกเลิก',
             // ✅ กำหนด zIndex ให้สูงกว่า Modal ของ Antd (Modal ปกติ ~1000)
             customClass: {
-                container: 'swal-z-index-high' 
+                container: 'swal-z-index-high'
             }
         });
 
@@ -104,9 +104,9 @@ export default function ReportIssueContent() {
             <form onSubmit={handleSubmit} className="issue-form" style={{ marginBottom: '20px' }}>
                 <div className="form-group">
                     <label>ประเภทปัญหา</label>
-                    <select 
-                        className="form-input" 
-                        value={typeID} 
+                    <select
+                        className="form-input"
+                        value={typeID}
                         onChange={(e) => setTypeID(Number(e.target.value))}
                         style={{ width: '100%', padding: '8px', marginBottom: '10px' }}
                     >
@@ -117,23 +117,23 @@ export default function ReportIssueContent() {
 
                 <div className="form-group">
                     <label>รายละเอียด</label>
-                    <textarea 
-                        className="form-input" 
+                    <textarea
+                        className="form-input"
                         rows={3}
-                        placeholder="ระบุรายละเอียด..." 
+                        placeholder="ระบุรายละเอียด..."
                         value={detail}
                         onChange={(e) => setDetail(e.target.value)}
                         style={{ width: '100%', padding: '8px' }}
                     />
                 </div>
 
-                <button 
-                    type="submit" 
+                <button
+                    type="submit"
                     className="btn-submit"
                     disabled={!currentUserId}
-                    style={{ 
-                        width: '100%', padding: '10px', backgroundColor: '#8A011D', color: '#fff', 
-                        border: 'none', borderRadius: '5px', cursor: 'pointer', marginTop: '10px' 
+                    style={{
+                        width: '100%', padding: '10px', backgroundColor: '#8A011D', color: '#fff',
+                        border: 'none', borderRadius: '5px', cursor: 'pointer', marginTop: '10px'
                     }}
                 >
                     {currentUserId ? "ส่งเรื่องแจ้งปัญหา" : "กำลังโหลด..."}
@@ -153,7 +153,7 @@ export default function ReportIssueContent() {
                     <p style={{ textAlign: 'center', color: '#999' }}>ยังไม่มีรายการแจ้งปัญหา</p>
                 ) : (
                     issues.map((item) => (
-                        <div key={item.ID} className="issue-item" style={{ 
+                        <div key={item.ID} className="issue-item" style={{
                             border: '1px solid #eee', borderRadius: '8px', padding: '10px', marginBottom: '10px',
                             display: 'flex', gap: '10px', alignItems: 'flex-start'
                         }}>
@@ -163,12 +163,7 @@ export default function ReportIssueContent() {
                             <div style={{ flex: 1 }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
                                     <span style={{ fontWeight: 'bold', fontSize: '14px' }}>{item.type?.type || "General"}</span>
-                                    <span style={{ 
-                                        fontSize: '12px', padding: '2px 8px', borderRadius: '10px',
-                                        backgroundColor: item.status?.status === 'Completed' ? '#f6ffed' : '#fffbe6',
-                                        color: item.status?.status === 'Completed' ? '#52c41a' : '#faad14',
-                                        border: `1px solid ${item.status?.status === 'Completed' ? '#b7eb8f' : '#ffe58f'}`
-                                    }}>
+                                    <span className={`issue-status status-${(item.status?.status || "Pending").toLowerCase().replace(" ", "-")}`}>
                                         {item.status?.status || "Pending"}
                                     </span>
                                 </div>
