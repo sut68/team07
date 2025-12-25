@@ -40,6 +40,9 @@ type JwtService interface {
 	ValidateResetToken(db *gorm.DB, rawToken string) (uint, error)
 }
 
+var ErrTokenUsed = errors.New("this reset link has already been used")
+var ErrTokenExpired = errors.New("reset token has expired")
+
 type jwtServiceImpl struct{}
 
 func NewJwtService() JwtService {
@@ -261,12 +264,12 @@ func NormalizeUsername(username string) string {
 
 // ในไฟล์ service/jwtService.go (วางต่อจากเมธอดอื่นๆ)
 
-// ConsumeResetToken ลบ Token ออกจาก DB หลังการเปลี่ยนรหัสผ่านสำเร็จ
+// ConsumeResetToken ทำเครื่องหมาย Token ว่าถูกใช้แล้ว
 func (s *jwtServiceImpl) ConsumeResetToken(db *gorm.DB, rawToken string) error {
 	tokenHash := HashTokenSHA256(rawToken) // ใช้ Global/Helper Function
 
-	// ลบ Token ที่ Hash ตรงกัน
-	result := db.Where("token_hash = ?", tokenHash).Delete(&entity.ResetPasswordToken{})
+	// อัปเดตสถานะ Used เป็น true
+	result := db.Model(&entity.ResetPasswordToken{}).Where("token_hash = ?", tokenHash).Update("used", true)
 
 	if result.Error != nil {
 		return fmt.Errorf("failed to consume reset token: %w", result.Error)
@@ -275,7 +278,7 @@ func (s *jwtServiceImpl) ConsumeResetToken(db *gorm.DB, rawToken string) error {
 		return fmt.Errorf("token not found or already consumed")
 	}
 
-	log.Printf("SUCCESS: Consumed Reset Token.")
+	log.Printf("SUCCESS: Consumed Reset Token (Marked as Used).")
 	return nil
 }
 
@@ -293,10 +296,16 @@ func (s *jwtServiceImpl) ValidateResetToken(db *gorm.DB, rawToken string) (uint,
 		return 0, fmt.Errorf("database query error: %w", err)
 	}
 
+	// ตรวจสอบว่าถูกใช้ไปแล้วหรือยัง
+	if token.Used {
+		return token.UserID, ErrTokenUsed
+	}
+
 	//ตรวจสอบวันหมดอายุ
 	if time.Now().Unix() > token.ExpiresAt {
-		db.Delete(&token) // ลบ Token ที่หมดอายุ
-		return 0, fmt.Errorf("reset token has expired")
+		// ไม่ลบ Token ทันที เพื่อให้สามารถตรวจสอบ Double Submit ได้
+		// db.Delete(&token)
+		return token.UserID, ErrTokenExpired
 	}
 
 	log.Printf("SUCCESS: Validated Reset Token for User ID %d", token.UserID)

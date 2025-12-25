@@ -37,7 +37,6 @@ func main() {
 	r := gin.Default()
 	r.Static("/uploads", "./uploads")
 	r.Use(database.CORSMiddleware())
-	r.Static("/uploads", "./uploads")
 
 	authHandler := auth.NewLoginHandler()
 
