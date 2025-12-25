@@ -1,0 +1,327 @@
+/* =========================================
+   1. LAYOUT & CONTAINER
+   ========================================= */
+.news-kanban-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 24px; /* เพิ่ม Padding ให้หายใจสะดวก */
+  box-sizing: border-box;
+  background: linear-gradient(to bottom right, #ffffff, #f8fafc);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-left: 5px solid #9a0120; /* SUT Red */
+  padding-left: 16px;
+  line-height: 1.2;
+  height: 35px;
+}
+
+/* Scroll Area (Vertical List) */
+.kanban-scroll-area {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 4px 12px 20px 4px; /* เผื่อที่ให้เงาการ์ดไม่โดนตัด */
+  height: 100%;
+  
+  /* Scrollbar Styling */
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.kanban-scroll-area::-webkit-scrollbar {
+  width: 6px;
+}
+
+.kanban-scroll-area::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.kanban-scroll-area::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 20px;
+}
+
+/* news.css */
+
+:root {
+  /* ธีมหลัก: แดงเลือดหมู */
+  --theme-primary: #8b0020;
+  --theme-primary-soft: #fff0f2;
+  
+  /* ธีมรอง: สีทอง/เหลืองเข้ม (สำหรับข่าวที่ปรึกษา) */
+  --theme-secondary: #c49a00;
+  --theme-secondary-soft: #fffbe6;
+  
+  --text-main: #2c2c2c;
+  --text-sub: #595959;
+}
+
+.news-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px 24px;
+  position: relative;
+  transition: all 0.3s ease;
+  border: 1px solid #e0e0e0;
+  border-left: 5px solid transparent; /* เตรียมไว้สำหรับสีขอบซ้าย */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  margin-bottom: 20px;
+}
+
+.news-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+/* เส้นขอบซ้ายแยกตามประเภท */
+.news-card.type-general {
+  border-left-color: var(--theme-primary);
+}
+
+.news-card.type-advisor {
+  border-left-color: var(--theme-secondary);
+}
+
+/* Header ของการ์ด */
+.news-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+/* Badge สไตล์ Modern */
+.news-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.badge-general {
+  background-color: var(--theme-primary-soft);
+  color: var(--theme-primary);
+}
+
+.badge-advisor {
+  background-color: var(--theme-secondary-soft);
+  color: var(--theme-secondary);
+}
+
+.news-date {
+  font-size: 0.85rem;
+  color: #8c8c8c;
+  margin-left: 8px;
+}
+
+/* เนื้อหา */
+.news-title {
+  margin: 0 0 8px 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.news-desc {
+  color: var(--text-sub);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 16px;
+  
+  /* ตัดบรรทัด */
+  display: -webkit-box;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* โซนไฟล์แนบ */
+.news-footer {
+  padding-top: 12px;
+  border-top: 1px dashed #e8e8e8;
+}
+
+.file-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-sub);
+  text-decoration: none;
+  font-size: 0.9rem;
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: background 0.2s;
+  background-color: #f7f7f7;
+}
+
+.file-link:hover {
+  color: var(--theme-primary);
+  background-color: var(--theme-primary-soft);
+}
+
+/* ปุ่ม Action */
+.news-actions button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #999;
+  padding: 4px;
+  transition: color 0.2s;
+}
+
+.news-actions button:hover {
+  color: var(--theme-primary);
+}
+
+
+/* =========================================
+   3. MODAL (POPUP FORM)
+   ========================================= */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  background-color: white;
+  padding: 32px;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+  position: relative;
+  animation: slideUpFade 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUpFade {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 16px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #cbd5e1;
+  transition: color 0.2s;
+}
+
+.close-btn:hover { color: #64748b; }
+
+/* Form Elements */
+.form-group { margin-bottom: 20px; }
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.form-control {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  box-sizing: border-box;
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+  font-family: inherit;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #9a0120;
+  box-shadow: 0 0 0 3px rgba(154, 1, 32, 0.1);
+}
+
+textarea.form-control {
+  min-height: 120px;
+  resize: vertical;
+}
+
+/* Modal Footer Buttons */
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+.btn {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+
+.btn-cancel {
+  background-color: #f1f5f9;
+  color: #64748b;
+}
+.btn-cancel:hover { background-color: #e2e8f0; color: #334155; }
+
+.btn-submit {
+  background-color: #9a0120; /* SUT Theme Color */
+  color: white;
+}
+.btn-submit:hover { 
+  background-color: #7f011a; 
+  box-shadow: 0 4px 12px rgba(154, 1, 32, 0.2);
+}
+
+/* =========================================
+   4. UTILITIES
+   ========================================= */
+.loading-container, .empty-state {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
+  width: 100%;
+  color: #94a3b8;
+  font-weight: 500;
+}

@@ -1,7 +1,6 @@
 package topic
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -92,11 +91,7 @@ func CreateTopic(c *gin.Context) {
 		}
 
 		if len(fileList) > 0 {
-			// Marshal to JSON
-			jsonBytes, err := json.Marshal(fileList)
-			if err == nil {
-				topic.FileAttachment = string(jsonBytes)
-			}
+			topic.FileAttachment = fileList[0] // เก็บแค่ชื่อไฟล์แรก "170000_file.pdf"
 		}
 	}
 
@@ -126,7 +121,7 @@ func GetTopic(c *gin.Context) {
 
 // GET /topics
 func ListTopics(c *gin.Context) {
-	var topics []entity.Topic
+	topics := []entity.Topic{}
 
 	// Query Parameters for filtering
 	proposerRole := c.Query("proposer_role")
@@ -148,10 +143,13 @@ func ListTopics(c *gin.Context) {
 		if filter == "my_topics" {
 			query = query.Where("teacher_id = ?", teacherID)
 		} else if filter == "advisor" {
-			query = query.Joins("JOIN group_projects ON group_projects.id = topics.group_project_id").
-				Where("group_projects.teacher_id = ?", teacherID)
+			// Fix: Query topics proposed by the teacher directly
+			query = query.Where("teacher_id = ?", teacherID)
 		}
 	}
+
+	// Filter out topics that are already selected (Active)
+	query = query.Where("id NOT IN (?)", db.Table("topic_selections").Select("topic_id").Where("status = ?", "Active"))
 
 	if err := query.Find(&topics).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -226,8 +224,7 @@ func UpdateTopic(c *gin.Context) {
 	}
 	
 	if len(finalFileList) > 0 {
-		jsonBytes, _ := json.Marshal(finalFileList)
-		payload.FileAttachment = string(jsonBytes)
+		payload.FileAttachment = finalFileList[0]
 	} else if c.Request.MultipartForm != nil {
 		payload.FileAttachment = topic.FileAttachment
 	} else {
@@ -336,18 +333,22 @@ func SelectTopic(c *gin.Context) {
 
 	// 2. Check if group has an active student proposal
 	var existingTopic entity.Topic
-	if err := db.Where("group_project_id = ? AND proposer_role = ? AND status != ?", payload.GroupProjectID, "Student", "Closed").First(&existingTopic).Error; err == nil {
+	if err := db.Where("group_project_id = ? AND proposer_role = ? AND status NOT IN (?, ?)", payload.GroupProjectID, "Student", "Closed", "Rejected").First(&existingTopic).Error; err == nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Group already has an active topic proposal"})
 		return
 	}
 
 	// 3. Create Selection
-	tid, _ := strconv.ParseUint(topicID, 10, 32)
+	tid, err := strconv.ParseUint(topicID, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid topic ID"})
+		return
+	}
 
 	// 2.5 Check if the topic is already selected by another group
 	var duplicateSelection entity.TopicSelection
 
-	err := db.Where(
+	err = db.Where(
 		"topic_id = ? AND status = ? AND group_project_id != ?",
 		tid,
 		"Active",
@@ -389,38 +390,44 @@ func CancelSelection(c *gin.Context) {
 	}
 
 	db := database.DB()
+	cancelled := false
 
-	// 1. หา selection ที่ยัง active
-	var selection entity.TopicSelection
-	if err := db.
+	// 1. Cancel ALL active selections for this group
+	// Using Update to ensure all active selections are cancelled (handling potential duplicates)
+	resultSel := db.Model(&entity.TopicSelection{}).
 		Where("group_project_id = ? AND status = ?", payload.GroupProjectID, "Active").
-		First(&selection).Error; err != nil {
+		Update("status", "Cancelled")
+	
+	if resultSel.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": resultSel.Error.Error()})
+		return
+	}
+	if resultSel.RowsAffected > 0 {
+		cancelled = true
+	}
 
-		c.JSON(http.StatusNotFound, gin.H{"error": "No active selection found"})
+	// 2. หา Student Proposal ที่ยังไม่ Closed (สำหรับหัวข้อที่นักศึกษาเสนอเอง)
+	// ใช้ Update เพื่อปิดทุกรายการที่ค้างอยู่ (กันกรณีมีหลายรายการที่ Rejected/Pending ค้างไว้)
+	result := db.Model(&entity.Topic{}).
+		Where("group_project_id = ? AND proposer_role = ? AND status != ?", payload.GroupProjectID, "Student", "Closed").
+		Update("status", "Closed")
+
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
 		return
 	}
 
-	// 2. ปิด selection เสมอ
-	selection.Status = "Cancelled"
-	if err := db.Save(&selection).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+	if result.RowsAffected > 0 {
+		cancelled = true
 	}
 
-	// 3. หา topic ที่ถูกเลือก
-	var topic entity.Topic
-	if err := db.First(&topic, selection.TopicID).Error; err == nil {
-
-		// 4. ถ้าเป็น Student Topic → ปิดหัวข้อถาวร
-		if topic.ProposerRole == "Student" {
-			topic.Status = "Closed"
-			db.Save(&topic)
-		}
+	if cancelled {
+		c.JSON(http.StatusOK, gin.H{"message": "Selection/Proposal cancelled successfully"})
+	} else {
+		// If nothing was cancelled, it might be because it was already cancelled.
+		// Return success anyway to allow frontend to proceed/refresh.
+		c.JSON(http.StatusOK, gin.H{"message": "No active selection found, but treated as success"})
 	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Selection cancelled successfully",
-	})
 }
 
 
@@ -437,8 +444,16 @@ func GetStudentTopic(c *gin.Context) {
 	// 1. Check for Selection (Active only)
 	var selection entity.TopicSelection
 	if err := db.Preload("Topic").Where("group_project_id = ? AND status = ?", groupID, "Active").First(&selection).Error; err == nil {
+		// Self-healing: If the selected topic is Closed or Cancelled (e.g. by teacher), 
+		// the selection should be invalidated.
+		if selection.Topic != nil && (selection.Topic.Status == "Closed" || selection.Topic.Status == "Cancelled") {
+			// Auto-cancel this selection
+			db.Model(&selection).Update("status", "Cancelled")
+			// Fall through to check for proposal or return nil
+		} else {
 			c.JSON(http.StatusOK, gin.H{"data": selection.Topic, "source": "selection"})
 			return
+		}
 	}
 
 	// 2. Check for Student Proposal

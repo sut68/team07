@@ -2,7 +2,7 @@
 import React, { ReactNode, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Menu } from 'antd';
+import { Menu, Modal } from 'antd';
 import {
   HomeOutlined,
   DashboardOutlined,
@@ -13,6 +13,7 @@ import {
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  ExclamationCircleOutlined,
 } from '@ant-design/icons';
 import { Logout } from '../../services/login';
 import 'antd/dist/reset.css';
@@ -53,7 +54,14 @@ export default function AdminSidebar({ children }: SidebarProps) {
   };
   const onMenuClick = ({ key }: { key: string }) => {
     if (key === '/logout') {
-      handleLogout();
+      Modal.confirm({
+        title: 'ยืนยันการออกจากระบบ',
+        icon: <ExclamationCircleOutlined />,
+        content: 'คุณต้องการออกจากระบบใช่หรือไม่?',
+        okText: 'ยืนยัน',
+        cancelText: 'ยกเลิก',
+        onOk: handleLogout,
+      });
       return;
     }
     router.push(key);

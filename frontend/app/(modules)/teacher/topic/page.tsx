@@ -486,11 +486,11 @@ export default function TeacherTopicPage() {
                             {selectedProposal.file_attachment && (
                                 <div style={{ marginTop: 8 }}>
                                     <Text strong><PaperClipOutlined /> ไฟล์แนบ:</Text>
-                                    <a
-                                        href={`http://localhost:8080/uploads/topics/${selectedProposal.file_attachment}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        style={{ marginLeft: 8 }}
+                                    <a 
+                                      href={`${process.env.NEXT_PUBLIC_API_URL}/uploads/topics/${selectedProposal.file_attachment}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      style={{ marginLeft: 8 }}
                                     >
                                         {selectedProposal.file_attachment}
                                     </a>

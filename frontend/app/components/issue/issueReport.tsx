@@ -115,7 +115,6 @@ export default function ReportIssueContent() {
                     >
                         <option value={1}>Bug (ข้อผิดพลาดของระบบ)</option>
                         <option value={2}>Feature Request (ขอฟีเจอร์เพิ่ม)</option>
-                        <option value={3}>Other (อื่นๆ)</option>
                     </select>
                 </div>
 

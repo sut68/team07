@@ -1,17 +1,8 @@
 import api from "./api";
-import type { FullChat, ChatCreate, GetChat, ChatDelete, ProcessInterface } from "../interfaces/Chat";
+import type { FullChat, ChatCreate, GetChat, ChatDelete, Getteacher ,GroupProject } from "../interfaces/Chat";
+import { promises } from "dns";
 
-async function GetProcessIDByProjectID(group_project_id: number): Promise<ProcessInterface[]> {
-  try {
-    const response = await api.get<ProcessInterface[]>("/GetProcessID", {
-      params: { group_project_id },
-    });
-    return Array.isArray(response.data) ? response.data : [];
-  } catch (error) {
-    console.error("Failed to fetch process IDs:", error);
-    return [];
-  }
-}
+
 
 async function GetAllChat(payload: GetChat): Promise<FullChat[]> {
   const res = await api.get<FullChat[]>("/GetChat", {
@@ -38,4 +29,15 @@ async function DropChat(payload: ChatDelete) {
   });
 }
 
-export { GetAllChat, InsertChat, DropChat, GetProcessIDByProjectID as GetProcessIDbyGroupID };
+async function DropWholechat(payload: GetChat) {
+  await api.delete("/Deletechatbyid",{
+    params: payload,
+  });
+}
+
+async function Getteachergroup(payload: Getteacher): Promise<GroupProject[]> {
+  const res = await api.get<GroupProject[]>("/get_teacher_id", { params: payload });
+  return res.data;
+}
+
+export { GetAllChat, InsertChat, DropChat ,DropWholechat, Getteachergroup};

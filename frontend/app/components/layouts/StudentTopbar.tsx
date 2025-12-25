@@ -4,7 +4,7 @@ import { GetUserProfile } from '../../services/user'; // Path ของ service 
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
-import { Dropdown, Avatar } from 'antd';
+import { Dropdown, Avatar, Modal } from 'antd';
 import { DownOutlined, UserOutlined, ExclamationCircleOutlined, LogoutOutlined, BellOutlined } from '@ant-design/icons';
 import { Logout } from '../../services/login';
 import { useAuth } from "../../(modules)/roleCheck/authContext";
@@ -77,7 +77,14 @@ export default function StudentTopbar({ userRole, children }: { userRole: string
 
     const onMenuClick = ({ key }: { key: string }) => {
         if (key === 'logout') {
-            handleLogout();
+            Modal.confirm({
+                title: 'ยืนยันการออกจากระบบ',
+                icon: <ExclamationCircleOutlined />,
+                content: 'คุณต้องการออกจากระบบใช่หรือไม่?',
+                okText: 'ยืนยัน',
+                cancelText: 'ยกเลิก',
+                onOk: handleLogout,
+            });
         }
     };
 
@@ -118,7 +125,7 @@ export default function StudentTopbar({ userRole, children }: { userRole: string
                 </Link>
 
                 <div style={{ position: 'absolute', right: 200, display: 'flex', gap: 40, alignItems: 'center' }}>
-                    <Link href="/chat" style={getNavStyle('/chat')}>แชท</Link>
+                    <Link href="/student/chat" style={getNavStyle('/chat')}>แชท</Link>
                     {/* <Link href="/student/chat" style={navLinkStyle}>แชท</Link> */}
                     <Link href="/student/appointment" style={getNavStyle('/student/appointment')}>การนัดหมาย</Link>
                     <Link href="/student/evaluation" style={getNavStyle('/student/evaluation')}>การประเมิน</Link>

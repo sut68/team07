@@ -42,7 +42,7 @@ export default function TypeManager({ visible, onClose, types, onRefresh }: Type
 
     return (
         <Modal
-            title="🏷️ จัดการประเภทการนัดหมาย"
+            title="จัดการประเภทการนัดหมาย"
             open={visible}
             onCancel={onClose}
             footer={null}

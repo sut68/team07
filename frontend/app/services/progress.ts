@@ -10,12 +10,12 @@ import type {
 } from "../interfaces/Progress";
 
 async function GetProgress(payload: PickProgress): Promise<FullProgress[]> {
-  const res = await api.get<FullProgress[]>("/student/getProcess", { params: payload });
+  const res = await api.get<FullProgress[]>("/getProcess", { params: payload });
   return res.data;
 }
 
 async function GetGroupProjectIDByUser(payload: GetGroupProjectByUser): Promise<GroupProjectIdResponse> {
-  const res = await api.get<GroupProjectIdResponse>("/student/getProjectbyuser", { params: payload });
+  const res = await api.get<GroupProjectIdResponse>("/getProjectbyuser", { params: payload });
   return res.data;
 }
 
@@ -24,11 +24,12 @@ async function AddProgress(payload: AssignProgress) {
   fd.append("group_project_id", String(payload.group_project_id));
   fd.append("Name", payload.Name);       
   fd.append("comment", payload.comment);
-  fd.append("file", payload.file as any);  
+  
+  if (payload.file) {
+      fd.append("file", payload.file);  
+  }
 
-  await api.post("/student/assignProgress", fd, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  await api.post("/assignProgress", fd);
 }
 
 
@@ -38,15 +39,16 @@ async function UpProgress(payload: UpdateProgress) {
 
   if (payload.Name?.trim()) fd.append("Name", payload.Name.trim());
   if (payload.comment?.trim()) fd.append("comment", payload.comment.trim());
-  if (payload.file) fd.append("file", payload.file as any);
+  
+  if (payload.file) {
+      fd.append("file", payload.file);
+  }
 
-  await api.post("/student/modifyProgress", fd, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  await api.post("/modifyProgress", fd);
 }
 
 async function EraseProgress(payload: DeleteProgress) {
-  await api.delete("/student/deleteProgress", { params: payload });
+  await api.delete("/deleteProgress", { params: payload });
 }
 
 

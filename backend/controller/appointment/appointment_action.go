@@ -195,6 +195,19 @@ func UpdateAppointment(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Appointment not found or permission denied"})
 		return
 	}
+
+	// Check if GroupProjectID is changing, if so, clear old evaluation results
+	if payload.GroupProjectID != 0 && payload.GroupProjectID != existingAppt.GroupProjectID {
+		if err := db.Where("appointment_id = ?", existingAppt.ID).Delete(&entity.EvaResult{}).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to clear old evaluation results"})
+			return
+		}
+		if err := db.Where("appointment_id = ?", existingAppt.ID).Delete(&entity.IndividualScore{}).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to clear old individual scores"})
+			return
+		}
+	}
+
 	if err := db.Model(&existingAppt).Updates(payload).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update appointment: " + err.Error()})
 		return

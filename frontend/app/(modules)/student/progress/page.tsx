@@ -10,15 +10,17 @@ import {
   GetGroupProjectIDByUser,
 } from "../../../services/progress";
 
+import { DropWholechat } from "@/app/services/chat";
+
 type Mode = "view" | "submit" | "edit";
 
 export default function ProgressPage() {
   const [mode, setMode] = useState<Mode>("view");
 
-  const [groupProjectId, setGroupProjectId] = useState<number>(0);
-  const [userId, setUserId] = useState<number>(0);
+  const [gpji, setgpji] = useState<number>(0);
+  const [userid, setuserid] = useState<number>(0);
 
-  const [progressList, setProgressList] = useState<any[]>([]);
+  const [processlist, setprocesslist] = useState<any[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
   const [file, setFile] = useState<File | null>(null);
@@ -29,23 +31,21 @@ export default function ProgressPage() {
   const [isError, setIsError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const getId = (p: any) => Number(p?.id ?? p?.ID ?? p?.progress_id ?? 0) || 0;
-  const getProgressTitle = (p: any) => String(p?.Name ?? p?.name ?? "").trim();
+  const getId = (p: any) => Number(p?.id ?? p?.ID ?? 0) || 0;
+  const getProgressTitle = (p: any) => String(p?.Name ?? "").trim();
   const getFilePath = (p: any) => String(p?.file ?? p?.File ?? "").trim();
-  const getCommentText = (p: any) => String(p?.comment ?? p?.Comment ?? "").trim();
-  const getUpdatedAt = (p: any) =>
-    String(p?.updatedAt ?? p?.UpdatedAt ?? p?.updated_at ?? p?.update_at ?? "").trim();
+  const getCommentText = (p: any) => String(p?.comment ?? "").trim();
+  const getUpdatedAt = (p: any) => String(p?.update_at ?? "").trim();
 
-  // ---------- init ids ----------
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     const uid = Number(window.localStorage.getItem("user_id") ?? 0);
     const cleanUid = Number.isFinite(uid) && uid > 0 ? uid : 0;
-    setUserId(cleanUid);
+    setuserid(cleanUid);
 
     if (!cleanUid) {
-      setGroupProjectId(0);
+      setgpji(0);
       return;
     }
 
@@ -53,29 +53,27 @@ export default function ProgressPage() {
       try {
         const res = await GetGroupProjectIDByUser({ student_id: cleanUid });
         const gp = Number(res?.group_project_id ?? 0);
-        setGroupProjectId(Number.isFinite(gp) && gp > 0 ? gp : 0);
+        setgpji(Number.isFinite(gp) && gp > 0 ? gp : 0);
       } catch (err) {
-        console.error("Failed to load group project id", err);
-        setGroupProjectId(0);
+        console.error("load id fail", err);
+        setgpji(0);
       }
     })();
   }, []);
 
-  const locked = groupProjectId <= 0 || userId <= 0;
+  const locked = gpji <= 0 || userid <= 0;
 
-  // force view mode if locked
   useEffect(() => {
     if (locked) setMode("view");
   }, [locked]);
 
-  // ---------- refresh (uses service) ----------
   const refresh = async () => {
-    if (!groupProjectId || groupProjectId <= 0) {
-      setProgressList([]);
+    if (gpji == 0) {
+      setprocesslist([]);
       return;
     }
-    const data = await GetProgress({ group_project_id: groupProjectId });
-    setProgressList(Array.isArray(data) ? data : []);
+    const data = await GetProgress({ group_project_id: gpji });
+    setprocesslist(Array.isArray(data) ? data : []);
   };
 
   const handleView = async () => {
@@ -89,38 +87,34 @@ export default function ProgressPage() {
     } catch (err: any) {
       console.error(err);
       setIsError(true);
-      setStatus(`❌ ${err?.response?.data?.message || err?.message || "โหลดไม่สำเร็จ"}`);
+      setStatus(`${err?.response?.data?.message || err?.message || "โหลดไม่สำเร็จ"}`);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // auto load when groupProjectId is ready
   useEffect(() => {
-    if (!locked && groupProjectId > 0) void handleView();
+    if (!locked && gpji > 0) void handleView();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [groupProjectId, locked]);
+  }, [gpji, locked]);
 
-  // ---------- submit (uses service) ----------
   const handleSubmit = async () => {
     if (locked) return;
     setIsLoading(true);
     setIsError(false);
 
     try {
-      if (!groupProjectId) throw new Error("ขาด group_project_id");
+      if (!gpji) throw new Error("ขาด group_project_id");
       if (!progressTitle.trim()) throw new Error("ได้โปรดตั้งชื่อหัวข้อ");
       if (!file) throw new Error("ได้โปรดเลือกไฟล์");
       if (!comment.trim()) throw new Error("โปรดใส่ความคิดเห็น");
 
       await AddProgress({
-        group_project_id: groupProjectId,
+        group_project_id: gpji,
         Name: progressTitle.trim(),
-        // NOTE: your interface currently uses string for file in some versions.
-        // We pass File anyway; if TS complains, update interface to file: any | File.
-        file: file as any,
+        file: file!,
         comment: comment.trim(),
-      } as any);
+      });
 
       setFile(null);
       setComment("");
@@ -136,7 +130,6 @@ export default function ProgressPage() {
     }
   };
 
-  // ---------- edit (uses service) ----------
   const handleEdit = async () => {
     if (locked) return;
     setIsLoading(true);
@@ -148,7 +141,7 @@ export default function ProgressPage() {
       await UpProgress({
         id: selectedId,
         Name: progressTitle.trim(),
-        file: (file ?? undefined) as any,
+        file: file ?? undefined,
         comment: comment.trim(),
       } as any);
 
@@ -166,7 +159,6 @@ export default function ProgressPage() {
     }
   };
 
-  // ---------- delete (uses service) ----------
   const handleDelete = async () => {
     if (locked) return;
     setIsLoading(true);
@@ -174,6 +166,7 @@ export default function ProgressPage() {
 
     try {
       const id = selectedId;
+
       if (!id) throw new Error("ได้โปรดเลือกความคืบหน้าที่ต้องการลบ");
 
       if (!confirm(`ลบความคืบหน้า #${id}?`)) {
@@ -183,6 +176,12 @@ export default function ProgressPage() {
 
       setStatus(`ลบ #${id}...`);
       await EraseProgress({ id });
+
+      setStatus(`ลบแชทที่เกี่ยวข้อง...`);
+      await DropWholechat({
+        process_id: id,
+        group_project_id: gpji,
+      });
 
       await refresh();
       setStatus(`ลบความคืบหน้า #${id} สำเร็จ`);
@@ -196,10 +195,10 @@ export default function ProgressPage() {
   };
 
   const availableIds = useMemo(() => {
-    return Array.isArray(progressList)
-      ? progressList.map(getId).filter((id) => Number.isFinite(id) && id > 0)
+    return Array.isArray(processlist)
+      ? processlist.map(getId).filter((id) => Number.isFinite(id) && id > 0)
       : [];
-  }, [progressList]);
+  }, [processlist]);
 
   useEffect(() => {
     setSelectedId(availableIds.length > 0 ? availableIds[0] : null);
@@ -241,7 +240,6 @@ export default function ProgressPage() {
       </div>
 
       <div style={styles.content}>
-        {/* LEFT */}
         <div style={styles.left}>
           <div
             style={{
@@ -339,10 +337,10 @@ export default function ProgressPage() {
                       value={selectedId ?? ""}
                       onChange={(e) => setSelectedId(Number(e.target.value) || null)}
                       style={styles.select}
-                      disabled={isLoading || progressList.length === 0}
+                      disabled={isLoading || processlist.length === 0}
                     >
-                      {progressList.length === 0 ? <option value="">No updates</option> : null}
-                      {progressList.map((p: any) => {
+                      {processlist.length === 0 ? <option value="">No updates</option> : null}
+                      {processlist.map((p: any) => {
                         const id = getId(p);
                         const title = getProgressTitle(p);
                         return (
@@ -401,7 +399,6 @@ export default function ProgressPage() {
           )}
         </div>
 
-        {/* RIGHT */}
         <div style={styles.right}>
           {locked ? (
             <div style={styles.lockRight}>
@@ -414,14 +411,14 @@ export default function ProgressPage() {
             <>
               <div style={styles.listHeader}>
                 <div style={{ fontWeight: 800 }}>Updates</div>
-                <div style={{ fontSize: 12, opacity: 0.7 }}>{progressList.length} items</div>
+                <div style={{ fontSize: 12, opacity: 0.7 }}>{processlist.length} items</div>
               </div>
 
-              {progressList.length === 0 ? (
+              {processlist.length === 0 ? (
                 <div style={styles.empty}>No progress updates yet.</div>
               ) : (
                 <div style={styles.list}>
-                  {progressList.map((p: any) => {
+                  {processlist.map((p: any) => {
                     const id = getId(p);
                     const title = getProgressTitle(p);
                     const filePath = getFilePath(p);
@@ -436,7 +433,16 @@ export default function ProgressPage() {
                         </div>
 
                         {filePath ? (
-                          <div style={{ fontSize: 12, opacity: 0.75 }}>File: {filePath}</div>
+                          <div style={{ fontSize: 12, opacity: 0.75 }}>
+                            File:{" "}
+                            <a
+                              href={`${process.env.NEXT_PUBLIC_API_URL}${filePath}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              {filePath}
+                            </a>
+                          </div>
                         ) : null}
 
                         <div style={styles.itemComment}>{cmt}</div>

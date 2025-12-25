@@ -3,16 +3,20 @@ import { useState } from 'react';
 import { Button, Modal, message } from 'antd';
 import { CheckCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { UpdateGroupStatus } from '../../../../../services/group';
-
+import { Toast_success,Toast_fail } from '../../../../../components/Webmessage';
 interface ConfirmGroupCompletionProps {
     groupId: number;
+    currentStatus?: string;
     onSuccess?: () => void;
 }
 
-export default function ConfirmGroupCompletion({ groupId, onSuccess }: ConfirmGroupCompletionProps) {
+export default function ConfirmGroupCompletion({ groupId, currentStatus, onSuccess }: ConfirmGroupCompletionProps) {
     const [loading, setLoading] = useState(false);
+    const isCompleted = currentStatus === "Completed";
 
     const showConfirm = () => {
+        if (isCompleted) return;
+        
         Modal.confirm({
             title: 'ยืนยันกลุ่มจบการศึกษา',
             icon: <ExclamationCircleOutlined />,
@@ -28,13 +32,13 @@ export default function ConfirmGroupCompletion({ groupId, onSuccess }: ConfirmGr
         try {
             const res = await UpdateGroupStatus(groupId, "Completed");
             if (res) {
-                message.success("อัปเดตสถานะกลุ่มเรียบร้อยแล้ว");
+                Toast_success("อัปเดตสถานะกลุ่มเรียบร้อยแล้ว");
                 if (onSuccess) onSuccess();
             } else {
-                 message.error("เกิดข้อผิดพลาดในการอัปเดตสถานะ");
+                Toast_fail("เกิดข้อผิดพลาดในการอัปเดตสถานะ");
             }
         } catch (error: any) {
-            message.error(error?.response?.data?.error || "เกิดข้อผิดพลาดในการอัปเดตสถานะ");
+            Toast_fail(error?.response?.data?.error || "เกิดข้อผิดพลาดในการอัปเดตสถานะ");
         } finally {
             setLoading(false);
         }
@@ -43,12 +47,17 @@ export default function ConfirmGroupCompletion({ groupId, onSuccess }: ConfirmGr
     return (
         <Button 
             type="primary" 
-            icon={<CheckCircleOutlined />} 
+            icon={isCompleted ? <CheckCircleOutlined /> : <CheckCircleOutlined />} 
             onClick={showConfirm}
             loading={loading}
-            style={{ backgroundColor: '#9a0120', borderColor: '#9a0120' }}
+            disabled={isCompleted}
+            style={{ 
+                backgroundColor: isCompleted ? '#52c41a' : '#9a0120', 
+                borderColor: isCompleted ? '#52c41a' : '#9a0120',
+                opacity: isCompleted ? 0.8 : 1
+            }}
         >
-            ยืนยันกลุ่มจบ
+            {isCompleted ? "กลุ่มจบการศึกษาแล้ว" : "ยืนยันกลุ่มจบ"}
         </Button>
     );
 }

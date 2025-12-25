@@ -6,23 +6,30 @@ interface GroupCardProps {
   group: GroupProject;
   currentUserId: number | null;
   globalUserHasGroup: boolean;
-  onJoin: (groupId: number) => void;
+  onJoin?: (groupId: number) => void;
+  hideAction?: boolean;
 }
 
 const GroupCard: React.FC<GroupCardProps> = ({ 
   group, 
   currentUserId, 
   globalUserHasGroup, 
-  onJoin 
+  onJoin,
+  hideAction
 }) => {
-  const members = group.group_members || [];
+  const rawMembers = group.group_members || [];
+  
+
+  const members = [...rawMembers].sort((a, b) => {
+    if (a.leader && !b.leader) return -1;
+    if (!a.leader && b.leader) return 1;
+    return 0; 
+  });
+
   const totalSlots = group.membership; 
   const filledCount = members.length;
   const isFull = filledCount >= totalSlots;
-
-  // Logic เดิม: หาค่ามากสุดเพื่อสร้าง Loop
   const rowsToRender = Math.max(totalSlots, filledCount);
-
   const isMyGroup = members.some((m) => m.student_id === currentUserId);
 
   return (
@@ -34,24 +41,27 @@ const GroupCard: React.FC<GroupCardProps> = ({
           <div className="group-title">
             กลุ่มที่ {group.group_number}
           </div>
+          <div className="group-year">
+            ปีการศึกษา {group.year}
+          </div>
           <div className="member-count">
             สมาชิก {filledCount} / {totalSlots}
           </div>
         </div>
 
         {/* --- ปุ่ม Action --- */}
-        {isMyGroup ? (
-          <span className="badge-my-group">
-            กลุ่มของคุณ
-          </span>
-        ) : (
-          <button
-            onClick={() => onJoin(group.ID)}
-            disabled={globalUserHasGroup || isFull}
-            className="btn-join"
-          >
-            {isFull ? "เต็ม" : "เข้าร่วม"}
-          </button>
+        {!hideAction && (
+            isMyGroup ? (
+                <span className="badge-my-group">กลุ่มของคุณ</span>
+            ) : (
+                <button
+                    onClick={() => onJoin && onJoin(group.ID)}
+                    disabled={globalUserHasGroup || isFull}
+                    className="btn-join"
+                >
+                    {isFull ? "เต็ม" : "เข้าร่วม"}
+                </button>
+            )
         )}
       </div>
 
@@ -63,7 +73,6 @@ const GroupCard: React.FC<GroupCardProps> = ({
           return (
             <div key={index} className="member-row">
               {member ? (
-                // --- กรณีมีคนนั่ง ---
                 <div className="member-info">
                   {/* รหัสนักศึกษา */}
                   <span className="student-id-badge">

@@ -4,13 +4,14 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sut68/team07/backend/controller/advisor"
 	"github.com/sut68/team07/backend/controller/appointment"
 	"github.com/sut68/team07/backend/controller/auth"
 	"github.com/sut68/team07/backend/controller/chat"
 	"github.com/sut68/team07/backend/controller/evaluation"
 	"github.com/sut68/team07/backend/controller/group"
-	"github.com/sut68/team07/backend/controller/importuser"
 	"github.com/sut68/team07/backend/controller/issues"
+	"github.com/sut68/team07/backend/controller/news"
 	"github.com/sut68/team07/backend/controller/progress"
 	"github.com/sut68/team07/backend/controller/storage"
 	"github.com/sut68/team07/backend/controller/topic"
@@ -35,6 +36,7 @@ func main() {
 	service.InitEmailConfig()
 	service.StartCleanupWorker(database.DB())
 	r := gin.Default()
+	r.Static("/uploads", "./uploads")
 	r.Use(database.CORSMiddleware())
 	r.Static("/uploads", "./uploads")
 
@@ -51,12 +53,26 @@ func main() {
 
 		// user ทุก Role สามารถเข้าถึงได้
 		protected.GET("/GetChat", chat.GetAllChat)
-		protected.GET("/GetProcessID", chat.GetProcessIDbyGroupID)
+		protected.GET("/get_teacher_id", chat.GetGroupbyteacherid)
 		protected.POST("/SendChat", chat.InsertChat)
 		protected.DELETE("/DeleteChat", chat.DeleteChat)
+		protected.DELETE("/Deletechatbyid", chat.DeleteChatbyProgress)
+
 		protected.GET("/getUserProfile", users.GetUserProfile)
 		protected.PATCH("/updateUserProfile", users.UpdateUserProfile)
 		protected.GET("/me", authHandler.Me)
+
+		protected.GET("/getProcess", progress.GetProGressByID)
+		protected.GET("/getProjectbyuser", progress.GetGroupProjectIDByStudentID)
+		protected.POST("/assignProgress", progress.AssignProGress)
+		protected.POST("/modifyProgress", progress.UpdateProGress)
+		protected.DELETE("/deleteProgress", progress.DeleteProgress)
+
+		// News
+		protected.POST("/news", news.CreateNews)
+		protected.GET("/news", news.GetNews)
+		protected.PATCH("/news/:id", news.UpdateNews)
+		protected.DELETE("/news/:id", news.DeleteNews)
 
 		// Group
 		protected.GET("/academicYears", group.GetAcademicYears)
@@ -73,11 +89,12 @@ func main() {
 			adminGroup.GET("/statuses", users.GetUserStatuses)
 			adminGroup.GET("/getIssueStatus", issues.GetIssueStatus)
 
-			adminGroup.POST("/importUsersCSV", importuser.ImportUsersHandler)
+			adminGroup.POST("/importUsersCSV", users.ImportUsersCSV)
 			adminGroup.PATCH("/issues/:id", issues.UpdateIssueStatus)
 			adminGroup.GET("/users", users.ListUsers)
 			adminGroup.POST("/user", users.CreateUser)
-            adminGroup.DELETE("/user/:id", users.DeleteUser)
+			adminGroup.PATCH("/user/:id", users.UpdateUser)
+			adminGroup.DELETE("/user/:id", users.DeleteUser)
 
 			// Group
 			adminGroup.GET("/studentCount", group.GetEligibleStudentCount)
@@ -142,6 +159,12 @@ func main() {
 			teacherGroup.DELETE("/storage/projects/:id", storage.DeleteProject)
 			// Status Update
 			teacherGroup.PATCH("/groups/:id/status", updateStatus.UpdateGroupStatus)
+
+			// Select Group Advisor
+			teacherGroup.GET("/requests", advisor.GetAdvisorRequests)
+			teacherGroup.POST("/request/accept", advisor.AcceptRequest)
+			teacherGroup.POST("/request/reject", advisor.RejectRequest)
+			teacherGroup.POST("/status/toggle", advisor.ToggleAdvisorStatus)
 		}
 
 		studentGroup := protected.Group("/student")
@@ -149,7 +172,7 @@ func main() {
 		{
 			// ถ้า API ไหนที่นักเรียนเข้าถึงได้ ให้นำไปใส่ในนี้
 			studentGroup.GET("/getProcess", progress.GetProGressByID)
-			studentGroup.GET("/getProjectbyuser",progress.GetGroupProjectIDByStudentID)
+			studentGroup.GET("/getProjectbyuser", progress.GetGroupProjectIDByStudentID)
 			studentGroup.POST("/assignProgress", progress.AssignProGress)
 			studentGroup.POST("/modifyProgress", progress.UpdateProGress)
 			studentGroup.DELETE("/deleteProgress", progress.DeleteProgress)
@@ -158,6 +181,11 @@ func main() {
 			//studentGroup.GET("/group", group.GetGroupProject)
 			studentGroup.GET("/myGroup", group.GetMyGroup)
 			studentGroup.POST("/addMember", group.PostGroupMember)
+
+			//Select Advisor
+			studentGroup.POST("/select", advisor.SaveAdvisorSelection)
+			studentGroup.GET("/selection/:groupId", advisor.GetAdvisorSelection)
+			studentGroup.GET("/teachers/search", advisor.GetAllTeachers)
 
 			// Evaluation and Appointment
 			studentGroup.GET("/myAppointment", appointment.GetMyProjectAndAppointment)

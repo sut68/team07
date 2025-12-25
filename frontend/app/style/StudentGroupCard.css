@@ -49,13 +49,24 @@
   padding: 2px 8px;
   border-radius: 9999px;
   width: fit-content;
+  margin-top: 6px;
+}
+
+.group-year {
+  font-size: 0.75rem;
+  color: #fecaca;
+  font-weight: 500;
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 2px 8px;
+  border-radius: 9999px;
+  width: fit-content;
 }
 
 /* --- Buttons & Badges --- */
 .badge-my-group {
   background-color: #dcfce7;
-  color: #15803d;
-  padding: 4px 12px;
+  color: #097230;
+  padding: 4px 8px;
   border-radius: 9999px;
   font-size: 0.75rem;
   font-weight: 700;

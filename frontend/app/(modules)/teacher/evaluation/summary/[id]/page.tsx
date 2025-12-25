@@ -31,11 +31,15 @@ export default function EvaluationSummaryPage() {
                     <button className="btn-back" onClick={() => router.back()} style={{display: 'flex', alignItems: 'center', gap: 8, fontSize: '1rem', padding: '8px 16px', borderRadius: 8}}>
                         <ArrowLeftOutlined /> กลับไปหน้าประเมิน
                     </button>
-                    <ConfirmGroupCompletion groupId={Number(params.id)} onSuccess={() => {
-                        GetEvaluationSummary(Number(params.id)).then(res => {
-                            setData(res.data);
-                        });
-                    }} />
+                    <ConfirmGroupCompletion 
+                        groupId={Number(params.id)} 
+                        currentStatus={data?.group_status}
+                        onSuccess={() => {
+                            GetEvaluationSummary(Number(params.id)).then(res => {
+                                setData(res.data);
+                            });
+                        }} 
+                    />
                 </div>
 
                 <div className="section-header">

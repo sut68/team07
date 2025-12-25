@@ -109,6 +109,38 @@ export default function StudentResultPage() {
                                     </div>
                                 </>
                             )}
+
+                            {(result.comments?.length > 0) && (
+                                <>
+                                    <div className="result-divider" style={{margin: '24px 0'}} />
+                                    <div style={{textAlign: 'left', width: '100%'}}>
+                                        <h3 style={{fontSize: '1.1rem', fontWeight: 600, marginBottom: 16, color: '#333'}}>ความคิดเห็นจากอาจารย์ (Comments)</h3>
+                                        
+                                        <div className="comments-list">
+                                            {result.comments.map((c: any, idx: number) => (
+                                                <div key={idx} className="comment-card" style={{
+                                                    background: '#f8fafc',
+                                                    border: '1px solid #e2e8f0',
+                                                    borderRadius: 8,
+                                                    padding: 16,
+                                                    marginBottom: 12
+                                                }}>
+                                                    <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: 8}}>
+                                                        <span style={{fontWeight: 600, color: '#9a0120'}}>{c.evaluation_name}</span>
+                                                        <span style={{fontSize: '0.9rem', color: '#64748b'}}>{c.teacher_name}</span>
+                                                    </div>
+                                                    <div style={{fontSize: '0.9rem', color: '#475569', marginBottom: 4}}>
+                                                        <b>หัวข้อ:</b> {c.criteria}
+                                                    </div>
+                                                    <div style={{fontSize: '0.95rem', color: '#333'}}>
+                                                        "{c.comment}"
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     ) : (
                         <div className="empty-state-card">

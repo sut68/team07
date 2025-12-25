@@ -94,6 +94,7 @@ func SetUpDatabase() {
 	db.AutoMigrate(
         &entity.GroupMember{},
         &entity.SelectAdvisor{},
+		&entity.AdvisorStatus{},
         &entity.TopicSelection{},
         &entity.TopicApproval{},
         &entity.Appointment{},
@@ -101,6 +102,7 @@ func SetUpDatabase() {
         &entity.IssueReport{},
         &entity.Chat{},
         &entity.Log{},
+		&entity.News{},
     )
 
 	db.AutoMigrate(

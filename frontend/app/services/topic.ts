@@ -14,16 +14,12 @@ export const getTopicById = async (id: number) => {
 };
 
 export const createTopic = async (data: FormData) => {
-    const res = await api.post<{ data: Topic }>("/groupProject/topics", data, {
-        headers: { "Content-Type": "multipart/form-data" },
-    });
+    const res = await api.post<{ data: Topic }>("/groupProject/topics", data);
     return res.data;
 };
 
 export const updateTopic = async (id: number, data: FormData) => {
-    const res = await api.patch<{ data: Topic }>(`/groupProject/topics/${id}`, data, {
-        headers: { "Content-Type": "multipart/form-data" },
-    });
+    const res = await api.patch<{ data: Topic }>(`/groupProject/topics/${id}`, data);
     return res.data;
 };
 

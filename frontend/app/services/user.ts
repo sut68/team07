@@ -16,11 +16,7 @@ async function ImportUsersCSV(file: File) {
     const formData = new FormData();
     formData.append("file", file); // ชื่อ "file" ต้องตรงกับ backend c.FormFile("file")
 
-    return await api.post("/admin/importUsersCSV", formData, {
-        headers: {
-            "Content-Type": "multipart/form-data",
-        },
-    });
+    return await api.post("/admin/importUsersCSV", formData);
 }
 
 // GET: ดึงข้อมูล User ทั้งหมด (Admin)
@@ -38,6 +34,11 @@ async function CreateUser(data: CreateUserInterface) {
     }
 
     return await api.post("/admin/user", data);
+}
+
+// ✅ เพิ่ม: ฟังก์ชันแก้ไขข้อมูล User (Admin)
+async function UpdateUser(id: number, data: { firstname: string; lastname: string; status_id: number }) {
+    return await api.patch(`/admin/user/${id}`, data);
 }
 
 // ✅ ใหม่: DELETE ลบ User ตาม ID
@@ -71,5 +72,6 @@ export {
     UpdateUserProfile,
     ImportUsersCSV,
     CreateUser,
-    DeleteUser
+    DeleteUser,
+    UpdateUser
 };

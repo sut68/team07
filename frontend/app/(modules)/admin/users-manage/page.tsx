@@ -1,10 +1,12 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
-import { GetUsers, ImportUsersCSV, CreateUser, GetGenders, GetBranches, GetRoles, GetUserStatuses, DeleteUser } from '../../../services/user';
+import { GetUsers, ImportUsersCSV, CreateUser, GetGenders, GetBranches, GetRoles, GetUserStatuses, DeleteUser, UpdateUser } from '../../../services/user';
 import { UserProfileInterface, GenderInterface, BranchInterface, RoleInterface, StatusInterface, CreateUserInterface } from '../../../interfaces/Users';
 import "../../../style/import-user.css";
 import "../../../style/admin-dashboard.css";
-import { CloudUploadOutlined, FileTextOutlined, DownloadOutlined, TeamOutlined, SearchOutlined, PlusOutlined, SaveOutlined, DeleteOutlined } from '@ant-design/icons';
+import { CloudUploadOutlined, FileTextOutlined, DownloadOutlined, TeamOutlined, SearchOutlined, PlusOutlined, SaveOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
+import { Toast_success, Toast_fail } from '../../../components/Webmessage';
+import Swal from 'sweetalert2';
 
 export default function UsersManagePage() {
     // --- State: Data ---
@@ -32,7 +34,11 @@ export default function UsersManagePage() {
         gender_id: 1, branch_id: 1, role_id: 3, status_id: 1
     });
 
-    // 1. Fetch All Data (Users + Master Data)
+    // --- State: Edit User Modal ---
+    const [showEdit, setShowEdit] = useState(false);
+    const [editingUser, setEditingUser] = useState<{ id: number; firstname: string; lastname: string; status_id: number } | null>(null);
+
+    // Fetch All Data
     const fetchAllData = async () => {
         setLoading(true);
         try {
@@ -44,7 +50,10 @@ export default function UsersManagePage() {
                 GetUserStatuses()
             ]);
 
-            if (usersRes.status === 200) setUsers(usersRes.data);
+            if (usersRes.status === 200) {
+                const sortedUsers = usersRes.data.sort((a: any, b: any) => (a.ID || 0) - (b.ID || 0));
+                setUsers(sortedUsers);
+            }
             if (gendersRes.status === 200) setGenders(gendersRes.data);
             if (branchesRes.status === 200) setBranches(branchesRes.data);
             if (rolesRes.status === 200) setRoles(rolesRes.data);
@@ -60,22 +69,21 @@ export default function UsersManagePage() {
         fetchAllData();
     }, []);
 
-    // 2. Logic Import CSV
+    // Logic Import CSV
     const handleBoxClick = () => !isUploading && fileInputRef.current?.click();
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
             const selectedFile = e.target.files[0];
             if (!selectedFile.name.endsWith(".csv")) {
-                alert("❌ กรุณาเลือกไฟล์ .csv เท่านั้น");
+                Toast_fail("กรุณาเลือกไฟล์ .csv เท่านั้น");
                 return;
             }
             setFile(selectedFile);
         }
     };
-
     const handleDownloadTemplate = () => {
         const csvHeader = "username,password,firstname,lastname,email,phone,gender_id,branch_id,role_id,status_id";
-        const csvExample = "user01,123456,Somchai,Rakdee,somchai@email.com,0811111111,1,1,1,1";
+        const csvExample = "B6600001,123456,Somchai,Rakdee,somchai@email.com,0811111111,1,1,1,1";
         const csvContent = "data:text/csv;charset=utf-8," + csvHeader + "\n" + csvExample;
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");
@@ -85,86 +93,160 @@ export default function UsersManagePage() {
         link.click();
         document.body.removeChild(link);
     };
-
     const handleUpload = async () => {
-        if (!file) return alert("⚠️ กรุณาเลือกไฟล์ก่อน");
+        if (!file) return Toast_fail("กรุณาเลือกไฟล์ก่อน");
         if (!confirm(`ยืนยันการนำเข้าไฟล์ "${file.name}"?`)) return;
 
         setIsUploading(true);
         try {
             const res = await ImportUsersCSV(file);
             if (res.status === 200) {
-                alert(`✅ นำเข้าสำเร็จ!\n${res.data.message || ""}`);
+                Toast_success(`นำเข้าสำเร็จ! ${res.data.message || ""}`);
                 setFile(null);
                 setShowImport(false);
-                fetchAllData(); // Refresh Data
+                fetchAllData();
             } else {
-                alert(`❌ เกิดข้อผิดพลาด: ${res.data.error}`);
+                Toast_fail(`เกิดข้อผิดพลาด: ${res.data.error}`);
             }
-        } catch (error) {
-            console.error(error);
-            alert("❌ เชื่อมต่อ Server ไม่ได้");
+        } catch (error: any) {
+            console.error("Upload Error:", error);
+            if (error.response && error.response.data && error.response.data.error) {
+                Toast_fail(`นำเข้าไม่สำเร็จ: ${error.response.data.error}`);
+            } else {
+                Toast_fail("เชื่อมต่อ Server ไม่ได้ หรือเกิดข้อผิดพลาดที่ไม่ระบุ");
+            }
         } finally {
             setIsUploading(false);
         }
     };
 
-    // 3. Logic Create User
+    // Logic Create User
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
+        if (name === "phone") {
+            const numericValue = value.replace(/\D/g, "");
+            if (numericValue.length > 10) return;
+            setNewUser({ ...newUser, [name]: numericValue });
+            return;
+        }
+        if (name === "username") {
+            setNewUser({ ...newUser, [name]: value.toUpperCase() });
+            return;
+        }
         setNewUser({
             ...newUser,
-            [name]: name.includes("id") ? Number(value) : value // แปลงเป็นเลขถ้าเป็น ID
+            [name]: name.includes("id") ? Number(value) : value
         });
     };
-
     const handleCreateSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newUser.username || !newUser.password || !newUser.firstname) {
-            alert("กรุณากรอก Username, Password และ ชื่อจริง");
-            return;
+            return Toast_fail("กรุณากรอกข้อมูลสำคัญให้ครบ");
+        }
+
+        const phoneRegex = /^\d{10}$/;
+        if (newUser.phone && !phoneRegex.test(newUser.phone)) {
+            return Toast_fail("เบอร์โทรต้องมี 10 หลัก");
         }
 
         try {
             const res = await CreateUser(newUser);
             if (res.status === 201) {
-                alert("✅ เพิ่มผู้ใช้งานสำเร็จ!");
+                Toast_success("เพิ่มผู้ใช้งานสำเร็จ!");
                 setShowCreate(false);
-                setNewUser({
-                    username: "", password: "", firstname: "", lastname: "",
-                    email: "", phone: "", gender_id: 1, branch_id: 1, role_id: 3, status_id: 1
-                });
-                fetchAllData(); // Refresh Table
+                setNewUser({ username: "", password: "", firstname: "", lastname: "", email: "", phone: "", gender_id: 1, branch_id: 1, role_id: 3, status_id: 1 });
+                fetchAllData();
             } else {
-                alert("❌ เกิดข้อผิดพลาด: " + res.data.error);
+                Toast_fail("เกิดข้อผิดพลาด: " + res.data.error);
             }
         } catch (error: any) {
-            console.error(error);
-            // ✅ แสดง Error message ที่โยนมาจาก Service (เช่น ห้ามสร้าง Admin)
-            alert("❌ " + (error.response?.data?.error || error.message || "ไม่สามารถเชื่อมต่อ Server ได้"));
+            Toast_fail(error.response?.data?.error || error.message);
         }
     };
 
-    // ✅ 4. Logic Delete User (เพิ่มใหม่)
+    // Logic Delete User
+    // ✅ แก้ไขใหม่โดยใช้ SweetAlert2
     const handleDelete = async (id: number) => {
-        const isConfirmed = confirm("⚠️ คุณแน่ใจหรือไม่ว่าจะลบผู้ใช้งานรายนี้? \nการกระทำนี้ไม่สามารถย้อนกลับได้");
-        if (!isConfirmed) return;
+        // แสดง Dialog ยืนยันสวยๆ
+        const result = await Swal.fire({
+            title: 'คุณแน่ใจหรือไม่?',
+            text: "การลบผู้ใช้งานนี้จะไม่สามารถกู้คืนได้!",
+            icon: 'warning', // ไอคอนเตือนสีเหลือง
+            showCancelButton: true,
+            confirmButtonColor: '#d33', // สีแดงสำหรับปุ่มลบ
+            cancelButtonColor: '#3085d6', // สีฟ้าสำหรับปุ่มยกเลิก
+            confirmButtonText: 'ใช่, ลบเลย!',
+            cancelButtonText: 'ยกเลิก',
+            reverseButtons: true // เอาปุ่มยกเลิกขึ้นก่อน (ป้องกันการกดผิด)
+        });
 
+        // ถ้าผู้ใช้กดยืนยัน (ปุ่มสีแดง)
+        if (result.isConfirmed) {
+            try {
+                // แสดง Loading ระหว่างรอ Server ลบ
+                Swal.fire({
+                    title: 'กำลังลบ...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                const res = await DeleteUser(id);
+
+                if (res.status === 200) {
+                    // ปิด Loading และแสดง Toast สำเร็จ
+                    Swal.close();
+                    Toast_success("ลบผู้ใช้งานสำเร็จ");
+                    fetchAllData();
+                } else {
+                    // ปิด Loading และแสดง Toast แจ้ง Error
+                    Swal.close();
+                    Toast_fail("ลบไม่สำเร็จ: " + res.data.error);
+                }
+            } catch (error: any) {
+                // ปิด Loading และแสดง Toast แจ้ง Error
+                Swal.close();
+                Toast_fail("เกิดข้อผิดพลาด: " + (error.response?.data?.error || error.message));
+            }
+        }
+        // ถ้ากด "ยกเลิก" ก็ไม่ต้องทำอะไร
+    };
+
+    // Logic Edit User
+    const handleEditClick = (user: UserProfileInterface) => {
+        if (!user.ID) return;
+        setEditingUser({
+            id: user.ID,
+            firstname: user.firstname || "",
+            lastname: user.lastname || "",
+            status_id: user.status_id || 1
+        });
+        setShowEdit(true);
+    };
+
+    const handleEditSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingUser) return;
         try {
-            const res = await DeleteUser(id);
+            const res = await UpdateUser(editingUser.id, {
+                firstname: editingUser.firstname,
+                lastname: editingUser.lastname,
+                status_id: editingUser.status_id
+            });
             if (res.status === 200) {
-                alert("✅ ลบผู้ใช้งานสำเร็จ");
-                fetchAllData(); // โหลดข้อมูลใหม่
+                Toast_success("แก้ไขข้อมูลสำเร็จ");
+                setShowEdit(false);
+                setEditingUser(null);
+                fetchAllData();
             } else {
-                alert("❌ ลบไม่สำเร็จ: " + res.data.error);
+                Toast_fail("แก้ไขไม่สำเร็จ: " + res.data.error);
             }
         } catch (error: any) {
-            console.error(error);
-            alert("❌ เกิดข้อผิดพลาด: " + (error.response?.data?.error || error.message));
+            Toast_fail("เกิดข้อผิดพลาด: " + (error.response?.data?.error || error.message));
         }
     };
 
-    // Filter Logic
     const filteredUsers = users.filter(user =>
         user.firstname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.lastname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -173,53 +255,27 @@ export default function UsersManagePage() {
 
     return (
         <div className="dashboard-container">
-            {/* Header Page */}
             <div className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                    <h1>จัดการผู้ใช้งาน (Users Management)</h1>
+                    <h1>จัดการผู้ใช้งาน</h1>
                     <p>รายชื่อผู้ใช้งานทั้งหมดในระบบ</p>
                 </div>
                 <div style={{ display: 'flex', gap: '10px' }}>
-                    <button
-                        onClick={() => setShowCreate(true)}
-                        style={{
-                            backgroundColor: '#0958d9', color: 'white', padding: '10px 20px',
-                            border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold',
-                            display: 'flex', gap: '8px', alignItems: 'center', boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
-                        }}
-                    >
+                    <button onClick={() => setShowCreate(true)} style={{ backgroundColor: '#0958d9', color: 'white', padding: '10px 20px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', gap: '8px', alignItems: 'center', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
                         <PlusOutlined /> เพิ่มผู้ใช้งาน
                     </button>
-                    <button
-                        onClick={() => setShowImport(true)}
-                        style={{
-                            backgroundColor: '#9a0120', color: 'white', padding: '10px 20px',
-                            border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold',
-                            display: 'flex', gap: '8px', alignItems: 'center', boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
-                        }}
-                    >
+                    <button onClick={() => setShowImport(true)} style={{ backgroundColor: '#9a0120', color: 'white', padding: '10px 20px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', gap: '8px', alignItems: 'center', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
                         <CloudUploadOutlined /> นำเข้า CSV
                     </button>
                 </div>
             </div>
 
-            {/* Main Content */}
             <div className="section-main" style={{ marginTop: '20px' }}>
                 <div style={{ marginBottom: '20px', position: 'relative', maxWidth: '300px' }}>
                     <SearchOutlined style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#999' }} />
-                    <input
-                        type="text"
-                        placeholder="ค้นหาชื่อ หรือ รหัสนักศึกษา..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        style={{
-                            width: '100%', padding: '10px 10px 10px 35px',
-                            border: '1px solid #ddd', borderRadius: '6px', fontSize: '0.9rem'
-                        }}
-                    />
+                    <input type="text" placeholder="ค้นหาชื่อ หรือ รหัสนักศึกษา..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: '100%', padding: '10px 10px 10px 35px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '0.9rem' }} />
                 </div>
 
-                {/* Table */}
                 {loading ? (
                     <p style={{ textAlign: 'center', padding: '40px', color: '#666' }}>กำลังโหลดข้อมูล...</p>
                 ) : (
@@ -228,22 +284,17 @@ export default function UsersManagePage() {
                             <thead>
                                 <tr>
                                     <th style={{ width: '80px', textAlign: 'center' }}>ID</th>
-                                    <th>ชื่อผู้ใช้งาน (Username)</th>
+                                    <th>ชื่อผู้ใช้งาน</th>
                                     <th>ชื่อ - นามสกุล</th>
-                                    <th>บทบาท (Role)</th>
-                                    <th>สาขา (Branch)</th>
+                                    <th>บทบาท</th>
+                                    <th>สาขา</th>
                                     <th>สถานะ</th>
-                                    {/* ✅ เพิ่มหัวตาราง Action */}
                                     <th style={{ textAlign: 'center' }}>จัดการ</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {filteredUsers.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={7} style={{ textAlign: 'center', padding: '30px', color: '#999' }}>
-                                            ไม่พบข้อมูลผู้ใช้งาน
-                                        </td>
-                                    </tr>
+                                    <tr><td colSpan={7} style={{ textAlign: 'center', padding: '30px', color: '#999' }}>ไม่พบข้อมูลผู้ใช้งาน</td></tr>
                                 ) : (
                                     filteredUsers.map((user) => (
                                         <tr key={user.ID}>
@@ -258,43 +309,23 @@ export default function UsersManagePage() {
                                                 </div>
                                             </td>
                                             <td>
-                                                <span style={{
-                                                    padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 600,
-                                                    backgroundColor: user.role?.role === 'Admin' ? '#333' : (user.role?.role === 'Teacher' ? '#e6f7ff' : '#f6ffed'),
-                                                    color: user.role?.role === 'Admin' ? '#fff' : (user.role?.role === 'Teacher' ? '#096dd9' : '#389e0d')
-                                                }}>
+                                                <span style={{ padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 600, backgroundColor: user.role?.role === 'Admin' ? '#333' : (user.role?.role === 'Teacher' ? '#e6f7ff' : '#f6ffed'), color: user.role?.role === 'Admin' ? '#fff' : (user.role?.role === 'Teacher' ? '#096dd9' : '#389e0d') }}>
                                                     {user.role?.role || "-"}
                                                 </span>
                                             </td>
                                             <td>{user.branch?.branch_name || "-"}</td>
-                                            <td>
-                                                <span style={{ color: user.status?.status === 'Active' ? 'green' : 'red', fontWeight: 500 }}>
-                                                    {user.status?.status || "-"}
-                                                </span>
-                                            </td>
-                                            {/* ✅ แก้ไขปุ่มลบ: ซ่อนปุ่มถ้าเป็น Admin */}
+                                            <td><span style={{ color: user.status?.status === 'Active' ? 'green' : 'red', fontWeight: 500 }}>{user.status?.status || "-"}</span></td>
                                             <td style={{ textAlign: 'center' }}>
                                                 {user.role?.role !== 'Admin' ? (
-                                                    <button
-                                                        onClick={() => user.ID && handleDelete(user.ID)}
-                                                        style={{
-                                                            backgroundColor: 'transparent',
-                                                            border: 'none',
-                                                            cursor: 'pointer',
-                                                            color: '#ff4d4f',
-                                                            fontSize: '1.2rem',
-                                                            transition: 'color 0.2s'
-                                                        }}
-                                                        title="ลบผู้ใช้งาน"
-                                                    >
-                                                        <DeleteOutlined />
-                                                    </button>
-                                                ) : (
-                                                    // ถ้าเป็น Admin ให้แสดงเครื่องหมายขีด หรือกุญแจล็อคแทน
-                                                    <span style={{ color: '#ccc', fontSize: '1.2rem', cursor: 'not-allowed' }} title="ไม่สามารถลบ Admin ได้">
-                                                        🚫
-                                                    </span>
-                                                )}
+                                                    <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
+                                                        <button onClick={() => handleEditClick(user)} style={{ backgroundColor: 'transparent', border: 'none', cursor: 'pointer', color: '#faad14', fontSize: '1.2rem' }} title="แก้ไข">
+                                                            <EditOutlined />
+                                                        </button>
+                                                        <button onClick={() => user.ID && handleDelete(user.ID)} style={{ backgroundColor: 'transparent', border: 'none', cursor: 'pointer', color: '#ff4d4f', fontSize: '1.2rem' }} title="ลบ">
+                                                            <DeleteOutlined />
+                                                        </button>
+                                                    </div>
+                                                ) : <span style={{ color: '#ccc', fontSize: '1.2rem', cursor: 'not-allowed' }}>🚫</span>}
                                             </td>
                                         </tr>
                                     ))
@@ -305,47 +336,26 @@ export default function UsersManagePage() {
                 )}
             </div>
 
-            {/* --- Modal 1: Import CSV --- */}
+            {/* Modal Import */}
             {showImport && (
-                <div className="modal-overlay" style={{
-                    position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)',
-                    display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000
-                }}>
-                    <div className="import-card" style={{ width: '90%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
+                <div className="modal-overlay" style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
+                    <div className="import-card" style={{ width: '90%', maxWidth: '600px', backgroundColor: 'white', padding: '20px', borderRadius: '10px' }}>
                         <div className="import-header" style={{ position: 'relative' }}>
                             <h2>นำเข้าข้อมูลผู้ใช้งาน (Import Users)</h2>
-                            <p>รองรับไฟล์ .csv เท่านั้น</p>
-                            <button
-                                onClick={() => setShowImport(false)}
-                                style={{ position: 'absolute', top: '20px', right: '20px', background: 'none', border: 'none', color: 'white', fontSize: '1.5rem', cursor: 'pointer' }}
-                            >×</button>
+                            <button onClick={() => setShowImport(false)} style={{ position: 'absolute', top: '0', right: '0', background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
                         </div>
                         <div className="import-content">
                             <div className="template-section">
-                                <span>ยังไม่มีไฟล์ต้นแบบ? </span>
-                                <button onClick={handleDownloadTemplate} className="btn-template">
-                                    <DownloadOutlined /> ดาวน์โหลด Template CSV
-                                </button>
+                                <button onClick={handleDownloadTemplate} className="btn-template"><DownloadOutlined /> ดาวน์โหลด Template</button>
                             </div>
-                            <div
-                                className="upload-area"
-                                onClick={handleBoxClick}
-                                style={{ opacity: isUploading ? 0.6 : 1, cursor: isUploading ? 'wait' : 'pointer' }}
-                            >
+                            <div className="upload-area" onClick={handleBoxClick} style={{ border: '2px dashed #ccc', padding: '20px', textAlign: 'center', marginTop: '15px', cursor: 'pointer' }}>
                                 <input type="file" accept=".csv" ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileChange} disabled={isUploading} />
-                                <div className="upload-icon"><CloudUploadOutlined /></div>
-                                <div className="upload-text-main">คลิกเพื่อเลือกไฟล์ CSV</div>
-                                <div className="upload-text-sub">หรือลากไฟล์มาวางที่นี่</div>
-                                {file && (
-                                    <div className="selected-file-badge" onClick={(e) => e.stopPropagation()}>
-                                        <FileTextOutlined /> {file.name}
-                                    </div>
-                                )}
+                                <CloudUploadOutlined style={{ fontSize: '2rem', color: '#1890ff' }} />
+                                <p>{file ? file.name : "คลิกเพื่อเลือกไฟล์ CSV"}</p>
                             </div>
-                            <div className="action-buttons">
-                                <button className="btn-back" onClick={() => setShowImport(false)} disabled={isUploading}>ยกเลิก</button>
-                                <button className="btn-upload" onClick={handleUpload} disabled={!file || isUploading}>
-                                    {isUploading ? 'กำลังอัปโหลด...' : 'ยืนยันการนำเข้า'}
+                            <div className="action-buttons" style={{ marginTop: '20px', textAlign: 'right' }}>
+                                <button className="btn-upload" onClick={handleUpload} disabled={!file || isUploading} style={{ backgroundColor: '#1890ff', color: 'white', padding: '8px 16px', border: 'none', borderRadius: '4px' }}>
+                                    {isUploading ? 'กำลังอัปโหลด...' : 'ยืนยัน'}
                                 </button>
                             </div>
                         </div>
@@ -353,83 +363,80 @@ export default function UsersManagePage() {
                 </div>
             )}
 
-            {/* --- Modal 2: Create User (Dynamic Dropdowns) --- */}
+            {/* Modal Create */}
             {showCreate && (
-                <div style={{
-                    position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)',
-                    display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000
-                }}>
-                    <div style={{
-                        backgroundColor: 'white', padding: '30px', borderRadius: '12px',
-                        width: '90%', maxWidth: '700px', maxHeight: '90vh', overflowY: 'auto',
-                        boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
-                    }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
-                            <h2 style={{ margin: 0, color: '#333' }}><PlusOutlined /> เพิ่มผู้ใช้งานใหม่</h2>
-                            <button onClick={() => setShowCreate(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#999' }}>×</button>
+                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
+                    <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '12px', width: '90%', maxWidth: '700px', maxHeight: '90vh', overflowY: 'auto' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+                            <h2><PlusOutlined /> เพิ่มผู้ใช้งานใหม่</h2>
+                            <button onClick={() => setShowCreate(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
                         </div>
-
                         <form onSubmit={handleCreateSubmit} className="create-user-form">
-                            <div className="form-group">
-                                <label>Username <span style={{ color: 'red' }}>*</span></label>
-                                <input className="form-input" name="username" value={newUser.username} onChange={handleInputChange} required placeholder="เช่น student66" />
+                            <div className="form-group"><label>Username *</label><input className="form-input" name="username" value={newUser.username} onChange={handleInputChange} required /></div>
+                            <div className="form-group"><label>Password *</label><input className="form-input" type="password" name="password" value={newUser.password} onChange={handleInputChange} required /></div>
+                            <div className="form-group"><label>ชื่อจริง *</label><input className="form-input" name="firstname" value={newUser.firstname} onChange={handleInputChange} required /></div>
+                            <div className="form-group"><label>นามสกุล *</label><input className="form-input" name="lastname" value={newUser.lastname} onChange={handleInputChange} required /></div>
+                            <div className="form-group"><label>อีเมล</label><input className="form-input" name="email" value={newUser.email} onChange={handleInputChange} /></div>
+                            <div className="form-group"><label>เบอร์โทร</label><input className="form-input" name="phone" value={newUser.phone} onChange={handleInputChange} /></div>
+                            <div className="form-group"><label>เพศ</label><select className="form-input" name="gender_id" value={newUser.gender_id} onChange={handleInputChange}>{genders.map(g => <option key={g.ID} value={g.ID}>{g.name}</option>)}</select></div>
+                            <div className="form-group"><label>สาขา</label><select className="form-input" name="branch_id" value={newUser.branch_id} onChange={handleInputChange}>{branches.map(b => <option key={b.ID} value={b.ID}>{b.branch_name}</option>)}</select></div>
+                            <div className="form-group"><label>บทบาท</label><select className="form-input" name="role_id" value={newUser.role_id} onChange={handleInputChange}>{roles.filter(r => r.role !== 'Admin').map(r => <option key={r.ID} value={r.ID}>{r.role}</option>)}</select></div>
+                            <div className="form-group"><label>สถานะ</label><select className="form-input" name="status_id" value={newUser.status_id} onChange={handleInputChange}>{statuses.map(s => <option key={s.ID} value={s.ID}>{s.status}</option>)}</select></div>
+                            <div style={{ marginTop: '15px' }}><button type="submit" className="btn-save"><SaveOutlined /> บันทึกข้อมูล</button></div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Edit User */}
+            {showEdit && editingUser && (
+                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
+                    <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '12px', width: '90%', maxWidth: '500px', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
+                            <h2 style={{ margin: 0 }}><EditOutlined /> แก้ไขข้อมูลผู้ใช้</h2>
+                            <button onClick={() => setShowEdit(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#999' }}>×</button>
+                        </div>
+                        <form onSubmit={handleEditSubmit}>
+                            <div style={{ marginBottom: '15px' }}>
+                                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>ชื่อจริง (Firstname)</label>
+                                <input
+                                    className="form-input"
+                                    value={editingUser.firstname}
+                                    onChange={(e) => setEditingUser({ ...editingUser, firstname: e.target.value })}
+                                    required
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
+                                />
                             </div>
-                            <div className="form-group">
-                                <label>Password <span style={{ color: 'red' }}>*</span></label>
-                                <input className="form-input" type="password" name="password" value={newUser.password} onChange={handleInputChange} required placeholder="กำหนดรหัสผ่าน" />
+                            <div style={{ marginBottom: '15px' }}>
+                                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>นามสกุล (Lastname)</label>
+                                <input
+                                    className="form-input"
+                                    value={editingUser.lastname}
+                                    onChange={(e) => setEditingUser({ ...editingUser, lastname: e.target.value })}
+                                    required
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
+                                />
                             </div>
-                            <div className="form-group">
-                                <label>ชื่อจริง <span style={{ color: 'red' }}>*</span></label>
-                                <input className="form-input" name="firstname" value={newUser.firstname} onChange={handleInputChange} required placeholder="ชื่อภาษาอังกฤษ" />
-                            </div>
-                            <div className="form-group">
-                                <label>นามสกุล <span style={{ color: 'red' }}>*</span></label>
-                                <input className="form-input" name="lastname" value={newUser.lastname} onChange={handleInputChange} required placeholder="นามสกุลภาษาอังกฤษ" />
-                            </div>
-                            <div className="form-group">
-                                <label>อีเมล</label>
-                                <input className="form-input" type="email" name="email" value={newUser.email} onChange={handleInputChange} placeholder="example@sut.ac.th" />
-                            </div>
-                            <div className="form-group">
-                                <label>เบอร์โทร</label>
-                                <input className="form-input" name="phone" value={newUser.phone} onChange={handleInputChange} placeholder="08xxxxxxxx" />
+                            {/* Dropdown Status */}
+                            <div style={{ marginBottom: '15px' }}>
+                                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>สถานะ (Status)</label>
+                                <select
+                                    className="form-input"
+                                    value={editingUser.status_id}
+                                    onChange={(e) => setEditingUser({ ...editingUser, status_id: Number(e.target.value) })}
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
+                                >
+                                    {statuses.map((s) => (
+                                        <option key={s.ID} value={s.ID}>
+                                            {s.status}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
 
-                            {/* Dynamic Dropdowns */}
-                            <div className="form-group">
-                                <label>เพศ</label>
-                                <select className="form-input" name="gender_id" value={newUser.gender_id} onChange={handleInputChange}>
-                                    {genders.map(g => <option key={g.ID} value={g.ID}>{g.name}</option>)}
-                                </select>
-                            </div>
-                            <div className="form-group">
-                                <label>สาขา</label>
-                                <select className="form-input" name="branch_id" value={newUser.branch_id} onChange={handleInputChange}>
-                                    {branches.map(b => <option key={b.ID} value={b.ID}>{b.branch_name}</option>)}
-                                </select>
-                            </div>
-                            <div className="form-group">
-                                <label>บทบาท (Role)</label>
-                                <select className="form-input" name="role_id" value={newUser.role_id} onChange={handleInputChange}>
-                                    {roles
-                                        .filter(r => r.role !== 'Admin') // กรองเอา Admin ออก
-                                        .map(r => (
-                                            <option key={r.ID} value={r.ID}>{r.role}</option>
-                                        ))
-                                    }
-                                </select>
-                            </div>
-                            <div className="form-group">
-                                <label>สถานะ</label>
-                                <select className="form-input" name="status_id" value={newUser.status_id} onChange={handleInputChange}>
-                                    {statuses.map(s => <option key={s.ID} value={s.ID}>{s.status}</option>)}
-                                </select>
-                            </div>
-
-                            <div style={{ gridColumn: '1 / -1', marginTop: '15px' }}>
-                                <button type="submit" className="btn-save">
-                                    <SaveOutlined /> บันทึกข้อมูล
-                                </button>
+                            <div style={{ textAlign: 'right', marginTop: '20px' }}>
+                                <button type="button" onClick={() => setShowEdit(false)} style={{ marginRight: '10px', padding: '8px 16px', border: '1px solid #ddd', background: 'white', borderRadius: '4px', cursor: 'pointer' }}>ยกเลิก</button>
+                                <button type="submit" style={{ padding: '8px 16px', border: 'none', background: '#0958d9', color: 'white', borderRadius: '4px', cursor: 'pointer' }}>บันทึกการแก้ไข</button>
                             </div>
                         </form>
                     </div>
