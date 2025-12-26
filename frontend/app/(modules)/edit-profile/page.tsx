@@ -1,9 +1,9 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { GetUserProfile, UpdateUserProfile } from '../../services/user'; // ปรับ path ให้ตรงกับโฟลเดอร์ของคุณ
-import { UserProfileInterface, UpdateUserProfileInterface } from '../../interfaces/Users'; // ปรับ path ให้ตรงกับโฟลเดอร์ของคุณ
-import "../../style/edit-profile.css"; // Import CSS
+import { GetUserProfile, UpdateUserProfile } from '../../services/user'; 
+import { UserProfileInterface, UpdateUserProfileInterface } from '../../interfaces/Users';
+import "../../style/edit-profile.css";
 
 export default function EditProfilePage() {
     const router = useRouter();
@@ -20,7 +20,7 @@ export default function EditProfilePage() {
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
 
-    // 1. โหลดข้อมูลเดิมมาใส่ Form
+    // โหลดข้อมูลเดิมมาใส่ Form
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -44,13 +44,13 @@ export default function EditProfilePage() {
         fetchData();
     }, []);
 
-    // 2. จัดการเมื่อพิมพ์ข้อมูล
+    // จัดการเมื่อพิมพ์ข้อมูล
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    // 3. บันทึกข้อมูล
+    // บันทึกข้อมูล
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSaving(true);
@@ -58,7 +58,7 @@ export default function EditProfilePage() {
             const res = await UpdateUserProfile(formData);
             if (res.status === 200) {
                 alert("บันทึกข้อมูลสำเร็จ!");
-                router.push('/profile'); // กลับไปหน้า Profile เพื่อดูผลลัพธ์
+                router.push('/profile'); 
             } else {
                 alert("เกิดข้อผิดพลาด: " + res.data.error);
             }
@@ -165,7 +165,7 @@ export default function EditProfilePage() {
                             <button 
                                 type="button" 
                                 className="btn-cancel"
-                                onClick={() => router.back()} // ย้อนกลับ
+                                onClick={() => router.back()} 
                             >
                                 ยกเลิก
                             </button>

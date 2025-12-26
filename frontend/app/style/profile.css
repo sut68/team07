@@ -5,7 +5,7 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background-color: #f5f5f5; /* พื้นหลังสีเทาอ่อนเพื่อให้การ์ดเด่น */
+  background-color: #f5f5f5; 
   font-family: 'Inter', sans-serif;
   padding: 20px;
   border-radius: 16px;
@@ -17,12 +17,12 @@
   background: white;
   border-radius: 16px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-  overflow: hidden; /* เพื่อให้ Header ไม่เกินขอบโค้ง */
+  overflow: hidden; 
   display: flex;
   flex-direction: column;
 }
 
-/* ส่วนหัวด้านบน (สีแดง Theme เดียวกับ Login) */
+/* ส่วนหัวด้านบน */
 .profile-header {
   background: rgba(154, 1, 32, 1);
   padding: 40px 30px;

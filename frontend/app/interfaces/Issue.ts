@@ -1,7 +1,3 @@
-// interfaces/Issue.ts
-
-// 1. Import UserProfileInterface จากไฟล์ Users.ts ของคุณ
-// (เช็ค path ให้ถูกว่าไฟล์ Users.ts อยู่โฟลเดอร์เดียวกันไหม)
 import { UserProfileInterface } from "../interfaces/Users"; 
 
 export interface IssueTypeInterface {
@@ -21,7 +17,6 @@ export interface IssueReportInterface {
 
     admin_reply?: string;
     
-    // Foreign Keys & Relations
     type_id?: number;
     type?: IssueTypeInterface;
     

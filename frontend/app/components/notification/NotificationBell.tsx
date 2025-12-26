@@ -145,7 +145,7 @@ export default function NotificationBell() {
                 footer={null} 
                 width={700}
                 centered
-                destroyOnHidden // ล้างข้อมูลเมื่อปิด Modal
+                destroyOnHidden 
             >
                 <ReportIssueContent />
             </Modal>

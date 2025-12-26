@@ -1,5 +1,4 @@
-// services/issue.ts
-import api from "./api"; // Import api instance ที่เราตั้งค่า baseURL ไว้แล้ว
+import api from "./api"; 
 import { CreateIssueInterface } from "../interfaces/Issue";
 
 // GET: ดึงรายการแจ้งปัญหาทั้งหมด
@@ -25,7 +24,7 @@ async function GetMyIssues() {
 async function UpdateIssueStatus(id: number, statusID: number, adminReply?: string) {
     return await api.patch(`/admin/issues/${id}`, { 
         status_id: statusID,
-        admin_reply: adminReply // ส่งข้อความตอบกลับไปด้วย
+        admin_reply: adminReply 
     });
 }
 

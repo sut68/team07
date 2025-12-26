@@ -1,21 +1,21 @@
 export interface GenderInterface {
     ID?: number;
-    name?: string; // ตรงกับ json:"name" ใน Go
+    name?: string; 
 }
 
 export interface BranchInterface {
     ID?: number;
-    branch_name?: string; // ตรงกับ json:"branch_name" ใน Go
+    branch_name?: string; 
 }
 
 export interface RoleInterface {
     ID?: number;
-    role?: string; // ตรงกับ json:"role" ใน Go
+    role?: string; 
 }
 
 export interface StatusInterface {
     ID?: number;
-    status?: string; // ตรงกับ json:"status" ใน Go
+    status?: string;
 }
 
 export interface UserProfileInterface {
@@ -24,20 +24,19 @@ export interface UserProfileInterface {
     firstname?: string;
     lastname?: string;
     email?: string;
-    phone?: string; // ✅ เพิ่ม phone เข้ามา
+    phone?: string; 
     
-    // Relation Objects
     gender_id?: number;
-    gender?: GenderInterface; // ✅ รับ Object Gender
+    gender?: GenderInterface; 
     
     branch_id?: number;
-    branch?: BranchInterface; // ✅ รับ Object Branch
+    branch?: BranchInterface;
     
     role_id?: number;
     role?: RoleInterface;
     
     status_id?: number;
-    status?: StatusInterface; // ✅ รับ Object Status
+    status?: StatusInterface;
 }
 
 export interface UpdateUserProfileInterface {
@@ -45,7 +44,6 @@ export interface UpdateUserProfileInterface {
     phone?: string;
 }
 
-// Interface สำหรับรับค่า Form
 export interface CreateUserInterface {
     username?: string;
     password?: string;

@@ -1,9 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
-import { CreateIssue, GetMyIssues, UpdateIssue } from "../../services/issue"; // ⚠️ ต้องไปสร้าง UpdateIssue ใน services ด้วย
+import { CreateIssue, GetMyIssues, UpdateIssue } from "../../services/issue";
 import { GetUserProfile } from "../../services/user";
 import { IssueReportInterface, CreateIssueInterface } from "../../interfaces/Issue";
-import { BugOutlined, FileTextOutlined, LoadingOutlined, EditOutlined, CloseOutlined } from "@ant-design/icons"; // เพิ่ม EditOutlined, CloseOutlined
+import { BugOutlined, FileTextOutlined, LoadingOutlined, EditOutlined, CloseOutlined } from "@ant-design/icons"; 
 import "../../style/issue-report.css";
 import Swal from "sweetalert2";
 
