@@ -3,7 +3,6 @@ import type { UserProfileInterface } from "../interfaces/Users";
 import {CreateUserInterface, GenderInterface, RoleInterface, BranchInterface, StatusInterface} from "../interfaces/Users";
 
 async function GetUserProfile() {
-    // URL "/profile" ต้องตรงกับที่ backend กำหนดใน r.GET(...)
     return await api.get("/getUserProfile");
 }
 
@@ -19,13 +18,13 @@ async function ImportUsersCSV(file: File) {
     return await api.post("/admin/importUsersCSV", formData);
 }
 
-// GET: ดึงข้อมูล User ทั้งหมด (Admin)
+// GET: ดึงข้อมูล User ทั้งหมด 
 async function GetUsers() {
     return await api.get("/admin/users");
 }
 
 async function CreateUser(data: CreateUserInterface) {
-    // กำหนด ID ของ Role Admin (ต้องเช็คใน DB ว่าเลขอะไร ปกติคือ 1)
+    // กำหนด ID ของ Role Admin
     const ADMIN_ROLE_ID = 1; 
 
     if (data.role_id === ADMIN_ROLE_ID) {
@@ -36,12 +35,12 @@ async function CreateUser(data: CreateUserInterface) {
     return await api.post("/admin/user", data);
 }
 
-// ✅ เพิ่ม: ฟังก์ชันแก้ไขข้อมูล User (Admin)
+// ฟังก์ชันแก้ไขข้อมูล User (Admin)
 async function UpdateUser(id: number, data: { firstname: string; lastname: string; status_id: number }) {
     return await api.patch(`/admin/user/${id}`, data);
 }
 
-// ✅ ใหม่: DELETE ลบ User ตาม ID
+// DELETE ลบ User ตาม ID
 async function DeleteUser(id: number) {
     return await api.delete(`/admin/user/${id}`);
 }

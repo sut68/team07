@@ -25,7 +25,7 @@
 .dashboard-layout {
     display: flex;
     gap: 20px;
-    align-items: flex-start; /* ให้ยืดตาม content ของตัวเอง */
+    align-items: flex-start;
 }
 
 /* ส่วน 70% */
@@ -45,14 +45,14 @@
     border-radius: 12px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     padding: 20px;
-    min-height: 200px; /* สูงขั้นต่ำเผื่อไม่มีเนื้อหา */
+    min-height: 200px; 
 }
 
 /* --- Table Styles --- */
 .admin-table {
     width: 100%;
-    border-collapse: separate; /* เปลี่ยนเป็น separate เพื่อให้ทำมุมมนได้ */
-    border-spacing: 0 8px; /* เว้นระยะห่างระหว่างแถว */
+    border-collapse: separate; 
+    border-spacing: 0 8px; 
     margin-top: 10px;
 }
 
@@ -62,16 +62,16 @@
     color: #666;
     font-size: 0.9rem;
     font-weight: 600;
-    border-bottom: none; /* เอาเส้นเดิมออก */
+    border-bottom: none; 
 }
 
 .admin-table td {
     padding: 15px;
-    background-color: white; /* ใส่สีพื้นหลังให้แถว */
+    background-color: white; 
     border-top: 1px solid #eee;
     border-bottom: 1px solid #eee;
     color: #333;
-    vertical-align: middle; /* จัดกึ่งกลางแนวตั้ง */
+    vertical-align: middle; 
 }
 
 .admin-table td:first-child {
@@ -88,7 +88,7 @@
 
 .admin-table tr:hover td {
     background-color: #fafafa;
-    transform: translateY(-1px); /* ขยับขึ้นนิดนึงให้ดูมีมิติ */
+    transform: translateY(-1px); 
     transition: all 0.2s ease;
     box-shadow: 0 2px 5px rgba(0,0,0,0.02);
 }
@@ -108,21 +108,20 @@
 
 .status-select {
     width: 100%;
-    padding: 6px 10px; /* เพิ่มพื้นที่ */
-    border-radius: 20px; /* มุมมนสวยงาม */
+    padding: 6px 10px; 
+    border-radius: 20px; 
     font-size: 0.85rem;
     font-weight: 600;
     border: 1px solid transparent;
     cursor: pointer;
-    appearance: none; /* ลบลูกศรเดิมของ Browser */
+    appearance: none; 
     -webkit-appearance: none;
     text-align: center;
-    /* สร้างลูกศรเองเพื่อให้ควบคุมตำแหน่งได้ */
     background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
     background-repeat: no-repeat;
-    background-position: right 10px center; /* ขยับลูกศรมาซ้ายหน่อย */
+    background-position: right 10px center; 
     background-size: 10px;
-    padding-right: 25px; /* เผื่อที่ให้ลูกศร */
+    padding-right: 25px; 
 }
 
 /* Status Badge (Reuse style) */
