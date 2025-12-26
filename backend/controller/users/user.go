@@ -121,7 +121,7 @@ func ImportUsersCSV(c *gin.Context) {
 
 		// กำหนดค่า Pass
 		var pass *bool
-		if roleID == 3 { // Student
+		if roleID == 3 {
 			isPass := false
 			pass = &isPass
 		} else {

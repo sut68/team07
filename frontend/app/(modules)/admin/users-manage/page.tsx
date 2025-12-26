@@ -161,22 +161,20 @@ export default function UsersManagePage() {
     };
 
     // Logic Delete User
-    // ✅ แก้ไขใหม่โดยใช้ SweetAlert2
     const handleDelete = async (id: number) => {
-        // แสดง Dialog ยืนยันสวยๆ
         const result = await Swal.fire({
             title: 'คุณแน่ใจหรือไม่?',
             text: "การลบผู้ใช้งานนี้จะไม่สามารถกู้คืนได้!",
-            icon: 'warning', // ไอคอนเตือนสีเหลือง
+            icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#d33', // สีแดงสำหรับปุ่มลบ
-            cancelButtonColor: '#3085d6', // สีฟ้าสำหรับปุ่มยกเลิก
+            confirmButtonColor: '#d33', 
+            cancelButtonColor: '#3085d6',
             confirmButtonText: 'ใช่, ลบเลย!',
             cancelButtonText: 'ยกเลิก',
-            reverseButtons: true // เอาปุ่มยกเลิกขึ้นก่อน (ป้องกันการกดผิด)
+            reverseButtons: true
         });
 
-        // ถ้าผู้ใช้กดยืนยัน (ปุ่มสีแดง)
+        // ถ้าผู้ใช้กดยืนยัน
         if (result.isConfirmed) {
             try {
                 // แสดง Loading ระหว่างรอ Server ลบ
@@ -206,7 +204,6 @@ export default function UsersManagePage() {
                 Toast_fail("เกิดข้อผิดพลาด: " + (error.response?.data?.error || error.message));
             }
         }
-        // ถ้ากด "ยกเลิก" ก็ไม่ต้องทำอะไร
     };
 
     // Logic Edit User

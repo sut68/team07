@@ -44,6 +44,7 @@ export default function StudentTopbar({ children }: { userRole: string; children
     // --- Styles ---
     const navLinkStyle: React.CSSProperties = { color: 'rgba(255,255,255,0.95)', textDecoration: 'none', fontWeight: 700 };
     const pathname = usePathname() || '';
+
     const getNavStyle = (href: string): React.CSSProperties => {
         const isActive = pathname === href || (href !== '/' && pathname.startsWith(href));
         return {
@@ -122,7 +123,7 @@ export default function StudentTopbar({ children }: { userRole: string; children
                 footer={null}
                 width={700}
                 centered
-                destroyOnClose
+                destroyOnHidden
             >
                 {/* เรียกใช้ Component ตัวเดียวกับที่ใช้ใน NotificationBell */}
                 <ReportIssueContent />
@@ -143,7 +144,7 @@ export default function StudentTopbar({ children }: { userRole: string; children
                 }}
                 role="banner"
             >
-                <nav style={{ position: 'absolute', left: 100, display: 'flex', gap: 40 }}>
+                <nav style={{ position: 'absolute', left: 100, display: 'flex', gap: 40, alignItems: 'center' }}>
                     <Link href="/student/dashboard" style={getNavStyle('/student/dashboard')}>หน้าหลัก</Link>
                     <Link href="/student/group" style={getNavStyle('/student/group')}>กลุ่มของฉัน</Link>
                     <Link href="/student/selectAdvisor" style={getNavStyle('/student/selectAdvisor')}>เลือกที่ปรึกษา</Link>
@@ -155,7 +156,7 @@ export default function StudentTopbar({ children }: { userRole: string; children
                     <Image src="/image/logo1.png" alt="SUT" width={90} height={38} priority />
                 </Link>
                 <div style={{ position: 'absolute', right: 200, display: 'flex', gap: 40, alignItems: 'center' }}>
-                    <Link href="/student/chat" style={getNavStyle('/chat')}>แชท</Link>
+                    <Link href="/student/chat" style={getNavStyle('/student/chat')}>แชท</Link>
                     <Link href="/student/appointment" style={getNavStyle('/student/appointment')}>การนัดหมาย</Link>
                     <Link href="/student/evaluation" style={getNavStyle('/student/evaluation')}>การประเมิน</Link>
                     <Link href="/student/storage" style={getNavStyle('/student/storage')}>คลังโครงงาน</Link>

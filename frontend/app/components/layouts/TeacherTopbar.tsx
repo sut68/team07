@@ -74,7 +74,7 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
         if (key === 'logout') {
             Modal.confirm({
                 title: 'ยืนยันการออกจากระบบ',
-                icon: <ExclamationCircleOutlined />,
+                icon: <ExclamationCircleOutlined/>,
                 content: 'คุณต้องการออกจากระบบใช่หรือไม่?',
                 okText: 'ยืนยัน',
                 cancelText: 'ยกเลิก',
@@ -83,7 +83,7 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
         } else if (key === 'create_news') {
             setIsNewsModalOpen(true);
         } else if (key === 'report') {
-            // ✅ 4. สั่งเปิด Modal เมื่อกดปุ่มรายงานปัญหา
+            // สั่งเปิด Modal เมื่อกดปุ่มรายงานปัญหา
             setIsReportModalOpen(true);
         }
     };
@@ -124,10 +124,10 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
                 footer={null}
                 width={700}
                 centered
-                destroyOnClose
+                destroyOnHidden
             >
                 {/* เรียกใช้ Component ตัวเดียวกับที่ใช้ใน NotificationBell */}
-                <ReportIssueContent />
+                <ReportIssueContent/>
             </Modal>
 
             <header
@@ -144,7 +144,7 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
                     zIndex: 100,
                 }}
             >
-                <nav style={{ position: 'absolute', left: 120, display: 'flex', gap: 40 }}>
+                <nav style={{ position: 'absolute', left: 120, display: 'flex', gap: 40, alignItems: 'center' }}>
                     <Link href="/teacher/dashboard" style={getNavStyle('/teacher/dashboard')}>หน้าหลัก</Link>
                     <Link href="/teacher/group" style={getNavStyle('/teacher/group')}>กลุ่มในที่ปรึกษา</Link>
                     <Link href="/teacher/topic" style={getNavStyle('/teacher/topic')}>หัวข้อโครงงาน</Link>

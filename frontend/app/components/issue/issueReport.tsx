@@ -1,9 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
-import { CreateIssue, GetMyIssues, UpdateIssue } from "../../services/issue"; // ⚠️ ต้องไปสร้าง UpdateIssue ใน services ด้วย
+import { CreateIssue, GetMyIssues, UpdateIssue } from "../../services/issue";
 import { GetUserProfile } from "../../services/user";
 import { IssueReportInterface, CreateIssueInterface } from "../../interfaces/Issue";
-import { BugOutlined, FileTextOutlined, LoadingOutlined, EditOutlined, CloseOutlined } from "@ant-design/icons"; // เพิ่ม EditOutlined, CloseOutlined
+import { BugOutlined, FileTextOutlined, LoadingOutlined, EditOutlined, CloseOutlined } from "@ant-design/icons"; 
 import "../../style/issue-report.css";
 import Swal from "sweetalert2";
 
@@ -130,7 +130,7 @@ export default function ReportIssueContent() {
             {/* Form Section */}
             <form onSubmit={handleSubmit} className="issue-form" style={{ marginBottom: '20px', border: editMode ? '2px solid #1890ff' : '1px solid #ddd', padding: '15px', borderRadius: '8px' }}>
                 <h4 style={{ marginTop: 0, color: editMode ? '#1890ff' : '#333' }}>
-                    {editMode ? `✏️ กำลังแก้ไขรายการ #${editIssueId}` : "📝 แจ้งปัญหาใหม่"}
+                    {editMode ? `✏️ กำลังแก้ไขรายการ` : "📝 แจ้งปัญหาใหม่"}
                 </h4>
                 
                 <div className="form-group">
