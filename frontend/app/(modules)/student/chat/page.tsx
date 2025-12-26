@@ -23,7 +23,7 @@ export default function ChatPage() {
   const [message, setMessage] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  // ✅ ONE socket per tab
+
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
@@ -35,21 +35,17 @@ export default function ChatPage() {
     setUserId(localStorage.getItem("user_id"));
   }, [mounted]);
 
-  // ✅ init socket once
+
   useEffect(() => {
     if (!mounted) return;
     if (socketRef.current) return;
 
-    // ⚠️ IMPORTANT: In production, ensure NEXT_PUBLIC_SOCKET_URL is set to your https://api... domain
-    // If not set, it defaults to localhost which will fail on a real server.
     const url = process.env.NEXT_PUBLIC_SOCKET_URL ?? "http://localhost:3001";
 
     const s = io(url, {
       transports: ["websocket"],
       autoConnect: true,
-      // 👇 FIXED: Added this to match your Axios config. 
-      // This sends cookies/session data to the backend during the handshake.
-      withCredentials: true, 
+      withCredentials: true,
     });
 
     socketRef.current = s;
@@ -59,6 +55,7 @@ export default function ChatPage() {
     });
 
     s.on("connect_error", (e) => {
+      console.error("❌ socket connect_error:", e);
       console.error("❌ socket connect_error:", e.message);
     });
 
@@ -70,27 +67,6 @@ export default function ChatPage() {
       socketRef.current = null;
     };
   }, [mounted]);
-
-  const checkToxicityClient = async (
-    text: string
-  ): Promise<"toxic" | "non toxic" | "unknown"> => {
-    try {
-      const res = await fetch("/api/toxicity", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
-      });
-
-      const data = await res.json().catch(() => null);
-
-      if (!res.ok) return "unknown";
-      if (!data || typeof data.toxic !== "boolean") return "unknown";
-
-      return data.toxic ? "toxic" : "non toxic";
-    } catch {
-      return "unknown";
-    }
-  };
 
   const normalizeChat = (data: any): FullChat => {
     const timeString =
@@ -178,7 +154,7 @@ export default function ChatPage() {
     })();
   }, [mounted, idsOk, groupProjectId]);
 
-  // ✅ join/leave + receive
+
   useEffect(() => {
     if (!mounted) return;
     if (!idsOk) return;
@@ -199,7 +175,7 @@ export default function ChatPage() {
       const cleanMsg = normalizeChat(data);
 
       setChats((prev) => {
-        // ✅ FIX: Remove old message with same ID, add new one (Handles Updates/Dupes)
+
         const otherMessages = prev.filter((msg) => Number(msg.id) !== Number(cleanMsg.id));
         return [...otherMessages, cleanMsg];
       });
@@ -231,38 +207,52 @@ export default function ChatPage() {
 
   // ✅ FIXED sendChat Function (With Duplicate/Race Condition Fix)
   const sendChat = async (e: React.FormEvent) => {
-  e.preventDefault();
-  if (!roomJoined || !idsOk) return;
+    e.preventDefault();
+    if (!roomJoined || !idsOk) return;
 
-  const text = message.trim();
-  if (!text) return;
+    const text = message.trim();
+    if (!text) return;
 
-  const socket = socketRef.current;
-  if (!socket) {
-    alert("Socket not connected");
-    return;
-  }
+    const socket = socketRef.current;
+    if (!socket) {
+      alert("Socket not connected");
+      return;
+    }
 
-  const payload = {
-    group_project_id: groupProjectId,
-    process_id: Number(activeRoomId),
-    sender_id: Number(userId),
-    message: text,
+    const roomIdStr = `${groupProjectId}:${activeRoomId}`;
+
+    const payload = {
+      group_project_id: groupProjectId,
+      process_id: Number(activeRoomId),
+      sender_id: Number(userId),
+      message: text,
+    };
+
+    setMessage("");
+
+    try {
+
+      const savedMessage = (await InsertChat(payload)) as any;
+
+
+      const dbId = Number(savedMessage?.id || savedMessage?.ID || 0);
+      const uniqueId = dbId > 0 ? dbId : Date.now() + Math.random();
+
+      const socketPayload = {
+        ...payload,
+        ...(typeof savedMessage === 'object' ? savedMessage : {}),
+        id: uniqueId, // <--- CRITICAL FIX
+        room_id: roomIdStr,
+      };
+
+
+      socket.emit("send_message", socketPayload);
+
+    } catch (err) {
+      console.error("InsertChat failed:", err);
+      alert("ส่งข้อความไม่สำเร็จ");
+    }
   };
-
-  setMessage("");
-
-  const status = await checkToxicityClient(text);
-  console.warn("[toxicity]", status, { room: activeRoomId, group: groupProjectId });
-
-  try {
-    await InsertChat(payload);
-  } catch (err) {
-    console.error("InsertChat failed:", err);
-    alert("ส่งข้อความไม่สำเร็จ");
-  }
-  };
-
 
   const deleteMessage = async (id: number) => {
     if (!id || isNaN(id)) {
@@ -275,13 +265,14 @@ export default function ChatPage() {
 
     try {
       const payload = {
-        id : Number(userId),
+        id: Number(userId),
         group_project_id: groupProjectId,
         process_id: Number(activeRoomId),
       };
 
       await DropChat(payload);
       setChats((prev) => prev.filter((c) => Number(c.id) !== id));
+
 
       const roomIdStr = `${groupProjectId}:${activeRoomId}`;
       const socket = socketRef.current;
@@ -300,6 +291,7 @@ export default function ChatPage() {
       return "";
     }
   };
+
 
   if (!mounted) return null;
 
@@ -393,7 +385,6 @@ export default function ChatPage() {
         </div>
       </aside>
 
-      {/* MAIN CHAT AREA */}
       <main style={{ flex: 1, display: "flex", flexDirection: "column" }}>
         <div
           style={{

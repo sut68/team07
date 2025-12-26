@@ -1,13 +1,10 @@
-export type ToxicityResult = "toxic" | "non toxic";
+'use server'; // <--- THIS IS REQUIRED
 
-async function CheckToxicity(text: string) {
-  const res = await fetch("/api/toxicity", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text }),
-  });
+import { check } from '../../data/toxic/check'; 
 
-  return await res.json() as { result: ToxicityResult; toxic: boolean };
+export async function getResult(text: string) {
+  // This runs on the server (Node.js)
+  const status = await check(text); 
+  console.log(`[Server] Input: "${text}" -> Result: ${status}`);
+  return status;
 }
-
-export { CheckToxicity };

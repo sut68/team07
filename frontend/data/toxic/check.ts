@@ -1,80 +1,81 @@
-import fs from "fs";
-import path from "path";
-import * as ort from "onnxruntime-node";
-
-// CONFIGURATION
-const MAX_SEQ_LEN = 20; // MUST match what you used in Python training
-const MODEL_PATH = path.join(process.cwd(), "public", "toxicity_v1.onnx"); // Suggest putting in public
-const VOCAB_PATH = path.join(process.cwd(), "public", "vocab.json");
+import * as ort from 'onnxruntime-node';
+import * as fs from 'fs';
+import * as path from 'path';
+import { parse } from 'csv-parse/sync';
 
 let session: ort.InferenceSession | null = null;
-let vocab: Record<string, number> | null = null;
+let blocklist: Set<string> | null = null;
 
 async function loadResources() {
-  if (session && vocab) return { session, vocab };
+  if (session && blocklist) return;
 
-  // 1. Load Vocab
-  const vocabData = fs.readFileSync(VOCAB_PATH, "utf8");
-  vocab = JSON.parse(vocabData);
+  // 1. Get the current running directory
+  const currentDir = process.cwd();
+  console.log("------------------------------------------------");
+  console.log("[DEBUG] Current Working Directory:", currentDir);
 
-  // 2. Load Model
-  session = await ort.InferenceSession.create(MODEL_PATH);
+  // 2. Construct the paths
+  // We try to find where 'data' is relative to where you ran the command
+  const modelPath = path.join(currentDir, 'data', 'toxic', 'toxicity_v1.onnx');
+  const csvPath = path.join(currentDir, 'data', 'toxic', 'toxicword.csv');
 
-  return { session, vocab };
-}
+  console.log("[DEBUG] Target Model Path:", modelPath);
+  console.log("[DEBUG] Target CSV Path:", csvPath);
 
-function tokenize(text: string, vocabulary: Record<string, number>): bigint[] {
-  // Simple cleaning: lowercase, remove punctuation
-  const clean = text.toLowerCase().replace(/[^a-z0-9\s]/g, "");
-  const words = clean.split(/\s+/);
-
-  // Map words to IDs
-  const tokens = words.map((w) => {
-    if (vocabulary && w in vocabulary) return BigInt(vocabulary[w]);
-    return BigInt(vocabulary?.["<UNK>"] ?? 1); // Default to UNK if word not found
-  });
-
-  // Pad or Truncate to MAX_SEQ_LEN
-  if (tokens.length < MAX_SEQ_LEN) {
-    const padding = new Array(MAX_SEQ_LEN - tokens.length).fill(BigInt(0));
-    return [...tokens, ...padding];
-  } else {
-    return tokens.slice(0, MAX_SEQ_LEN);
+  // 3. CHECK IF FILES EXIST (This prevents the 500 crash)
+  if (!fs.existsSync(modelPath)) {
+    console.error("❌ [CRITICAL] Model file NOT FOUND at this path!");
+    // Check if maybe it's inside 'src'?
+    const altPath = path.join(currentDir, 'src', 'data', 'toxic', 'toxicity_v1.onnx');
+    console.log("[DEBUG] Checking alternative path:", altPath);
+    if(fs.existsSync(altPath)) {
+        console.log("✅ Found it at alternative path! Please update your code to include 'src'.");
+    }
+    throw new Error(`File not found: ${modelPath}`);
   }
+
+  if (!fs.existsSync(csvPath)) {
+    console.error("❌ [CRITICAL] CSV file NOT FOUND at this path!");
+    throw new Error(`File not found: ${csvPath}`);
+  }
+
+  console.log("✅ [DEBUG] Files found. Loading model...");
+
+  try {
+    session = await ort.InferenceSession.create(modelPath);
+    const csvContent = fs.readFileSync(csvPath, 'utf-8');
+    const records = parse(csvContent, { columns: false, trim: true });
+    blocklist = new Set(records.map((r: any) => r[0].toLowerCase()));
+    console.log("✅ [DEBUG] Model loaded successfully!");
+  } catch (e) {
+    console.error("❌ [DEBUG] Crash during model loading:", e);
+    throw e;
+  }
+  console.log("------------------------------------------------");
 }
 
-export async function checkToxicityResult(text: string): Promise<{ isToxic: boolean; score: number }> {
+export async function check(text: string): Promise<string> {
   try {
-    const { session, vocab } = await loadResources();
+    await loadResources();
     
-    if (!session || !vocab) throw new Error("Failed to load AI resources");
+    if (!text || !text.trim()) return "non toxic";
 
-    // 1. Tokenize Input
-    const inputIds = tokenize(text, vocab);
-    
-    // 2. Create Tensor (Int64 is required for PyTorch Embedding layers)
-    const tensorData = BigInt64Array.from(inputIds);
-    const inputTensor = new ort.Tensor("int64", tensorData, [1, MAX_SEQ_LEN]);
+    const cleanText = text.toLowerCase();
+    const words = cleanText.split(/\s+/);
+    if (blocklist) {
+        for (const word of words) {
+            if (blocklist.has(word)) return "toxic";
+        }
+    }
 
-    // 3. Run Inference
-    // Note: 'input' is the name defined in torch.onnx.export. If you changed it, change it here.
-    const feeds = { input: inputTensor }; 
-    const results = await session.run(feeds);
-
-    // 4. Get Output
-    // Output shape is [1, 1] (probability)
-    const outputMap = results[Object.keys(results)[0]]; // Get first output
-    const data = outputMap.data as Float32Array;
-    const score = Number(data[0]);
-
-    return { 
-        isToxic: score > 0.5, 
-        score 
-    };
-
+    const inputTensor = new ort.Tensor('string', [text], [1, 1]);
+    const feeds = { input: inputTensor };
+    const results = await session!.run(feeds);
+    const label = results['output_label'].data[0];
+    return Number(label) === 1 ? "toxic" : "non toxic";
   } catch (error) {
-    console.error("AI Inference Error:", error);
-    // Fail safe: If AI crashes, allow message (or block, depending on your policy)
-    return { isToxic: false, score: 0 }; 
+    console.error("[DEBUG] Check function crashed:", error);
+    // Return non-toxic so the app doesn't break
+    return "non toxic";
   }
 }
