@@ -130,7 +130,7 @@ export default function ReportIssueContent() {
             {/* Form Section */}
             <form onSubmit={handleSubmit} className="issue-form" style={{ marginBottom: '20px', border: editMode ? '2px solid #1890ff' : '1px solid #ddd', padding: '15px', borderRadius: '8px' }}>
                 <h4 style={{ marginTop: 0, color: editMode ? '#1890ff' : '#333' }}>
-                    {editMode ? `✏️ กำลังแก้ไขรายการ #${editIssueId}` : "📝 แจ้งปัญหาใหม่"}
+                    {editMode ? `✏️ กำลังแก้ไขรายการ` : "📝 แจ้งปัญหาใหม่"}
                 </h4>
                 
                 <div className="form-group">
