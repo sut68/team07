@@ -1,23 +1,19 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Badge, Popover, Avatar, Typography, Modal, Button } from 'antd'; // ✅ เพิ่ม Modal, Button
-import { BellOutlined, ExclamationCircleOutlined, FormOutlined } from '@ant-design/icons'; // ✅ เพิ่ม FormOutlined
+import { Badge, Popover, Avatar, Typography, Modal, Button } from 'antd'; 
+import { BellOutlined, ExclamationCircleOutlined, FormOutlined } from '@ant-design/icons'; 
 import { GetMyNotifications, MarkNotificationAsRead } from '../../services/notification'; 
 import { NotificationItem } from '../../interfaces/Notification';
-
-// ✅ Import Component หน้ารายงานปัญหาเข้ามา (เช็ค Path ให้ถูกกับโฟลเดอร์ของคุณ)
-// เนื่องจากไฟล์นี้อยู่ components/notification ดังนั้นต้องถอยกลับไปหา components/issue
 import ReportIssueContent from '../issue/issueReport'; 
 
 const { Text } = Typography;
 
 export default function NotificationBell() {
-    // ❌ ไม่รับ Props redirectPath แล้ว เพราะเราจะเปิด Modal แทนการเปลี่ยนหน้า
 
     const [notifications, setNotifications] = useState<NotificationItem[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
     
-    // ✅ State ควบคุมการเปิด/ปิด Modal
+    // State ควบคุมการเปิด/ปิด Modal
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     // --- Fetch Data on Mount ---
@@ -54,7 +50,7 @@ export default function NotificationBell() {
             setNotifications(updatedList);
             setUnreadCount((prev) => Math.max(0, prev - 1));
 
-            // ✅ เปิด Modal แทนการ Redirect
+            // เปิด Modal แทนการ Redirect
             setIsModalOpen(true); 
 
         } catch (error) {
@@ -136,7 +132,7 @@ export default function NotificationBell() {
                 </Badge>
             </Popover>
 
-            {/* ✅ ส่วน Modal ที่ซ่อนอยู่ จะแสดงเมื่อ isModalOpen = true */}
+            {/* ส่วน Modal ที่ซ่อนอยู่ จะแสดงเมื่อ isModalOpen = true */}
             <Modal
                 title={
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -146,12 +142,11 @@ export default function NotificationBell() {
                 }
                 open={isModalOpen}
                 onCancel={() => setIsModalOpen(false)}
-                footer={null} // ไม่เอาปุ่ม OK/Cancel ของ Modal เพราะเรามีปุ่มใน Form แล้ว
+                footer={null} 
                 width={700}
                 centered
-                destroyOnClose // ล้างข้อมูลเมื่อปิด Modal
+                destroyOnHidden // ล้างข้อมูลเมื่อปิด Modal
             >
-                {/* เรียกใช้ Component เนื้อหาที่เราทำไว้ */}
                 <ReportIssueContent />
             </Modal>
         </>
