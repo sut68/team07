@@ -71,6 +71,27 @@ export default function ChatPage() {
     };
   }, [mounted]);
 
+  const checkToxicityClient = async (
+    text: string
+  ): Promise<"toxic" | "non toxic" | "unknown"> => {
+    try {
+      const res = await fetch("/api/toxicity", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok) return "unknown";
+      if (!data || typeof data.toxic !== "boolean") return "unknown";
+
+      return data.toxic ? "toxic" : "non toxic";
+    } catch {
+      return "unknown";
+    }
+  };
+
   const normalizeChat = (data: any): FullChat => {
     const timeString =
       data.updated_at ||
@@ -210,36 +231,38 @@ export default function ChatPage() {
 
   // ✅ FIXED sendChat Function (With Duplicate/Race Condition Fix)
   const sendChat = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!roomJoined || !idsOk) return;
+  e.preventDefault();
+  if (!roomJoined || !idsOk) return;
 
-    const text = message.trim();
-    if (!text) return;
+  const text = message.trim();
+  if (!text) return;
 
-    const socket = socketRef.current;
-    if (!socket) {
-      alert("Socket not connected");
-      return;
-    }
+  const socket = socketRef.current;
+  if (!socket) {
+    alert("Socket not connected");
+    return;
+  }
 
-    const roomIdStr = `${groupProjectId}:${activeRoomId}`;
-
-    const payload = {
-      group_project_id: groupProjectId,
-      process_id: Number(activeRoomId),
-      sender_id: Number(userId),
-      message: text,
-    };
-
-    setMessage("");
-
-    try {
-      await InsertChat(payload);
-    } catch (err) {
-      console.error("InsertChat failed:", err);
-      alert("ส่งข้อความไม่สำเร็จ");
-    }
+  const payload = {
+    group_project_id: groupProjectId,
+    process_id: Number(activeRoomId),
+    sender_id: Number(userId),
+    message: text,
   };
+
+  setMessage("");
+
+  const status = await checkToxicityClient(text);
+  console.warn("[toxicity]", status, { room: activeRoomId, group: groupProjectId });
+
+  try {
+    await InsertChat(payload);
+  } catch (err) {
+    console.error("InsertChat failed:", err);
+    alert("ส่งข้อความไม่สำเร็จ");
+  }
+  };
+
 
   const deleteMessage = async (id: number) => {
     if (!id || isNaN(id)) {

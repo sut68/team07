@@ -1,0 +1,10 @@
+{
+  "model": "toxicity_v1",
+  "epochs_equivalent": 5000,
+  "learning_rate_equivalent": 1e-05,
+  "C": 1e-05,
+  "threshold": 0.5,
+  "validation_accuracy": 0.7237163814180929,
+  "input_name": "input",
+  "csv_path": "C:\\Users\\tham\\Documents\\code\\python\\study\\toxicword.csv"
+}
