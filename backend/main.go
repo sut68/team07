@@ -12,6 +12,7 @@ import (
 	"github.com/sut68/team07/backend/controller/group"
 	"github.com/sut68/team07/backend/controller/issues"
 	"github.com/sut68/team07/backend/controller/news"
+	"github.com/sut68/team07/backend/controller/notification"
 	"github.com/sut68/team07/backend/controller/progress"
 	"github.com/sut68/team07/backend/controller/topic"
 	"github.com/sut68/team07/backend/controller/updateStatus"
@@ -37,7 +38,6 @@ func main() {
 	r := gin.Default()
 	r.Static("/uploads", "./uploads")
 	r.Use(database.CORSMiddleware())
-	r.Static("/uploads", "./uploads")
 
 	authHandler := auth.NewLoginHandler()
 
@@ -77,6 +77,10 @@ func main() {
 		protected.GET("/academicYears", group.GetAcademicYears)
 		r.GET("/group", group.GetGroupProject)
 		// r.POST("/addMember", group.PostGroupMember)
+
+		// Notification
+		protected.GET("/notifications/my", notification.GetMyNotifications)
+		protected.PATCH("/notifications/:id/read", notification.MarkAsRead)
 
 		adminGroup := protected.Group("/admin")
 		adminGroup.Use(middleware.RoleGuard("Admin"))
@@ -190,6 +194,7 @@ func main() {
 			studentGroup.GET("/topic", topic.GetStudentTopic)
 			studentGroup.POST("/topics/:id/select", topic.SelectTopic)
 			studentGroup.POST("/topics/cancel-selection", topic.CancelSelection)
+
 		}
 
 		teacherOrStudentGroup := protected.Group("/groupProject")
@@ -209,14 +214,16 @@ func main() {
 		// อนุญาตให้ Admin, Teacher, Student เข้าถึงได้
 		issueGroup.Use(middleware.RoleGuard("Admin", "Teacher", "Student"))
 		{
-			issueGroup.GET("", issues.GetIssueReports)        // GET /issues (List)
-			issueGroup.POST("", issues.CreateIssue)           // POST /issues (Create)
-			issueGroup.GET("/:id", issues.GetIssueReportByID) // GET /issues/:id (Get By ID)
-			issueGroup.GET("/my", issues.GetMyIssues)         // GET /issues/my (Get My Issues)
+			issueGroup.GET("", issues.GetIssueReports)         // GET /issues (List)
+			issueGroup.POST("", issues.CreateIssue)            // POST /issues (Create)
+			issueGroup.GET("/:id", issues.GetIssueReportByID)  // GET /issues/:id (Get By ID)
+			issueGroup.GET("/my", issues.GetMyIssues)          // GET /issues/my (Get My Issues)
+			issueGroup.PATCH("/:id", issues.UpdateIssueReport) // PATCH /issues/:id (User Edit)
 		}
 
 		protected.POST("/logout", authHandler.Logout)
 	}
 
 	r.Run(":8080")
+
 }

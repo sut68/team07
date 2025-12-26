@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import './dashboard.css';
+import '../../../style/dashboard.css';
 import NewsList from '../../../components/news/NewsList';
 import NewsModal from '../../../components/news/NewsModal';
 import { News } from '../../../interfaces/News';
@@ -28,7 +28,7 @@ export default function TeacherDashboardPage() {
     };
 
     return (
-        <div className="container">
+        <div className="container-teacher-dashboard">
             <NewsModal 
                 isOpen={isNewsModalOpen} 
                 onClose={handleCloseModal} 
@@ -36,7 +36,7 @@ export default function TeacherDashboardPage() {
                 initialData={editingNews}
             />
             {/* --- ส่วนซ้าย: ข่าวสาร (50%) --- */}
-            <div className="news-section">
+            <div className="news-section-teacher">
                 <NewsList 
                     currentUserId={user?.id} 
                     role="Teacher" 
@@ -46,20 +46,20 @@ export default function TeacherDashboardPage() {
             </div>
 
             {/* --- ส่วนขวา: รวม 3 ส่วนเดิม (50%) --- */}
-            <div className="right-panel">
+            <div className="right-panel-teacher">
                 
                 {/* นัดหมาย */}
-                <div className="section top">
+                <div className="section-teacher top-teacher">
                     <h1>นัดหมายของหนึ่ง (Top) ทำเเบบขึ้นว่ามีนัดอะไรเฉยๆเป็นการ์ด เเล้วมีปุ่มให้คลิ๊กไป</h1>
                 </div>
 
                 {/* แจ้งเตือนกลุ่ม */}
-                <div className="section middle">
+                <div className="section-teacher middle-teacher">
                     <h1>กลุ่มของเอ แจ้งว่ามีใครเลือกคุณ (Middle) ทำเเบบขึ้นว่ามีเฉยๆเป็นการ์ด เเล้วมีปุ่มให้คลิ๊กไป</h1>
                 </div>
 
                 {/* ความคืบหน้า */}
-                <div className="section bottom">
+                <div className="section-teacher bottom-teacher">
                     <h1>ของพู แสดงความคืบหน้า (Bottom) ทำเเบบขึ้นว่ามีอะไรเฉยๆเป็นการ์ด เเล้วมีปุ่มให้คลิ๊กไป</h1>
                 </div>
 

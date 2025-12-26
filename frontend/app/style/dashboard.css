@@ -1,0 +1,100 @@
+/* std dashboard.css */
+.container {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+  margin: 0;
+  padding: 10px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* --- ส่วนซ้าย: ข่าวสาร --- */
+.news-section {
+  flex: 0 0 40%;
+  background-color: transparent; 
+  display: block; 
+  overflow: hidden; 
+  border-right: 1px solid #eee;
+}
+
+/* --- ส่วนขวา: กล่องรวม --- */
+.right-panel {
+  flex: 0 0 60%;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+/* --- นัดหมาย (Top Right) --- */
+.top-right {
+  flex: 0 0 40%; 
+  background-color: #d4edda;
+  border-bottom: 10px solid #fff;
+}
+
+/* --- โครงงาน (Bottom Right) --- */
+.bottom-right {
+  flex: 1; 
+  background-color: #d1ecf1;
+}
+
+/* teacher dashboard.css */
+
+.container-teacher-dashboard {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+  margin: 0;
+  padding: 10px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* --- ส่วนซ้าย: ข่าวสาร --- */
+.news-section-teacher {
+  flex: 0 0 50%;
+  background-color: transparent; 
+  display: block; 
+  overflow: hidden; 
+  border-right: 1px solid #eee;
+}
+
+/* --- ส่วนขวา: กล่องรวม 3 ชั้น --- */
+.right-panel-teacher {
+  flex: 0 0 50%;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* --- สไตล์ของ 3 กล่องด้านขวา --- */
+.section-teacher {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-bottom: 10px solid #ffffff; 
+}
+
+.section-teacher:last-child {
+  border-bottom: none;
+}
+
+.top-teacher { background-color: #f8d7da; }
+.middle-teacher { background-color: #d1ecf1; }
+.bottom-teacher { background-color: #d4edda; }
+
+
+/* Appointment css */
+
+/* group css */
+
+/* progress css */

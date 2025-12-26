@@ -2,7 +2,7 @@
 
 import { EditOutlined, DeleteOutlined, PaperClipOutlined } from '@ant-design/icons';
 import { News } from '../../interfaces/News';
-import './news.css';
+import '../../style/news.css';
 
 interface NewsCardProps {
     data: News;

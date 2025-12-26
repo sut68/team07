@@ -129,10 +129,6 @@ export default function UsersManagePage() {
             setNewUser({ ...newUser, [name]: numericValue });
             return;
         }
-        if (name === "username") {
-            setNewUser({ ...newUser, [name]: value.toUpperCase() });
-            return;
-        }
         setNewUser({
             ...newUser,
             [name]: name.includes("id") ? Number(value) : value
