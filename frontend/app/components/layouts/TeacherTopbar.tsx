@@ -83,7 +83,7 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
         } else if (key === 'create_news') {
             setIsNewsModalOpen(true);
         } else if (key === 'report') {
-            // ✅ 4. สั่งเปิด Modal เมื่อกดปุ่มรายงานปัญหา
+            // สั่งเปิด Modal เมื่อกดปุ่มรายงานปัญหา
             setIsReportModalOpen(true);
         }
     };
@@ -124,7 +124,7 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
                 footer={null}
                 width={700}
                 centered
-                destroyOnClose
+                destroyOnHidden
             >
                 {/* เรียกใช้ Component ตัวเดียวกับที่ใช้ใน NotificationBell */}
                 <ReportIssueContent />
