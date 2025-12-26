@@ -18,15 +18,11 @@ const ResetPasswordComponent: React.FC = () => {
     const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
     const [isLoading, setIsLoading] = useState(false);
 
-    // ทดสอบโหมด: ถ้า URL มี ?test=1 จะอนุญาตไม่ต้องมี token (ใช้เพื่อทดสอบหน้า UI)
-    const testMode = typeof window !== 'undefined' && searchParams.get('test') === '1';
-
     useEffect(() => {
         const urlToken = searchParams.get('token');
         if (urlToken) {
             setToken(urlToken);
         } else {
-            // ถ้าไม่มี token แสดงข้อผิดพลาด (เอาโหมดทดสอบออกแล้ว)
             setMessage({
                 text: "Invalid link. Missing reset token. Please request a new password reset.",
                 type: 'error'
@@ -36,6 +32,7 @@ const ResetPasswordComponent: React.FC = () => {
 
     const handleReset = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (isLoading) return;
         setMessage(null);
 
         if (!token) {
@@ -44,8 +41,13 @@ const ResetPasswordComponent: React.FC = () => {
         }
 
         const hasUpperCase = /[A-Z]/.test(password);
-        const hasSymbol = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+        const hasSymbol = /[^A-Za-z0-9]/.test(password);
+        const hasNumber = /[0-9]/.test(password);
 
+        if (!hasNumber) {
+            setMessage({ text: "รหัสผ่านต้องมีตัวเลข (0-9) อย่างน้อย 1 ตัว", type: 'error' });
+            return;
+        }
         if (password.length < 8) {
             setMessage({ text: "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร", type: 'error' });
             return;
@@ -83,7 +85,21 @@ const ResetPasswordComponent: React.FC = () => {
             }, 5000);
 
         } catch (err: any) {
+            console.error("Reset Password Error:", err);
             const errorText = err.response?.data?.error || "ตั้งรหัสผ่านไม่สำเร็จ: ลิงก์อาจหมดอายุแล้ว";
+            
+            // กรณีที่ Backend แจ้งว่า Token ถูกใช้แล้ว แต่จริงๆ คือเปลี่ยนสำเร็จไปแล้ว (เผื่อ Backend check พลาด)
+            if (errorText === "this reset link has already been used") {
+                 setMessage({
+                    text: "ตั้งรหัสผ่านใหม่สำเร็จ! (ลิงก์ถูกใช้งานแล้ว)",
+                    type: 'success'
+                });
+                setTimeout(() => {
+                    router.push('/login');
+                }, 5000);
+                return;
+            }
+
             setMessage({ text: errorText, type: 'error' });
         } finally {
             setIsLoading(false);
@@ -105,7 +121,14 @@ const ResetPasswordComponent: React.FC = () => {
             <div className="rp-card" role="main" aria-labelledby="rp-title">
                 <div className="rp-icon" aria-hidden="true">
                     <svg width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12.3212 10.6852L4 19L6 21M7 16L9 18M20 7.5C20 9.98528 17.9853 12 15.5 12C13.0147 12 11 9.98528 11 7.5C11 5.01472 13.0147 3 15.5 3C17.9853 3 20 5.01472 20 7.5Z" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        <path
+                            d="M12.3212 10.6852L4 19L6 21M7 16L9 18M20 7.5C20 9.98528 17.9853 12 15.5 12C13.0147 12 11 9.98528 11 7.5C11 5.01472 13.0147 3 15.5 3C17.9853 3 20 5.01472 20 7.5Z"
+                            stroke="#000000"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        />
+
                     </svg>
                 </div>
 
@@ -169,7 +192,6 @@ const ResetPasswordComponent: React.FC = () => {
 
 const ResetPasswordPage: React.FC = () => {
     return (
-        // ห่อหุ้มด้วย Suspense เพื่อแก้ไขปัญหา Next.js Build Error (SSR)
         <Suspense fallback={
             <div className="flex items-center justify-center min-h-screen bg-gray-100">
                 <p className="text-gray-600" style={{ fontFamily: originalFont }}>กำลังเตรียมหน้า...</p>

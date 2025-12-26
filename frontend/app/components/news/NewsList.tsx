@@ -6,7 +6,7 @@ import { getNews, deleteNews } from '../../services/news';
 import NewsCard from './NewsCard';
 import { Empty, Spin, Modal } from 'antd';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
-import './news.css';
+import '../../style/news.css';
 import { Toast_success, Toast_fail } from '../Webmessage';
 
 interface NewsListProps {

@@ -6,8 +6,8 @@ import (
 
 type Notification struct {
 	gorm.Model
-	Title   string `json:"title"`   
-	Message string `json:"message"` 
+	Title   string `json:"title" valid:"required~Title is required"`   
+	Message string `json:"message" valid:"required~Message is required"` 
 	IsRead  bool   `json:"is_read" gorm:"default:false"` 
 	
 	UserID  uint   `json:"user_id"` 

@@ -8,4 +8,5 @@ type ResetPasswordToken struct {
 	UserID    uint   `gorm:"not null"`
 	User      User   `gorm:"foreignKey:UserID"`
 	ExpiresAt int64  `gorm:"not null"`
+	Used      bool   `gorm:"default:false"`
 }

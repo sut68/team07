@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
-import './dashboard.css';
+import '../../../style/dashboard.css';
 import NewsList from '../../../components/news/NewsList';
 import { useAuth } from '../../roleCheck/authContext';
 
