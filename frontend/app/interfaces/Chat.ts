@@ -4,6 +4,7 @@ export interface FullChat {
   process_id: number;
   sender_id: number;
   message: string;
+  name: string;
   created_at?: string;
   updated_at?: string;
   deleted_at?: string | null;
@@ -14,8 +15,7 @@ export interface ChatCreate {
   group_project_id: number;
   process_id: number;
   sender_id: number;
-
-  // frontend uses message
+  name: string;
   message: string;
 }
 
@@ -31,6 +31,7 @@ export interface ProcessInterface {
 export interface GetChat {
   process_id: number;
   group_project_id: number;
+  name: string;
 
   
 }

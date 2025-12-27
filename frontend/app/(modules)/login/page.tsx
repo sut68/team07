@@ -62,6 +62,7 @@ export default function LoginPage() {
       if (res.data) {
         // Backend ส่งมาเป็น int ต้องแปลงเป็น string ก่อนเก็บ
         localStorage.setItem("user_id", String(res.data.id));
+        
 
         // เก็บ role และ username ไว้ด้วยเผื่อใช้แสดงผล
         localStorage.setItem("role", res.data.role);

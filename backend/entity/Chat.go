@@ -16,6 +16,8 @@ type Chat struct {
 	SenderID   uint   `json:"sender_id" valid:"required~SenderID is required"`
 	Sender     *User  `gorm:"foreignKey:SenderID" json:"sender"`
 
+	Name     string   `json:"name"`
+
 
 	Message   string    `json:"message" valid:"required~Message is required"`
 }

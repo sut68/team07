@@ -1,6 +1,6 @@
 import api from "./api";
 import type { FullChat, ChatCreate, GetChat, ChatDelete, Getteacher ,GroupProject } from "../interfaces/Chat";
-import { promises } from "dns";
+
 
 
 
@@ -18,6 +18,7 @@ async function InsertChat(payload: ChatCreate) {
       group_project_id: payload.group_project_id,
       process_id: payload.process_id,
       sender_id: payload.sender_id,
+      name: payload.name,
       messege: payload.message, 
     },
   });

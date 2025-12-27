@@ -6,8 +6,8 @@ import { GetAllChat, InsertChat, DropChat, Getteachergroup } from "../../../serv
 import { GetProgress } from "../../../services/progress";
 import type { FullChat } from "../../../interfaces/Chat";
 import type { FullProgress } from "../../../interfaces/Progress";
+import { GetMe } from "@/app/services/login";
 
-// ✅ you should have this interface somewhere central, but ok to keep local
 export interface GroupProject {
   id: number;
   group_number: number;
@@ -26,8 +26,8 @@ export default function ChatPage() {
   const [mounted, setMounted] = useState(false);
 
   const [userId, setUserId] = useState<string | null>(null);
+  const [myUsername, setMyUsername] = useState<string>("");
 
-  // ✅ teacher may have many groups
   const [teacherGroups, setTeacherGroups] = useState<GroupProject[]>([]);
   const [groupProjectId, setGroupProjectId] = useState<number>(0);
 
@@ -39,17 +39,28 @@ export default function ChatPage() {
 
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  // ✅ ONE socket per tab
   const socketRef = useRef<Socket | null>(null);
 
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    (async () => {
+      try {
+        const me = await GetMe();
+        if (me?.id) {
+          setUserId(String(me.id));
+          setMyUsername(me.username || "");
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!mounted) return;
     setUserId(localStorage.getItem("user_id"));
   }, [mounted]);
 
-  // ✅ init socket once
   useEffect(() => {
     if (!mounted) return;
     if (socketRef.current) return;
@@ -63,8 +74,8 @@ export default function ChatPage() {
 
     socketRef.current = s;
 
-    s.on("connect", () => console.log("✅ socket connected:", s.id));
-    s.on("connect_error", (e) => console.error("❌ socket connect_error:", e));
+    s.on("connect", () => console.log("socket connected:", s.id));
+    s.on("connect_error", (e) => console.error("socket connect_error:", e));
 
     return () => {
       try {
@@ -90,10 +101,10 @@ export default function ChatPage() {
       message: data.message ?? data.Message ?? "",
       updated_at: timeString,
       created_at: data.created_at ?? data.CreatedAt ?? timeString,
-    };
+      name: data.name ?? data.Name ?? `ผู้ใช้ ${data.sender_id}`,
+    } as any;
   };
 
-  // ✅ load teacher groups once userId available
   useEffect(() => {
     if (!mounted) return;
     if (!userId) return;
@@ -123,7 +134,6 @@ export default function ChatPage() {
 
         setTeacherGroups(clean);
 
-        // ✅ choose default group: prefer In Process -> Pending -> first
         const preferred =
           clean.find((g) => g.group_status === "In Process") ??
           clean.find((g) => g.group_status === "Pending") ??
@@ -155,6 +165,7 @@ export default function ChatPage() {
       const res = await GetAllChat({
         group_project_id: groupProjectId,
         process_id: Number(rid),
+        name: "", 
       });
 
       const rawData = Array.isArray(res) ? res : [];
@@ -167,7 +178,6 @@ export default function ChatPage() {
     }
   };
 
-  // ✅ load progresses when groupProjectId changes
   useEffect(() => {
     if (!mounted) return;
     if (!idsOk) {
@@ -194,7 +204,6 @@ export default function ChatPage() {
     })();
   }, [mounted, groupProjectId, idsOk]);
 
-  // ✅ join/leave + receive per room
   useEffect(() => {
     if (!mounted) return;
     if (!idsOk) return;
@@ -260,13 +269,30 @@ export default function ChatPage() {
       group_project_id: groupProjectId,
       process_id: Number(activeRoomId),
       sender_id: Number(userId),
+      name: myUsername,
       message: text,
     };
 
     setMessage("");
 
     try {
-      await InsertChat(payload);
+      const savedMessage = (await InsertChat(payload)) as any;
+
+      const dbId = Number(savedMessage?.id || savedMessage?.ID || 0);
+      const uniqueId = dbId > 0 ? dbId : Date.now() + Math.random();
+
+      const socketPayload = {
+        ...payload,
+        ...(typeof savedMessage === 'object' ? savedMessage : {}),
+        id: uniqueId,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        room_id: roomIdStr,
+        name: savedMessage?.name || savedMessage?.Name || myUsername,
+      };
+
+      socket.emit("send_message", socketPayload);
+
     } catch (err) {
       console.error("InsertChat failed:", err);
       alert("ส่งข้อความไม่สำเร็จ");
@@ -304,7 +330,13 @@ export default function ChatPage() {
   const formatTime = (dateStr?: string) => {
     if (!mounted || !dateStr) return "";
     try {
-      return new Date(dateStr).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      const date = new Date(dateStr);
+      let hours = date.getHours();
+      const minutes = date.getMinutes().toString().padStart(2, "0");
+      const ampm = hours >= 12 ? "pm" : "am";
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      return `${hours}.${minutes} ${ampm}`;
     } catch {
       return "";
     }
@@ -324,7 +356,6 @@ export default function ChatPage() {
         background: BG,
       }}
     >
-      {/* SIDEBAR */}
       <aside
         style={{
           width: 280,
@@ -340,7 +371,6 @@ export default function ChatPage() {
             กลุ่ม <b>{groupProjectId || "-"}</b> • ผู้ใช้ <b>{userId || "-"}</b>
           </div>
 
-          {/* ✅ group selector (teacher has many groups) */}
           <div style={{ marginTop: 10 }}>
             <select
               value={groupProjectId}
@@ -430,7 +460,6 @@ export default function ChatPage() {
         </div>
       </aside>
 
-      {/* MAIN CHAT AREA */}
       <main style={{ flex: 1, display: "flex", flexDirection: "column" }}>
         <div
           style={{
@@ -522,7 +551,7 @@ export default function ChatPage() {
                         textAlign: isMe ? "right" : "left",
                       }}
                     >
-                      {isMe ? "ฉัน" : `ผู้ใช้ ${c.sender_id}`}
+                      {isMe ? "ฉัน" : (c.name || `ผู้ใช้ ${c.sender_id}`).split('@')[0]}
                     </div>
 
                     <div

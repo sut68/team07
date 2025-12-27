@@ -30,7 +30,6 @@ func broadcast(path string, payload any) {
 	if err != nil {
 		return
 	}
-	// fire-and-forget (don’t block request)
 	go func() {
 		_, _ = http.Post(socketBroadcastBaseURL+path, "application/json", bytes.NewBuffer(b))
 	}()
@@ -67,11 +66,9 @@ func GetAllChat(c *gin.Context) {
 func InsertChat(c *gin.Context) {
 	db := database.DB()
 
-	// Prefer JSON body
 	var body InsertChatBody
 	_ = c.ShouldBindJSON(&body)
 
-	// Fallback to query params (your old style)
 	if body.GroupProjectID == 0 {
 		groupstr := c.Query("group_project_id")
 		if v, err := strconv.ParseUint(groupstr, 10, 64); err == nil {
@@ -91,7 +88,6 @@ func InsertChat(c *gin.Context) {
 		}
 	}
 
-	// FIX typo: support both "message" and legacy "messege"
 	if body.Message == "" {
 		body.Message = c.Query("message")
 	}
@@ -99,9 +95,8 @@ func InsertChat(c *gin.Context) {
 		body.Message = c.Query("messege")
 	}
 
-	// Validate
 	if body.GroupProjectID == 0 || body.ProcessID == 0 || body.SenderID == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "missing ids"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "miss id"})
 		return
 	}
 	if body.Message == "" {
@@ -109,11 +104,15 @@ func InsertChat(c *gin.Context) {
 		return
 	}
 
+	var sender entity.User
+	db.Select("username").Where("id = ?", body.SenderID).First(&sender)
+
 	chat := entity.Chat{
 		GroupProjectID: body.GroupProjectID,
 		ProcessID:      body.ProcessID,
 		SenderID:       body.SenderID,
 		Message:        body.Message,
+		Name:           sender.Username,
 	}
 
 	result := db.Create(&chat)
@@ -122,7 +121,6 @@ func InsertChat(c *gin.Context) {
 		return
 	}
 
-	// Broadcast the SAVED message (real DB id!)
 	rk := roomKey(chat.GroupProjectID, chat.ProcessID)
 	broadcast("/broadcast/chat", gin.H{
 		"room_id":          rk,
@@ -130,6 +128,7 @@ func InsertChat(c *gin.Context) {
 		"group_project_id": chat.GroupProjectID,
 		"process_id":       chat.ProcessID,
 		"sender_id":        chat.SenderID,
+		"name":             chat.Name,
 		"message":          chat.Message,
 		"created_at":       chat.CreatedAt,
 		"updated_at":       chat.UpdatedAt,
@@ -206,7 +205,7 @@ func DeleteChatbyProgress(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "successfully deleted"})
 }
 
-func GetGroupbyteacherid (c *gin.Context ){
+func GetGroupbyteacherid(c *gin.Context) {
 
 	db := database.DB()
 
@@ -227,5 +226,5 @@ func GetGroupbyteacherid (c *gin.Context ){
 	}
 	log.InsertLog(c, 4)
 	c.JSON(http.StatusOK, group_proj)
-	
+
 }

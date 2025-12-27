@@ -6,6 +6,7 @@ import { GetAllChat, InsertChat, DropChat } from "../../../services/chat";
 import { GetProgress, GetGroupProjectIDByUser } from "../../../services/progress";
 import type { FullChat } from "../../../interfaces/Chat";
 import { FullProgress } from "../../../interfaces/Progress";
+import { GetMe } from "@/app/services/login";
 
 const RED = "#9a0120";
 const RED_DARK = "#7d0019";
@@ -16,25 +17,40 @@ export default function ChatPage() {
   const [mounted, setMounted] = useState(false);
 
   const [userId, setUserId] = useState<string | null>(null);
+  // ✅ 1. ADDED: State to hold your name for the chat socket
+  const [myUsername, setMyUsername] = useState<string>(""); 
+
   const [groupProjectId, setGroupProjectId] = useState<number>(0);
   const [processes, setProcesses] = useState<FullProgress[]>([]);
   const [activeRoomId, setActiveRoomId] = useState<number | null>(null);
   const [chats, setChats] = useState<FullChat[]>([]);
   const [message, setMessage] = useState("");
+
   const bottomRef = useRef<HTMLDivElement>(null);
-
-
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
+    (async () => {
+      try {
+        const me = await GetMe();
+        if (me?.id) {
+          setUserId(String(me.id));
+          // ✅ 2. FIX: Save the username so we can send it later
+          setMyUsername(me.username || ""); 
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    })();
     setMounted(true);
   }, []);
 
   useEffect(() => {
     if (!mounted) return;
-    setUserId(localStorage.getItem("user_id"));
-  }, [mounted]);
-
+    if (!userId) {
+        setUserId(localStorage.getItem("user_id"));
+    }
+  }, [mounted, userId]);
 
   useEffect(() => {
     if (!mounted) return;
@@ -56,7 +72,6 @@ export default function ChatPage() {
 
     s.on("connect_error", (e) => {
       console.error("❌ socket connect_error:", e);
-      console.error("❌ socket connect_error:", e.message);
     });
 
     return () => {
@@ -79,10 +94,11 @@ export default function ChatPage() {
     return {
       ...data,
       id: Number(data.id ?? data.ID ?? 0),
-      sender_id: Number(data.sender_id ?? data.SenderID ?? 0),
+      sender_id: Number(data.sender_id ?? 0),
       message: data.message ?? data.Message ?? "",
       updated_at: timeString,
-      created_at: data.created_at ?? data.CreatedAt ?? timeString,
+      created_at: data.created_at ?? timeString,
+      name: data.name ?? data.Name ?? `ผู้ใช้ ${data.sender_id}`, 
     };
   };
 
@@ -123,6 +139,7 @@ export default function ChatPage() {
       const res = await GetAllChat({
         group_project_id: groupProjectId,
         process_id: Number(rid),
+        name: "", 
       });
 
       const rawData = Array.isArray(res) ? res : [];
@@ -154,7 +171,6 @@ export default function ChatPage() {
     })();
   }, [mounted, idsOk, groupProjectId]);
 
-
   useEffect(() => {
     if (!mounted) return;
     if (!idsOk) return;
@@ -175,7 +191,6 @@ export default function ChatPage() {
       const cleanMsg = normalizeChat(data);
 
       setChats((prev) => {
-
         const otherMessages = prev.filter((msg) => Number(msg.id) !== Number(cleanMsg.id));
         return [...otherMessages, cleanMsg];
       });
@@ -205,7 +220,6 @@ export default function ChatPage() {
     setActiveRoomId(roomId);
   };
 
-  // ✅ FIXED sendChat Function (With Duplicate/Race Condition Fix)
   const sendChat = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!roomJoined || !idsOk) return;
@@ -221,19 +235,19 @@ export default function ChatPage() {
 
     const roomIdStr = `${groupProjectId}:${activeRoomId}`;
 
+    // 4. FIX: Use 'myUsername' here so we send the name immediately!
     const payload = {
       group_project_id: groupProjectId,
       process_id: Number(activeRoomId),
       sender_id: Number(userId),
+      name: myUsername, 
       message: text,
     };
 
     setMessage("");
 
     try {
-
       const savedMessage = (await InsertChat(payload)) as any;
-
 
       const dbId = Number(savedMessage?.id || savedMessage?.ID || 0);
       const uniqueId = dbId > 0 ? dbId : Date.now() + Math.random();
@@ -241,10 +255,11 @@ export default function ChatPage() {
       const socketPayload = {
         ...payload,
         ...(typeof savedMessage === 'object' ? savedMessage : {}),
-        id: uniqueId, // <--- CRITICAL FIX
+        id: uniqueId, 
         room_id: roomIdStr,
-      };
 
+        name: savedMessage?.name || savedMessage?.Name || myUsername, 
+      };
 
       socket.emit("send_message", socketPayload);
 
@@ -273,7 +288,6 @@ export default function ChatPage() {
       await DropChat(payload);
       setChats((prev) => prev.filter((c) => Number(c.id) !== id));
 
-
       const roomIdStr = `${groupProjectId}:${activeRoomId}`;
       const socket = socketRef.current;
       if (socket) socket.emit("delete_message", { id, room_id: roomIdStr });
@@ -286,12 +300,17 @@ export default function ChatPage() {
   const formatTime = (dateStr?: string) => {
     if (!mounted || !dateStr) return "";
     try {
-      return new Date(dateStr).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      const date = new Date(dateStr);
+      let hours = date.getHours();
+      const minutes = date.getMinutes().toString().padStart(2, "0"); 
+      const ampm = hours >= 12 ? "pm" : "am";
+      hours = hours % 12;
+      hours = hours ? hours : 12; 
+      return `${hours}.${minutes} ${ampm}`;
     } catch {
       return "";
     }
   };
-
 
   if (!mounted) return null;
 
@@ -307,7 +326,6 @@ export default function ChatPage() {
         background: BG,
       }}
     >
-      {/* SIDEBAR */}
       <aside
         style={{
           width: 280,
@@ -458,7 +476,6 @@ export default function ChatPage() {
               const isMe = Number(c.sender_id) === Number(userId);
 
               return (
-                // ✅ KEY FIX: Combine ID + Index to prevent "Same Key" crash
                 <div
                   key={`${c.id}-${index}`}
                   style={{
@@ -477,7 +494,8 @@ export default function ChatPage() {
                         textAlign: isMe ? "right" : "left",
                       }}
                     >
-                      {isMe ? "ฉัน" : `ผู้ใช้ ${c.sender_id}`}
+                      {/* ✅ 5. FIX: Display name from the snapshot column */}
+                      {isMe ? "ฉัน" : (c.name || `ผู้ใช้ ${c.sender_id}`).split('@')[0]}
                     </div>
 
                     <div
