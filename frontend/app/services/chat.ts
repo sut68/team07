@@ -13,15 +13,15 @@ async function GetAllChat(payload: GetChat): Promise<FullChat[]> {
 
 async function InsertChat(payload: ChatCreate) {
 
-  await api.post("/SendChat", null, {
-    params: {
-      group_project_id: payload.group_project_id,
-      process_id: payload.process_id,
-      sender_id: payload.sender_id,
-      name: payload.name,
-      messege: payload.message, 
+  await api.post("/SendChat", {
+    group_project_id: payload.group_project_id,
+    process_id: payload.process_id,
+    sender_id: payload.sender_id,
+    type: payload.type,
+    name: payload.name,
+    message: payload.message, 
     },
-  });
+  );
 }
 
 async function DropChat(payload: ChatDelete) {
@@ -41,4 +41,17 @@ async function Getteachergroup(payload: Getteacher): Promise<GroupProject[]> {
   return res.data;
 }
 
-export { GetAllChat, InsertChat, DropChat ,DropWholechat, Getteachergroup};
+async function UploadFile(file: File): Promise<string> {
+
+  const sm = encodeURIComponent(file.name);
+  
+  const res = await api.post<{ url: string }>(`/uploadfile?filename=${sm}`, file, {
+    headers: {
+
+      "Content-Type": "application/octet-stream", 
+    },
+  });
+  return res.data.url; 
+}
+
+export { GetAllChat, InsertChat, DropChat ,DropWholechat, Getteachergroup, UploadFile};

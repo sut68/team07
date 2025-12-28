@@ -45,6 +45,8 @@ func main() {
 	r.POST("/refresh", authHandler.Refresh)
 	r.POST("/forgot-password", authHandler.ForgotPassword)
 	r.POST("/reset-password", authHandler.ResetPassword)
+	r.Static("/chatsave", "./chatsave")
+	
 
 	protected := r.Group("/")
 	protected.Use(middleware.CSRFCheckMiddleware(), middleware.AuthMiddleware())
@@ -57,6 +59,7 @@ func main() {
 		protected.DELETE("/DeleteChat", chat.DeleteChat)
 		protected.DELETE("/Deletechatbyid", chat.DeleteChatbyProgress)
 		protected.POST("/uploadfile",chat.GetFile)
+		
 
 		protected.GET("/getUserProfile", users.GetUserProfile)
 		protected.PATCH("/updateUserProfile", users.UpdateUserProfile)

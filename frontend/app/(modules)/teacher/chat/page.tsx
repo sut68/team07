@@ -6,6 +6,7 @@ import { GetAllChat, InsertChat, DropChat, Getteachergroup } from "../../../serv
 import { GetProgress } from "../../../services/progress";
 import type { FullChat } from "../../../interfaces/Chat";
 import type { FullProgress } from "../../../interfaces/Progress";
+import { UploadFile } from "../../../services/chat";
 import { GetMe } from "@/app/services/login";
 import { 
   SendOutlined, 
