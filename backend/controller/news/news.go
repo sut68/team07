@@ -38,12 +38,16 @@ func CreateNews(c *gin.Context) {
 	file, err := c.FormFile("file")
 	if err == nil {
 		uploadDir := "./uploads/news"
-		if _, err := os.Stat(uploadDir); os.IsNotExist(err) {
-			os.MkdirAll(uploadDir, 0755)
+		// Create a unique directory for the file
+		subDir := fmt.Sprintf("%d", time.Now().UnixNano())
+		targetDir := filepath.Join(uploadDir, subDir)
+
+		if _, err := os.Stat(targetDir); os.IsNotExist(err) {
+			os.MkdirAll(targetDir, 0755)
 		}
 
-		filename := fmt.Sprintf("%d_%s", time.Now().UnixNano(), file.Filename)
-		filePath = filepath.Join(uploadDir, filename)
+		// Use the original filename
+		filePath = filepath.Join(targetDir, file.Filename)
 
 		if err := c.SaveUploadedFile(file, filePath); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
@@ -104,15 +108,22 @@ func UpdateNews(c *gin.Context) {
 	if err == nil {
 		if news.File != "" {
 			os.Remove(news.File)
+			// Try to remove the directory if it's empty
+			dir := filepath.Dir(news.File)
+			os.Remove(dir)
 		}
 
 		uploadDir := "./uploads/news"
-		if _, err := os.Stat(uploadDir); os.IsNotExist(err) {
-			os.MkdirAll(uploadDir, 0755)
+		// Create a unique directory for the file
+		subDir := fmt.Sprintf("%d", time.Now().UnixNano())
+		targetDir := filepath.Join(uploadDir, subDir)
+
+		if _, err := os.Stat(targetDir); os.IsNotExist(err) {
+			os.MkdirAll(targetDir, 0755)
 		}
 
-		filename := fmt.Sprintf("%d_%s", time.Now().UnixNano(), file.Filename)
-		filePath := filepath.Join(uploadDir, filename)
+		// Use the original filename
+		filePath := filepath.Join(targetDir, file.Filename)
 
 		if err := c.SaveUploadedFile(file, filePath); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
@@ -150,6 +161,9 @@ func DeleteNews(c *gin.Context) {
 
 	if news.File != "" {
 		os.Remove(news.File)
+		// Try to remove the directory if it's empty
+		dir := filepath.Dir(news.File)
+		os.Remove(dir)
 	}
 
 	if err := database.DB().Delete(&news).Error; err != nil {
