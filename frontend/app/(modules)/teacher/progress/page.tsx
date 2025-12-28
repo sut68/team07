@@ -200,6 +200,7 @@ export default function ProgressPage() {
       await DropWholechat({
         process_id: id,
         group_project_id: gpji,
+        name: ""
       });
 
       await refresh();
