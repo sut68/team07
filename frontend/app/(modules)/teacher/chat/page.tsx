@@ -2,11 +2,10 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
-import { GetAllChat, InsertChat, DropChat, Getteachergroup } from "../../../services/chat";
+import { GetAllChat, InsertChat, DropChat, Getteachergroup, UploadFile } from "../../../services/chat";
 import { GetProgress } from "../../../services/progress";
 import type { FullChat } from "../../../interfaces/Chat";
 import type { FullProgress } from "../../../interfaces/Progress";
-import { UploadFile } from "../../../services/chat";
 import { GetMe } from "@/app/services/login";
 import { 
   SendOutlined, 
@@ -20,7 +19,12 @@ import {
   CheckCircleOutlined,
   ProjectOutlined,
   CaretDownOutlined,
-  AppstoreOutlined
+  AppstoreOutlined,
+  PaperClipOutlined,
+  CloseCircleOutlined,
+  FileOutlined,
+  LoadingOutlined,
+  PictureOutlined
 } from '@ant-design/icons';
 import { Avatar, Tooltip, Badge, Input, Button, Empty, Select, Tag } from 'antd';
 
@@ -37,6 +41,7 @@ const THEME_RED = "#8A011D";
 const THEME_RED_LIGHT = "#a81835";
 const BG_COLOR = "#f0f2f5";
 const BORDER_COLOR = "#e5e7eb";
+const API_URL = "http://localhost:8080"; // Ensure this matches your backend port
 
 export default function ChatPage() {
   const [mounted, setMounted] = useState(false);
@@ -48,6 +53,12 @@ export default function ChatPage() {
   const [activeRoomId, setActiveRoomId] = useState<number | null>(null);
   const [chats, setChats] = useState<FullChat[]>([]);
   const [message, setMessage] = useState("");
+
+  // --- New File Upload States ---
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const bottomRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket | null>(null);
 
@@ -112,6 +123,8 @@ export default function ChatPage() {
       updated_at: timeString,
       created_at: data.created_at ?? data.CreatedAt ?? timeString,
       name: data.name ?? data.Name ?? `ผู้ใช้ ${data.sender_id}`,
+      // Ensure we capture the type correctly
+      type: Number(data.type ?? data.ChatType ?? data.chattype ?? 1),
     } as any;
   };
 
@@ -260,12 +273,42 @@ export default function ChatPage() {
     setActiveRoomId(roomId);
   };
 
-  const sendChat = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // --- File Handling Functions ---
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (const item of items) {
+      if (item.kind === 'file') {
+        const file = item.getAsFile();
+        if (file) {
+          setSelectedFile(file);
+          e.preventDefault();
+        }
+      }
+    }
+  };
+
+  const clearFile = () => {
+    setSelectedFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const isImage = (filename: string) => {
+    return /\.(jpg|jpeg|png|gif|webp)$/i.test(filename);
+  };
+
+  const sendChat = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!roomJoined || !idsOk) return;
 
     const text = message.trim();
-    if (!text) return;
+    if (!text && !selectedFile) return;
 
     const socket = socketRef.current;
     if (!socket) {
@@ -273,24 +316,36 @@ export default function ChatPage() {
       return;
     }
 
-    const roomIdStr = `${groupProjectId}:${activeRoomId}`;
-
-    const payload = {
-      group_project_id: groupProjectId,
-      process_id: Number(activeRoomId),
-      sender_id: Number(userId),
-      name: myUsername,
-      message: text,
-    };
-
-    setMessage("");
+    setUploading(true);
 
     try {
-      const savedMessage = (await InsertChat(payload)) as any;
+      let finalMessage = text;
+      let finalType = 1;
 
+      // 1. Upload File if exists
+      if (selectedFile) {
+         const url = await UploadFile(selectedFile);
+         finalMessage = url;
+         finalType = 2; // Type 2 = File
+      }
+
+      const roomIdStr = `${groupProjectId}:${activeRoomId}`;
+
+      const payload = {
+        group_project_id: groupProjectId,
+        process_id: Number(activeRoomId),
+        sender_id: Number(userId),
+        type: finalType,
+        name: myUsername,
+        message: finalMessage,
+      };
+
+      // 2. Save to DB
+      const savedMessage = (await InsertChat(payload)) as any;
       const dbId = Number(savedMessage?.id || savedMessage?.ID || 0);
       const uniqueId = dbId > 0 ? dbId : Date.now() + Math.random();
 
+      // 3. Emit to Socket
       const socketPayload = {
         ...payload,
         ...(typeof savedMessage === 'object' ? savedMessage : {}),
@@ -302,10 +357,16 @@ export default function ChatPage() {
       };
 
       socket.emit("send_message", socketPayload);
+      
+      // 4. Reset
+      setMessage("");
+      clearFile();
 
     } catch (err) {
       console.error("InsertChat failed:", err);
       alert("ส่งข้อความไม่สำเร็จ");
+    } finally {
+        setUploading(false);
     }
   };
 
@@ -517,6 +578,7 @@ export default function ChatPage() {
           </div>
         </div>
 
+        {/* Chat Area */}
         <div style={{ flex: 1, padding: "20px 24px", overflowY: "auto", display: 'flex', flexDirection: 'column' }}>
           {locked ? (
             <div style={{ margin: 'auto', textAlign: "center", color: "#9ca3af" }}>
@@ -579,7 +641,33 @@ export default function ChatPage() {
                         fontSize: 14
                       }}
                     >
-                      {c.message}
+                      {/* === RENDER LOGIC: Check for Type 2 (File) === */}
+                      {(c.type === 2 || (c as any).chattype === 2) ? (
+                         <div>
+                            {isImage(c.message) ? (
+                                <img 
+                                    src={`${API_URL}${c.message}`}
+                                    alt="sent file" 
+                                    style={{ maxWidth: '200px', borderRadius: '8px', display: 'block', cursor: 'pointer' }}
+                                    onClick={() => window.open(`${API_URL}${c.message}`, '_blank')}
+                                />
+                            ) : (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <FileOutlined style={{ fontSize: 24 }} />
+                                    <a 
+                                        href={`${API_URL}${c.message}`} 
+                                        target="_blank" 
+                                        rel="noreferrer"
+                                        style={{ color: isMe ? 'white' : 'blue', textDecoration: 'underline' }}
+                                    >
+                                        Download File
+                                    </a>
+                                </div>
+                            )}
+                         </div>
+                      ) : (
+                         c.message
+                      )}
                     </div>
                     
                     <div style={{ 
@@ -608,44 +696,97 @@ export default function ChatPage() {
           <div ref={bottomRef} />
         </div>
 
+        {/* Input Area (New Design) */}
         <div
           style={{
             padding: "16px 24px",
             background: "#fff",
             borderTop: `1px solid ${BORDER_COLOR}`,
             display: "flex",
-            alignItems: "center",
-            gap: 12,
+            flexDirection: "column",
             boxShadow: "0 -2px 10px rgba(0,0,0,0.02)"
           }}
         >
-          <form 
-            onSubmit={sendChat} 
-            style={{ width: '100%', display: 'flex', gap: 12 }}
-          >
-            <Input
-              size="large"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              disabled={locked || !roomJoined}
-              placeholder={locked ? "ยังไม่สามารถส่งข้อความได้" : !roomJoined ? "กรุณาเลือกหัวข้อก่อน" : "พิมพ์ข้อความ..."}
-              style={{ borderRadius: 24, paddingLeft: 20 }}
-            />
+          {/* A. FILE PREVIEW */}
+          {selectedFile && (
+            <div style={{ 
+              marginBottom: 10, 
+              padding: "8px 12px", 
+              background: "#f0f2f5", 
+              borderRadius: 8, 
+              display: "flex", 
+              alignItems: "center", 
+              justifyContent: "space-between",
+              fontSize: 13
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                {isImage(selectedFile.name) ? <PictureOutlined /> : <FileOutlined />}
+                <span style={{ maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {selectedFile.name}
+                </span>
+                <span style={{ color: "#999", fontSize: 11 }}>
+                  ({(selectedFile.size / 1024).toFixed(1)} KB)
+                </span>
+              </div>
+              <CloseCircleOutlined 
+                onClick={clearFile} 
+                style={{ cursor: "pointer", color: "#666", fontSize: 16 }} 
+              />
+            </div>
+          )}
 
-            <Button
-              type="primary"
-              shape="circle"
-              size="large"
-              htmlType="submit"
-              disabled={locked || !roomJoined || !message.trim()}
-              icon={<SendOutlined style={{ marginLeft: 2 }} />}
-              style={{ 
-                  background: locked || !roomJoined || !message.trim() ? undefined : THEME_RED,
-                  borderColor: locked || !roomJoined || !message.trim() ? undefined : THEME_RED,
+          {/* B. MAIN INPUT ROW */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, width: '100%' }}>
+             {/* Hidden File Input */}
+             <input 
+               type="file" 
+               hidden 
+               ref={fileInputRef} 
+               onChange={handleFileSelect} 
+             />
+
+             {/* Paperclip Button */}
+             <Button 
+               shape="circle" 
+               icon={<PaperClipOutlined />} 
+               onClick={() => fileInputRef.current?.click()}
+               disabled={locked || !roomJoined}
+               style={{ border: 'none', boxShadow: 'none' }}
+             />
+
+             {/* Text Input */}
+             <Input
+                size="large"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                onPaste={handlePaste} // Paste support
+                disabled={locked || !roomJoined || !!selectedFile}
+                placeholder={
+                   selectedFile 
+                   ? "กดส่งเพื่ออัปโหลดไฟล์..." 
+                   : (locked ? "ยังไม่สามารถส่งข้อความได้" : "พิมพ์ข้อความ... (หรือวางรูปภาพ)")
+                }
+                style={{ borderRadius: 24, paddingLeft: 20 }}
+                onPressEnter={(e) => {
+                   if(!e.shiftKey) sendChat(e);
+                }}
+             />
+
+             {/* Send Button */}
+             <Button
+               type="primary"
+               shape="circle"
+               size="large"
+               onClick={sendChat}
+               disabled={locked || !roomJoined || (!message.trim() && !selectedFile) || uploading}
+               icon={uploading ? <LoadingOutlined /> : <SendOutlined style={{ marginLeft: 2 }} />}
+               style={{ 
+                  background: (locked || !roomJoined || (!message.trim() && !selectedFile)) ? undefined : THEME_RED,
+                  borderColor: (locked || !roomJoined || (!message.trim() && !selectedFile)) ? undefined : THEME_RED,
                   minWidth: 40
-              }}
-            />
-          </form>
+               }}
+             />
+          </div>
         </div>
       </main>
     </div>
