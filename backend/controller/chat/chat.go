@@ -10,6 +10,12 @@ import (
 	"github.com/sut68/team07/backend/controller/log"
 	"github.com/sut68/team07/backend/database"
 	"github.com/sut68/team07/backend/entity"
+
+	"fmt"
+	"time"
+	"path/filepath"
+	"os"
+	"io"
 )
 
 const socketBroadcastBaseURL = "http://socket:3001"
@@ -19,6 +25,7 @@ type InsertChatBody struct {
 	ProcessID      uint   `json:"process_id"`
 	SenderID       uint   `json:"sender_id"`
 	Message        string `json:"message"`
+	ChatType		uint  `json:"type"`
 }
 
 func roomKey(gp uint, pid uint) string {
@@ -35,6 +42,39 @@ func broadcast(path string, payload any) {
 	}()
 }
 
+func GetFile(c *gin.Context){
+
+	orn := c.Query("filename")
+	if orn == ""{
+		orn = "tem"
+	}
+
+	new := fmt.Sprintf("%d_%s", time.Now().Unix(), orn)
+
+	finalpath := filepath.Join("chatsave", new)
+	webPath := "/chatsave/" + new
+
+	out, err := os.Create(finalpath)
+	if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create file "})
+        return
+    }
+    defer out.Close()
+
+
+	_, err = io.Copy(out, c.Request.Body)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file content"})
+        return
+    }
+
+
+    c.JSON(http.StatusOK, gin.H{
+        "status": "ok",
+        "url":    webPath, 
+    })
+
+}
 func GetAllChat(c *gin.Context) {
 	db := database.DB()
 
@@ -88,6 +128,13 @@ func InsertChat(c *gin.Context) {
 		}
 	}
 
+	if body.ChatType == 0{
+		chat := c.Query("type")
+		if v, err := strconv.ParseInt(chat , 10, 64); err == nil{
+			body.ChatType = uint(v)
+		}
+	}
+
 	if body.Message == "" {
 		body.Message = c.Query("message")
 	}
@@ -107,35 +154,81 @@ func InsertChat(c *gin.Context) {
 	var sender entity.User
 	db.Select("username").Where("id = ?", body.SenderID).First(&sender)
 
-	chat := entity.Chat{
-		GroupProjectID: body.GroupProjectID,
-		ProcessID:      body.ProcessID,
-		SenderID:       body.SenderID,
-		Message:        body.Message,
-		Name:           sender.Username,
+	if body.ChatType == 1 {
+
+		chat := entity.Chat{
+			GroupProjectID: body.GroupProjectID,
+			ProcessID:      body.ProcessID,
+			SenderID:       body.SenderID,
+			ChatType:       body.ChatType,
+			Message:        body.Message,
+			Name:           sender.Username,
+			
+		}
+
+		result := db.Create(&chat)
+		if result.Error != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save chat"})
+			return
+		}
+
+		rk := roomKey(chat.GroupProjectID, chat.ProcessID)
+		broadcast("/broadcast/chat", gin.H{
+			"room_id":          rk,
+			"id":               chat.ID,
+			"group_project_id": chat.GroupProjectID,
+			"process_id":       chat.ProcessID,
+			"sender_id":        chat.SenderID,
+			"name":             chat.Name,
+			"message":          chat.Message,
+			"chattype":			chat.ChatType,
+			"created_at":       chat.CreatedAt,
+			"updated_at":       chat.UpdatedAt,
+		})
+
+		log.InsertLog(c, 9)
+		c.JSON(http.StatusOK, &chat)
+
+
+	}else if body.ChatType == 2{
+
+		chat := entity.Chat{
+			GroupProjectID: body.GroupProjectID,
+			ProcessID:      body.ProcessID,
+			SenderID:       body.SenderID,
+			ChatType:       body.ChatType,
+			Message:        body.Message,
+			Name:           sender.Username,
+			
+		}
+
+		result := db.Create(&chat)
+        if result.Error != nil {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save chat"})
+            return
+        }
+
+		rk := roomKey(chat.GroupProjectID, chat.ProcessID)
+		broadcast("/broadcast/chat", gin.H{
+			"room_id":          rk,
+			"id":               chat.ID,
+			"group_project_id": chat.GroupProjectID,
+			"process_id":       chat.ProcessID,
+			"sender_id":        chat.SenderID,
+			"name":             chat.Name,
+			"message":          chat.Message,
+			"chattype":			chat.ChatType,
+			"created_at":       chat.CreatedAt,
+			"updated_at":       chat.UpdatedAt,
+		})
+
+		log.InsertLog(c, 9)
+		c.JSON(http.StatusOK, &chat)
+
+	}else{
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid chat type you frontend is broken idiot"})
 	}
 
-	result := db.Create(&chat)
-	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save chat"})
-		return
-	}
-
-	rk := roomKey(chat.GroupProjectID, chat.ProcessID)
-	broadcast("/broadcast/chat", gin.H{
-		"room_id":          rk,
-		"id":               chat.ID,
-		"group_project_id": chat.GroupProjectID,
-		"process_id":       chat.ProcessID,
-		"sender_id":        chat.SenderID,
-		"name":             chat.Name,
-		"message":          chat.Message,
-		"created_at":       chat.CreatedAt,
-		"updated_at":       chat.UpdatedAt,
-	})
-
-	log.InsertLog(c, 9)
-	c.JSON(http.StatusOK, &chat)
 }
 
 func DeleteChat(c *gin.Context) {
@@ -228,3 +321,4 @@ func GetGroupbyteacherid(c *gin.Context) {
 	c.JSON(http.StatusOK, group_proj)
 
 }
+
