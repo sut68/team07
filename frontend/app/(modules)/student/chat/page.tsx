@@ -49,6 +49,7 @@ export default function ChatPage() {
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
+    
     (async () => {
       try {
         const me = await GetMe();
@@ -196,6 +197,7 @@ export default function ChatPage() {
     if (!roomJoined) return;
 
     const socket = socketRef.current;
+
     if (!socket) return;
 
     setChats([]);
