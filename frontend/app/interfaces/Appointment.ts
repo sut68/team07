@@ -30,7 +30,9 @@ export interface IAppointment {
   location: string;
   group_number: number;
   group_name: string;
+  teacher_id: number;
   teacher_name: string;
+  evaluation_name?: string;
 }
 
 export interface IAppointmentDetail extends IAppointment {

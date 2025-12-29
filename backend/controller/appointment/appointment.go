@@ -62,6 +62,7 @@ func ListAppointments(c *gin.Context) {
 			"location":           apt.Room.Location,
 			"group_project_id":   apt.GroupProject.ID,
 			"group_number":       apt.GroupProject.GroupNumber,
+			"teacher_id":         apt.Teacher.ID,
 			"teacher_name":       apt.Teacher.Firstname + " " + apt.Teacher.Lastname,
 			"evaluation_id":      apt.EvaluationID,
 			"evaluation_name": func() string {

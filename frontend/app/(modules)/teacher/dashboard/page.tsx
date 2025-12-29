@@ -1,17 +1,40 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import '../../../style/dashboard.css';
 import NewsList from '../../../components/news/NewsList';
 import NewsModal from '../../../components/news/NewsModal';
 import { News } from '../../../interfaces/News';
 import { useAuth } from '../../roleCheck/authContext';
+import { GetListAppointments } from '../../../services/appointment';
+import { IAppointment } from '../../../interfaces/Appointment';
+import AppointmentSlider from '../../../components/dashboard/appointmentSlider';
+import { Tabs } from 'antd';
 
 export default function TeacherDashboardPage() {
     const { user } = useAuth();
     const [editingNews, setEditingNews] = useState<News | null>(null);
     const [isNewsModalOpen, setIsNewsModalOpen] = useState(false);
     const [refreshNewsTrigger, setRefreshNewsTrigger] = useState(0);
+    
+    const [appointments, setAppointments] = useState<IAppointment[]>([]);
+    const [loadingAppt, setLoadingAppt] = useState(true);
+
+    useEffect(() => {
+        const fetchAppointments = async () => {
+            try {
+                const res = await GetListAppointments();
+                if (res.data) {
+                    setAppointments(res.data);
+                }
+            } catch (error) {
+                console.error("Error fetching appointments:", error);
+            } finally {
+                setLoadingAppt(false);
+            }
+        };
+        fetchAppointments();
+    }, []);
 
     const handleEditNews = (news: News) => {
         setEditingNews(news);
@@ -26,6 +49,29 @@ export default function TeacherDashboardPage() {
     const handleNewsSuccess = () => {
         setRefreshNewsTrigger(prev => prev + 1);
     };
+
+    // Filter appointments
+    const advisorAppointments = appointments.filter(a => 
+        a.teacher_id === user?.id
+    );
+    
+    const committeeAppointments = appointments.filter(a => 
+        a.type_name === 'Final Defense' && 
+        a.evaluation_name === 'Committee Evaluation'
+    );
+
+    const appointmentItems = [
+        {
+            key: 'advisor',
+            label: 'ที่ปรึกษา (Advisor)',
+            children: <AppointmentSlider appointments={advisorAppointments} category="advisor" />,
+        },
+        {
+            key: 'committee',
+            label: 'นัดหมายสอบจบ (Final Defense Appointments)',
+            children: <AppointmentSlider appointments={committeeAppointments} category="committee" />,
+        },
+    ];
 
     return (
         <div className="container-teacher-dashboard">
@@ -50,7 +96,14 @@ export default function TeacherDashboardPage() {
                 
                 {/* นัดหมาย */}
                 <div className="section-teacher top-teacher">
-                    <h1>นัดหมายของหนึ่ง (Top) ทำเเบบขึ้นว่ามีนัดอะไรเฉยๆเป็นการ์ด เเล้วมีปุ่มให้คลิ๊กไป</h1>
+                    <h2 style={{ marginBottom: '16px', fontSize: '1.25rem', fontWeight: 'bold', flexShrink: 0 }}>การนัดหมาย (Appointments)</h2>
+                    <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+                        <Tabs 
+                            defaultActiveKey="advisor" 
+                            items={appointmentItems} 
+                            style={{ height: '100%' }}
+                        />
+                    </div>
                 </div>
 
                 {/* แจ้งเตือนกลุ่ม */}

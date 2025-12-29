@@ -53,45 +53,47 @@
   flex-direction: row;
   height: 100vh;
   margin: 0;
-  padding: 10px;
+  padding: 16px;
   overflow: hidden;
   box-sizing: border-box;
+  background-color: #f3f4f6; /* Light gray background for the whole dashboard */
+  gap: 16px;
 }
 
 /* --- ส่วนซ้าย: ข่าวสาร --- */
 .news-section-teacher {
   flex: 0 0 50%;
-  background-color: transparent; 
+  background-color: #ffffff; 
   display: block; 
   overflow: hidden; 
-  border-right: 1px solid #eee;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e5e7eb;
 }
 
 /* --- ส่วนขวา: กล่องรวม 3 ชั้น --- */
 .right-panel-teacher {
-  flex: 0 0 50%;
+  flex: 1;
   display: flex;
   flex-direction: column;
   height: 100%;
+  gap: 16px;
+  min-width: 0; /* Prevent flex item from overflowing */
 }
 
 /* --- สไตล์ของ 3 กล่องด้านขวา --- */
 .section-teacher {
   flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border-bottom: 10px solid #ffffff; 
+  display: flex; /* Use flex to manage internal layout */
+  flex-direction: column;
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e5e7eb;
+  padding: 20px;
+  overflow: hidden; /* Lock the container, prevent scrollbars on the card itself */
+  min-width: 0; /* Prevent flex item from overflowing */
 }
-
-.section-teacher:last-child {
-  border-bottom: none;
-}
-
-.top-teacher { background-color: #f8d7da; }
-.middle-teacher { background-color: #d1ecf1; }
-.bottom-teacher { background-color: #d4edda; }
-
 
 /* Appointment css */
 
