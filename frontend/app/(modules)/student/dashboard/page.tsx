@@ -1,15 +1,21 @@
 "use client";
 
+import { useRouter } from 'next/navigation';
 import '../../../style/dashboard.css';
+import '../../../style/appointment.css';
 import NewsList from '../../../components/news/NewsList';
 import { useAuth } from '../../roleCheck/authContext';
+import StudentAppointmentSliderSection from '../../../components/dashboard/studentAppointmentSliderSection';
 
 export default function StudentDashboardPage() {
     const { user } = useAuth();
+    const router = useRouter();
+    const handleOpenExamPage = () => {
+        router.push('/student/exam');
+    };
 
     return (
         <div className="container">
-            
             {/* --- ส่วนซ้าย: ข่าวสาร (40%) --- */}
             <div className="news-section">
                 <NewsList currentUserId={user?.id} role="Student" />
@@ -17,10 +23,14 @@ export default function StudentDashboardPage() {
 
             {/* --- ส่วนขวา: รวม 2 ส่วน (60%) --- */}
             <div className="right-panel">
-                
+
                 {/* นัดหมาย (Top) */}
                 <div className="section top-right">
-                    <h1>แจ้งนัดหมาย ของ หนึ่ง</h1>
+                    <StudentAppointmentSliderSection
+                        actionLabel="เกี่ยวกับสอบ"
+                        onActionClick={handleOpenExamPage}
+                        onCardClick={handleOpenExamPage}
+                    />
                 </div>
 
                 {/* โครงงาน (Bottom) */}

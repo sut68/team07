@@ -66,6 +66,11 @@ export default function NewsModal({ isOpen, onClose, onSuccess, initialData }: N
             await createNews(formData);
             Toast_success("สร้างข่าวสารเรียบร้อย!");
           }
+
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('news:updated'));
+          }
+
           if (onSuccess) onSuccess();
           onClose();
         } catch (error: any) {

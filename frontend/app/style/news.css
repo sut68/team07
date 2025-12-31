@@ -297,6 +297,11 @@ textarea.form-control {
   transition: all 0.2s;
 }
 
+.modal-footer .btn {
+  flex: 1;
+  text-align: center;
+}
+
 .btn-cancel {
   background-color: #f1f5f9;
   color: #64748b;

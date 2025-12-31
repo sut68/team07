@@ -68,3 +68,20 @@ export interface IUpdateAppointmentRequest {
   duration_min?: number;
   room_id?: number;
 }
+
+export interface IStudentAppointmentSlot {
+  id: number;
+  type: string;
+  date_time: string;
+  room: string;
+  location: string;
+  evaluation_name?: string;
+}
+
+export interface IStudentAppointmentOverview {
+  appointments?: IStudentAppointmentSlot[];
+  appointment?: IStudentAppointmentSlot | null;
+  group_number?: number | string;
+  project_name?: string;
+  advisor_name?: string;
+}

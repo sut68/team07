@@ -29,21 +29,126 @@
 .section {
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: stretch;
   box-sizing: border-box;
+  padding: 16px;
 }
 
 /* --- นัดหมาย (Top Right) --- */
 .top-right {
-  flex: 0 0 40%; 
-  background-color: #d4edda;
-  border-bottom: 10px solid #fff;
+  flex: 0 0 45%;
+  background-color: transparent;
+  border-bottom: none;
 }
 
 /* --- โครงงาน (Bottom Right) --- */
 .bottom-right {
-  flex: 1; 
-  background-color: #d1ecf1;
+  flex: 1;
+  background-color: #eef2ff;
+}
+
+.dashboard-section-card {
+  width: 100%;
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+  border: 1px solid #e5e7eb;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  transition: box-shadow 0.2s ease;
+}
+
+.dashboard-section-card:hover {
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+}
+
+.dashboard-section-title h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 8px 0;
+}
+
+.dashboard-section-title p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.95rem;
+}
+
+.dashboard-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+.student-dashboard-appointment {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.1);
+  padding: 20px;
+  gap: 16px;
+  height: 100%;
+}
+
+.student-dashboard-appointment__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.student-dashboard-appointment__header h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.student-dashboard-appointment__header p {
+  margin: 6px 0 0 0;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.student-dashboard-appointment__action,
+.student-dashboard-appointment__action:hover,
+.student-dashboard-appointment__action:focus {
+  background-color: #9a0120 !important;
+  border-color: #9a0120 !important;
+}
+
+.student-dashboard-appointment__body {
+  flex: 1;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+}
+
+.student-dashboard-appointment__loading,
+.student-dashboard-appointment__empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+
+.student-dashboard-appointment__carousel {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin: 0 -2px;
+  padding-left: 2px;
+  scrollbar-width: thin;
 }
 
 /* teacher dashboard.css */

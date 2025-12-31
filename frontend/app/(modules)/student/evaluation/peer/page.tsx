@@ -89,7 +89,7 @@ export default function PeerEvaluationPage() {
 
         await SavePeerEvaluation(payload);
             Toast_success("บันทึกเรียบร้อย!");
-            router.push('/student/evaluation');
+            router.push('/student/exam');
         } catch (error: any) {
             Toast_fail(error?.response?.data?.error || "บันทึกไม่สำเร็จ");
         } finally {
@@ -146,7 +146,7 @@ export default function PeerEvaluationPage() {
                         </div>
                     </div>
                 )) : (
-                    <Empty description="ไม่พบสมาชิกในกลุ่ม" />
+                    <Empty description="ไม่พบการนัดหมายประเมิน" />
                 )}
 
             </div>

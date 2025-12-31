@@ -44,8 +44,8 @@ const AppointmentSlider: React.FC<AppointmentSliderProps> = ({ appointments, cat
                     key={appt.id}
                     hoverable
                     style={{ 
-                        minWidth: 280, 
-                        maxWidth: 280, 
+                        minWidth: 220, 
+                        maxWidth: 220, 
                         flexShrink: 0,
                         borderRadius: '12px',
                         boxShadow: '0 2px 8px rgba(0,0,0,0.1)'

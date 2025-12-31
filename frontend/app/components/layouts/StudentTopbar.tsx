@@ -149,16 +149,16 @@ export default function StudentTopbar({ children }: { userRole: string; children
                     <Link href="/student/group" style={getNavStyle('/student/group')}>กลุ่มของฉัน</Link>
                     <Link href="/student/selectAdvisor" style={getNavStyle('/student/selectAdvisor')}>เลือกที่ปรึกษา</Link>
                     <Link href="/student/topic" style={getNavStyle('/student/topic')}>หัวข้อโครงงาน</Link>
-                    <Link href="/student/progress" style={getNavStyle('/student/progress')}>ความคืบหน้า</Link>
+        
                 </nav>
 
                 <Link href="/student/dashboard" aria-label="หน้าหลัก" className="topbar-logo" style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
                     <Image src="/image/logo1.png" alt="SUT" width={90} height={38} priority />
                 </Link>
                 <div style={{ position: 'absolute', right: 200, display: 'flex', gap: 40, alignItems: 'center' }}>
+                    <Link href="/student/progress" style={getNavStyle('/student/progress')}>ความคืบหน้า</Link>
                     <Link href="/student/chat" style={getNavStyle('/student/chat')}>แชท</Link>
-                    <Link href="/student/appointment" style={getNavStyle('/student/appointment')}>การนัดหมาย</Link>
-                    <Link href="/student/evaluation" style={getNavStyle('/student/evaluation')}>การประเมิน</Link>
+                    <Link href="/student/exam" style={getNavStyle('/student/exam')}>เกี่ยวกับสอบ</Link>
                     <Link href="/student/storage" style={getNavStyle('/student/storage')}>คลังโครงงาน</Link>
                 </div>
                 <div style={{ position: 'absolute', right: 30, display: 'flex', alignItems: 'center', gap: 16 }}>
