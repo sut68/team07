@@ -35,7 +35,7 @@ export default function AdminIssuePage() {
             const res = await GetIssues();
             if (res.status === 200) {
                 // เรียงลำดับ ID มาก -> น้อย (ล่าสุดขึ้นก่อน)
-                const sortedIssues = res.data.sort((a: any, b: any) => (b.ID || 0) - (a.ID || 0));
+                const sortedIssues = res.data.sort((a: any, b: any) => (a.ID || 0) - (b.ID || 0));
                 setIssues(sortedIssues);
             }
         } catch (error) {
@@ -153,7 +153,7 @@ export default function AdminIssuePage() {
                                 {issues.map((item) => (
                                     <tr key={item.ID}>
                                         <td style={{ textAlign: 'center', fontWeight: 'bold', color: '#9a0120' }}>
-                                            #{item.ID}
+                                            {item.ID}
                                         </td>
                                         <td>
                                             <span style={{

@@ -23,10 +23,11 @@
 
 /* Header สีแดง */
 .import-header {
-    background: linear-gradient(135deg, #9a0120 0%, #7d0019 100%);
+    background: #9a0120;
     padding: 30px;
     text-align: center;
     color: white;
+    border-radius: 10px;
 }
 
 .import-header h2 {

@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { CreateIssue, GetMyIssues, UpdateIssue } from "../../services/issue";
 import { GetUserProfile } from "../../services/user";
 import { IssueReportInterface, CreateIssueInterface } from "../../interfaces/Issue";
-import { BugOutlined, FileTextOutlined, LoadingOutlined, EditOutlined, CloseOutlined } from "@ant-design/icons"; 
+import { BugOutlined, FileTextOutlined, LoadingOutlined, EditOutlined } from "@ant-design/icons"; 
 import "../../style/issue-report.css";
 import Swal from "sweetalert2";
 
@@ -91,6 +91,8 @@ export default function ReportIssueContent() {
             showCancelButton: true,
             confirmButtonText: 'บันทึกข้อมูล',
             cancelButtonText: 'ยกเลิก',
+            confirmButtonColor: 'green', 
+            cancelButtonColor: '#9a0120',
             customClass: { container: 'swal-z-index-high' }
         });
 
@@ -109,7 +111,7 @@ export default function ReportIssueContent() {
 
                 if (res.status === 200 || res.status === 201) {
                     Swal.close();
-                    await Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ!', timer: 1500, showConfirmButton: false });
+                    await Swal.fire({ icon: 'success', title: 'ส่งรายงานสำเร็จ!', timer: 1500, showConfirmButton: false });
                     
                     // Reset Form
                     handleCancelEdit(); 
