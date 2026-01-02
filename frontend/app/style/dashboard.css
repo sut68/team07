@@ -126,7 +126,7 @@
 
 .student-dashboard-appointment__body {
   flex: 1;
-  min-height: 200px;
+  min-height: 150px;
   display: flex;
   flex-direction: column;
 }

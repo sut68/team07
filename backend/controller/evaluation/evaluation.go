@@ -463,9 +463,10 @@ func GetStudentEvaluationForm(c *gin.Context) {
 	db.Where("appointment_id = ? AND student_evaluator_id = ?", appointment.ID, claims.ID).
 		Find(&existingScores)
 
-	scoresMap := make(map[uint]float64)
+	scoresMap := make(map[string]float64)
 	for _, s := range existingScores {
-		scoresMap[s.StudentID] = s.Score
+		key := fmt.Sprintf("%d_%d", s.StudentID, s.CriteriaID)
+		scoresMap[key] = s.Score
 	}
 
 	c.JSON(http.StatusOK, gin.H{

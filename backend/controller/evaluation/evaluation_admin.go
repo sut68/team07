@@ -165,7 +165,19 @@ func DeleteCriteria(c *gin.Context) {
 	id := c.Param("id")
 	db := database.DB()
 
-	if err := db.Delete(&entity.Criteria{}, id).Error; err != nil {
+	var criteria entity.Criteria
+	if err := db.Preload("Evaluation").First(&criteria, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Criteria not found"})
+		return
+	}
+
+	// Prevent deleting criteria from Committee Evaluation
+	if criteria.Evaluation != nil && criteria.Evaluation.Name == "Committee Evaluation" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Cannot delete criteria from Committee Evaluation"})
+		return
+	}
+
+	if err := db.Delete(&criteria).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
