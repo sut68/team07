@@ -151,4 +151,38 @@
         width: 100%;
         flex: none;
     }
+    .section-main {
+        overflow-x: auto; 
+    }
+    .admin-table {
+        min-width: 600px; 
+    }
+}
+
+@media (max-width: 768px) {
+    .modal-overlay > div { 
+        width: 95% !important;
+        padding: 20px !important;
+        max-height: 85vh !important;
+    }
+
+    .modal-overlay > div > div:nth-child(2) > div:nth-last-child(1) { 
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .modal-overlay h2 {
+        font-size: 1.2rem;
+    }
+
+    .modal-overlay .user-profile-section { 
+        flex-direction: column;
+        text-align: center;
+        align-items: center;
+    }
+    
+    .admin-table button {
+        padding: 8px 12px; 
+        font-size: 1.1rem;
+    }
 }
