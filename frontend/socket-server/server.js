@@ -5,7 +5,9 @@ const cors = require("cors");
 
 const app = express();
 
-app.use(cors({ origin: "*" }));
+const allowedOrigin = process.env.FRONTEND_URL || "*";
+
+app.use(cors({ origin: allowedOrigin }));
 app.use(express.json());
 
 // ✅ ADD THIS: A simple home page route
@@ -17,7 +19,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: allowedOrigin,
     methods: ["GET", "POST"],
   },
 });

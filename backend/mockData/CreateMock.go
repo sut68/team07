@@ -86,17 +86,17 @@ var MockGroupProject = []entity.GroupProject{
 
 var MockGroupMember = []entity.GroupMember{
 	{Leader: true, StudentID: 12, GroupProjectID: 1},
-	{Leader: true, StudentID: 13, GroupProjectID: 4},
-	{Leader: false, StudentID: 14, GroupProjectID: 1},
+	{Leader: true, StudentID: 13, GroupProjectID: 1},
+	{Leader: false, StudentID: 14, GroupProjectID: 2},
 	{Leader: true, StudentID: 16, GroupProjectID: 2},
 	{Leader: true, StudentID: 15, GroupProjectID: 3},
 
-	{Leader: false, StudentID: 17, GroupProjectID: 2},
+	{Leader: false, StudentID: 17, GroupProjectID: 3},
 	{Leader: false, StudentID: 18, GroupProjectID: 3},
 	{Leader: false, StudentID: 19, GroupProjectID: 4},
-	{Leader: true, StudentID: 20, GroupProjectID: 5},
+	{Leader: true, StudentID: 20, GroupProjectID: 4},
 	{Leader: false, StudentID: 21, GroupProjectID: 5},
-	{Leader: true, StudentID: 22, GroupProjectID: 6},
+	{Leader: true, StudentID: 22, GroupProjectID: 5},
 	{Leader: false, StudentID: 23, GroupProjectID: 6},
 	{Leader: false, StudentID: 24, GroupProjectID: 6},
 }
@@ -169,21 +169,3 @@ var MockTopics = []entity.Topic{
 		TeacherID:      Uint(6),
 	},
 }
-
-// var MockTopicSelections = []entity.TopicSelection{
-// 	{DateSelected: time.Now().AddDate(0, -4, 0), TopicID: 1, GroupProjectID: 1, Status: "Active"},
-// 	{DateSelected: time.Now().AddDate(0, -4, 0), TopicID: 2, GroupProjectID: 2, Status: "Active"},
-// 	{DateSelected: time.Now().AddDate(0, -4, 0), TopicID: 3, GroupProjectID: 3, Status: "Active"},
-// 	{DateSelected: time.Now().AddDate(0, -3, 0), TopicID: 4, GroupProjectID: 4, Status: "Active"},
-// 	{DateSelected: time.Now().AddDate(0, -3, 0), TopicID: 5, GroupProjectID: 5, Status: "Active"},
-// 	{DateSelected: time.Now().AddDate(0, -2, 0), TopicID: 6, GroupProjectID: 6, Status: "Active"},
-// }
-
-// var MockProjects = []entity.Project{
-// 	{Title: "Complete Report: Smart Farm System", Abstract: "This project aims to develop an IOT solution...", Keywords: "IOT, Smart Farm, Arduino", Year: 2025, Status: "Completed", FilePath: "/uploads/projects/group1_final.pdf", SelectionID: 1},
-// 	{Title: "Complete Report: AI Face Recognition", Abstract: "A system to automate attendance tracking...", Keywords: "AI, Computer Vision, Python", Year: 2025, Status: "Completed", FilePath: "/uploads/projects/group2_final.pdf", SelectionID: 2},
-// 	{Title: "Complete Report: E-Commerce App", Abstract: "Development of a mobile application...", Keywords: "E-Commerce, Mobile App, Flutter", Year: 2025, Status: "In Progress", FilePath: "/uploads/projects/group3_draft.pdf", SelectionID: 3},
-// 	{Title: "Complete Report: Renewable Energy", Abstract: "Designing a hybrid solar-wind energy system...", Keywords: "Renewable Energy, Solar, Wind", Year: 2025, Status: "Pending", FilePath: "", SelectionID: 4},
-// 	{Title: "Complete Report: Health Monitoring", Abstract: "Creating a wearable device for health tracking...", Keywords: "Wearable, Health Monitoring, IoT", Year: 2025, Status: "Pending", FilePath: "", SelectionID: 5},
-// 	{Title: "Complete Report: Smart Home Automation", Abstract: "Implementing an IoT-based home automation system...", Keywords: "Smart Home, IoT, Automation", Year: 2025, Status: "Pending", FilePath: "", SelectionID: 6},
-// }
