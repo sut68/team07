@@ -35,7 +35,8 @@ export default function StudentDashboardPage() {
 
                 {/* โครงงาน (Bottom) */}
                 <div className="section bottom-right">
-                    <h1>โครงงานของ Jornor</h1>
+                    <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '16px' }}>โครงงานของ Jornor</h2>
+                    
                 </div>
 
             </div>

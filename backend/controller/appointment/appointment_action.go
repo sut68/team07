@@ -150,12 +150,38 @@ func CreateAppointment(c *gin.Context) {
 		return
 	}
 
-	var conflictAppt entity.Appointment
-	if tx := db.Where("room_id = ? AND start_date_time = ? AND appointment_status = 'scheduled'", appointment.RoomID, appointment.StartDateTime).
-		First(&conflictAppt); tx.RowsAffected > 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "The room is not available at this time."})
+	// Calculate End Time for Overlap Check
+	newStartTime := appointment.StartDateTime
+	newEndTime := newStartTime.Add(time.Duration(appointment.DurationMin) * time.Minute)
+
+	// 1. Check Room Conflict (Overlap)
+	var roomConflict int64
+	if err := db.Model(&entity.Appointment{}).
+		Where("room_id = ? AND appointment_status = 'scheduled'", appointment.RoomID).
+		Where("start_date_time < ? AND (start_date_time + (duration_min * interval '1 minute')) > ?", newEndTime, newStartTime).
+		Count(&roomConflict).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	if roomConflict > 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ห้องนี้ถูกจองในช่วงเวลาดังกล่าวแล้ว"})
+		return
+	}
+
+	// 2. Check Teacher Conflict (Overlap)
+	var teacherConflict int64
+	if err := db.Model(&entity.Appointment{}).
+		Where("teacher_id = ? AND appointment_status = 'scheduled'", claims.ID).
+		Where("start_date_time < ? AND (start_date_time + (duration_min * interval '1 minute')) > ?", newEndTime, newStartTime).
+		Count(&teacherConflict).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if teacherConflict > 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "คุณมีนัดหมายอื่นในช่วงเวลานี้แล้ว"})
+		return
+	}
+
 	if appointment.StartDateTime.Before(time.Now()) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "ไม่สามารถสร้างนัดหมายย้อนหลังได้"})
 		return

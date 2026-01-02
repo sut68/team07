@@ -52,7 +52,7 @@ export default function TeacherDashboardPage() {
 
     // Filter appointments
     const advisorAppointments = appointments.filter(a => 
-        a.teacher_id === user?.id
+        a.teacher_id === user?.id && a.evaluation_name !== 'Committee Evaluation'
     );
     
     const committeeAppointments = appointments.filter(a => 
@@ -96,12 +96,14 @@ export default function TeacherDashboardPage() {
                 
                 {/* นัดหมาย */}
                 <div className="section-teacher top-teacher">
-                    <h2 style={{ marginBottom: '16px', fontSize: '1.25rem', fontWeight: 'bold', flexShrink: 0 }}>การนัดหมาย (Appointments)</h2>
-                    <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+                    <h2 style={{ marginBottom: '0px', fontSize: '1.25rem', fontWeight: 'bold', flexShrink: 0 }}>
+                        การนัดหมาย (Appointments)
+                    </h2>
+                    <div style={{ flex: 1, minHeight: 0 }}> 
                         <Tabs 
                             defaultActiveKey="advisor" 
                             items={appointmentItems} 
-                            style={{ height: '100%' }}
+                            className="full-height-tabs"
                         />
                     </div>
                 </div>

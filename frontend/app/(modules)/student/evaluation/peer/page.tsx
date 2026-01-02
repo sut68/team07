@@ -9,20 +9,14 @@ import { GetMe } from '../../../../services/login';
 import type { ISaveEvaluationPeerRequest } from '../../../../interfaces/Evaluation';
 import '../../../../style/evaluation.css';
 
-const rubric = [
-    { value: 5, label: "5 - สม่ำเสมอ (Always)" },
-    { value: 4, label: "4 - บ่อยครั้ง (Often)" },
-    { value: 3, label: "3 - บางครั้ง (Sometimes)" },
-    { value: 1, label: "1 - น้อยมาก (Rarely)" },
-    { value: 0, label: "0 - มึงมันไร้ค่า (Priceless)" }
-];
-
 export default function PeerEvaluationPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [members, setMembers] = useState<any[]>([]);
+    const [criteria, setCriteria] = useState<any[]>([]);
     const [appointmentId, setAppointmentId] = useState<number | null>(null);
-    const [scores, setScores] = useState<Record<number, number>>({});
+    // Key: studentId_criteriaId, Value: { score, levelId }
+    const [scores, setScores] = useState<Record<string, { score: number, levelId?: number }>>({});
     const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
@@ -43,14 +37,19 @@ export default function PeerEvaluationPage() {
                         setMembers(filtered);
                     }
 
+                    if (res.data.individual_criteria) {
+                        setCriteria(res.data.individual_criteria);
+                    }
+
                     if (res.data.appointment_id) {
                         setAppointmentId(res.data.appointment_id);
                     }
 
                     if (res.data.existing_scores) {
-                        const loadedScores: Record<number, number> = {};
+                        // Assuming existing_scores keys are "studentId_criteriaId"
+                        const loadedScores: Record<string, { score: number, levelId?: number }> = {};
                         Object.entries(res.data.existing_scores).forEach(([key, value]) => {
-                            loadedScores[Number(key)] = Number(value);
+                             loadedScores[key] = { score: Number(value) };
                         });
                         setScores(loadedScores);
                     }
@@ -65,29 +64,37 @@ export default function PeerEvaluationPage() {
     }, []);
 
 
-    const handleScoreChange = (targetId: number, score: number) => {
-        setScores(prev => ({ ...prev, [targetId]: score }));
+    const handleScoreChange = (studentId: number, criteriaId: number, score: number, levelId?: number) => {
+        const key = `${studentId}_${criteriaId}`;
+        setScores(prev => ({ ...prev, [key]: { score, levelId } }));
     };
 
     const handleSubmit = async () => {
-        if (Object.keys(scores).length < members.length) {
-            message.warning("กรุณาประเมินเพื่อนให้ครบทุกคน");
+        // Validate: All students must be evaluated on all criteria
+        const totalRequired = members.length * criteria.length;
+        const currentFilled = Object.keys(scores).length;
+
+        if (currentFilled < totalRequired) {
+            message.warning(`กรุณาประเมินให้ครบทุกข้อ (${currentFilled}/${totalRequired})`);
             return;
         }
 
         setSubmitting(true);
         try {
-        const payload: ISaveEvaluationPeerRequest = {
-            appointment_id: appointmentId || 0, 
-            scores: Object.entries(scores).map(([targetId, score]) => ({
-                target_student_id: Number(targetId),
-                criteria_id: 2,
-                criteria_level_id: null, 
-                score: score
-            }))
-        };
+            const payload: ISaveEvaluationPeerRequest = {
+                appointment_id: appointmentId || 0, 
+                scores: Object.entries(scores).map(([key, val]) => {
+                    const [sid, cid] = key.split('_');
+                    return {
+                        target_student_id: Number(sid),
+                        criteria_id: Number(cid),
+                        criteria_level_id: val.levelId || null, 
+                        score: val.score
+                    };
+                })
+            };
 
-        await SavePeerEvaluation(payload);
+            await SavePeerEvaluation(payload);
             Toast_success("บันทึกเรียบร้อย!");
             router.push('/student/exam');
         } catch (error: any) {
@@ -110,14 +117,14 @@ export default function PeerEvaluationPage() {
                     </button>
                     <div className="page-title-box" style={{marginBottom: 0}}>
                         <h1>ประเมินเพื่อน (Peer Assessment)</h1>
-                        <p>หัวข้อ: ความร่วมมือ (Collaboration)</p>
+                        <p>โปรดให้คะแนนเพื่อนร่วมทีมตามความเป็นจริง</p>
                     </div>
                 </div>
 
                 {/* Friends List */}
                 {members.length > 0 ? members.map((friend) => (
-                    <div key={friend.id} className="friend-card">
-                        <div className="friend-info">
+                    <div key={friend.id} className="friend-card" style={{marginBottom: 32}}>
+                        <div className="friend-info" style={{marginBottom: 16}}>
                             <div className="friend-avatar">
                                 {friend.firstname.charAt(0)}
                             </div>
@@ -129,21 +136,35 @@ export default function PeerEvaluationPage() {
                             </div>
                         </div>
 
-                        {/* Custom Radio Choice */}
-                        <div className="rubric-choices">
-                            {rubric.map(r => (
-                                <div 
-                                    key={r.value} 
-                                    className={`rubric-radio ${scores[friend.id] === r.value ? 'selected' : ''}`}
-                                    onClick={() => handleScoreChange(friend.id, r.value)}
-                                >
-                                    <div className="radio-circle"></div>
-                                    <span style={{fontWeight: scores[friend.id] === r.value ? 700 : 400}}>
-                                        {r.label}
-                                    </span>
+                        {/* Criteria Loop */}
+                        {criteria.map((c) => {
+                            const key = `${friend.id}_${c.id}`;
+                            const currentVal = scores[key]?.score;
+
+                            return (
+                                <div key={c.id} style={{marginBottom: 24, paddingBottom: 16, borderBottom: '1px solid #f0f0f0'}}>
+                                    <p style={{fontWeight: 600, marginBottom: 12}}>{c.name} ({c.max_score} คะแนน)</p>
+                                    <div className="rubric-choices">
+                                        {c.levels && c.levels.length > 0 ? (
+                                            c.levels.map((lvl: any) => (
+                                                <div 
+                                                    key={lvl.id} 
+                                                    className={`rubric-radio ${currentVal === lvl.score ? 'selected' : ''}`}
+                                                    onClick={() => handleScoreChange(friend.id, c.id, lvl.score, lvl.id)}
+                                                >
+                                                    <div className="radio-circle"></div>
+                                                    <span style={{fontWeight: currentVal === lvl.score ? 700 : 400}}>
+                                                        {lvl.description} ({lvl.score})
+                                                    </span>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <p>No criteria levels found.</p>
+                                        )}
+                                    </div>
                                 </div>
-                            ))}
-                        </div>
+                            );
+                        })}
                     </div>
                 )) : (
                     <Empty description="ไม่พบการนัดหมายประเมิน" />
