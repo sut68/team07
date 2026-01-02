@@ -184,6 +184,7 @@ networks:
 #     volumes:
 #       - ./uploads:/app/uploads
 #       - ./backend/uploads:/app/uploads
+#       - ./chatsave:/app/chatsave
 #     environment:
 #       DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}?sslmode=disable
 #       FRONTEND_URL: https://capstonehub.me
@@ -193,6 +194,8 @@ networks:
 #       SMTP_PORT: ${SMTP_PORT}
 #       SMTP_PASSWORD: ${SMTP_PASSWORD}
 #       SMTP_USERNAME: ${SMTP_USERNAME}
+#       SOCKET_SERVICE_URL: "http://socket:3001"
+#       GIN_MODE: release
 #       VIRTUAL_HOST: api.capstonehub.me
 #       VIRTUAL_PORT: 8080
 #       LETSENCRYPT_HOST: api.capstonehub.me
@@ -215,6 +218,8 @@ networks:
 #       - backend
 #       - socket
 #     environment:
+#       NEXT_PUBLIC_API_URL: https://api.capstonehub.me
+#       NEXT_PUBLIC_SOCKET_URL: https://socket.capstonehub.me
 #       VIRTUAL_HOST: capstonehub.me,www.capstonehub.me
 #       VIRTUAL_PORT: 5173
 #       LETSENCRYPT_HOST: capstonehub.me,www.capstonehub.me
