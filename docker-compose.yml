@@ -55,6 +55,7 @@ services:
     expose:
       - "3001"
     environment:
+      FRONTEND_URL: https://capstonehub.me
       # บอก Nginx ว่า ถ้าใครเข้า socket.capstonehub.me ให้มาที่นี่
       VIRTUAL_HOST: socket.capstonehub.me
       VIRTUAL_PORT: 3001
@@ -72,7 +73,6 @@ services:
       - db
     volumes:
       - ./uploads:/app/uploads
-      - ./backend/uploads:/app/uploads
       - ./chatsave:/app/chatsave
     environment:
       DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}?sslmode=disable
@@ -85,6 +85,8 @@ services:
       SMTP_USERNAME: ${SMTP_USERNAME}
       SOCKET_SERVICE_URL: "http://socket:3001"
       GIN_MODE: release
+      APP_ENV: production
+      COOKIE_DOMAIN: capstonehub.me
       VIRTUAL_HOST: api.capstonehub.me
       VIRTUAL_PORT: 8080
       LETSENCRYPT_HOST: api.capstonehub.me
