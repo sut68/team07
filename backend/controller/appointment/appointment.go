@@ -38,8 +38,10 @@ func ListAppointments(c *gin.Context) {
 		Preload("Teacher", func(db *gorm.DB) *gorm.DB { return db.Select("id", "username", "firstname", "lastname") }).
 		Preload("Evaluation", func(db *gorm.DB) *gorm.DB { return db.Select("id", "name") }).
 		Joins("JOIN users ON users.id = appointments.teacher_id").
+		Joins("JOIN group_projects ON group_projects.id = appointments.group_project_id").
+		Joins("LEFT JOIN evaluations ON evaluations.id = appointments.evaluation_id").
 		Where("appointments.teacher_id = ?", claims.ID).
-		Or("appointments.appointment_type_id = ? AND users.branch_id = ?", 3, claims.BranchID).
+		Or("appointments.appointment_type_id = ? AND (group_projects.teacher_id = ? OR (evaluations.name = 'Committee Evaluation' AND users.branch_id = ?))", 3, claims.ID, claims.BranchID).
 		Find(&appointments)
 
 	if results.Error != nil {
@@ -241,13 +243,12 @@ func GetMyProjectAndAppointment(c *gin.Context) {
 	groupID := member.GroupProjectID
 	group := member.GroupProject
 
-	var appointment entity.Appointment
-	apptFound := false
+	var appointments []entity.Appointment
 	if err := db.Preload("Room").Preload("AppointmentType").Preload("Evaluation").
 		Where("group_project_id = ? AND appointment_status IN ?", groupID, []string{"scheduled", "completed", "Scheduled", "Completed"}).
-		Order("start_date_time DESC").
-		First(&appointment).Error; err == nil {
-		apptFound = true
+		Order("start_date_time ASC").
+		Find(&appointments).Error; err != nil {
+		// Just ignore error, list will be empty
 	}
 
 	projectName := fmt.Sprintf("Group %d", group.GroupNumber)
@@ -255,27 +256,34 @@ func GetMyProjectAndAppointment(c *gin.Context) {
 		projectName = group.TopicSelections[0].Topic.Title
 	}
 
+	apptList := []gin.H{}
+	for _, apt := range appointments {
+		evaluationName := ""
+		if apt.Evaluation != nil {
+			evaluationName = apt.Evaluation.Name
+		}
+		apptList = append(apptList, gin.H{
+			"id":              apt.ID,
+			"type":            apt.AppointmentType.Name,
+			"date_time":       apt.StartDateTime,
+			"room":            apt.Room.Name,
+			"location":        apt.Room.Location,
+			"evaluation_name": evaluationName,
+		})
+	}
+
 	response := gin.H{
 		"group_id":     group.ID,
 		"group_number": group.GroupNumber,
 		"project_name": projectName,
 		"advisor_name": group.Teacher.Firstname + " " + group.Teacher.Lastname,
-
-		"appointment": nil,
+		"appointments": apptList,
 	}
 
-	if apptFound {
-		evaluationName := ""
-		if appointment.Evaluation != nil {
-			evaluationName = appointment.Evaluation.Name
-		}
-		response["appointment"] = gin.H{
-			"type":            appointment.AppointmentType.Name,
-			"date_time":       appointment.StartDateTime,
-			"room":            appointment.Room.Name,
-			"location":        appointment.Room.Location,
-			"evaluation_name": evaluationName,
-		}
+	if len(apptList) > 0 {
+		response["appointment"] = apptList[0]
+	} else {
+		response["appointment"] = nil
 	}
 
 	c.JSON(http.StatusOK, response)

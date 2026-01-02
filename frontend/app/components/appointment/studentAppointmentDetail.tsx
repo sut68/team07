@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from 'react';
-import { Spin } from 'antd';
-import { CalendarOutlined, ClockCircleOutlined, EnvironmentOutlined, BellOutlined, FileTextOutlined } from '@ant-design/icons';
+import { Spin, Carousel } from 'antd';
+import { CalendarOutlined, ClockCircleOutlined, EnvironmentOutlined, BellOutlined, FileTextOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import 'dayjs/locale/th';
 import { GetMyProjectAndAppointment } from '../../services/appointment';
@@ -19,6 +19,19 @@ interface StudentAppointmentDetailProps {
 const DEFAULT_TITLE = 'การนัดหมาย (Appointment)';
 const DEFAULT_SUBTITLE = 'ตรวจสอบวัน เวลา และสถานที่สอบโครงงานของคุณ';
 
+// Custom Arrow Components to prevent React warnings about unknown props
+const SlickArrowLeft = ({ currentSlide, slideCount, ...props }: any) => (
+    <div {...props} className={`custom-arrow prev ${props.className?.includes('slick-disabled') ? 'disabled' : ''}`}>
+        <LeftOutlined />
+    </div>
+);
+
+const SlickArrowRight = ({ currentSlide, slideCount, ...props }: any) => (
+    <div {...props} className={`custom-arrow next ${props.className?.includes('slick-disabled') ? 'disabled' : ''}`}>
+        <RightOutlined />
+    </div>
+);
+
 export default function StudentAppointmentDetail({
     variant = 'standalone',
     title = DEFAULT_TITLE,
@@ -27,6 +40,7 @@ export default function StudentAppointmentDetail({
 }: StudentAppointmentDetailProps) {
     const [overview, setOverview] = useState<IStudentAppointmentOverview | null>(null);
     const [loading, setLoading] = useState(true);
+    const [currentSlide, setCurrentSlide] = useState(0);
 
     useEffect(() => {
         const fetchAppointment = async () => {
@@ -45,17 +59,19 @@ export default function StudentAppointmentDetail({
         fetchAppointment();
     }, []);
 
-    const appointment: IStudentAppointmentSlot | null = useMemo(() => {
+    const appointments: IStudentAppointmentSlot[] = useMemo(() => {
         if (!overview) {
-            return null;
+            return [];
         }
-        if (overview.appointment) {
-            return overview.appointment;
-        }
+        let allAppointments: IStudentAppointmentSlot[] = [];
+        
         if (overview.appointments && overview.appointments.length > 0) {
-            return overview.appointments[0];
+            allAppointments = overview.appointments;
+        } else if (overview.appointment) {
+            allAppointments = [overview.appointment];
         }
-        return null;
+
+        return allAppointments;
     }, [overview]);
 
     const renderLoading = () => (
@@ -85,7 +101,7 @@ export default function StudentAppointmentDetail({
     );
 
     const renderAppointmentCard = (apt: IStudentAppointmentSlot) => (
-        <div className="student-appt-card">
+        <div className="student-appt-card" key={apt.id || Math.random()}>
             <div className="appt-header">
                 <div className="appt-info">
                     <h2>{apt.type}</h2>
@@ -160,7 +176,28 @@ export default function StudentAppointmentDetail({
         </div>
     );
 
-    const content = loading ? renderLoading() : appointment ? renderAppointmentCard(appointment) : renderEmptyState();
+    const content = loading ? renderLoading() : 
+        appointments.length > 0 ? (
+            <div className="appointment-slider-container">
+                <div style={{ marginBottom: 8, textAlign: 'right', color: '#666', fontSize: '0.9rem' }}>
+                    รายการที่ {currentSlide + 1} จาก {appointments.length}
+                </div>
+                <Carousel 
+                    arrows 
+                    infinite={false} 
+                    dots={{ className: 'custom-dots' }}
+                    prevArrow={<SlickArrowLeft />}
+                    nextArrow={<SlickArrowRight />}
+                    afterChange={(current) => setCurrentSlide(current)}
+                >
+                    {appointments.map(apt => (
+                        <div key={apt.id} style={{ padding: '4px' }}>
+                            {renderAppointmentCard(apt)}
+                        </div>
+                    ))}
+                </Carousel>
+            </div>
+        ) : renderEmptyState();
 
     if (variant === 'standalone') {
         return (
