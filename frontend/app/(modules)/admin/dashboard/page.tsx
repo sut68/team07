@@ -24,6 +24,7 @@ export default function AdminDashboardPage() {
         try {
             const res = await GetIssues();
             if (res.status === 200) {
+                const sortedIssues = res.data.sort((a: any, b: any) => (b.ID || 0) - (a.ID || 0));
                 setIssues(res.data);
             }
         } catch (error) {
@@ -105,7 +106,7 @@ export default function AdminDashboardPage() {
                                             style={{ cursor: 'pointer', transition: 'background 0.2s' }} 
                                             className="hover:bg-gray-50" 
                                         >
-                                            <td>#{item.ID}</td>
+                                            <td>{item.ID}</td>
                                             <td><span style={{ fontWeight: 500 }}>{item.type?.type}</span></td>
                                             <td className="col-detail" title={item.detail}>{item.detail}</td>
                                             <td>

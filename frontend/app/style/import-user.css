@@ -23,10 +23,11 @@
 
 /* Header สีแดง */
 .import-header {
-    background: linear-gradient(135deg, #9a0120 0%, #7d0019 100%);
+    background: #9a0120;
     padding: 30px;
     text-align: center;
     color: white;
+    border-radius: 10px;
 }
 
 .import-header h2 {
@@ -221,4 +222,59 @@
 
 .btn-save:hover {
     background-color: #003eb3;
+}
+
+/* --- Responsive for Mobile/Tablet --- */
+@media (max-width: 768px) {
+    .import-container {
+        padding: 10px;
+    }
+    .import-card {
+        width: 100%;
+        max-width: 100%; 
+        border-radius: 12px; 
+    }
+    .import-content {
+        padding: 20px; 
+    }
+    .create-user-form {
+        grid-template-columns: 1fr; 
+        gap: 15px;
+    }
+    .form-group label {
+        font-size: 0.95rem; 
+    }
+
+    .form-input {
+        padding: 12px; 
+        font-size: 1rem;
+    }
+    .import-header {
+        padding: 20px;
+    }
+    
+    .import-header h2 {
+        font-size: 1.3rem;
+    }
+    .action-buttons {
+        flex-direction: column; 
+    }
+    .btn-upload, 
+    .btn-back,
+    .btn-save {
+        width: 100%;
+        padding: 14px; 
+    }
+}
+
+.modal-overlay {
+    padding: 15px; 
+}
+
+@media (max-height: 800px) {
+    .create-user-form {
+        max-height: 70vh; 
+        overflow-y: auto;
+        padding-right: 5px; 
+    }
 }

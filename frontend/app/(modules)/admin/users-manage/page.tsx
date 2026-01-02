@@ -4,8 +4,7 @@ import { GetUsers, ImportUsersCSV, CreateUser, GetGenders, GetBranches, GetRoles
 import { UserProfileInterface, GenderInterface, BranchInterface, RoleInterface, StatusInterface, CreateUserInterface } from '../../../interfaces/Users';
 import "../../../style/import-user.css";
 import "../../../style/admin-dashboard.css";
-import { CloudUploadOutlined, FileTextOutlined, DownloadOutlined, TeamOutlined, SearchOutlined, PlusOutlined, SaveOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
-import { Toast_success, Toast_fail } from '../../../components/Webmessage';
+import { CloudUploadOutlined, DownloadOutlined, TeamOutlined, SearchOutlined, PlusOutlined, SaveOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import Swal from 'sweetalert2';
 
 export default function UsersManagePage() {
@@ -75,7 +74,12 @@ export default function UsersManagePage() {
         if (e.target.files && e.target.files.length > 0) {
             const selectedFile = e.target.files[0];
             if (!selectedFile.name.endsWith(".csv")) {
-                Toast_fail("กรุณาเลือกไฟล์ .csv เท่านั้น");
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'ไฟล์ไม่ถูกต้อง',
+                    text: 'กรุณาเลือกไฟล์นามสกุล .csv เท่านั้น',
+                    timer: 2000
+                });
                 return;
             }
             setFile(selectedFile);
@@ -83,7 +87,7 @@ export default function UsersManagePage() {
     };
     const handleDownloadTemplate = () => {
         const csvHeader = "username,password,firstname,lastname,email,phone,gender_id,branch_id,role_id,status_id";
-        const csvExample = "B6600001,123456,Somchai,Rakdee,somchai@email.com,0811111111,1,1,1,1";
+        const csvExample = "B6600001,123456,Somchai,Rakdee,somchai@email.com,0811111111,1,1,2,1";
         const csvContent = "data:text/csv;charset=utf-8," + csvHeader + "\n" + csvExample;
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");
@@ -93,30 +97,59 @@ export default function UsersManagePage() {
         link.click();
         document.body.removeChild(link);
     };
-    const handleUpload = async () => {
-        if (!file) return Toast_fail("กรุณาเลือกไฟล์ก่อน");
-        if (!confirm(`ยืนยันการนำเข้าไฟล์ "${file.name}"?`)) return;
 
-        setIsUploading(true);
-        try {
-            const res = await ImportUsersCSV(file);
-            if (res.status === 200) {
-                Toast_success(`นำเข้าสำเร็จ! ${res.data.message || ""}`);
-                setFile(null);
-                setShowImport(false);
-                fetchAllData();
-            } else {
-                Toast_fail(`เกิดข้อผิดพลาด: ${res.data.error}`);
+    const handleUpload = async () => {
+        if (!file) {
+            Swal.fire({ icon: 'warning', title: 'กรุณาเลือกไฟล์ก่อน', timer: 1500 });
+            return;
+        }
+
+        const confirmResult = await Swal.fire({
+            title: `ยืนยันการนำเข้าไฟล์ "${file.name}"?`,
+            text: "ข้อมูลผู้ใช้งานจะถูกเพิ่มเข้าสู่ระบบ",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'ยืนยัน',
+            cancelButtonText: 'ยกเลิก',
+            confirmButtonColor: '#1f4d2b',
+            cancelButtonColor: '#9a0120',
+            customClass: { container: 'swal-z-index-high' }
+        });
+
+        if (confirmResult.isConfirmed) {
+            setIsUploading(true);
+            try {
+                Swal.fire({ title: 'กำลังอัปโหลด...', didOpen: () => Swal.showLoading() });
+
+                const res = await ImportUsersCSV(file);
+
+                if (res.status === 200) {
+                    Swal.close();
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'นำเข้าสำเร็จ!',
+                        text: res.data.message || "",
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    setFile(null);
+                    setShowImport(false);
+                    fetchAllData();
+                } else {
+                    Swal.close();
+                    Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: res.data.error });
+                }
+            } catch (error: any) {
+                console.error("Upload Error:", error);
+                Swal.close();
+                const errMsg = error.response && error.response.data && error.response.data.error
+                    ? error.response.data.error
+                    : "เชื่อมต่อ Server ไม่ได้ หรือเกิดข้อผิดพลาดที่ไม่ระบุ";
+
+                Swal.fire({ icon: 'error', title: 'นำเข้าไม่สำเร็จ', text: errMsg });
+            } finally {
+                setIsUploading(false);
             }
-        } catch (error: any) {
-            console.error("Upload Error:", error);
-            if (error.response && error.response.data && error.response.data.error) {
-                Toast_fail(`นำเข้าไม่สำเร็จ: ${error.response.data.error}`);
-            } else {
-                Toast_fail("เชื่อมต่อ Server ไม่ได้ หรือเกิดข้อผิดพลาดที่ไม่ระบุ");
-            }
-        } finally {
-            setIsUploading(false);
         }
     };
 
@@ -134,29 +167,75 @@ export default function UsersManagePage() {
             [name]: name.includes("id") ? Number(value) : value
         });
     };
+
     const handleCreateSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newUser.username || !newUser.password || !newUser.firstname) {
-            return Toast_fail("กรุณากรอกข้อมูลสำคัญให้ครบ");
+            Swal.fire({ icon: 'warning', title: 'ข้อมูลไม่ครบ', text: 'กรุณากรอกข้อมูลสำคัญให้ครบถ้วน' });
+            return;
         }
 
         const phoneRegex = /^\d{10}$/;
         if (newUser.phone && !phoneRegex.test(newUser.phone)) {
-            return Toast_fail("เบอร์โทรต้องมี 10 หลัก");
+            Swal.fire({ icon: 'warning', title: 'เบอร์โทรไม่ถูกต้อง', text: 'เบอร์โทรต้องมี 10 หลัก' });
+            return;
         }
 
-        try {
-            const res = await CreateUser(newUser);
-            if (res.status === 201) {
-                Toast_success("เพิ่มผู้ใช้งานสำเร็จ!");
-                setShowCreate(false);
-                setNewUser({ username: "", password: "", firstname: "", lastname: "", email: "", phone: "", gender_id: 1, branch_id: 1, role_id: 3, status_id: 1 });
-                fetchAllData();
-            } else {
-                Toast_fail("เกิดข้อผิดพลาด: " + res.data.error);
+        const result = await Swal.fire({
+            title: 'ยืนยันการเพิ่มผู้ใช้งาน?',
+            text: `คุณต้องการเพิ่มผู้ใช้งาน "${newUser.username}" ใช่หรือไม่?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#1f4d2b',
+            cancelButtonColor: '#9a0120',
+            confirmButtonText: 'ใช่, เพิ่มเลย!',
+            cancelButtonText: 'ยกเลิก',
+            reverseButtons: true
+        });
+
+        if (result.isConfirmed) {
+            try {
+                // แสดง Loading
+                Swal.fire({
+                    title: 'กำลังบันทึก...',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+
+                const res = await CreateUser(newUser);
+
+                if (res.status === 201) {
+                    Swal.close();
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'เพิ่มผู้ใช้งานสำเร็จ!',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+
+                    setShowCreate(false);
+                    // Reset Form
+                    setNewUser({
+                        username: "", password: "", firstname: "", lastname: "",
+                        email: "", phone: "", gender_id: 1, branch_id: 1, role_id: 3, status_id: 1
+                    });
+                    fetchAllData();
+                } else {
+                    Swal.close();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด',
+                        text: res.data.error
+                    });
+                }
+            } catch (error: any) {
+                Swal.close();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: error.response?.data?.error || error.message
+                });
             }
-        } catch (error: any) {
-            Toast_fail(error.response?.data?.error || error.message);
         }
     };
 
@@ -167,41 +246,34 @@ export default function UsersManagePage() {
             text: "การลบผู้ใช้งานนี้จะไม่สามารถกู้คืนได้!",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#d33', 
+            confirmButtonColor: '#9a0120',
             cancelButtonColor: '#3085d6',
             confirmButtonText: 'ใช่, ลบเลย!',
             cancelButtonText: 'ยกเลิก',
             reverseButtons: true
         });
 
-        // ถ้าผู้ใช้กดยืนยัน
         if (result.isConfirmed) {
             try {
-                // แสดง Loading ระหว่างรอ Server ลบ
                 Swal.fire({
                     title: 'กำลังลบ...',
                     allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
+                    didOpen: () => Swal.showLoading()
                 });
 
                 const res = await DeleteUser(id);
 
                 if (res.status === 200) {
-                    // ปิด Loading และแสดง Toast สำเร็จ
                     Swal.close();
-                    Toast_success("ลบผู้ใช้งานสำเร็จ");
+                    await Swal.fire({ icon: 'success', title: 'ลบผู้ใช้งานสำเร็จ', timer: 1500, showConfirmButton: false });
                     fetchAllData();
                 } else {
-                    // ปิด Loading และแสดง Toast แจ้ง Error
                     Swal.close();
-                    Toast_fail("ลบไม่สำเร็จ: " + res.data.error);
+                    Swal.fire({ icon: 'error', title: 'ลบไม่สำเร็จ', text: res.data.error });
                 }
             } catch (error: any) {
-                // ปิด Loading และแสดง Toast แจ้ง Error
                 Swal.close();
-                Toast_fail("เกิดข้อผิดพลาด: " + (error.response?.data?.error || error.message));
+                Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: error.response?.data?.error || error.message });
             }
         }
     };
@@ -221,22 +293,62 @@ export default function UsersManagePage() {
     const handleEditSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!editingUser) return;
-        try {
-            const res = await UpdateUser(editingUser.id, {
-                firstname: editingUser.firstname,
-                lastname: editingUser.lastname,
-                status_id: editingUser.status_id
-            });
-            if (res.status === 200) {
-                Toast_success("แก้ไขข้อมูลสำเร็จ");
-                setShowEdit(false);
-                setEditingUser(null);
-                fetchAllData();
-            } else {
-                Toast_fail("แก้ไขไม่สำเร็จ: " + res.data.error);
+
+        const result = await Swal.fire({
+            title: 'ยืนยันการแก้ไขข้อมูล?',
+            // แสดงชื่อคนที่จะแก้ด้วย เพื่อความชัดเจน
+            text: `คุณต้องการบันทึกการเปลี่ยนแปลงของ "${editingUser.firstname} ${editingUser.lastname}" ใช่หรือไม่?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#1f4d2b', 
+            cancelButtonColor: '#9a0120',
+            confirmButtonText: 'ใช่, บันทึกเลย',
+            cancelButtonText: 'ยกเลิก',
+            reverseButtons: true
+        });
+
+        if (result.isConfirmed) {
+            try {
+                Swal.fire({
+                    title: 'กำลังบันทึก...',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+
+                const res = await UpdateUser(editingUser.id, {
+                    firstname: editingUser.firstname,
+                    lastname: editingUser.lastname,
+                    status_id: editingUser.status_id
+                });
+
+                if (res.status === 200) {
+                    Swal.close();
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'แก้ไขข้อมูลสำเร็จ',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+
+                    setShowEdit(false);
+                    setEditingUser(null);
+                    fetchAllData();
+                } else {
+                    Swal.close();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'แก้ไขไม่สำเร็จ',
+                        text: res.data.error
+                    });
+                }
+            } catch (error: any) {
+                Swal.close();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: error.response?.data?.error || error.message
+                });
             }
-        } catch (error: any) {
-            Toast_fail("เกิดข้อผิดพลาด: " + (error.response?.data?.error || error.message));
         }
     };
 
@@ -335,7 +447,7 @@ export default function UsersManagePage() {
                     <div className="import-card" style={{ width: '90%', maxWidth: '600px', backgroundColor: 'white', padding: '20px', borderRadius: '10px' }}>
                         <div className="import-header" style={{ position: 'relative' }}>
                             <h2>นำเข้าข้อมูลผู้ใช้งาน (Import Users)</h2>
-                            <button onClick={() => setShowImport(false)} style={{ position: 'absolute', top: '0', right: '0', background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
+                            <button onClick={() => setShowImport(false)} style={{ position: 'absolute', top: '0', right: '5px', background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
                         </div>
                         <div className="import-content">
                             <div className="template-section">
@@ -343,11 +455,11 @@ export default function UsersManagePage() {
                             </div>
                             <div className="upload-area" onClick={handleBoxClick} style={{ border: '2px dashed #ccc', padding: '20px', textAlign: 'center', marginTop: '15px', cursor: 'pointer' }}>
                                 <input type="file" accept=".csv" ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileChange} disabled={isUploading} />
-                                <CloudUploadOutlined style={{ fontSize: '2rem', color: '#1890ff' }} />
+                                <CloudUploadOutlined style={{ fontSize: '2rem', color: '#9a0120' }} />
                                 <p>{file ? file.name : "คลิกเพื่อเลือกไฟล์ CSV"}</p>
                             </div>
                             <div className="action-buttons" style={{ marginTop: '20px', textAlign: 'right' }}>
-                                <button className="btn-upload" onClick={handleUpload} disabled={!file || isUploading} style={{ backgroundColor: '#1890ff', color: 'white', padding: '8px 16px', border: 'none', borderRadius: '4px' }}>
+                                <button className="btn-upload" onClick={handleUpload} disabled={!file || isUploading} style={{ backgroundColor: '#1f4d2b', color: 'white', padding: '8px 16px', border: 'none', borderRadius: '4px' }}>
                                     {isUploading ? 'กำลังอัปโหลด...' : 'ยืนยัน'}
                                 </button>
                             </div>
@@ -365,10 +477,10 @@ export default function UsersManagePage() {
                             <button onClick={() => setShowCreate(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
                         </div>
                         <form onSubmit={handleCreateSubmit} className="create-user-form">
-                            <div className="form-group"><label>Username *</label><input className="form-input" name="username" value={newUser.username} onChange={handleInputChange} required /></div>
-                            <div className="form-group"><label>Password *</label><input className="form-input" type="password" name="password" value={newUser.password} onChange={handleInputChange} required /></div>
-                            <div className="form-group"><label>ชื่อจริง *</label><input className="form-input" name="firstname" value={newUser.firstname} onChange={handleInputChange} required /></div>
-                            <div className="form-group"><label>นามสกุล *</label><input className="form-input" name="lastname" value={newUser.lastname} onChange={handleInputChange} required /></div>
+                            <div className="form-group"><label>Username *</label><input className="form-input" name="username" value={newUser.username} onChange={handleInputChange} /></div>
+                            <div className="form-group"><label>Password *</label><input className="form-input" type="password" name="password" value={newUser.password} onChange={handleInputChange} /></div>
+                            <div className="form-group"><label>ชื่อจริง *</label><input className="form-input" name="firstname" value={newUser.firstname} onChange={handleInputChange} /></div>
+                            <div className="form-group"><label>นามสกุล *</label><input className="form-input" name="lastname" value={newUser.lastname} onChange={handleInputChange} /></div>
                             <div className="form-group"><label>อีเมล</label><input className="form-input" name="email" value={newUser.email} onChange={handleInputChange} /></div>
                             <div className="form-group"><label>เบอร์โทร</label><input className="form-input" name="phone" value={newUser.phone} onChange={handleInputChange} /></div>
                             <div className="form-group"><label>เพศ</label><select className="form-input" name="gender_id" value={newUser.gender_id} onChange={handleInputChange}>{genders.map(g => <option key={g.ID} value={g.ID}>{g.name}</option>)}</select></div>

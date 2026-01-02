@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"regexp"
 	"strconv"
+
 	"github.com/gin-gonic/gin"
 	"github.com/sut68/team07/backend/controller/log"
 	"github.com/sut68/team07/backend/database"
@@ -14,11 +15,15 @@ import (
 	"github.com/sut68/team07/backend/service"
 )
 
+// Regex สำหรับตรวจสอบ Email: ต้องเป็นภาษาอังกฤษ ตัวเลข หรือ . _ % + - และต้องมี @ และโดเมน (เช่น .com, .co.th)
+var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
+
+// Regex สำหรับตรวจสอบ Phone: ต้องเป็นตัวเลข 10 หลักเท่านั้น
+var phoneRegex = regexp.MustCompile(`^\d{10}$`)
+
 // POST: /users/import-csv
 func ImportUsersCSV(c *gin.Context) {
-
 	db := database.DB()
-
 	jwtService := service.NewJwtService()
 
 	// รับไฟล์จาก Form-Data
@@ -44,15 +49,12 @@ func ImportUsersCSV(c *gin.Context) {
 		return
 	}
 
-	var phoneRegex = regexp.MustCompile(`^\d{10}$`)
-
 	var users []entity.User
 	tx := db.Begin()
 
 	// วนลูปอ่านข้อมูล (เริ่ม i = 1 เพื่อข้าม Header)
 	for i := 1; i < len(records); i++ {
 		row := records[i]
-
 		if len(row) < 10 {
 			tx.Rollback()
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid column count at row " + strconv.Itoa(i+1)})
@@ -60,13 +62,23 @@ func ImportUsersCSV(c *gin.Context) {
 		}
 
 		username := row[0]
-		phone := row[5]
+		// password := row[1]
 		firstname := row[2]
 		lastname := row[3]
 		email := row[4]
+		phone := row[5]
 
-		// Validation: ตรวจ Phone Regex
-		if !phoneRegex.MatchString(phone) {
+		// Validation: ตรวจ Email Regex (ถ้ามีค่า)
+		if email != "" && !emailRegex.MatchString(email) {
+			tx.Rollback()
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": fmt.Sprintf("Row %d: Email '%s' รูปแบบไม่ถูกต้อง (ต้องเป็นภาษาอังกฤษและมีโดเมนที่ถูกต้อง)", i+1, email),
+			})
+			return
+		}
+
+		// Validation: ตรวจ Phone Regex (ถ้ามีค่า)
+		if phone != "" && !phoneRegex.MatchString(phone) {
 			tx.Rollback()
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": fmt.Sprintf("Row %d: Phone '%s' ไม่ถูกต้อง (ต้องเป็นตัวเลข 10 หลัก)", i+1, phone),
@@ -90,30 +102,40 @@ func ImportUsersCSV(c *gin.Context) {
 
 		// Validation: ตรวจสอบข้อมูลซ้ำ (Unique Check)
 		var checkUser entity.User
+
 		// Username
 		if err := db.Where("username = ?", username).First(&checkUser).Error; err == nil {
 			tx.Rollback()
-			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Row %d: Username '%s' มีอยู่ในระบบแล้ว", i+1, username)})
+			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Row %d: Username '%s' ซ้ำกับ User: %s (ชื่อ: %s %s)",
+				i+1, username, checkUser.Username, checkUser.Firstname, checkUser.Lastname)})
 			return
 		}
+
 		// Email
 		if email != "" {
 			if err := db.Where("email = ?", email).First(&checkUser).Error; err == nil {
 				tx.Rollback()
-				c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Row %d: Email '%s' มีอยู่ในระบบแล้ว", i+1, email)})
+				c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Row %d: Email '%s' ซ้ำกับ User: %s (ชื่อ: %s %s)",
+					i+1, email, checkUser.Username, checkUser.Firstname, checkUser.Lastname)})
 				return
 			}
 		}
+
 		// Phone
-		if err := db.Where("phone = ?", phone).First(&checkUser).Error; err == nil {
-			tx.Rollback()
-			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Row %d: Phone '%s' มีอยู่ในระบบแล้ว", i+1, phone)})
-			return
+		if phone != "" { // แก้ไข: เช็คเฉพาะถ้ามีเบอร์โทร
+			if err := db.Where("phone = ?", phone).First(&checkUser).Error; err == nil {
+				tx.Rollback()
+				c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Row %d: Phone '%s' ซ้ำกับ User: %s (ชื่อ: %s %s)",
+					i+1, phone, checkUser.Username, checkUser.Firstname, checkUser.Lastname)})
+				return
+			}
 		}
+
 		// Firstname + Lastname
 		if err := db.Where("firstname = ? AND lastname = ?", firstname, lastname).First(&checkUser).Error; err == nil {
 			tx.Rollback()
-			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Row %d: ชื่อ-นามสกุล '%s %s' มีอยู่ในระบบแล้ว", i+1, firstname, lastname)})
+			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Row %d: ชื่อ-นามสกุล '%s %s' ซ้ำกับ User: %s (ID: %d)",
+				i+1, firstname, lastname, checkUser.Username, checkUser.ID)})
 			return
 		}
 
@@ -152,17 +174,15 @@ func ImportUsersCSV(c *gin.Context) {
 
 	tx.Commit()
 	fmt.Println("[DEBUG] Import สำเร็จ!")
-	log.InsertLog(c,28)
+	log.InsertLog(c, 28)
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Imported " + strconv.Itoa(len(users)) + " users successfully",
 	})
 }
 
-// GET: /admin/users
 func ListUsers(c *gin.Context) {
 	db := database.DB()
 	var users []entity.User
-
 	if err := db.Preload("Gender").
 		Preload("Branch").
 		Preload("Role").
@@ -171,11 +191,9 @@ func ListUsers(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
 	for i := range users {
 		users[i].Password = ""
 	}
-
 	c.JSON(http.StatusOK, users)
 }
 
@@ -196,7 +214,6 @@ type CreateUserInput struct {
 func CreateUser(c *gin.Context) {
 	db := database.DB()
 	var input CreateUserInput
-
 	jwtService := service.NewJwtService()
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -209,10 +226,15 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	var phoneRegex = regexp.MustCompile(`^\d{10}$`)
-
-	if !phoneRegex.MatchString(input.Phone) {
+	// Validation: ตรวจ Phone Regex (ถ้ามีค่า)
+	if input.Phone != "" && !phoneRegex.MatchString(input.Phone) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "เบอร์โทรศัพท์ไม่ถูกต้อง (ต้องเป็นตัวเลข 10 หลัก)"})
+		return
+	}
+
+	// Validation: ตรวจ Email Regex (ถ้ามีค่า)
+	if input.Email != "" && !emailRegex.MatchString(input.Email) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "รูปแบบ Email ไม่ถูกต้อง (ต้องเป็นภาษาอังกฤษและมีโดเมนที่ถูกต้อง)"})
 		return
 	}
 
@@ -226,6 +248,7 @@ func CreateUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Username นี้มีอยู่ในระบบแล้ว"})
 		return
 	}
+
 	// Email
 	if input.Email != "" {
 		if err := db.Where("email = ?", input.Email).First(&checkUser).Error; err == nil {
@@ -233,6 +256,7 @@ func CreateUser(c *gin.Context) {
 			return
 		}
 	}
+
 	// Phone
 	if input.Phone != "" {
 		if err := db.Where("phone = ?", input.Phone).First(&checkUser).Error; err == nil {
@@ -240,11 +264,13 @@ func CreateUser(c *gin.Context) {
 			return
 		}
 	}
+
 	// Firstname + Lastname
 	if err := db.Where("firstname = ? AND lastname = ?", input.Firstname, input.Lastname).First(&checkUser).Error; err == nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "ชื่อและนามสกุลนี้มีอยู่ในระบบแล้ว"})
 		return
 	}
+
 	// -----------------------------------------------------
 
 	hashedPassword := jwtService.HashPassword(input.Password)
@@ -276,11 +302,10 @@ func CreateUser(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	log.InsertLog(c,28)
+	log.InsertLog(c, 28)
 	c.JSON(http.StatusCreated, gin.H{"message": "User created successfully", "data": user})
 }
 
-// Struct แก้ไข
 type UpdateUserInfoInput struct {
 	Firstname string `json:"firstname"`
 	Lastname  string `json:"lastname"`
@@ -348,6 +373,18 @@ func UpdateUserProfile(c *gin.Context) {
 		return
 	}
 
+	// Validation: ตรวจ Phone Regex (ถ้ามีค่า)
+	if input.Phone != "" && !phoneRegex.MatchString(input.Phone) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "เบอร์โทรศัพท์ไม่ถูกต้อง (ต้องเป็นตัวเลข 10 หลัก)"})
+		return
+	}
+
+	// Validation: ตรวจ Email Regex (ถ้ามีค่า)
+	if input.Email != "" && !emailRegex.MatchString(input.Email) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "รูปแบบ Email ไม่ถูกต้อง (ต้องเป็นภาษาอังกฤษและมีโดเมนที่ถูกต้อง)"})
+		return
+	}
+
 	var user entity.User
 	if err := db.First(&user, userId).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
@@ -362,6 +399,7 @@ func UpdateUserProfile(c *gin.Context) {
 			return
 		}
 	}
+
 	// เช็ค Phone ซ้ำกับคนอื่น (ไม่รวมตัวเอง)
 	if input.Phone != "" {
 		if err := db.Where("phone = ? AND id != ?", input.Phone, userId).First(&checkUser).Error; err == nil {
@@ -381,27 +419,23 @@ func UpdateUserProfile(c *gin.Context) {
 	})
 }
 
-// DELETE: /admin/user/:id
 func DeleteUser(c *gin.Context) {
 	id := c.Param("id")
 	db := database.DB()
-
 	var user entity.User
 	if err := db.First(&user, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
-
 	if user.RoleID == 1 {
 		c.JSON(http.StatusForbidden, gin.H{"error": "ไม่สามารถลบบัญชีผู้ดูแลระบบ (Admin) ได้"})
 		return
 	}
-
 	if err := db.Delete(&user).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete user"})
 		return
 	}
-	log.InsertLog(c,30)
+	log.InsertLog(c, 30)
 	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
 }
 
@@ -414,24 +448,20 @@ func GetUserProfile(c *gin.Context) {
 		return
 	}
 	userId := claims.ID
-
 	var user entity.User
 	if err := db.Preload("Gender").
 		Preload("Branch").
 		Preload("Role").
 		Preload("Status").
 		First(&user, userId).Error; err != nil {
-
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
-
 	user.Password = ""
 	c.JSON(http.StatusOK, gin.H{
 		"data": user,
 	})
 }
-
 func GetGenders(c *gin.Context) {
 	var genders []entity.Gender
 	if err := database.DB().Find(&genders).Error; err != nil {
@@ -440,7 +470,6 @@ func GetGenders(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, genders)
 }
-
 func GetBranches(c *gin.Context) {
 	var branches []entity.Branch
 	if err := database.DB().Find(&branches).Error; err != nil {
@@ -449,7 +478,6 @@ func GetBranches(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, branches)
 }
-
 func GetRoles(c *gin.Context) {
 	var roles []entity.UserRole
 	if err := database.DB().Find(&roles).Error; err != nil {
@@ -458,7 +486,6 @@ func GetRoles(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, roles)
 }
-
 func GetUserStatuses(c *gin.Context) {
 	var statuses []entity.AccountStatus
 	if err := database.DB().Find(&statuses).Error; err != nil {

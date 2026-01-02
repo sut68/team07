@@ -71,7 +71,7 @@ export default function StudentTopbar({ children }: { userRole: string; children
         {
             key: 'profile',
             icon: <UserOutlined />,
-            label: <Link href="/profile" style={{ color: 'inherit' }}>โปรไฟล์ของฉัน</Link>,
+            label: <Link href="/student/profile" style={{ color: 'inherit' }}>โปรไฟล์ของฉัน</Link>,
         },
         {
             key: 'report',
@@ -96,7 +96,7 @@ export default function StudentTopbar({ children }: { userRole: string; children
                 onOk: handleLogout,
             });
         } else if (key === 'report') {
-            // ✅ 4. สั่งเปิด Modal เมื่อกดปุ่มรายงานปัญหา
+            // สั่งเปิด Modal เมื่อกดปุ่มรายงานปัญหา
             setIsReportModalOpen(true);
         }
     };

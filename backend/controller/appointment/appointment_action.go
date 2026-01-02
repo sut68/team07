@@ -58,10 +58,21 @@ func DeleteAppointment(c *gin.Context) {
 	var apt entity.Appointment
 	claims, _ := middleware.GetClaimsFromContext(c)
 
-	if err := db.Where("id = ? AND teacher_id = ?", id, claims.ID).First(&apt).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Appointment not found or permission denied"})
+	// Find appointment first
+	if err := db.Preload("GroupProject").First(&apt, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Appointment not found"})
 		return
 	}
+
+	// Check permission: Owner OR Group Advisor
+	isOwner := apt.TeacherID == claims.ID
+	isAdvisor := apt.GroupProject.TeacherID != nil && *apt.GroupProject.TeacherID == claims.ID
+
+	if !isOwner && !isAdvisor {
+		c.JSON(http.StatusForbidden, gin.H{"error": "You do not have permission to delete this appointment"})
+		return
+	}
+
 	tx := db.Begin()
 
 	if err := tx.Delete(&apt).Error; err != nil {
@@ -143,16 +154,23 @@ func CreateAppointment(c *gin.Context) {
 		}
 	}
 
-	var existingAppt entity.Appointment
-	if tx := db.Where("group_project_id = ? AND appointment_status = 'scheduled'", appointment.GroupProjectID).
-		First(&existingAppt); tx.RowsAffected > 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "กลุ่มนี้มีการนัดหมายที่ยังไม่เสร็จสิ้นอยู่ กรุณายกเลิกหรือลบนัดเดิมก่อนจึงจะสร้างนัดใหม่ได้"})
-		return
-	}
-
 	// Calculate End Time for Overlap Check
 	newStartTime := appointment.StartDateTime
 	newEndTime := newStartTime.Add(time.Duration(appointment.DurationMin) * time.Minute)
+
+	// 0. Check Group Conflict (Overlap) - แทนที่การเช็คว่ามีนัดหมายค้างอยู่หรือไม่
+	var groupConflict int64
+	if err := db.Model(&entity.Appointment{}).
+		Where("group_project_id = ? AND appointment_status = 'scheduled'", appointment.GroupProjectID).
+		Where("start_date_time < ? AND (start_date_time + (duration_min * interval '1 minute')) > ?", newEndTime, newStartTime).
+		Count(&groupConflict).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if groupConflict > 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "กลุ่มนี้มีนัดหมายอื่นในช่วงเวลานี้แล้ว"})
+		return
+	}
 
 	// 1. Check Room Conflict (Overlap)
 	var roomConflict int64

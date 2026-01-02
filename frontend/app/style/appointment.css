@@ -378,3 +378,98 @@
   font-size: 1rem;
   margin: 0;
 }
+/* --- Slider / Carousel Styles --- */
+.appointment-slider-container {
+  position: relative;
+  padding: 0 20px; /* Add padding for arrows */
+}
+
+/* Custom Arrows */
+.custom-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  background: white;
+  border-radius: 50%;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  cursor: pointer;
+  z-index: 10;
+  color: #333;
+  transition: all 0.3s ease;
+  border: 1px solid #eee;
+  font-size: 18px;
+}
+
+.custom-arrow:hover {
+  background: #9a0120;
+  color: white;
+  border-color: #9a0120;
+}
+
+.custom-arrow.prev {
+  left: -10px;
+}
+
+.custom-arrow.next {
+  right: -10px;
+}
+
+/* Adjust dots */
+.ant-carousel .slick-dots li button {
+  background: #9a0120 !important;
+  opacity: 0.3;
+}
+
+.ant-carousel .slick-dots li.slick-active button {
+  opacity: 1;
+}
+
+
+/* Fix Arrow Positioning */
+.appointment-slider-container {
+  padding: 0 50px !important; /* Increase padding to fit arrows */
+}
+
+.custom-arrow.prev {
+  left: 0 !important;
+}
+
+.custom-arrow.next {
+  right: 0 !important;
+}
+
+
+/* Make dots more prominent */
+.ant-carousel .slick-dots li {
+  width: 24px !important; /* Wider touch area */
+  height: 6px !important;
+  margin: 0 4px !important;
+}
+
+.ant-carousel .slick-dots li button {
+  height: 6px !important;
+  border-radius: 4px !important;
+  background: #9a0120 !important;
+  opacity: 0.2 !important;
+  transition: all 0.3s ease !important;
+}
+
+.ant-carousel .slick-dots li.slick-active button {
+  width: 32px !important; /* Active dot is wider */
+  opacity: 1 !important;
+  background: #9a0120 !important;
+  box-shadow: 0 2px 4px rgba(154, 1, 32, 0.3);
+}
+
+/* Hide disabled arrows */
+.custom-arrow.slick-disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+

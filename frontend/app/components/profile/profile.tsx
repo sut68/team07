@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { GetUserProfile } from '../../services/user'; 
 import { UserProfileInterface } from '../../interfaces/Users'; 
 import "../../style/profile.css"; 
+import EditProfilePage from '../editprofile/editprofile'; 
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -11,8 +12,11 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchProfile = async () => {
+  // State สำหรับตรวจสอบโหมดแก้ไข
+  const [isEditing, setIsEditing] = useState(false);
+
+  // แยกฟังก์ชัน fetch ออกมาเพื่อให้เรียกซ้ำได้ง่าย
+  const fetchProfile = async () => {
       try {
         const res = await GetUserProfile();
         if (res.status === 200 && res.data) {
@@ -23,19 +27,33 @@ export default function ProfilePage() {
       } catch (err) {
         console.error("Error fetching profile:", err);
         setError("Unauthorized or Network Error");
-        setTimeout(() => router.push('/login'), 2000);
+        // setTimeout(() => router.push('/login'), 2000); 
       } finally {
         setIsLoading(false);
       }
-    };
+  };
 
+  useEffect(() => {
     fetchProfile();
-  }, [router]);
+  }, []);
 
-  // ฟังก์ชันสร้างตัวย่อจากชื่อ 
   const getInitials = (firstname?: string) => {
     return firstname ? firstname.charAt(0).toUpperCase() : "?";
   };
+
+  // ส่วนสลับหน้า: ถ้าอยู่ในโหมดแก้ไข ให้แสดง EditProfilePage
+  if (isEditing && user) {
+      return (
+          <EditProfilePage 
+              user={user} // ส่งข้อมูล user เดิมไปให้
+              onCancel={() => setIsEditing(false)} // เมื่อกดยกเลิก ให้กลับมาหน้าเดิม
+              onSuccess={() => {
+                  setIsEditing(false); // ปิดโหมดแก้ไข
+                  fetchProfile();      // โหลดข้อมูลใหม่ (เผื่อมีการอัปเดต)
+              }}
+          />
+      );
+  }
 
   if (isLoading) {
     return (
@@ -55,6 +73,7 @@ export default function ProfilePage() {
     );
   }
 
+  // ส่วนแสดงผลหน้า Profile ปกติ
   return (
     <div className="profile-container">
       <div className="profile-card">
@@ -115,8 +134,9 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
+          
           <button
-            onClick={() => router.push('/edit-profile')}
+            onClick={() => setIsEditing(true)}
             style={{
               marginTop: '20px',
               padding: '10px 20px',

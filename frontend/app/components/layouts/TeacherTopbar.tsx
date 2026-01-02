@@ -41,7 +41,7 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
         {
             key: 'profile',
             icon: <UserOutlined />,
-            label: <Link href="/profile" style={{ color: 'inherit' }}>โปรไฟล์ของฉัน</Link>,
+            label: <Link href="/teacher/profile" style={{ color: 'inherit' }}>โปรไฟล์ของฉัน</Link>,
         },
         {
             key: 'create_news',
