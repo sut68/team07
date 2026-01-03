@@ -21,6 +21,9 @@ jobs:
             # 2. บังคับ Code ให้ตรงกับ GitHub
             git fetch --all
             git reset --hard origin/main
+            
+            mkdir -p backend/uploads/chats backend/uploads/news backend/uploads/progress backend/uploads/topics
+            chmod -R 777 backend/uploads
 
             # 3. สร้างไฟล์ .env
             cat <<EOF > .env

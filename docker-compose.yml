@@ -72,7 +72,7 @@ services:
     depends_on:
       - db
     volumes:
-      - ./uploads:/app/uploads
+      - ./backend/uploads:/app/uploads
     environment:
       DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}?sslmode=disable
       FRONTEND_URL: https://capstonehub.me

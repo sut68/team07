@@ -33,7 +33,6 @@ var MockIssueStatus = []entity.IssueStatus{
 var MockIssueType = []entity.IssueType{
 	{Type: "Bug"},
 	{Type: "Feature Request"},
-	{Type: "Other"},
 }
 
 var MockActionType = []entity.ActionType{
