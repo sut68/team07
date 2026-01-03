@@ -45,8 +45,9 @@ func main() {
 	r.POST("/refresh", authHandler.Refresh)
 	r.POST("/forgot-password", authHandler.ForgotPassword)
 	r.POST("/reset-password", authHandler.ResetPassword)
-	r.Static("/chatsave", "./chatsave")
-	
+	//r.Static("/chatsave", "./chatsave") ย้ายไปใช้ uploads แทน
+	// Backward compatibility for old chat images
+	r.Static("/chatsave", "./uploads/chats")
 
 	protected := r.Group("/")
 	protected.Use(middleware.CSRFCheckMiddleware(), middleware.AuthMiddleware())

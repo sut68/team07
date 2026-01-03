@@ -1,0 +1,60 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOST }}
+          username: azureuser
+          password: ${{ secrets.PASSWORD }}
+          script: |
+            # 1. เข้า folder
+            cd /home/azureuser/team07
+
+            # 2. บังคับ Code ให้ตรงกับ GitHub
+            git fetch --all
+            git reset --hard origin/main
+
+            # 3. สร้างไฟล์ .env
+            cat <<EOF > .env
+            # --- Database ---
+            DB_HOST=db
+            DB_PORT=5432
+            DB_USER=rattasat
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            DB_NAME=se_db
+
+            # --- Server ---
+            DOMAIN_NAME=capstonehub.me
+            
+            # --- JWT & Auth ---
+            SECRET_KEY=${{ secrets.SECRET_KEY }}
+            REFRESH_SECRET_KEY=${{ secrets.REFRESH_SECRET_KEY }}
+            ACCESS_TOKEN_TTL=4h
+            REFRESH_TOKEN_TTL=168h
+            RESET_TOKEN_TTL=8m
+            REFRESH_COOLDOWN=8s
+            COOKIE_DOMAIN=capstonehub.me
+
+            # --- Email ---
+            SMTP_SENDER_EMAIL=b6640583@g.sut.ac.th
+            SMTP_SENDER_NAME="Capstone Hub"
+            SMTP_HOST=smtp.sendgrid.net
+            SMTP_PORT=587
+            SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}
+            SMTP_USERNAME=apikey
+            EOF
+
+            # 4. Restart Container
+            docker compose down
+            docker compose up -d --build
+
+            # 5. ล้างขยะ
+            docker image prune -f

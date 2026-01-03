@@ -19,7 +19,6 @@ WORKDIR /app
 COPY --from=builder /goapp /app/goapp
 
 RUN mkdir -p /app/uploads
-RUN mkdir -p /app/chatsave
 
 EXPOSE 8080
 

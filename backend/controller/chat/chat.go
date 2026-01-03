@@ -16,6 +16,7 @@ import (
 	"path/filepath"
 	"os"
 	"io"
+	"strings"
 )
 
 const socketBroadcastBaseURL = "http://socket:3001"
@@ -51,8 +52,14 @@ func GetFile(c *gin.Context){
 
 	new := fmt.Sprintf("%d_%s", time.Now().Unix(), orn)
 
-	finalpath := filepath.Join("chatsave", new)
-	webPath := "/chatsave/" + new
+	// จากหนึ่ง ผมย้ายเอง ผมไม่รู้จะเอาไปนอก uploads ทำไม
+	if err := os.MkdirAll(filepath.Join("uploads", "chats"), os.ModePerm); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create directory"})
+		return
+	}
+
+	finalpath := filepath.Join("uploads", "chats", new)
+	webPath := "/uploads/chats/" + new
 
 	out, err := os.Create(finalpath)
 	if err != nil {
@@ -97,6 +104,13 @@ func GetAllChat(c *gin.Context) {
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error retrieving chats"})
 		return
+	}
+
+	// หนึ่ง แก้ path ของ chat image ที่เก่าที่เคยเก็บใน chatsave ให้มาเป็น uploads/chats แทน
+	for i := range chats {
+		if chats[i].ChatType == 2 && strings.HasPrefix(chats[i].Message, "/chatsave/") {
+			chats[i].Message = strings.Replace(chats[i].Message, "/chatsave/", "/uploads/chats/", 1)
+		}
 	}
 
 	log.InsertLog(c, 8)

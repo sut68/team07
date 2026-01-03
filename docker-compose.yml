@@ -73,7 +73,6 @@ services:
       - db
     volumes:
       - ./uploads:/app/uploads
-      - ./chatsave:/app/chatsave
     environment:
       DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}?sslmode=disable
       FRONTEND_URL: https://capstonehub.me
