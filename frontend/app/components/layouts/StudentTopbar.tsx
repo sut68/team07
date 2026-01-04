@@ -163,12 +163,6 @@ export default function StudentTopbar({ userRole, children }: { userRole: string
                         แชท
                     </Link>
                     <Link
-                        href="/student/appointment"
-                        className={`${styles.sidebarLink} ${isActive('/student/appointment') ? styles.sidebarLinkActive : ''}`}
-                    >
-                        การนัดหมาย
-                    </Link>
-                    <Link
                         href="/student/evaluation"
                         className={`${styles.sidebarLink} ${isActive('/student/evaluation') ? styles.sidebarLinkActive : ''}`}
                     >
@@ -190,7 +184,7 @@ export default function StudentTopbar({ userRole, children }: { userRole: string
                     <Link href="/student/dashboard" style={getNavStyle('/student/dashboard')}>หน้าหลัก</Link>
                     <Link href="/student/group" style={getNavStyle('/student/group')}>กลุ่มของฉัน</Link>
                     <Link href="/student/selectAdvisor" style={getNavStyle('/student/selectAdvisor')}>เลือกที่ปรึกษา</Link>
-                    <Link href="/student/topic" style={getNavStyle('/student/topic')}>หัวข้อโครงงาน</Link>
+                    <Link href="/student/topic" style={getNavStyle('/student/topic')}>โครงงานของฉัน</Link>
         
                 </nav>
 
@@ -202,7 +196,6 @@ export default function StudentTopbar({ userRole, children }: { userRole: string
                 {/* Desktop Navigation - Right (visible > 1400px) */}
                 <nav className={styles.navRight}>
                     <Link href="/student/chat" style={getNavStyle('/student/chat')}>แชท</Link>
-                    <Link href="/student/appointment" style={getNavStyle('/student/appointment')}>การนัดหมาย</Link>
                     <Link href="/student/evaluation" style={getNavStyle('/student/evaluation')}>การประเมิน</Link>
                     <Link href="/student/storage" style={getNavStyle('/student/storage')}>คลังโครงงาน</Link>
                 </nav>

@@ -133,13 +133,19 @@ func GetMyProject(c *gin.Context) {
 	}
 
 	groupID := member.GroupProjectID
+	fmt.Printf("DEBUG: Student ID: %d, Group ID: %d\n", claims.ID, groupID)
 
-	// ดึง TopicSelection
+	// ดึง TopicSelection (ไม่จำกัด status เพื่อให้หาได้ทุกกรณี)
 	var selection entity.TopicSelection
-	if err := db.Where("group_project_id = ?", groupID).First(&selection).Error; err != nil {
+	if err := db.Where("group_project_id = ?", groupID).
+		Order("created_at DESC").
+		First(&selection).Error; err != nil {
+		fmt.Printf("DEBUG: No TopicSelection found for group %d: %v\n", groupID, err)
 		c.JSON(http.StatusNotFound, gin.H{"error": "No topic selection found"})
 		return
 	}
+
+	fmt.Printf("DEBUG: Found TopicSelection ID: %d, Status: %s\n", selection.ID, selection.Status)
 
 	// ดึง Project
 	var project entity.Project
@@ -147,10 +153,12 @@ func GetMyProject(c *gin.Context) {
 		Preload("TopicSelection.GroupProject").
 		Where("selection_id = ?", selection.ID).
 		First(&project).Error; err != nil {
+		fmt.Printf("DEBUG: No Project found for selection_id %d: %v\n", selection.ID, err)
 		c.JSON(http.StatusNotFound, gin.H{"error": "No project information found"})
 		return
 	}
 
+	fmt.Printf("DEBUG: Found Project ID: %d, Title: %s\n", project.ID, project.Title)
 	c.JSON(http.StatusOK, gin.H{"data": project})
 }
 

@@ -8,6 +8,7 @@ import { getProjects } from '@/app/services/storage';
 const { Title, Text, Paragraph } = Typography;
 const { Search } = Input;
 import { Input } from 'antd';
+import '../../../style/evaluation.css';
 
 export default function StudentStoragePage() {
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -70,203 +71,217 @@ export default function StudentStoragePage() {
                 },
             }}
         >
-            <div style={{ padding: '0 24px', maxWidth: 1400, margin: '0 auto' }}>
-                <div style={{ marginBottom: 24 }}>
-                    <Title level={2} style={{ margin: 0, color: '#1f1f1f' }}>
-                        <BookOutlined style={{ marginRight: 10, color: '#F06522' }} />
-                        คลังโครงงาน
-                    </Title>
-                    <Text type="secondary">ค้นหาและศึกษาโครงงานที่ผ่านมาเพื่อใช้เป็นแนวทางในการทำโครงงาน</Text>
-                </div>
+            <div className="student-page">
+                <div className="student-container animate-fade-in">
+                    <div className="page-title-box">
+                        <h1>คลังโครงงาน</h1>
+                        <p>ค้นหาและศึกษาโครงงานที่ผ่านมาเพื่อใช้เป็นแนวทางในการทำโครงงาน</p>
+                    </div>
 
-                {/* Search and Filter Bar */}
-                <div style={{ marginBottom: 24, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-                    <Search
-                        placeholder="ค้นหาโครงงาน (ชื่อ, บทคัดย่อ, คำสำคัญ)"
-                        allowClear
-                        enterButton={<SearchOutlined />}
-                        size="large"
-                        onSearch={handleSearch}
-                        onChange={(e) => !e.target.value && setSearchKeyword('')}
-                        style={{ flex: 1, minWidth: 300, maxWidth: 500 }}
-                    />
-                    <Select
-                        placeholder="ปีการศึกษา"
-                        allowClear
-                        size="large"
-                        style={{ width: 200 }}
-                        options={[{ label: 'ทั้งหมด', value: undefined }, ...yearOptions]}
-                        onChange={handleYearChange}
-                        value={selectedYear}
-                    />
-                </div>
+                    {/* Search and Filter Bar */}
+                    <div style={{ marginBottom: 24, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                        <Search
+                            placeholder="ค้นหาโครงงาน (ชื่อ, บทคัดย่อ, คำสำคัญ)"
+                            allowClear
+                            enterButton={<SearchOutlined />}
+                            size="large"
+                            onSearch={handleSearch}
+                            onChange={(e) => !e.target.value && setSearchKeyword('')}
+                            style={{ flex: 1, minWidth: 300, maxWidth: 500 }}
+                        />
+                        <Select
+                            placeholder="ปีการศึกษา"
+                            allowClear
+                            size="large"
+                            style={{ width: 200 }}
+                            options={[{ label: 'ทั้งหมด', value: undefined }, ...yearOptions]}
+                            onChange={handleYearChange}
+                            value={selectedYear}
+                        />
+                    </div>
 
 
-                {/* Projects Grid */}
-                {filteredProjects.length === 0 && !loading ? (
-                    <Empty
-                        image={Empty.PRESENTED_IMAGE_SIMPLE}
-                        description="ไม่พบโครงงานที่ตรงกับเงื่อนไขการค้นหา"
-                    />
-                ) : (
-                    <Row gutter={[24, 24]}>
-                        {filteredProjects.map(project => (
-                            <Col xs={24} md={12} lg={8} key={project.ID}>
-                                <Card
-                                    hoverable
-                                    onClick={() => handleViewDetail(project)}
-                                    style={{
-                                        borderRadius: 12,
-                                        overflow: 'hidden',
-                                        border: '1px solid #f0f0f0',
-                                        height: '100%',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        transition: 'all 0.3s ease',
-                                        cursor: 'pointer'
-                                    }}
-                                    bodyStyle={{ padding: 24, flex: 1 }}
-                                    onMouseEnter={(e) => {
-                                        e.currentTarget.style.transform = 'translateY(-4px)';
-                                        e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.1)';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        e.currentTarget.style.transform = 'translateY(0)';
-                                        e.currentTarget.style.boxShadow = 'none';
-                                    }}
-                                >
-                                    <div style={{ marginBottom: 12 }}>
-                                        <Tag color="blue" icon={<CalendarOutlined />}>{project.year}</Tag>
-                                    </div>
-
-                                    <Title level={4} style={{ margin: '0 0 12px 0' }} ellipsis={{ rows: 2 }}>
-                                        {project.title}
-                                    </Title>
-
-                                    <Paragraph
-                                        ellipsis={{ rows: 3 }}
-                                        type="secondary"
-                                        style={{ marginBottom: 12, minHeight: 60 }}
+                    {/* Projects Grid */}
+                    {filteredProjects.length === 0 && !loading ? (
+                        <Empty
+                            image={Empty.PRESENTED_IMAGE_SIMPLE}
+                            description="ไม่พบโครงงานที่ตรงกับเงื่อนไขการค้นหา"
+                        />
+                    ) : (
+                        <Row gutter={[24, 24]}>
+                            {filteredProjects.map(project => (
+                                <Col xs={24} md={12} lg={8} key={project.ID}>
+                                    <Card
+                                        hoverable
+                                        onClick={() => handleViewDetail(project)}
+                                        style={{
+                                            borderRadius: 12,
+                                            overflow: 'hidden',
+                                            border: '1px solid #f0f0f0',
+                                            height: '100%',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            transition: 'all 0.3s ease',
+                                            cursor: 'pointer'
+                                        }}
+                                        styles={{ body: { padding: 24, flex: 1 } }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.transform = 'translateY(-4px)';
+                                            e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.1)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.transform = 'translateY(0)';
+                                            e.currentTarget.style.boxShadow = 'none';
+                                        }}
                                     >
-                                        {project.abstract}
-                                    </Paragraph>
+                                        <div style={{ marginBottom: 12 }}>
+                                            <Tag color="blue" icon={<CalendarOutlined />}>{project.year}</Tag>
+                                        </div>
 
-                                    <div style={{ marginBottom: 12 }}>
-                                        <Text type="secondary" style={{ fontSize: 12 }}>
-                                            <UserOutlined /> อาจารย์ที่ปรึกษา: {project.teacher?.firstname} {project.teacher?.lastname}
-                                        </Text>
-                                    </div>
+                                        <Title level={4} style={{ margin: '0 0 12px 0' }} ellipsis={{ rows: 2 }}>
+                                            {project.title}
+                                        </Title>
 
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                                        {project.keywords.split(',').slice(0, 3).map((keyword, idx) => (
-                                            <Tag key={idx} color="geekblue" style={{ fontSize: 11 }}>
-                                                {keyword.trim()}
-                                            </Tag>
-                                        ))}
-                                        {project.keywords.split(',').length > 3 && (
-                                            <Tag style={{ fontSize: 11 }}>+{project.keywords.split(',').length - 3}</Tag>
-                                        )}
-                                    </div>
-
-                                    <div style={{ marginTop: 16, textAlign: 'center' }}>
-                                        <Button type="link" size="small" icon={<FileTextOutlined />}>
-                                            ดูรายละเอียด
-                                        </Button>
-                                    </div>
-                                </Card>
-                            </Col>
-                        ))}
-                    </Row>
-                )}
-
-                {/* Detail Modal */}
-                <Modal
-                    title={
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                            <div style={{ background: '#e6f7ff', padding: 8, borderRadius: '50%', display: 'flex' }}>
-                                <BookOutlined style={{ color: '#1890ff', fontSize: 18 }} />
-                            </div>
-                            <span>รายละเอียดโครงงาน</span>
-                        </div>
-                    }
-                    open={isDetailModalOpen}
-                    onCancel={() => setIsDetailModalOpen(false)}
-                    footer={[
-                        <Button key="close" onClick={() => setIsDetailModalOpen(false)}>
-                            ปิด
-                        </Button>,
-                        <Button
-                            key="download"
-                            type="primary"
-                            icon={<DownloadOutlined />}
-                            onClick={handleDownload}
-                            style={{ background: '#52c41a', borderColor: '#52c41a' }}
-                        >
-                            ดาวน์โหลดรายงานฉบับสมบูรณ์
-                        </Button>
-                    ]}
-                    centered
-                    width={800}
-                >
-                    {selectedProject && (
-                        <div style={{ marginTop: 20 }}>
-                            <Title level={3} style={{ marginBottom: 24 }}>
-                                {selectedProject.title}
-                            </Title>
-
-                            <Descriptions bordered column={1} size="middle">
-                                <Descriptions.Item label="ปีการศึกษา">
-                                    <Tag color="blue" icon={<CalendarOutlined />}>{selectedProject.year}</Tag>
-                                </Descriptions.Item>
-                                <Descriptions.Item label="อาจารย์ที่ปรึกษา">
-                                    <Space>
-                                        <UserOutlined />
-                                        <Text>{selectedProject.teacher?.firstname} {selectedProject.teacher?.lastname}</Text>
-                                    </Space>
-                                </Descriptions.Item>
-                                <Descriptions.Item label="บทคัดย่อ">
-                                    <Paragraph style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
-                                        {selectedProject.abstract}
-                                    </Paragraph>
-                                </Descriptions.Item>
-                                <Descriptions.Item label="คำสำคัญ">
-                                    <Space wrap>
-                                        {selectedProject.keywords.split(',').map((keyword, idx) => (
-                                            <Tag key={idx} color="geekblue">{keyword.trim()}</Tag>
-                                        ))}
-                                    </Space>
-                                </Descriptions.Item>
-                                <Descriptions.Item label="ไฟล์รายงาน">
-                                    <Space>
-                                        <FileTextOutlined style={{ color: '#52c41a' }} />
-                                        <Text>{selectedProject.file_path}</Text>
-                                        <Button
-                                            type="link"
-                                            size="small"
-                                            icon={<DownloadOutlined />}
-                                            onClick={handleDownload}
+                                        <Paragraph
+                                            ellipsis={{ rows: 3 }}
+                                            type="secondary"
+                                            style={{ marginBottom: 12, minHeight: 60 }}
                                         >
-                                            ดาวน์โหลด
-                                        </Button>
-                                    </Space>
-                                </Descriptions.Item>
-                            </Descriptions>
+                                            {project.abstract}
+                                        </Paragraph>
 
-                            <div style={{
-                                marginTop: 24,
-                                padding: 16,
-                                background: '#f0f5ff',
-                                borderRadius: 8,
-                                border: '1px solid #adc6ff'
-                            }}>
-                                <Text type="secondary" style={{ fontSize: 13 }}>
-                                    💡 <strong>หมายเหตุ:</strong> โครงงานในคลังนี้เป็นผลงานที่ผ่านการอนุมัติและทำเสร็จสมบูรณ์แล้ว
-                                    สามารถใช้เป็นแนวทางในการศึกษาและพัฒนาโครงงานของคุณได้
-                                </Text>
-                            </div>
-                        </div>
+                                        <div style={{ marginBottom: 12 }}>
+                                            <Text type="secondary" style={{ fontSize: 12 }}>
+                                                <UserOutlined /> อาจารย์ที่ปรึกษา: {project.teacher?.firstname} {project.teacher?.lastname}
+                                            </Text>
+                                        </div>
+
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                                            {project.keywords.split(',').slice(0, 3).map((keyword, idx) => (
+                                                <Tag
+                                                    key={`${project.ID}-keyword-${idx}`}
+                                                    color="geekblue"
+                                                    style={{ fontSize: 11 }}
+                                                >
+                                                    {keyword.trim()}
+                                                </Tag>
+                                            ))}
+                                            {project.keywords.split(',').length > 3 && (
+                                                <Tag
+                                                    key={`${project.ID}-more`}
+                                                    style={{ fontSize: 11 }}
+                                                >
+                                                    +{project.keywords.split(',').length - 3}
+                                                </Tag>
+                                            )}
+                                        </div>
+
+                                        <div style={{ marginTop: 16, textAlign: 'center' }}>
+                                            <Button type="link" size="small" icon={<FileTextOutlined />}>
+                                                ดูรายละเอียด
+                                            </Button>
+                                        </div>
+                                    </Card>
+                                </Col>
+                            ))}
+                        </Row>
                     )}
-                </Modal>
+
+                    {/* Detail Modal */}
+                    <Modal
+                        title={
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                <div style={{ background: '#e6f7ff', padding: 8, borderRadius: '50%', display: 'flex' }}>
+                                    <BookOutlined style={{ color: '#1890ff', fontSize: 18 }} />
+                                </div>
+                                <span>รายละเอียดโครงงาน</span>
+                            </div>
+                        }
+                        open={isDetailModalOpen}
+                        onCancel={() => setIsDetailModalOpen(false)}
+                        footer={[
+                            <Button key="close" onClick={() => setIsDetailModalOpen(false)}>
+                                ปิด
+                            </Button>,
+                            <Button
+                                key="download"
+                                type="primary"
+                                icon={<DownloadOutlined />}
+                                onClick={handleDownload}
+                                style={{ background: '#52c41a', borderColor: '#52c41a' }}
+                            >
+                                ดาวน์โหลดรายงานฉบับสมบูรณ์
+                            </Button>
+                        ]}
+                        centered
+                        width={800}
+                    >
+                        {selectedProject && (
+                            <div style={{ marginTop: 20 }}>
+                                <Title level={3} style={{ marginBottom: 24 }}>
+                                    {selectedProject.title}
+                                </Title>
+
+                                <Descriptions bordered column={1} size="middle">
+                                    <Descriptions.Item label="ปีการศึกษา">
+                                        <Tag color="blue" icon={<CalendarOutlined />}>{selectedProject.year}</Tag>
+                                    </Descriptions.Item>
+                                    <Descriptions.Item label="อาจารย์ที่ปรึกษา">
+                                        <Space>
+                                            <UserOutlined />
+                                            <Text>{selectedProject.teacher?.firstname} {selectedProject.teacher?.lastname}</Text>
+                                        </Space>
+                                    </Descriptions.Item>
+                                    <Descriptions.Item label="บทคัดย่อ">
+                                        <Paragraph style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
+                                            {selectedProject.abstract}
+                                        </Paragraph>
+                                    </Descriptions.Item>
+                                    <Descriptions.Item label="คำสำคัญ">
+                                        <Space wrap>
+                                            {selectedProject.keywords.split(',').map((keyword) => (
+                                                <Tag
+                                                    key={`${selectedProject.ID}-${keyword.trim()}`}
+                                                    color="geekblue"
+                                                >
+                                                    {keyword.trim()}
+                                                </Tag>
+                                            ))}
+
+                                        </Space>
+                                    </Descriptions.Item>
+                                    <Descriptions.Item label="ไฟล์รายงาน">
+                                        <Space>
+                                            <FileTextOutlined style={{ color: '#52c41a' }} />
+                                            <Text>{selectedProject.file_path}</Text>
+                                            <Button
+                                                type="link"
+                                                size="small"
+                                                icon={<DownloadOutlined />}
+                                                onClick={handleDownload}
+                                            >
+                                                ดาวน์โหลด
+                                            </Button>
+                                        </Space>
+                                    </Descriptions.Item>
+                                </Descriptions>
+
+                                <div style={{
+                                    marginTop: 24,
+                                    padding: 16,
+                                    background: '#f0f5ff',
+                                    borderRadius: 8,
+                                    border: '1px solid #adc6ff'
+                                }}>
+                                    <Text type="secondary" style={{ fontSize: 13 }}>
+                                        💡 <strong>หมายเหตุ:</strong> โครงงานในคลังนี้เป็นผลงานที่ผ่านการอนุมัติและทำเสร็จสมบูรณ์แล้ว
+                                        สามารถใช้เป็นแนวทางในการศึกษาและพัฒนาโครงงานของคุณได้
+                                    </Text>
+                                </div>
+                            </div>
+                        )}
+                    </Modal>
+                </div>
             </div>
         </ConfigProvider>
     );

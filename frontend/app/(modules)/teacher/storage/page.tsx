@@ -6,6 +6,7 @@ import { PlusOutlined, DeleteOutlined, EditOutlined, BookOutlined, FileTextOutli
 import { ProjectStorage } from '@/app/interfaces/storage';
 import { getProjects, createProject, updateProject, deleteProject } from '@/app/services/storage';
 import type { ColumnsType } from 'antd/es/table';
+import '../../../style/evaluation.css';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -251,12 +252,9 @@ export default function TeacherStoragePage() {
             }}
         >
             <div style={{ padding: '0 24px', maxWidth: 1600, margin: '0 auto' }}>
-                <div style={{ marginBottom: 24 }}>
-                    <Title level={2} style={{ margin: 0, color: '#1f1f1f' }}>
-                        <BookOutlined style={{ marginRight: 10, color: '#8A011D' }} />
-                        คลังโครงงาน
-                    </Title>
-                    <Text type="secondary">จัดการและเผยแพร่โครงงานที่ทำเสร็จแล้วของนักศึกษา</Text>
+                <div className="page-title-box">
+                    <h1>คลังโครงงาน</h1>
+                    <p>จัดการและเผยแพร่โครงงานที่ทำเสร็จแล้วของนักศึกษา</p>
                 </div>
 
                 {/* Search and Filter Bar */}
