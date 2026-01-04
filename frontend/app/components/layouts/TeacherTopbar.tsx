@@ -4,35 +4,35 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { Dropdown, Avatar, Modal } from 'antd';
-import { DownOutlined, UserOutlined, ExclamationCircleOutlined, LogoutOutlined, NotificationOutlined, BellOutlined } from '@ant-design/icons';
+import { DownOutlined, UserOutlined, ExclamationCircleOutlined, LogoutOutlined, NotificationOutlined, BellOutlined, MenuOutlined } from '@ant-design/icons';
 import { GetUserProfile } from '../../services/user';
 import { Logout } from '../../services/login';
 import { useAuth } from "../../(modules)/roleCheck/authContext";
 import NewsModal from '../news/NewsModal';
-import NotificationBell from '../notification/NotificationBell';
-import ReportIssueContent from '../issue/issueReport';
+import styles from './TeacherLayout.module.css';
 
 export default function TeacherTopbar({ userRole, children }: { userRole: string; children?: React.ReactNode }) {
-    const topbarHeight = 72;
     const router = useRouter();
     const pathname = usePathname() || '';
 
     const [isNewsModalOpen, setIsNewsModalOpen] = useState(false);
-
-    const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [userInitial, setUserInitial] = useState("?");
     const { logoutClient } = useAuth();
+
+    const isActive = (href: string): boolean => {
+        return pathname === href || (href !== '/' && pathname.startsWith(href));
+    };
 
     const navLinkStyle: React.CSSProperties = { color: 'rgba(255,255,255,0.95)', textDecoration: 'none', fontWeight: 700 };
 
     const getNavStyle = (href: string): React.CSSProperties => {
-        const isActive = pathname === href || (href !== '/' && pathname.startsWith(href));
+        const active = isActive(href);
         return {
             ...navLinkStyle,
             color: navLinkStyle.color,
-            paddingBottom: isActive ? 6 : 0,
-            borderBottom: isActive ? '3px solid #ffffffff' : '3px solid transparent',
+            paddingBottom: active ? 6 : 0,
+            borderBottom: active ? '3px solid #ffffffff' : '3px solid transparent',
             transition: 'border-color 150ms ease, padding-bottom 150ms ease',
         };
     };
@@ -41,7 +41,7 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
         {
             key: 'profile',
             icon: <UserOutlined />,
-            label: <Link href="/teacher/profile" style={{ color: 'inherit' }}>โปรไฟล์ของฉัน</Link>,
+            label: <Link href="/profile" style={{ color: 'inherit' }}>โปรไฟล์ของฉัน</Link>,
         },
         {
             key: 'create_news',
@@ -51,7 +51,7 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
         {
             key: 'report',
             icon: <ExclamationCircleOutlined />,
-            label: 'รายงานปัญหา',
+            label: <Link href="/teacher/issueReport" style={{ color: 'inherit' }}>รายงานปัญหา</Link>,
         },
         {
             key: 'logout',
@@ -74,7 +74,7 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
         if (key === 'logout') {
             Modal.confirm({
                 title: 'ยืนยันการออกจากระบบ',
-                icon: <ExclamationCircleOutlined/>,
+                icon: <ExclamationCircleOutlined />,
                 content: 'คุณต้องการออกจากระบบใช่หรือไม่?',
                 okText: 'ยืนยัน',
                 cancelText: 'ยกเลิก',
@@ -82,9 +82,6 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
             });
         } else if (key === 'create_news') {
             setIsNewsModalOpen(true);
-        } else if (key === 'report') {
-            // สั่งเปิด Modal เมื่อกดปุ่มรายงานปัญหา
-            setIsReportModalOpen(true);
         }
     };
 
@@ -105,67 +102,110 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
     }, []);
 
     return (
-        <div style={{ fontFamily: "'Noto Sans Thai', sans-serif", minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-
+        <div className={styles.layoutContainer}>
             <NewsModal
                 isOpen={isNewsModalOpen}
                 onClose={() => setIsNewsModalOpen(false)}
             />
 
-            <Modal
-                title={
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <ExclamationCircleOutlined style={{ color: '#8A011D' }} /> 
-                        แจ้งปัญหาการใช้งาน / ติดตามสถานะ
-                    </div>
-                }
-                open={isReportModalOpen}
-                onCancel={() => setIsReportModalOpen(false)}
-                footer={null}
-                width={700}
-                centered
-                destroyOnHidden
+            {/* Hamburger Toggle Button - Visible on screens <= 1400px */}
+            <button
+                className={`${styles.hamburgerButton} ${!isSidebarCollapsed ? styles.hamburgerButtonHidden : ''}`}
+                onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                aria-label="Toggle sidebar"
             >
-                {/* เรียกใช้ Component ตัวเดียวกับที่ใช้ใน NotificationBell */}
-                <ReportIssueContent/>
-            </Modal>
+                <MenuOutlined />
+            </button>
 
-            <header
-                style={{
-                    height: topbarHeight,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '0 24px',
-                    background: 'linear-gradient(100deg, #8A011D 0%, #7F666B 100%)',
-                    color: '#fff',
-                    position: 'relative',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-                    zIndex: 100,
-                }}
-            >
-                <nav style={{ position: 'absolute', left: 120, display: 'flex', gap: 40, alignItems: 'center' }}>
+            {/* Sidebar - Visible on screens <= 1400px */}
+            <aside className={`${styles.sidebar} ${isSidebarCollapsed ? styles.sidebarCollapsed : ''}`}>
+                {/* Close Button */}
+                <button
+                    className={styles.sidebarCloseButton}
+                    onClick={() => setIsSidebarCollapsed(true)}
+                    aria-label="Close sidebar"
+                >
+                    ✕
+                </button>
+
+                <nav className={styles.sidebarNav}>
+                    <Link
+                        href="/teacher/dashboard"
+                        className={`${styles.sidebarLink} ${isActive('/teacher/dashboard') ? styles.sidebarLinkActive : ''}`}
+                    >
+                        หน้าหลัก
+                    </Link>
+                    <Link
+                        href="/teacher/group"
+                        className={`${styles.sidebarLink} ${isActive('/teacher/group') ? styles.sidebarLinkActive : ''}`}
+                    >
+                        กลุ่มในที่ปรึกษา
+                    </Link>
+                    <Link
+                        href="/teacher/topic"
+                        className={`${styles.sidebarLink} ${isActive('/teacher/topic') ? styles.sidebarLinkActive : ''}`}
+                    >
+                        หัวข้อโครงงาน
+                    </Link>
+                    <Link
+                        href="/teacher/progress"
+                        className={`${styles.sidebarLink} ${isActive('/teacher/progress') ? styles.sidebarLinkActive : ''}`}
+                    >
+                        ความคืบหน้า
+                    </Link>
+                    <Link
+                        href="/teacher/chat"
+                        className={`${styles.sidebarLink} ${isActive('/teacher/chat') ? styles.sidebarLinkActive : ''}`}
+                    >
+                        แชท
+                    </Link>
+                    <Link
+                        href="/teacher/appointment"
+                        className={`${styles.sidebarLink} ${isActive('/teacher/appointment') ? styles.sidebarLinkActive : ''}`}
+                    >
+                        การนัดหมาย
+                    </Link>
+                    <Link
+                        href="/teacher/evaluation"
+                        className={`${styles.sidebarLink} ${isActive('/teacher/evaluation') ? styles.sidebarLinkActive : ''}`}
+                    >
+                        การประเมิน
+                    </Link>
+                    <Link
+                        href="/teacher/storage"
+                        className={`${styles.sidebarLink} ${isActive('/teacher/storage') ? styles.sidebarLinkActive : ''}`}
+                    >
+                        คลังโครงงาน
+                    </Link>
+                </nav>
+            </aside>
+
+            {/* Header - Layout changes based on screen size */}
+            <header className={`${styles.header} ${isSidebarCollapsed ? styles.headerCollapsed : ''}`}>
+                {/* Desktop Navigation - Left (visible > 1400px) */}
+                <nav className={styles.navLeft}>
                     <Link href="/teacher/dashboard" style={getNavStyle('/teacher/dashboard')}>หน้าหลัก</Link>
                     <Link href="/teacher/group" style={getNavStyle('/teacher/group')}>กลุ่มในที่ปรึกษา</Link>
                     <Link href="/teacher/topic" style={getNavStyle('/teacher/topic')}>หัวข้อโครงงาน</Link>
                     <Link href="/teacher/progress" style={getNavStyle('/teacher/progress')}>ความคืบหน้า</Link>
                 </nav>
 
-                <Link href="/teacher/dashboard" className="topbar-logo" style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+                {/* Logo - Centered */}
+                <Link href="/teacher/dashboard" className={styles.logoContainer}>
                     <Image src="/image/logo1.png" alt="SUT" width={90} height={38} priority />
                 </Link>
 
-                <div style={{ position: 'absolute', right: 200, display: 'flex', gap: 40, alignItems: 'center' }}>
+                {/* Desktop Navigation - Right (visible > 1400px) */}
+                <nav className={styles.navRight}>
                     <Link href="/teacher/chat" style={getNavStyle('/teacher/chat')}>แชท</Link>
                     <Link href="/teacher/appointment" style={getNavStyle('/teacher/appointment')}>การนัดหมาย</Link>
                     <Link href="/teacher/evaluation" style={getNavStyle('/teacher/evaluation')}>การประเมิน</Link>
                     <Link href="/teacher/storage" style={getNavStyle('/teacher/storage')}>คลังโครงงาน</Link>
-                </div>
+                </nav>
 
-                <div style={{ position: 'absolute', right: 30, display: 'flex', alignItems: 'center', gap: 16 }}>
-
-                    <NotificationBell />
-
+                {/* User Actions - Always visible */}
+                <div className={styles.userActions}>
+                    <BellOutlined className={styles.bellIcon} />
                     <Dropdown
                         menu={{ items: menuItems, onClick: onMenuClick }}
                         placement="bottomRight"
@@ -176,7 +216,7 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
                             </div>
                         )}
                     >
-                        <a onClick={(e) => e.preventDefault()} style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#fff' }}>
+                        <a onClick={(e) => e.preventDefault()} style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#fff', cursor: 'pointer' }}>
                             <Avatar size="large" style={{ backgroundColor: '#fff', color: '#8A011D', fontWeight: 700 }}>{userInitial}</Avatar>
                             <DownOutlined style={{ color: '#fff' }} />
                         </a>
@@ -184,7 +224,8 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
                 </div>
             </header>
 
-            <main style={{ padding: 20, paddingTop: 30, flexGrow: 1 }}>
+            {/* Main Content */}
+            <main className={`${styles.mainContent} ${isSidebarCollapsed ? styles.mainContentCollapsed : ''}`}>
                 {children}
             </main>
         </div>

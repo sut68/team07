@@ -5,14 +5,12 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { Dropdown, Avatar, Modal } from 'antd';
-import { DownOutlined, UserOutlined, ExclamationCircleOutlined, LogoutOutlined } from '@ant-design/icons';
+import { DownOutlined, UserOutlined, ExclamationCircleOutlined, LogoutOutlined, BellOutlined, MenuOutlined } from '@ant-design/icons';
 import { Logout } from '../../services/login';
 import { useAuth } from "../../(modules)/roleCheck/authContext";
-import NotificationBell from '../notification/NotificationBell';
-import ReportIssueContent from '../issue/issueReport';
+import styles from './StudentLayout.module.css';
 
-export default function StudentTopbar({ children }: { userRole: string; children?: React.ReactNode }) {
-    const topbarHeight = 72;
+export default function StudentTopbar({ userRole, children }: { userRole: string; children?: React.ReactNode }) {
     const router = useRouter();
     const { logoutClient } = useAuth();
 
@@ -20,6 +18,12 @@ export default function StudentTopbar({ children }: { userRole: string; children
 
     // --- State Declarations (ประกาศตัวแปร State ไว้บนสุด) ---
     const [userInitial, setUserInitial] = useState("?");
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+    const pathname = usePathname() || '';
+
+    const isActive = (href: string): boolean => {
+        return pathname === href || (href !== '/' && pathname.startsWith(href));
+    };
 
     // --- Effects ---
     useEffect(() => {
@@ -43,20 +47,18 @@ export default function StudentTopbar({ children }: { userRole: string; children
 
     // --- Styles ---
     const navLinkStyle: React.CSSProperties = { color: 'rgba(255,255,255,0.95)', textDecoration: 'none', fontWeight: 700 };
-    const pathname = usePathname() || '';
 
     const getNavStyle = (href: string): React.CSSProperties => {
-        const isActive = pathname === href || (href !== '/' && pathname.startsWith(href));
+        const active = isActive(href);
         return {
             ...navLinkStyle,
             color: navLinkStyle.color,
-            paddingBottom: isActive ? 6 : 0,
-            borderBottom: isActive ? '3px solid #ffffffff' : '3px solid transparent',
+            paddingBottom: active ? 6 : 0,
+            borderBottom: active ? '3px solid #ffffffff' : '3px solid transparent',
             transition: 'border-color 150ms ease, padding-bottom 150ms ease',
         };
     };
 
-    // --- Handlers ---
     const handleLogout = async () => {
         try {
             await Logout();
@@ -102,69 +104,105 @@ export default function StudentTopbar({ children }: { userRole: string; children
     };
 
     return (
-        <div
-            style={{
-                fontFamily: "'Noto Sans Thai', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', sans-serif",
-                minHeight: '100vh',
-                display: 'flex',
-                flexDirection: 'column',
-            }}
-        >
-
-            <Modal
-                title={
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <ExclamationCircleOutlined style={{ color: '#8A011D' }} />
-                        แจ้งปัญหาการใช้งาน / ติดตามสถานะ
-                    </div>
-                }
-                open={isReportModalOpen}
-                onCancel={() => setIsReportModalOpen(false)}
-                footer={null}
-                width={700}
-                centered
-                destroyOnHidden
+        <div className={styles.layoutContainer}>
+            {/* Hamburger Toggle Button - Visible on screens <= 1400px */}
+            <button
+                className={`${styles.hamburgerButton} ${!isSidebarCollapsed ? styles.hamburgerButtonHidden : ''}`}
+                onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                aria-label="Toggle sidebar"
             >
-                {/* เรียกใช้ Component ตัวเดียวกับที่ใช้ใน NotificationBell */}
-                <ReportIssueContent />
-            </Modal>
+                <MenuOutlined />
+            </button>
 
-            <header
-                style={{
-                    height: topbarHeight,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '0 24px',
-                    background: 'linear-gradient(100deg, #8A011D 0%, #7F666B 100%)',
-                    color: '#fff',
-                    position: 'relative',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-                    zIndex: 100,
-                }}
-                role="banner"
-            >
-                <nav style={{ position: 'absolute', left: 100, display: 'flex', gap: 40, alignItems: 'center' }}>
+            {/* Sidebar - Visible on screens <= 1400px */}
+            <aside className={`${styles.sidebar} ${isSidebarCollapsed ? styles.sidebarCollapsed : ''}`}>
+                {/* Close Button */}
+                <button
+                    className={styles.sidebarCloseButton}
+                    onClick={() => setIsSidebarCollapsed(true)}
+                    aria-label="Close sidebar"
+                >
+                    ✕
+                </button>
+
+                <nav className={styles.sidebarNav}>
+                    <Link
+                        href="/student/dashboard"
+                        className={`${styles.sidebarLink} ${isActive('/student/dashboard') ? styles.sidebarLinkActive : ''}`}
+                    >
+                        หน้าหลัก
+                    </Link>
+                    <Link
+                        href="/student/group"
+                        className={`${styles.sidebarLink} ${isActive('/student/group') ? styles.sidebarLinkActive : ''}`}
+                    >
+                        กลุ่มของฉัน
+                    </Link>
+                    <Link
+                        href="/student/selectAdvisor"
+                        className={`${styles.sidebarLink} ${isActive('/student/selectAdvisor') ? styles.sidebarLinkActive : ''}`}
+                    >
+                        เลือกที่ปรึกษา
+                    </Link>
+                    <Link
+                        href="/student/topic"
+                        className={`${styles.sidebarLink} ${isActive('/student/topic') ? styles.sidebarLinkActive : ''}`}
+                    >
+                        หัวข้อโครงงาน
+                    </Link>
+                    <Link
+                        href="/student/progress"
+                        className={`${styles.sidebarLink} ${isActive('/student/progress') ? styles.sidebarLinkActive : ''}`}
+                    >
+                        ความคืบหน้า
+                    </Link>
+                    <Link
+                        href="/student/chat"
+                        className={`${styles.sidebarLink} ${isActive('/student/chat') ? styles.sidebarLinkActive : ''}`}
+                    >
+                        แชท
+                    </Link>
+                    <Link
+                        href="/student/evaluation"
+                        className={`${styles.sidebarLink} ${isActive('/student/evaluation') ? styles.sidebarLinkActive : ''}`}
+                    >
+                        การประเมิน
+                    </Link>
+                    <Link
+                        href="/student/storage"
+                        className={`${styles.sidebarLink} ${isActive('/student/storage') ? styles.sidebarLinkActive : ''}`}
+                    >
+                        คลังโครงงาน
+                    </Link>
+                </nav>
+            </aside>
+
+            {/* Header - Layout changes based on screen size */}
+            <header className={`${styles.header} ${isSidebarCollapsed ? styles.headerCollapsed : ''}`} role="banner">
+                {/* Desktop Navigation - Left (visible > 1400px) */}
+                <nav className={styles.navLeft}>
                     <Link href="/student/dashboard" style={getNavStyle('/student/dashboard')}>หน้าหลัก</Link>
                     <Link href="/student/group" style={getNavStyle('/student/group')}>กลุ่มของฉัน</Link>
                     <Link href="/student/selectAdvisor" style={getNavStyle('/student/selectAdvisor')}>เลือกที่ปรึกษา</Link>
-                    <Link href="/student/topic" style={getNavStyle('/student/topic')}>หัวข้อโครงงาน</Link>
+                    <Link href="/student/topic" style={getNavStyle('/student/topic')}>โครงงานของฉัน</Link>
         
                 </nav>
 
-                <Link href="/student/dashboard" aria-label="หน้าหลัก" className="topbar-logo" style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+                {/* Logo - Centered */}
+                <Link href="/student/dashboard" aria-label="หน้าหลัก" className={styles.logoContainer}>
                     <Image src="/image/logo1.png" alt="SUT" width={90} height={38} priority />
                 </Link>
-                <div style={{ position: 'absolute', right: 200, display: 'flex', gap: 40, alignItems: 'center' }}>
-                    <Link href="/student/progress" style={getNavStyle('/student/progress')}>ความคืบหน้า</Link>
+
+                {/* Desktop Navigation - Right (visible > 1400px) */}
+                <nav className={styles.navRight}>
                     <Link href="/student/chat" style={getNavStyle('/student/chat')}>แชท</Link>
-                    <Link href="/student/exam" style={getNavStyle('/student/exam')}>เกี่ยวกับสอบ</Link>
+                    <Link href="/student/evaluation" style={getNavStyle('/student/evaluation')}>การประเมิน</Link>
                     <Link href="/student/storage" style={getNavStyle('/student/storage')}>คลังโครงงาน</Link>
-                </div>
-                <div style={{ position: 'absolute', right: 30, display: 'flex', alignItems: 'center', gap: 16 }}>
+                </nav>
 
-                    <NotificationBell />
-
+                {/* User Actions - Always visible */}
+                <div className={styles.userActions}>
+                    <BellOutlined className={styles.bellIcon} />
                     <Dropdown
                         menu={{ items: menuItems, onClick: onMenuClick }}
                         placement="bottomRight"
@@ -175,14 +213,16 @@ export default function StudentTopbar({ children }: { userRole: string; children
                             </div>
                         )}
                     >
-                        <a onClick={(e) => e.preventDefault()} style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#fff' }}>
+                        <a onClick={(e) => e.preventDefault()} style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#fff', cursor: 'pointer' }}>
                             <Avatar size="large" style={{ backgroundColor: '#fff', color: '#8A011D', fontWeight: 700 }}>{userInitial}</Avatar>
                             <DownOutlined style={{ color: '#fff' }} />
                         </a>
                     </Dropdown>
                 </div>
             </header>
-            <main style={{ padding: 20, paddingTop: 30, flexGrow: 1 }}>
+
+            {/* Main Content */}
+            <main className={`${styles.mainContent} ${isSidebarCollapsed ? styles.mainContentCollapsed : ''}`}>
                 {children}
             </main>
         </div>

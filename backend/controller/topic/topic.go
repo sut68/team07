@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sut68/team07/backend/entity"
 	"github.com/sut68/team07/backend/database"
+	"github.com/sut68/team07/backend/middleware"
 )
 
 // POST /topics
@@ -23,13 +24,6 @@ func CreateTopic(c *gin.Context) {
 	topic.Description = c.PostForm("description")
 	topic.ProposerRole = c.PostForm("proposer_role")
 
-	if teacherIDStr := c.PostForm("teacher_id"); teacherIDStr != "" {
-		if id, err := strconv.ParseUint(teacherIDStr, 10, 32); err == nil {
-			uid := uint(id)
-			topic.TeacherID = &uid
-		}
-	}
-
 	if groupIDStr := c.PostForm("group_project_id"); groupIDStr != "" {
 		if id, err := strconv.ParseUint(groupIDStr, 10, 32); err == nil {
 			uid := uint(id)
@@ -41,6 +35,14 @@ func CreateTopic(c *gin.Context) {
 	switch topic.ProposerRole {
 	case "Teacher":
 		topic.Status = "Approved"
+		
+		// Get teacher_id from authenticated user
+		claims, err := middleware.GetClaimsFromContext(c)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+			return
+		}
+		topic.TeacherID = &claims.ID
 
 	case "Student":
 		topic.Status = "Pending"

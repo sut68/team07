@@ -1,10 +1,12 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Typography, Modal, Form, Input, Tag, Space, message, ConfigProvider, Select, Descriptions } from 'antd';
-import { PlusOutlined, DeleteOutlined, EditOutlined, BookOutlined, FileTextOutlined, UserOutlined, CalendarOutlined, DownloadOutlined, EyeOutlined, SearchOutlined } from '@ant-design/icons';
-import { ProjectStorage } from '@/app/interfaces/Repository';
-import { getProjects, createProject, updateProject, deleteProject } from '@/app/services/repository';
+import { Table, Button, Typography, Modal, Form, Input, Tag, Space, message, ConfigProvider, Select, Descriptions, Upload } from 'antd';
+import type { UploadFile } from 'antd';
+import { PlusOutlined, DeleteOutlined, EditOutlined, BookOutlined, FileTextOutlined, UserOutlined, CalendarOutlined, DownloadOutlined, EyeOutlined, SearchOutlined, UploadOutlined } from '@ant-design/icons';
+import { ProjectStorage } from '@/app/interfaces/storage';
+import { getProjects, createProject, updateProject, deleteProject } from '@/app/services/storage';
 import type { ColumnsType } from 'antd/es/table';
+import '../../../style/evaluation.css';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -18,6 +20,7 @@ export default function TeacherStoragePage() {
     const [form] = Form.useForm();
 
     const [projects, setProjects] = useState<ProjectStorage[]>([]);
+    const [fileList, setFileList] = useState<UploadFile[]>([]);
     const [filteredProjects, setFilteredProjects] = useState<ProjectStorage[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchKeyword, setSearchKeyword] = useState('');
@@ -26,7 +29,7 @@ export default function TeacherStoragePage() {
     const fetchProjects = async () => {
         setLoading(true);
         try {
-            const res = await getProjects({ year: selectedYear, keyword: searchKeyword });
+            const res = await getProjects({ year: selectedYear, keyword: searchKeyword, role: 'Teacher' });
             setProjects(res.data);
             setFilteredProjects(res.data);
         } catch (error) {
@@ -61,22 +64,33 @@ export default function TeacherStoragePage() {
         setIsModalOpen(false);
         setEditingProject(null);
         form.resetFields();
+        setFileList([]);
     };
 
     const handleSubmit = async (values: any) => {
         try {
+            // Validate file upload
+            if (!editingProject && fileList.length === 0) {
+                message.error('กรุณาอัปโหลดไฟล์รายงาน');
+                return;
+            }
+
             const formData = new FormData();
             formData.append('title', values.title);
             formData.append('abstract', values.abstract);
             formData.append('keywords', values.keywords);
             formData.append('year', values.year.toString());
-            formData.append('teacher_id', '1'); // Mock teacher ID
+
+            // Append file if exists
+            if (fileList.length > 0 && fileList[0].originFileObj) {
+                formData.append('file', fileList[0].originFileObj);
+            }
 
             if (editingProject) {
-                await updateProject(editingProject.ID, formData);
+                await updateProject(editingProject.ID, formData, 'Teacher');
                 message.success('แก้ไขโครงงานเรียบร้อยแล้ว');
             } else {
-                await createProject(formData);
+                await createProject(formData, 'Teacher');
                 message.success('เพิ่มโครงงานเรียบร้อยแล้ว');
             }
             handleCloseModal();
@@ -96,7 +110,7 @@ export default function TeacherStoragePage() {
             cancelText: 'ยกเลิก',
             onOk: async () => {
                 try {
-                    await deleteProject(id);
+                    await deleteProject(id, 'Teacher');
                     message.success('ลบโครงงานเรียบร้อยแล้ว');
                     fetchProjects();
                 } catch (error) {
@@ -164,7 +178,7 @@ export default function TeacherStoragePage() {
             render: (teacher: any) => (
                 <Space>
                     <UserOutlined />
-                    <Text>{teacher?.first_name} {teacher?.last_name}</Text>
+                    <Text>{teacher?.firstname} {teacher?.lastname}</Text>
                 </Space>
             ),
         },
@@ -238,12 +252,9 @@ export default function TeacherStoragePage() {
             }}
         >
             <div style={{ padding: '0 24px', maxWidth: 1600, margin: '0 auto' }}>
-                <div style={{ marginBottom: 24 }}>
-                    <Title level={2} style={{ margin: 0, color: '#1f1f1f' }}>
-                        <BookOutlined style={{ marginRight: 10, color: '#8A011D' }} />
-                        คลังโครงงาน
-                    </Title>
-                    <Text type="secondary">จัดการและเผยแพร่โครงงานที่ทำเสร็จแล้วของนักศึกษา</Text>
+                <div className="page-title-box">
+                    <h1>คลังโครงงาน</h1>
+                    <p>จัดการและเผยแพร่โครงงานที่ทำเสร็จแล้วของนักศึกษา</p>
                 </div>
 
                 {/* Search and Filter Bar */}
@@ -278,7 +289,7 @@ export default function TeacherStoragePage() {
                             borderColor: '#852d3fff',
                         }}
                     >
-                        เพิ่มโครงงาน
+                        <b>เพิ่มโครงงาน</b>
                     </Button>
                 </div>
 
@@ -332,7 +343,7 @@ export default function TeacherStoragePage() {
                             label="ชื่อโครงงาน"
                             rules={[{ required: true, message: 'กรุณากรอกชื่อโครงงาน' }]}
                         >
-                            <Input placeholder="เช่น ระบบจัดการโครงงานนักศึกษา" size="large" />
+                            <Input placeholder="เช่น ระบบจัดการโครงงานนักศึกษา" />
                         </Form.Item>
 
                         <Form.Item
@@ -349,7 +360,7 @@ export default function TeacherStoragePage() {
                             rules={[{ required: true, message: 'กรุณากรอกคำสำคัญ' }]}
                             extra="แยกคำสำคัญด้วยเครื่องหมายจุลภาค (,)"
                         >
-                            <Input placeholder="เช่น web application, project management, student" size="large" />
+                            <Input placeholder="เช่น web application, project management, student" />
                         </Form.Item>
 
                         <Form.Item
@@ -359,9 +370,38 @@ export default function TeacherStoragePage() {
                         >
                             <Select
                                 placeholder="เลือกปีการศึกษา"
-                                size="large"
                                 options={yearOptions}
                             />
+                        </Form.Item>
+
+                        <Form.Item
+                            label="ไฟล์รายงานโครงงาน"
+                            required={!editingProject}
+                            extra="รองรับไฟล์ PDF เท่านั้น (ขนาดไม่เกิน 10MB)"
+                        >
+                            <Upload
+                                fileList={fileList}
+                                onChange={({ fileList }) => setFileList(fileList)}
+                                beforeUpload={(file) => {
+                                    const isPDF = file.type === 'application/pdf';
+                                    if (!isPDF) {
+                                        message.error('กรุณาอัปโหลดไฟล์ PDF เท่านั้น');
+                                        return Upload.LIST_IGNORE;
+                                    }
+                                    const isLt10M = file.size / 1024 / 1024 < 10;
+                                    if (!isLt10M) {
+                                        message.error('ไฟล์ต้องมีขนาดไม่เกิน 10MB');
+                                        return Upload.LIST_IGNORE;
+                                    }
+                                    return false; // Prevent auto upload
+                                }}
+                                maxCount={1}
+                                accept=".pdf"
+                            >
+                                <Button icon={<UploadOutlined />}>
+                                    เลือกไฟล์ PDF
+                                </Button>
+                            </Upload>
                         </Form.Item>
 
                         <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
@@ -409,7 +449,7 @@ export default function TeacherStoragePage() {
                                 <Descriptions.Item label="อาจารย์ที่ปรึกษา">
                                     <Space>
                                         <UserOutlined />
-                                        <Text>{selectedProject.teacher?.first_name} {selectedProject.teacher?.last_name}</Text>
+                                        <Text>{selectedProject.teacher?.firstname} {selectedProject.teacher?.lastname}</Text>
                                     </Space>
                                 </Descriptions.Item>
                                 <Descriptions.Item label="บทคัดย่อ">

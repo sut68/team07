@@ -6,6 +6,7 @@ import '../../../style/appointment.css';
 import NewsList from '../../../components/news/NewsList';
 import { useAuth } from '../../roleCheck/authContext';
 import StudentAppointmentSliderSection from '../../../components/dashboard/studentAppointmentSliderSection';
+import StudentStorage from '../../../components/dashboard/studentStorage';
 
 export default function StudentDashboardPage() {
     const { user } = useAuth();
@@ -35,8 +36,7 @@ export default function StudentDashboardPage() {
 
                 {/* โครงงาน (Bottom) */}
                 <div className="section bottom-right">
-                    <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '16px' }}>โครงงานของ Jornor</h2>
-                    
+                    <StudentStorage />
                 </div>
 
             </div>

@@ -1,31 +1,40 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Typography, Row, Col, Modal, Form, Input, Tag, Space, Empty, message, ConfigProvider, Tabs, Steps, Upload, Tooltip } from 'antd';
-import { ProjectOutlined, SendOutlined, TeamOutlined, FileTextOutlined, CheckCircleOutlined, ExclamationCircleOutlined, ClockCircleOutlined, CloseCircleOutlined, UploadOutlined, EyeOutlined, PaperClipOutlined, PlusOutlined } from '@ant-design/icons';
+import { Card, Button, Typography, Modal, Form, Input, Tag, Space, message, Upload, Tooltip, Row, Col } from 'antd';
+import { ProjectOutlined, SendOutlined, FileTextOutlined, CheckCircleOutlined, ExclamationCircleOutlined, ClockCircleOutlined, CloseCircleOutlined, UploadOutlined, PlusOutlined, BookOutlined, EditOutlined } from '@ant-design/icons';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Topic, TopicApproval } from '@/app/interfaces/Topic';
 import { getTopics, createTopic, updateTopic, selectTopic, cancelSelection, getStudentTopic } from '@/app/services/topic';
 import { GetMyGroup } from '@/app/services/group';
 import { GetMe } from '@/app/services/login';
+import { CreateProject, GetMyProject, UpdateProject } from '@/app/services/project';
+import '../../../style/evaluation.css';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
 
 export default function StudentTopicPage() {
     const [form] = Form.useForm();
-    const [activeTab, setActiveTab] = useState('1');
+    const [projectForm] = Form.useForm();
+    const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [studentID, setStudentID] = useState<number | null>(null);
     const [groupID, setGroupID] = useState<number | null>(null);
     const [advisorID, setAdvisorID] = useState<number | null>(null);
+    const [groupYear, setGroupYear] = useState<number | null>(null);
 
     // Data States
     const [availableTopics, setAvailableTopics] = useState<Topic[]>([]);
     const [myTopic, setMyTopic] = useState<Topic | null>(null);
+    const [myProject, setMyProject] = useState<any>(null);
 
-    // View Details State
-    const [viewTopic, setViewTopic] = useState<Topic | null>(null);
-    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    // Modal States
+    const [isSelectModalOpen, setIsSelectModalOpen] = useState(false);
     const [isProposeModalOpen, setIsProposeModalOpen] = useState(false);
+    const [isProjectInfoModalOpen, setIsProjectInfoModalOpen] = useState(false);
+    const [isTopicDetailModalOpen, setIsTopicDetailModalOpen] = useState(false);
+    const [isProjectDetailModalOpen, setIsProjectDetailModalOpen] = useState(false);
 
     const fetchData = async () => {
         setLoading(true);
@@ -52,6 +61,9 @@ export default function StudentTopicPage() {
                         setAdvisorID(groupData.teacher_id);
                         currentAdvisorID = groupData.teacher_id;
                     }
+                    if (groupData.year) {
+                        setGroupYear(groupData.year);
+                    }
                 }
             } catch (err) {
                 console.log("No group found or error fetching group", err);
@@ -60,7 +72,7 @@ export default function StudentTopicPage() {
             const topicParams: any = { proposer_role: 'Teacher' };
             if (currentAdvisorID) {
                 topicParams.teacher_id = currentAdvisorID;
-                topicParams.filter = 'my_topics'; // Use 'my_topics' to filter strictly by teacher_id on topic table
+                topicParams.filter = 'my_topics';
             }
 
             const teacherTopicsRes = await getTopics(topicParams);
@@ -78,9 +90,34 @@ export default function StudentTopicPage() {
                 setMyTopic(null);
             }
 
+            // 4. Fetch My Project Data
+            try {
+                console.log('Fetching project data...');
+                const projectRes = await GetMyProject();
+                console.log('Project response:', projectRes);
+
+                if (projectRes?.data?.data) {
+                    console.log('Project data found:', projectRes.data.data);
+                    setMyProject(projectRes.data.data);
+                } else {
+                    console.log('No project data in response');
+                    setMyProject(null);
+                }
+            } catch (err: any) {
+                console.log("Project fetch error:", err);
+                console.log("Error response:", err?.response?.data);
+                // 404 หมายความว่ายังไม่มี project - ไม่ใช่ error จริงๆ
+                if (err?.response?.status === 404) {
+                    console.log('No project found (404) - this is normal if project not created yet');
+                    setMyProject(null);
+                } else {
+                    console.error("Unexpected error fetching project:", err);
+                    setMyProject(null);
+                }
+            }
+
         } catch (error) {
             console.error("Failed to fetch data", error);
-            // message.error("ไม่สามารถโหลดข้อมูลได้");
         } finally {
             setLoading(false);
         }
@@ -90,13 +127,7 @@ export default function StudentTopicPage() {
         fetchData();
     }, []);
 
-    const handleViewDetails = (topic: Topic) => {
-        setViewTopic(topic);
-        setIsViewModalOpen(true);
-    };
-
     const handleSelectTopic = (topic: Topic) => {
-        setIsViewModalOpen(false); // Close view modal if open
         Modal.confirm({
             title: 'ยืนยันการเลือกหัวข้อ',
             content: `คุณต้องการเลือกหัวข้อ "${topic.title}" ใช่หรือไม่?`,
@@ -109,7 +140,7 @@ export default function StudentTopicPage() {
                         await selectTopic(topic.ID, { group_project_id: groupID });
                         message.success('ส่งคำขอเลือกหัวข้อเรียบร้อยแล้ว');
                         fetchData();
-                        setActiveTab('2');
+                        setIsSelectModalOpen(false);
                     } else {
                         message.error('ไม่พบข้อมูลกลุ่มโครงงาน');
                     }
@@ -140,7 +171,6 @@ export default function StudentTopicPage() {
                     formData.append('description', values.description || '');
                     formData.append('proposer_role', 'Student');
 
-                    // Handle File
                     if (groupID) {
                         formData.append('group_project_id', groupID.toString());
                     }
@@ -178,10 +208,8 @@ export default function StudentTopicPage() {
                 if (myTopic) {
                     try {
                         if (myTopic.proposer_role === 'Teacher' && groupID) {
-                            // Cancel Selection
                             await cancelSelection({ group_project_id: groupID });
                         } else {
-                            // Cancel Proposal (Student Proposed)
                             const formData = new FormData();
                             formData.append('status', 'Closed');
                             formData.append('title', myTopic.title);
@@ -196,7 +224,6 @@ export default function StudentTopicPage() {
                         setMyTopic(null);
                         fetchData();
                     } catch (error) {
-                        // console.error(error);
                         message.error('ไม่สามารถยกเลิกหัวข้อได้');
                     }
                 }
@@ -205,248 +232,219 @@ export default function StudentTopicPage() {
         });
     };
 
-    const StatusBadge = ({ status, approval }: { status: string, approval?: TopicApproval }) => {
-        let color = 'default';
-        let text = 'N/A';
-        let icon = <ClockCircleOutlined />;
-
+    const getStatusInfo = (status: string) => {
         switch (status) {
             case 'Pending':
-                color = 'warning';
-                text = 'รอตรวจสอบ/อนุมัติ';
-                icon = <ClockCircleOutlined />;
-                break;
+                return { color: '#faad14', text: 'รอตรวจสอบ/อนุมัติ', icon: <ClockCircleOutlined /> };
             case 'Approved':
-                color = 'success';
-                text = 'อนุมัติแล้ว';
-                icon = <CheckCircleOutlined />;
-                break;
+                return { color: '#52c41a', text: 'อนุมัติแล้ว', icon: <CheckCircleOutlined /> };
             case 'Rejected':
-                color = 'error';
-                text = 'ไม่อนุมัติ/แก้ไข';
-                icon = <CloseCircleOutlined />;
-                break;
-            case 'Open':
-                color = 'processing';
-                text = 'เปิดรับสมัคร';
-                break;
+                return { color: '#ff4d4f', text: 'ไม่อนุมัติ/แก้ไข', icon: <CloseCircleOutlined /> };
+            default:
+                return { color: '#d9d9d9', text: 'N/A', icon: <ExclamationCircleOutlined /> };
         }
-
-        return (
-            <Card style={{ marginBottom: 24, borderLeft: `5px solid ${status === 'Approved' ? '#52c41a' : status === 'Rejected' ? '#ff4d4f' : '#faad14'}` }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                        <div style={{ fontSize: 24, color: status === 'Approved' ? '#52c41a' : status === 'Rejected' ? '#ff4d4f' : '#faad14' }}>
-                            {icon}
-                        </div>
-                        <div>
-                            <Text type="secondary">สถานะปัจจุบัน</Text>
-                            <Title level={4} style={{ margin: 0 }}>{text}</Title>
-                        </div>
-                    </div>
-                </div>
-                {/* Approval Logic typically nested in Topic object from backend */}
-                {/* Assuming topic.topic_approvals is array */}
-                {status === 'Rejected' && myTopic?.topic_approvals && myTopic.topic_approvals.length > 0 && (
-                    <div style={{ marginTop: 16, padding: 16, background: '#fff1f0', borderRadius: 8, border: '1px solid #ffccc7' }}>
-                        <Text strong type="danger"><ExclamationCircleOutlined /> เหตุผล/สิ่งที่ต้องแก้ไข:</Text>
-                        <Paragraph style={{ margin: '8px 0 0 0' }}>{myTopic.topic_approvals[myTopic.topic_approvals.length - 1]?.comment}</Paragraph>
-                    </div>
-                )}
-            </Card>
-        );
     };
 
-    const items = [
-        {
-            key: '1',
-            label: 'เลือกหัวข้อจากอาจารย์',
-            children: (
-                <div>
-                    <div style={{ marginBottom: 24, textAlign: 'center' }}>
-                        <Title level={3}>หัวข้อที่อาจารย์เปิดรับสมัคร</Title>
-                        <Text type="secondary">เลือกหัวข้อที่สนใจเพื่อยื่นขอทำโครงงานกับอาจารย์ที่ปรึกษา</Text>
+    return (
+        <div className="student-page">
+            <div className="student-container animate-fade-in">
+
+                <div className="page-title-box">
+                    <h1>โครงงานของฉัน (My Project)</h1>
+                    <p>ระบบจัดการหัวข้อและข้อมูลโครงงาน</p>
+                </div>
+
+                <div className="hub-grid">
+
+                    {/* Card 1: หัวข้อโครงงาน */}
+                    <div className="menu-card" onClick={() => {
+                        router.push('/student/topic/select');
+                    }}>
+                        <div className="menu-icon" style={{ background: myTopic ? '#f0f9ff' : '#fff1f2', color: myTopic ? '#0284c7' : '#9a0120' }}>
+                            <BookOutlined />
+                        </div>
+                        <h2 className="menu-title">
+                            {myTopic ? 'หัวข้อโครงงาน' : 'เลือก/เสนอหัวข้อโครงงาน'}
+                        </h2>
+                        <p className="menu-desc">
+                            {myTopic ? (
+                                <>
+                                    <strong>{myTopic.title}</strong>
+                                    <br />
+                                    <Tag color={getStatusInfo(myTopic.status).color} style={{ marginTop: 8 }}>
+                                        {getStatusInfo(myTopic.status).icon} {getStatusInfo(myTopic.status).text}
+                                    </Tag>
+                                </>
+                            ) : (
+                                'เลือกหัวข้อจากอาจารย์ หรือเสนอหัวข้อที่คุณสนใจ'
+                            )}
+                        </p>
+                    </div>
+
+                    {/* Card 2: กรอกข้อมูลโครงงาน */}
+                    <Tooltip title={myTopic?.status !== 'Approved' ? 'กรุณารอหัวข้อได้รับการอนุมัติก่อน' : ''}>
+                        <div
+                            className={`menu-card ${myTopic?.status !== 'Approved' ? 'disabled' : ''}`}
+                            onClick={() => {
+                                if (myTopic?.status === 'Approved') {
+                                    if (myProject) {
+                                        setIsProjectDetailModalOpen(true);
+                                    } else {
+                                        setIsProjectInfoModalOpen(true);
+                                    }
+                                }
+                            }}
+                            style={{
+                                opacity: myTopic?.status !== 'Approved' ? 0.6 : 1,
+                                cursor: myTopic?.status !== 'Approved' ? 'not-allowed' : 'pointer'
+                            }}
+                        >
+                            <div className="menu-icon" style={{ background: myProject ? '#f0fdf4' : '#fff7ed', color: myProject ? '#16a34a' : '#ea580c' }}>
+                                <FileTextOutlined />
+                            </div>
+                            <h2 className="menu-title">
+                                {myProject ? 'ข้อมูลโครงงาน' : 'กรอกข้อมูลโครงงาน'}
+                            </h2>
+                            <p className="menu-desc">
+                                {myProject ? (
+                                    <>
+                                        <Tag color="success" style={{ marginBottom: 4 }}>บันทึกแล้ว</Tag>
+                                        <br />
+                                        คลิกเพื่อดูรายละเอียดหรือแก้ไข
+                                    </>
+                                ) : (
+                                    'บันทึกบทคัดย่อ เครื่องมือที่ใช้ และเอกสารโครงงาน'
+                                )}
+                            </p>
+                        </div>
+                    </Tooltip>
+
+                </div>
+
+                {/* Modal: Select Topic from Teacher */}
+                <Modal
+                    title="เลือกหัวข้อจากอาจารย์"
+                    open={isSelectModalOpen}
+                    onCancel={() => setIsSelectModalOpen(false)}
+                    footer={null}
+                    width={900}
+                    centered
+                >
+                    <div style={{ marginBottom: 16 }}>
+                        <Text type="secondary">หัวข้อที่อาจารย์ที่ปรึกษาเปิดรับสมัคร</Text>
                     </div>
 
                     {availableTopics.length === 0 ? (
-                        <Empty description="ไม่มีหัวข้อที่เปิดรับสมัครในขณะนี้" />
-                    ) : (
-                        <Row gutter={[24, 24]}>
-                            {availableTopics.map(topic => (
-                                <Col xs={24} md={12} lg={12} key={topic.ID}>
-                                    <Card
-                                        hoverable
-                                        style={{ height: '100%', display: 'flex', flexDirection: 'column', borderRadius: 12, border: '1px solid #f0f0f0' }}
-                                        bodyStyle={{ flex: 1, display: 'flex', flexDirection: 'column' }}
-                                        onClick={() => handleViewDetails(topic)}
-                                    >
-                                        <div style={{ marginBottom: 16 }}>
-                                            <Tag color="blue" style={{ marginBottom: 8 }}>อาจารย์เสนอ</Tag>
-                                            <Title level={4} ellipsis={{ rows: 2 }} style={{ margin: 0 }}>{topic.title}</Title>
-                                        </div>
-
-                                        <div style={{ flex: 1 }}>
-                                            <Text strong>วัตถุประสงค์:</Text>
-                                            <Paragraph ellipsis={{ rows: 2 }} type="secondary">{topic.objective}</Paragraph>
-                                            <Text strong>ขอบเขต:</Text>
-                                            <Paragraph ellipsis={{ rows: 2 }} type="secondary">{topic.scope}</Paragraph>
-                                        </div>
-
-                                        <Tooltip title={!!myTopic ? "คุณไม่ได้มีสิทธ์เลือกหัวข้อนี้โครงงานนี้เนื่องจากได้เลือก/เสนอหัวข้อโครงงานไปแล้ว" : ""}>
-                                            <Button
-                                                type="primary"
-                                                block
-                                                size="large"
-                                                icon={<ProjectOutlined />}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleSelectTopic(topic);
-                                                }}
-                                                disabled={!!myTopic} // Disable if student already has a topic
-                                                style={{ background: '#8A011D', borderColor: '#852d3fff' }}
-                                            >
-                                                เลือกหัวข้อนี้
-                                            </Button>
-                                        </Tooltip>
-                                    </Card>
-                                </Col>
-                            ))}
-                        </Row>
-                    )}
-                </div>
-            ),
-        },
-        {
-            key: '2',
-            label: 'สถานะของฉัน',
-            children: (
-                <div style={{ maxWidth: 800, margin: '0 auto' }}>
-                    {myTopic ? (
-                        <div>
-                            <StatusBadge status={myTopic.status} approval={undefined} />
-
-                            <Card title="รายละเอียดหัวข้อโครงงาน" extra={<Button danger onClick={handleCancelProposal}>ยกเลิก/สละสิทธิ์</Button>}>
-                                <Title level={4}>{myTopic.title}</Title>
-
-                                <div style={{ marginTop: 24 }}>
-                                    <Title level={5}>วัตถุประสงค์</Title>
-                                    <Paragraph>{myTopic.objective}</Paragraph>
-                                </div>
-
-                                <div style={{ marginTop: 16 }}>
-                                    <Title level={5}>ขอบเขตของงาน</Title>
-                                    <Paragraph>{myTopic.scope}</Paragraph>
-                                </div>
-
-                                <div style={{ marginTop: 16 }}>
-                                    <Title level={5}>รายละเอียดเพิ่มเติม</Title>
-                                    <Paragraph>{myTopic.description || '-'}</Paragraph>
-                                </div>
-                            </Card>
+                        <div style={{ textAlign: 'center', padding: 40, color: '#94a3b8' }}>
+                            ไม่มีหัวข้อที่เปิดรับสมัครในขณะนี้
                         </div>
                     ) : (
-                        <Empty
-                            image={Empty.PRESENTED_IMAGE_SIMPLE}
-                            description={
-                                <span>
-                                    คุณยังไม่ได้เลือกหรือเสนอหัวข้อโครงงาน <br />
-                                    เลือกหัวข้อจากอาจารย์ในแถบแรก หรือกดปุ่ม + ด้านล่างขวาเพื่อเสนอหัวข้อเอง
-                                </span>
-                            }
-                        />
+                        <div style={{ maxHeight: 500, overflowY: 'auto' }}>
+                            <Space direction="vertical" style={{ width: '100%' }} size="middle">
+                                {availableTopics.map(topic => (
+                                    <Card
+                                        key={topic.ID}
+                                        hoverable
+                                        style={{ borderRadius: 8 }}
+                                    >
+                                        <Title level={5}>{topic.title}</Title>
+                                        <Paragraph ellipsis={{ rows: 2 }} type="secondary">
+                                            <strong>วัตถุประสงค์:</strong> {topic.objective}
+                                        </Paragraph>
+                                        <Paragraph ellipsis={{ rows: 2 }} type="secondary">
+                                            <strong>ขอบเขต:</strong> {topic.scope}
+                                        </Paragraph>
+                                        <Button
+                                            type="primary"
+                                            icon={<ProjectOutlined />}
+                                            onClick={() => handleSelectTopic(topic)}
+                                            style={{ background: '#8A011D', borderColor: '#8A011D', marginTop: 8 }}
+                                        >
+                                            เลือกหัวข้อนี้
+                                        </Button>
+                                    </Card>
+                                ))}
+                            </Space>
+                        </div>
                     )}
-                </div>
-            ),
-        }
-    ];
 
-    return (
-        <ConfigProvider
-            theme={{
-                token: {
-                    colorPrimary: '#F06522',
-                    fontFamily: "'Noto Sans Thai', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
-                },
-            }}
-        >
-            <div style={{ padding: '0 0px', maxWidth: 1200, margin: '0 auto' }}>
-                <div style={{ marginBottom: 32 }}>
-                    <Title level={2} style={{ margin: 0, color: '#1f1f1f' }}>
-                        <ProjectOutlined style={{ marginRight: 10, color: '#8A011D' }} />
-                        ระบบเลือกและเสนอหัวข้อโครงงาน
-                    </Title>
-                    <Text type="secondary">เลือกหัวข้อจากอาจารย์ หรือเสนอหัวข้อที่คุณสนใจด้วยตนเอง</Text>
-                </div>
+                    <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid #f0f0f0', textAlign: 'center' }}>
+                        <Text type="secondary">หรือ</Text>
+                        <br />
+                        <Button
+                            type="dashed"
+                            icon={<PlusOutlined />}
+                            onClick={() => {
+                                setIsSelectModalOpen(false);
+                                setIsProposeModalOpen(true);
+                            }}
+                            style={{ marginTop: 8 }}
+                        >
+                            เสนอหัวข้อโครงงานใหม่
+                        </Button>
+                    </div>
+                </Modal>
 
-                <Tabs defaultActiveKey="1" items={items} activeKey={activeTab} onChange={setActiveTab} />
-
-                {/* View Details Modal */}
+                {/* Modal: Topic Detail */}
                 <Modal
                     title="รายละเอียดหัวข้อโครงงาน"
-                    open={isViewModalOpen}
-                    onCancel={() => setIsViewModalOpen(false)}
+                    open={isTopicDetailModalOpen}
+                    onCancel={() => setIsTopicDetailModalOpen(false)}
                     footer={[
-                        <Button key="close" onClick={() => setIsViewModalOpen(false)}>
-                            ปิด
+                        <Button key="cancel" danger onClick={handleCancelProposal}>
+                            ยกเลิก/สละสิทธิ์
                         </Button>,
-                        <Button
-                            key="select"
-                            type="primary"
-                            icon={<ProjectOutlined />}
-                            onClick={() => viewTopic && handleSelectTopic(viewTopic)}
-                            disabled={!!myTopic}
-                        >
-                            เลือกหัวข้อนี้
+                        <Button key="close" type="primary" onClick={() => setIsTopicDetailModalOpen(false)}>
+                            ปิด
                         </Button>
                     ]}
-                    centered
                     width={700}
+                    centered
                 >
-                    {viewTopic && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 20 }}>
-                            <div>
-                                <Text type="secondary" style={{ fontSize: 12 }}>ชื่อหัวข้อ</Text>
-                                <Title level={4} style={{ marginTop: 0 }}>{viewTopic.title}</Title>
-                            </div>
-
-                            <Card size="small" style={{ background: '#fafafa' }}>
+                    {myTopic && (
+                        <div>
+                            <div style={{ marginBottom: 24, padding: 16, background: '#f0f5ff', borderRadius: 8, borderLeft: `5px solid ${getStatusInfo(myTopic.status).color}` }}>
                                 <Space>
-                                    <TeamOutlined />
-                                    <Text strong>เสนอโดย:</Text>
-                                    {/* Display Teacher Name if available, or role */}
-                                    <Text>อาจารย์ที่ปรึกษา {viewTopic.teacher_id ? `(ID: ${viewTopic.teacher_id})` : ''}</Text>
+                                    <span style={{ fontSize: 24, color: getStatusInfo(myTopic.status).color }}>
+                                        {getStatusInfo(myTopic.status).icon}
+                                    </span>
+                                    <div>
+                                        <Text type="secondary">สถานะปัจจุบัน</Text>
+                                        <Title level={4} style={{ margin: 0 }}>{getStatusInfo(myTopic.status).text}</Title>
+                                    </div>
                                 </Space>
-                            </Card>
 
-                            <Row gutter={16}>
-                                <Col span={12}>
-                                    <Text strong>วัตถุประสงค์:</Text>
-                                    <Paragraph style={{ marginTop: 4 }}>{viewTopic.objective}</Paragraph>
-                                </Col>
-                                <Col span={12}>
-                                    <Text strong>ขอบเขต:</Text>
-                                    <Paragraph style={{ marginTop: 4 }}>{viewTopic.scope}</Paragraph>
-                                </Col>
-                            </Row>
-
-                            <div>
-                                <Text strong>รายละเอียดเพิ่มเติม:</Text>
-                                <Paragraph style={{ marginTop: 4 }}>{viewTopic.description || '-'}</Paragraph>
+                                {myTopic.status === 'Rejected' && myTopic.topic_approvals && myTopic.topic_approvals.length > 0 && (
+                                    <div style={{ marginTop: 16, padding: 12, background: '#fff1f0', borderRadius: 6 }}>
+                                        <Text strong type="danger"><ExclamationCircleOutlined /> เหตุผล/สิ่งที่ต้องแก้ไข:</Text>
+                                        <Paragraph style={{ margin: '8px 0 0 0' }}>
+                                            {myTopic.topic_approvals[myTopic.topic_approvals.length - 1]?.comment}
+                                        </Paragraph>
+                                    </div>
+                                )}
                             </div>
 
-                            {viewTopic.file_attachment && (
-                                <div style={{ marginTop: 8 }}>
-                                    <Text strong><PaperClipOutlined /> เอกสารแนบ:</Text>
-                                    <a href="#" style={{ marginLeft: 8 }} onClick={(e) => { e.preventDefault(); message.info('ดาวน์โหลดไฟล์: ' + viewTopic.file_attachment); }}>
-                                        {viewTopic.file_attachment}
-                                    </a>
-                                </div>
-                            )}
+                            <Title level={4}>{myTopic.title}</Title>
+
+                            <div style={{ marginTop: 16 }}>
+                                <Text strong>วัตถุประสงค์</Text>
+                                <Paragraph>{myTopic.objective}</Paragraph>
+                            </div>
+
+                            <div style={{ marginTop: 16 }}>
+                                <Text strong>ขอบเขตของงาน</Text>
+                                <Paragraph>{myTopic.scope}</Paragraph>
+                            </div>
+
+                            <div style={{ marginTop: 16 }}>
+                                <Text strong>รายละเอียดเพิ่มเติม</Text>
+                                <Paragraph>{myTopic.description || '-'}</Paragraph>
+                            </div>
                         </div>
                     )}
                 </Modal>
 
-                {/* Propose Modal */}
+                {/* Modal: Propose New Topic */}
                 <Modal
                     title="เสนอหัวข้อโครงงานใหม่"
                     open={isProposeModalOpen}
@@ -515,30 +513,230 @@ export default function StudentTopicPage() {
                     </Form>
                 </Modal>
 
-                {!myTopic && (
-                    <Button
-                        type="primary"
-                        icon={<PlusOutlined />}
-                        size="large"
-                        onClick={() => setIsProposeModalOpen(true)}
-                        style={{
-                            position: 'fixed',
-                            bottom: 40,
-                            right: 40,
-                            zIndex: 1000,
-                            background: '#8A011D',
-                            borderColor: '#852d3fff',
-                            boxShadow: '0 4px 12px rgba(138, 1, 29, 0.4)',
-                            height: 50,
-                            borderRadius: 25,
-                            paddingLeft: 24,
-                            paddingRight: 24
+                {/* Modal: Project Information */}
+                <Modal
+                    title={<span><FileTextOutlined style={{ marginRight: 8, color: '#667eea' }} />กรอกข้อมูลโครงงาน</span>}
+                    open={isProjectInfoModalOpen}
+                    onCancel={() => {
+                        setIsProjectInfoModalOpen(false);
+                        projectForm.resetFields();
+                    }}
+                    footer={null}
+                    centered
+                    width={900}
+                >
+                    <Form
+                        form={projectForm}
+                        layout="vertical"
+                        onFinish={(values) => {
+                            Modal.confirm({
+                                title: myProject ? 'ยืนยันการแก้ไขข้อมูล' : 'ยืนยันการบันทึกข้อมูล',
+                                content: myProject ? 'คุณต้องการแก้ไขข้อมูลโครงงานนี้ใช่หรือไม่?' : 'คุณต้องการบันทึกข้อมูลโครงงานนี้ใช่หรือไม่?',
+                                okText: 'ยืนยัน',
+                                cancelText: 'ยกเลิก',
+                                onOk: async () => {
+                                    try {
+                                        const projectData: any = {
+                                            abstract: values.abstract_th,
+                                            keywords: values.tools_and_technologies,
+                                        };
+
+                                        if (values.project_document?.fileList?.length > 0) {
+                                            projectData.project_document = values.project_document.fileList[0].originFileObj;
+                                        }
+
+                                        // ถ้ามี project อยู่แล้ว ให้ update แทน create
+                                        if (myProject) {
+                                            await UpdateProject(myProject.ID, projectData);
+                                            message.success('แก้ไขข้อมูลโครงงานเรียบร้อยแล้ว');
+                                        } else {
+                                            await CreateProject(projectData);
+                                            message.success('บันทึกข้อมูลโครงงานเรียบร้อยแล้ว');
+                                        }
+                                        setIsProjectInfoModalOpen(false);
+                                        projectForm.resetFields();
+                                        fetchData(); // Refresh to get the new project data
+                                    } catch (error: any) {
+                                        console.error('Error creating project:', error);
+                                        const errMsg = error?.response?.data?.error || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล';
+                                        message.error(errMsg);
+                                    }
+                                }
+                            });
                         }}
+                        size="large"
                     >
-                        เสนอหัวข้อโครงงาน
-                    </Button>
-                )}
+                        <div style={{ marginBottom: 24, padding: 16, background: '#f0f5ff', borderRadius: 8, border: '1px solid #d6e4ff' }}>
+                            <Row gutter={16}>
+                                <Col span={16}>
+                                    <Text type="secondary" style={{ fontSize: 12 }}>ชื่อโครงงาน (จากหัวข้อที่อนุมัติ)</Text>
+                                    <div style={{ marginTop: 4 }}>
+                                        <Text strong style={{ fontSize: 16, color: '#1890ff' }}>{myTopic?.title || 'ไม่พบข้อมูล'}</Text>
+                                    </div>
+                                </Col>
+                                <Col span={8}>
+                                    <Text type="secondary" style={{ fontSize: 12 }}>ปีการศึกษา</Text>
+                                    <div style={{ marginTop: 4 }}>
+                                        <Text strong style={{ fontSize: 16, color: '#1890ff' }}>{groupYear || 'ไม่พบข้อมูล'}</Text>
+                                    </div>
+                                </Col>
+                            </Row>
+                        </div>
+
+                        <Form.Item
+                            name="abstract_th"
+                            label="บทคัดย่อ (ภาษาไทย)"
+                            rules={[{ required: true, message: 'กรุณากรอกบทคัดย่อภาษาไทย' }]}
+                        >
+                            <TextArea rows={4} placeholder="สรุปโครงงานโดยย่อ..." />
+                        </Form.Item>
+
+                        <Form.Item
+                            name="tools_and_technologies"
+                            label="เครื่องมือและเทคโนโลยีที่ใช้"
+                            rules={[{ required: true, message: 'กรุณากรอกเครื่องมือและเทคโนโลยี' }]}
+                        >
+                            <TextArea rows={3} placeholder="เช่น React, Node.js, PostgreSQL, Docker..." />
+                        </Form.Item>
+
+                        <Form.Item
+                            name="project_document"
+                            label="เอกสารโครงงาน ( ไฟล์นำเสนอและไฟล์รายงาน )"
+                        >
+                            <Upload maxCount={1} beforeUpload={() => false}>
+                                <Button icon={<UploadOutlined />}>คลิกเพื่ออัพโหลดเอกสาร</Button>
+                            </Upload>
+                        </Form.Item>
+
+                        <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
+                            <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
+                                <Button
+                                    onClick={() => {
+                                        setIsProjectInfoModalOpen(false);
+                                        projectForm.resetFields();
+                                    }}
+                                >
+                                    ยกเลิก
+                                </Button>
+                                <Button
+                                    type="primary"
+                                    htmlType="submit"
+                                    icon={<SendOutlined />}
+                                    style={{ background: '#667eea', borderColor: '#667eea' }}
+                                >
+                                    บันทึกข้อมูลโครงงาน
+                                </Button>
+                            </Space>
+                        </Form.Item>
+                    </Form>
+                </Modal>
+
+                {/* Modal: View Project Detail */}
+                <Modal
+                    title={<span><FileTextOutlined style={{ marginRight: 8, color: '#16a34a' }} />ข้อมูลโครงงาน</span>}
+                    open={isProjectDetailModalOpen}
+                    onCancel={() => setIsProjectDetailModalOpen(false)}
+                    footer={[
+                        <Button key="close" onClick={() => setIsProjectDetailModalOpen(false)}>
+                            ปิด
+                        </Button>,
+                        <Button
+                            key="edit"
+                            type="primary"
+                            icon={<EditOutlined />}
+                            onClick={() => {
+                                setIsProjectDetailModalOpen(false);
+                                setIsProjectInfoModalOpen(true);
+                                // Pre-fill form with existing data
+                                if (myProject) {
+                                    projectForm.setFieldsValue({
+                                        abstract_th: myProject.abstract,
+                                        tools_and_technologies: myProject.keywords,
+                                    });
+                                }
+                            }}
+                            style={{ background: '#16a34a', borderColor: '#16a34a' }}
+                        >
+                            แก้ไขข้อมูล
+                        </Button>
+                    ]}
+                    width={800}
+                    centered
+                >
+                    {myProject && (
+                        <div>
+                            <div style={{ marginBottom: 24, padding: 16, background: '#f0f5ff', borderRadius: 8, border: '1px solid #d6e4ff' }}>
+                                <Row gutter={16}>
+                                    <Col span={16}>
+                                        <Text type="secondary" style={{ fontSize: 12 }}>ชื่อโครงงาน</Text>
+                                        <div style={{ marginTop: 4 }}>
+                                            <Text strong style={{ fontSize: 16, color: '#1890ff' }}>{myTopic?.title || 'ไม่พบข้อมูล'}</Text>
+                                        </div>
+                                    </Col>
+                                    <Col span={8}>
+                                        <Text type="secondary" style={{ fontSize: 12 }}>ปีการศึกษา</Text>
+                                        <div style={{ marginTop: 4 }}>
+                                            <Text strong style={{ fontSize: 16, color: '#1890ff' }}>{groupYear || 'ไม่พบข้อมูล'}</Text>
+                                        </div>
+                                    </Col>
+                                </Row>
+                            </div>
+
+                            <div style={{ marginBottom: 16 }}>
+                                <Text strong style={{ fontSize: 14 }}>บทคัดย่อ (ภาษาไทย)</Text>
+                                <div style={{ marginTop: 8, padding: 12, background: '#fafafa', borderRadius: 6, border: '1px solid #f0f0f0' }}>
+                                    <Paragraph style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
+                                        {myProject.abstract || '-'}
+                                    </Paragraph>
+                                </div>
+                            </div>
+
+                            <div style={{ marginBottom: 16 }}>
+                                <Text strong style={{ fontSize: 14 }}>เครื่องมือและเทคโนโลยีที่ใช้</Text>
+                                <div style={{ marginTop: 8, padding: 12, background: '#fafafa', borderRadius: 6, border: '1px solid #f0f0f0' }}>
+                                    <Paragraph style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
+                                        {myProject.keywords || '-'}
+                                    </Paragraph>
+                                </div>
+                            </div>
+
+                            {myProject.file_path && (
+                                <div style={{ marginBottom: 16 }}>
+                                    <Text strong style={{ fontSize: 14 }}>เอกสารโครงงาน</Text>
+                                    <div style={{ marginTop: 8, padding: 12, background: '#f0fdf4', borderRadius: 6, border: '1px solid #bbf7d0' }}>
+                                        <Space direction="vertical" style={{ width: '100%' }}>
+                                            <Space>
+                                                <FileTextOutlined style={{ color: '#16a34a', fontSize: 18 }} />
+                                                <Text strong>{myProject.file_path.split('/').pop() || 'เอกสารโครงงาน'}</Text>
+                                            </Space>
+                                            <Button
+                                                type="primary"
+                                                icon={<UploadOutlined />}
+                                                size="small"
+                                                onClick={() => {
+                                                    // Download file
+                                                    const link = document.createElement('a');
+                                                    link.href = `http://localhost:8080/${myProject.file_path}`;
+                                                    link.download = myProject.file_path.split('/').pop() || 'document';
+                                                    link.target = '_blank';
+                                                    document.body.appendChild(link);
+                                                    link.click();
+                                                    document.body.removeChild(link);
+                                                    message.success('กำลังดาวน์โหลดไฟล์...');
+                                                }}
+                                                style={{ background: '#16a34a', borderColor: '#16a34a' }}
+                                            >
+                                                ดาวน์โหลดเอกสาร
+                                            </Button>
+                                        </Space>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </Modal>
+
             </div>
-        </ConfigProvider>
+        </div>
     );
 }

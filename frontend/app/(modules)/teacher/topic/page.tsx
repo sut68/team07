@@ -5,6 +5,7 @@ import { PlusOutlined, DeleteOutlined, EditOutlined, ProjectOutlined, CheckCircl
 import { Topic, TopicApproval, statusMap } from '@/app/interfaces/Topic';
 import { getTopics, createTopic, updateTopic, deleteTopic, approveTopic } from '@/app/services/topic';
 import { GetMe } from '@/app/services/login';
+import '../../../style/evaluation.css';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -33,10 +34,6 @@ export default function TeacherTopicPage() {
             let currentTeacherID = teacherID;
             if (!currentTeacherID) {
                 const user = await GetMe();
-                // Assuming User definition has ID, or map it.
-                // Backend response for GetMe usually returns { id: ..., role: ... } directly or wrapped.
-                // Checking interfaces/Login.ts: UserDataInterface { id: number ... }
-                // The service GetMe returns res.data which IS UserDataInterface.
                 currentTeacherID = user.id;
                 setTeacherID(user.id);
             }
@@ -341,12 +338,9 @@ export default function TeacherTopicPage() {
             }}
         >
             <div style={{ padding: '0 24px', maxWidth: 1200, margin: '0 auto' }}>
-                <div style={{ marginBottom: 24 }}>
-                    <Title level={2} style={{ margin: 0, color: '#1f1f1f' }}>
-                        <ProjectOutlined style={{ marginRight: 10, color: '#8A011D' }} />
-                        จัดการหัวข้อโครงงาน
-                    </Title>
-                    <Text type="secondary">เสนอหัวข้อโครงงานของคุณ และพิจารณาหัวข้อที่นักศึกษาเสนอ</Text>
+                <div className="page-title-box">
+                    <h1>จัดการหัวข้อโครงงาน</h1>
+                    <p>เสนอหัวข้อโครงงานของคุณ และพิจารณาหัวข้อที่นักศึกษาเสนอ</p>
                 </div>
 
                 <Tabs defaultActiveKey="1" items={items} />
@@ -490,11 +484,11 @@ export default function TeacherTopicPage() {
                             {selectedProposal.file_attachment && (
                                 <div style={{ marginTop: 8 }}>
                                     <Text strong><PaperClipOutlined /> ไฟล์แนบ:</Text>
-                                    <a 
-                                      href={`${process.env.NEXT_PUBLIC_API_URL}/uploads/topics/${selectedProposal.file_attachment}`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      style={{ marginLeft: 8 }}
+                                    <a
+                                        href={`${process.env.NEXT_PUBLIC_API_URL}/uploads/topics/${selectedProposal.file_attachment}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{ marginLeft: 8 }}
                                     >
                                         {selectedProposal.file_attachment}
                                     </a>
