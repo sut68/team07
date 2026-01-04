@@ -7,7 +7,7 @@ import { GetMyGroup } from '../../../services/group';
 import { GetAllTeachers, SaveAdvisorSelection, GetAdvisorSelection } from '../../../services/advisor';
 import { GroupProject } from '../../../interfaces/Group';
 import { Teacher } from '../../../interfaces/Advisor';
-import GroupCard from '../../../components/GroupCard';
+import GroupCard from '../../../components/group/GroupCard';
 import '../../../style/StudentSelectAdvisorPage.css';
 import api from '../../../services/api'; 
 
@@ -19,7 +19,7 @@ const AdvisorSelectionPage = () => {
     const [teachers, setTeachers] = useState<Teacher[]>([]);
     
     // State สำหรับฟอร์ม
-    const [selections, setSelections] = useState<(number | "")[]>(Array(10).fill(""));
+    const [selections, setSelections] = useState<(number | "")[]>([]);
     const [description, setDescription] = useState("");
     const [isAlreadySelected, setIsAlreadySelected] = useState(false);
 
@@ -51,15 +51,18 @@ const AdvisorSelectionPage = () => {
                 setLoading(false);
                 return; 
             }
+            let currentTeachers: Teacher[] = [];
             try {
                 const resTeachers = await GetAllTeachers();
                 const teacherList = (resTeachers.data as any).data || resTeachers.data;
                 if (Array.isArray(teacherList)) {
                     setTeachers(teacherList);
+                    currentTeachers = teacherList;
                 }
             } catch (err) {
                 console.error("Failed to fetch teachers:", err);
             }
+            let initialSelections = Array(currentTeachers.length).fill("");
 
             let groupID = 0;
             try {
@@ -98,6 +101,7 @@ const AdvisorSelectionPage = () => {
                     }
                 } catch (err) { /* No previous selection */ }
             }
+            setSelections(initialSelections);
 
         } catch (error) {
             console.error("Error init data:", error);
@@ -119,7 +123,7 @@ const AdvisorSelectionPage = () => {
 
     const handleClear = () => {
         if (isAlreadySelected) return;
-        setSelections(Array(10).fill(""));
+        setSelections(Array(teachers.length).fill(""));
         setDescription("");
         Swal.fire({ icon: 'success', title: 'ล้างข้อมูลสำเร็จ', timer: 1000, showConfirmButton: false });
     };
@@ -153,10 +157,15 @@ const AdvisorSelectionPage = () => {
         }
 
         const selectedAdvisors = selections.filter(s => s !== "") as number[];
-        if (selectedAdvisors.length < 10 || !description.trim()) {
-            Swal.fire({ icon: "warning", title: "ข้อมูลไม่ครบ", text: "กรุณาเลือกให้ครบ 10 ท่าน และระบุรายละเอียดโครงงาน", confirmButtonText: "ตกลง" });
+        if (selectedAdvisors.length < teachers.length || !description.trim()) {
+            Swal.fire({ 
+                icon: "warning", 
+                title: "ข้อมูลไม่ครบ", 
+                text: `กรุณาเลือกให้ครบ ${teachers.length} ท่าน และระบุรายละเอียดโครงงาน`, 
+                confirmButtonText: "ตกลง" 
+            });
             return;
-        }
+    }
 
         // --- เตรียม HTML สำหรับแสดงใน Popup ---
         let advisorListHtml = "";
