@@ -1,9 +1,10 @@
 package auth
 
 import (
+	"fmt"
 	logSys "log"
 	"net/http"
-	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"github.com/sut68/team07/backend/config"
 	"github.com/sut68/team07/backend/controller/log"
@@ -220,7 +221,7 @@ func (h *LoginHandler) Refresh(c *gin.Context) {
 	})
 }
 func setSingleCSRFToken(c *gin.Context, csrfToken string) {
-	cookieDomain := config.CookieDomain() 
+	cookieDomain := config.CookieDomain()
 
 	http.SetCookie(c.Writer, &http.Cookie{
 		Name:     "csrf_token",
@@ -309,6 +310,19 @@ func (h *LoginHandler) ResetPassword(c *gin.Context) {
 
 	userID, err := h.JwtService.ValidateResetToken(h.DB, input.Token)
 	if err != nil {
+		// กรณี Double Submit หรือ Token หมดอายุ/ถูกใช้ไปแล้ว
+		// ให้ตรวจสอบว่ารหัสผ่านปัจจุบันตรงกับรหัสผ่านใหม่หรือไม่
+		// ถ้าตรงกัน แสดงว่าคำขอก่อนหน้าทำสำเร็จแล้ว -> ให้ตอบกลับว่า Success
+		if (err == service.ErrTokenUsed || err == service.ErrTokenExpired) && userID != 0 {
+			var userCheck entity.User
+			if dbErr := h.DB.First(&userCheck, userID).Error; dbErr == nil {
+				if h.JwtService.CheckPasswordHash(input.NewPassword, userCheck.Password) {
+					c.JSON(http.StatusOK, gin.H{"message": "Password has been reset successfully."})
+					return
+				}
+			}
+		}
+
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
@@ -361,7 +375,7 @@ func (h *LoginHandler) ResetPassword(c *gin.Context) {
 
 	// 9. ส่งอีเมลแจ้งเตือนการเปลี่ยนรหัสผ่าน
 	go service.SendPasswordChangedNotification(user.Email, user.Username)
-	log.InsertLog(c, 13)
+	log.InsertLogByUserID(c, user.ID, 13)
 	c.JSON(http.StatusOK, gin.H{"message": "Password has been reset successfully. All old sessions have been revoked."})
 }
 

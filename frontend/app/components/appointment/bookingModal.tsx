@@ -1,7 +1,8 @@
 "use client";
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Modal, Form, Select, DatePicker, Button, message, TimePicker, Tabs, Divider, Spin } from 'antd';
-import { UserOutlined, RobotOutlined, DeploymentUnitOutlined, DeleteOutlined, SaveOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+import { UserOutlined, RobotOutlined, DeploymentUnitOutlined, DeleteOutlined, SaveOutlined, ExclamationCircleOutlined, AuditOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { Toast_success, Toast_fail } from '../Webmessage';
 import {
@@ -22,6 +23,7 @@ interface ModalProps {
 }
 
 export default function BookingModal({ visible, onClose, onSuccess, rooms, types, initialData }: ModalProps) {
+    const router = useRouter();
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
     const [mode, setMode] = useState<'manual' | 'auto'>('manual');
@@ -208,6 +210,15 @@ export default function BookingModal({ visible, onClose, onSuccess, rooms, types
                 }
             }
         });
+    };
+
+    const handleGoToEvaluation = () => {
+        if (!initialData) return;
+        
+        const isCommittee = initialData.evaluation_name === 'Committee Evaluation' || initialData.evaluation_id === 4;
+        const targetTab = isCommittee ? 'committee' : 'advisor';
+        
+        router.push(`/teacher/evaluation?tab=${targetTab}`);
     };
 
     return (
@@ -400,9 +411,22 @@ export default function BookingModal({ visible, onClose, onSuccess, rooms, types
                 )}
 
                 <div className="flex justify-between mt-8 pt-4 border-t border-gray-100">
-                    {initialData ? (
-                        <Button danger type="text" icon={<DeleteOutlined />} onClick={handleDelete}>ยกเลิกนัด</Button>
-                    ) : <div />}
+                    <div className="flex gap-2 items-center">
+                        {initialData ? (
+                            <Button danger type="text" icon={<DeleteOutlined />} onClick={handleDelete}>ยกเลิกนัด</Button>
+                        ) : null}
+
+                        {initialData && (initialData.type_name?.includes('Final') || initialData.type_id === 3 || initialData.appointment_type_id === 3) && (
+                             <Button 
+                                type="dashed" 
+                                icon={<AuditOutlined />} 
+                                onClick={handleGoToEvaluation}
+                                style={{ color: '#1890ff', borderColor: '#1890ff' }}
+                             >
+                                ไปยังการประเมิน
+                             </Button>
+                        )}
+                    </div>
 
                     <div className="flex gap-3">
                         <Button onClick={onClose}>ยกเลิก</Button>

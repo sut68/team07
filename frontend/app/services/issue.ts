@@ -1,5 +1,4 @@
-// services/issue.ts
-import api from "./api"; // Import api instance ที่เราตั้งค่า baseURL ไว้แล้ว
+import api from "./api"; 
 import { CreateIssueInterface } from "../interfaces/Issue";
 
 // GET: ดึงรายการแจ้งปัญหาทั้งหมด
@@ -21,10 +20,17 @@ async function GetMyIssues() {
     return await api.get("/issues/my");
 }
 
-// PATCH: อัปเดตสถานะ (Admin Only)
-async function UpdateIssueStatus(id: number, statusID: number) {
-    // ส่งเป็น JSON object { "status_id": ... }
-    return await api.patch(`/admin/issues/${id}`, { status_id: statusID });
+// PATCH: อัปเดตสถานะ + ข้อความตอบกลับ (Admin Only)
+async function UpdateIssueStatus(id: number, statusID: number, adminReply?: string) {
+    return await api.patch(`/admin/issues/${id}`, { 
+        status_id: statusID,
+        admin_reply: adminReply 
+    });
+}
+
+// PATCH: แก้ไขรายละเอียดปัญหา (User Edit)
+async function UpdateIssue(id: number, data: CreateIssueInterface) {
+    return await api.patch(`/issues/${id}`, data);
 }
 
 export {
@@ -32,5 +38,6 @@ export {
     GetIssueById,
     CreateIssue,
     GetMyIssues,
-    UpdateIssueStatus
+    UpdateIssueStatus,
+    UpdateIssue
 };

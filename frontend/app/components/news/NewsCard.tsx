@@ -2,7 +2,7 @@
 
 import { EditOutlined, DeleteOutlined, PaperClipOutlined } from '@ant-design/icons';
 import { News } from '../../interfaces/News';
-import './news.css';
+import '../../style/news.css';
 
 interface NewsCardProps {
     data: News;
@@ -24,7 +24,7 @@ export default function NewsCard({ data, role, currentUserId, onEdit, onDelete }
 
     const cleanApiUrl = API_URL.replace(/\/$/, "");
     const fileUrl = data.File ? `${cleanApiUrl}/${data.File.replace(/\\/g, '/')}`: null;
-    const fileName = data.File ? data.File.split('_').pop() : "ดาวน์โหลดไฟล์แนบ";
+    const fileName = data.File ? data.File.replace(/\\/g, '/').split('/').pop() : "ดาวน์โหลดไฟล์แนบ";
 
     return (
         <div className={`news-card ${cardTypeClass}`}>

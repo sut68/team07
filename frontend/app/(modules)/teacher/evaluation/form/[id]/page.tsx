@@ -319,30 +319,33 @@ export default function EvaluationFormPage() {
                                     <tbody>
                                         {/* Master Row */}
                                         <tr className="row-master">
-                                            <td className="col-student">
+                                            <td className="col-student" style={{ verticalAlign: 'top', paddingTop: '16px' }}>
                                                 <span>⚡ ให้คะแนนทุกคน (Apply All)</span>
                                             </td>
                                             {formData?.individual_criteria?.map((cri: any) => (
-                                                <td key={cri.id}>
-                                                    <div className="score-group" style={{ gap: '8px' }}>
+                                                <td key={cri.id} style={{ verticalAlign: 'top', padding: '8px' }}>
+                                                    <div className="score-group" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                                         {cri.levels.map((lvl: any) => (
                                                             <button
                                                                 key={lvl.id}
                                                                 className="score-btn"
                                                                 style={{
-                                                                    width: 'auto',
+                                                                    width: '100%',
                                                                     height: 'auto',
-                                                                    padding: '6px 12px',
-                                                                    borderRadius: '8px',
+                                                                    padding: '8px 12px',
+                                                                    borderRadius: '6px',
                                                                     display: 'flex',
-                                                                    flexDirection: 'column',
+                                                                    justifyContent: 'space-between',
                                                                     alignItems: 'center',
-                                                                    lineHeight: '1.2'
+                                                                    textAlign: 'left',
+                                                                    border: '1px solid #e5e7eb',
+                                                                    background: '#fff',
+                                                                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
                                                                 }}
                                                                 onClick={() => handleApplyAll(cri.id, lvl.score, lvl.id)}
                                                             >
-                                                                <span style={{ fontSize: '1.1em', fontWeight: 'bold' }}>{lvl.score}</span>
-                                                                <span style={{ fontSize: '0.7em', fontWeight: 'normal', marginTop: '2px' }}>{lvl.description}</span>
+                                                                <span style={{ fontSize: '0.85rem', color: '#374151' }}>{lvl.description}</span>
+                                                                <span style={{ fontWeight: '600', color: '#9a0120', marginLeft: '8px' }}>{lvl.score}</span>
                                                             </button>
                                                         ))}
                                                     </div>
@@ -368,13 +371,14 @@ export default function EvaluationFormPage() {
                                                     
                                                     return (
                                                         <td key={cri.id}>
-                                                            <div className="score-group">
+                                                            <div className="score-group" style={{ flexWrap: 'wrap', justifyContent: 'center' }}>
                                                                 {cri.levels.map((lvl: any) => (
                                                                     <button
                                                                         key={lvl.id}
                                                                         className={`score-btn ${current?.levelId === lvl.id ? 'active' : ''}`}
                                                                         onClick={() => handleIndChange(std.student_id, cri.id, lvl.score, lvl.id)}
                                                                         title={lvl.description}
+                                                                        style={{ width: '32px', height: '32px', fontSize: '0.9rem' }}
                                                                     >
                                                                         {lvl.score}
                                                                     </button>

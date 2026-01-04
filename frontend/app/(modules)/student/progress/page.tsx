@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
+// Ensure these imports match your file structure
 import {
   GetProgress,
   AddProgress,
@@ -12,31 +13,35 @@ import {
 
 import { DropWholechat } from "@/app/services/chat";
 
-type Mode = "view" | "submit" | "edit";
-
 export default function ProgressPage() {
-  const [mode, setMode] = useState<Mode>("view");
-
+  // --- Logic State (Exact same as your provided code) ---
   const [gpji, setgpji] = useState<number>(0);
   const [userid, setuserid] = useState<number>(0);
-
   const [processlist, setprocesslist] = useState<any[]>([]);
-  const [selectedId, setSelectedId] = useState<number | null>(null);
 
+  // --- UI State ---
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<"add" | "edit">("add");
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // --- Form State ---
   const [file, setFile] = useState<File | null>(null);
   const [comment, setComment] = useState("");
   const [progressTitle, setProgressTitle] = useState("");
 
-  const [status, setStatus] = useState("Ready");
-  const [isError, setIsError] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-
+  // --- Helpers ---
   const getId = (p: any) => Number(p?.id ?? p?.ID ?? 0) || 0;
   const getProgressTitle = (p: any) => String(p?.Name ?? "").trim();
   const getFilePath = (p: any) => String(p?.file ?? p?.File ?? "").trim();
   const getCommentText = (p: any) => String(p?.comment ?? "").trim();
-  const getUpdatedAt = (p: any) => String(p?.update_at ?? "").trim();
+  const getUpdatedAt = (p: any) => {
+    // Format date nicely
+    const d = new Date(p?.update_at || new Date());
+    return isNaN(d.getTime()) ? "Just now" : d.toLocaleDateString("th-TH", { day: 'numeric', month: 'short', year: '2-digit' });
+  };
 
+  // --- Effects ---
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -55,7 +60,6 @@ export default function ProgressPage() {
         const gp = Number(res?.group_project_id ?? 0);
         setgpji(Number.isFinite(gp) && gp > 0 ? gp : 0);
       } catch (err) {
-        console.error("load id fail", err);
         setgpji(0);
       }
     })();
@@ -63,578 +67,424 @@ export default function ProgressPage() {
 
   const locked = gpji <= 0 || userid <= 0;
 
-  useEffect(() => {
-    if (locked) setMode("view");
-  }, [locked]);
-
   const refresh = async () => {
     if (gpji == 0) {
       setprocesslist([]);
       return;
     }
     const data = await GetProgress({ group_project_id: gpji });
-    setprocesslist(Array.isArray(data) ? data : []);
-  };
-
-  const handleView = async () => {
-    if (locked) return;
-    setIsLoading(true);
-    setIsError(false);
-    setStatus("กำลังโหลดความคืบหน้า...");
-    try {
-      await refresh();
-      setStatus("โหลดสำเร็จ!!!");
-    } catch (err: any) {
-      console.error(err);
-      setIsError(true);
-      setStatus(`${err?.response?.data?.message || err?.message || "โหลดไม่สำเร็จ"}`);
-    } finally {
-      setIsLoading(false);
-    }
+    // Sort Newest First to make the "Stacking" effect work
+    const sorted = Array.isArray(data) ? data.sort((a, b) => getId(b) - getId(a)) : [];
+    setprocesslist(sorted);
   };
 
   useEffect(() => {
-    if (!locked && gpji > 0) void handleView();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (!locked && gpji > 0) {
+      setIsLoading(true);
+      refresh().finally(() => setIsLoading(false));
+    }
   }, [gpji, locked]);
+
+  // --- Handlers ---
+  const openAddModal = () => {
+    setModalMode("add");
+    setFile(null);
+    setComment("");
+    setProgressTitle("");
+    setSelectedId(null);
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (item: any) => {
+    setModalMode("edit");
+    setSelectedId(getId(item));
+    setProgressTitle(getProgressTitle(item));
+    setComment(getCommentText(item));
+    setFile(null);
+    setIsModalOpen(true);
+  };
 
   const handleSubmit = async () => {
     if (locked) return;
     setIsLoading(true);
-    setIsError(false);
 
     try {
-      if (!gpji) throw new Error("ขาด group_project_id");
-      if (!progressTitle.trim()) throw new Error("ได้โปรดตั้งชื่อหัวข้อ");
-      if (!file) throw new Error("ได้โปรดเลือกไฟล์");
-      if (!comment.trim()) throw new Error("โปรดใส่ความคิดเห็น");
+      if (modalMode === "add") {
+        if (!gpji) throw new Error("Missing Group ID");
+        if (!progressTitle.trim()) throw new Error("Title required");
+        if (!file) throw new Error("File required");
+        if (!comment.trim()) throw new Error("Comment required");
 
-      await AddProgress({
-        group_project_id: gpji,
-        Name: progressTitle.trim(),
-        file: file!,
-        comment: comment.trim(),
-      });
-
-      setFile(null);
-      setComment("");
-      setProgressTitle("");
-
-      await refresh();
-      setStatus("ส่งสำเร็จ !!!");
-    } catch (err: any) {
-      setIsError(true);
-      setStatus(err?.response?.data?.error || err?.message || "ส่งไม่สำเร็จ");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleEdit = async () => {
-    if (locked) return;
-    setIsLoading(true);
-    setIsError(false);
-
-    try {
-      if (!selectedId) throw new Error("ได้โปรดเลือกความคืบหน้าที่ต้องการจัดการ");
-
-      await UpProgress({
-        id: selectedId,
-        Name: progressTitle.trim(),
-        file: file ?? undefined,
-        comment: comment.trim(),
-      } as any);
-
-      setFile(null);
-      setComment("");
-      setProgressTitle("");
-
-      await refresh();
-      setStatus("แก้ไขสำเร็จ !!!");
-    } catch (err: any) {
-      setIsError(true);
-      setStatus(err?.response?.data?.error || err?.message || "แก้ไขไม่สำเร็จ");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    if (locked) return;
-    setIsLoading(true);
-    setIsError(false);
-
-    try {
-      const id = selectedId;
-
-      if (!id) throw new Error("ได้โปรดเลือกความคืบหน้าที่ต้องการลบ");
-
-      if (!confirm(`ลบความคืบหน้า #${id}?`)) {
-        setIsLoading(false);
-        return;
+        await AddProgress({
+          group_project_id: gpji,
+          Name: progressTitle.trim(),
+          file: file!,
+          comment: comment.trim(),
+        });
+      } else {
+        if (!selectedId) throw new Error("No ID selected");
+        await UpProgress({
+          id: selectedId,
+          Name: progressTitle.trim(),
+          file: file ?? undefined,
+          comment: comment.trim(),
+        } as any);
       }
 
-      setStatus(`ลบ #${id}...`);
-      await EraseProgress({ id });
+      await refresh();
+      setIsModalOpen(false);
+      setFile(null);
+      setComment("");
+      setProgressTitle("");
+    } catch (err: any) {
+      alert(err?.message || "Operation failed");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-      setStatus(`ลบแชทที่เกี่ยวข้อง...`);
+  const handleDelete = async (id: number) => {
+    if (locked || !id) return;
+    if (!confirm("Confirm deleting this block?")) return;
+
+    setIsLoading(true);
+    try {
+      await EraseProgress({ id });
       await DropWholechat({
         process_id: id,
         group_project_id: gpji,
+        name: ""
       });
-
       await refresh();
-      setStatus(`ลบความคืบหน้า #${id} สำเร็จ`);
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      setIsError(true);
-      setStatus(`❌ ${err?.response?.data?.message || err?.message || "เกิดข้อผิดพลาด"}`);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const availableIds = useMemo(() => {
-    return Array.isArray(processlist)
-      ? processlist.map(getId).filter((id) => Number.isFinite(id) && id > 0)
-      : [];
-  }, [processlist]);
-
-  useEffect(() => {
-    setSelectedId(availableIds.length > 0 ? availableIds[0] : null);
-  }, [availableIds]);
-
   return (
-    <div style={styles.page}>
-      <div style={styles.header}>
-        <div>
-          <div style={styles.appTitle}>ติดตามความคืบหน้า</div>
-        </div>
+    <div className="sut-page">
+      {/* Inject CSS Styles directly for animations */}
+      <style jsx global>{`
+        body { margin: 0; background-color: #f9f9f9; font-family: 'Sarabun', sans-serif; }
+        
+        /* 1. Animation for the Blocks appearing */
+        @keyframes popIn {
+          0% { opacity: 0; transform: scale(0.9) translateY(20px); }
+          100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .progress-block {
+          animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
 
-        <div style={styles.modeTabs}>
-          <button
-            onClick={() => !locked && setMode("view")}
-            style={mode === "view" ? styles.tabActive : styles.tab}
-            disabled={locked}
-            title={locked ? "ใช้งานไม่ได้เนื่องจากยังไม่มีกลุ่ม" : ""}
-          >
-            ดูความคืบหน้า
-          </button>
-          <button
-            onClick={() => !locked && setMode("submit")}
-            style={mode === "submit" ? styles.tabActive : styles.tab}
-            disabled={locked}
-            title={locked ? "ใช้งานไม่ได้เนื่องจากยังไม่มีกลุ่ม" : ""}
-          >
-            ส่งความคืบหน้า
-          </button>
-          <button
-            onClick={() => !locked && setMode("edit")}
-            style={mode === "edit" ? styles.tabActive : styles.tab}
-            disabled={locked}
-            title={locked ? "ใช้งานไม่ได้เนื่องจากยังไม่มีกลุ่ม" : ""}
-          >
-            จัดการความคืบหน้า
-          </button>
-        </div>
-      </div>
+        /* 2. Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #951B2E; }
+      `}</style>
 
-      <div style={styles.content}>
-        <div style={styles.left}>
-          <div
-            style={{
-              ...styles.status,
-              background: locked ? "#fef3c7" : isError ? "#fee2e2" : "#dcfce7",
-              color: locked ? "#92400e" : isError ? "#991b1b" : "#166534",
-              border: locked ? "1px solid #fde68a" : "1px solid rgba(0,0,0,0.05)",
-            }}
-          >
-            <b>Status:</b> {locked ? "ระบบจะล็อกจนกว่าคุณจะมีกลุ่ม." : status}
-          </div>
 
-          {locked ? (
-            <div style={styles.lockCard}>
-              <div style={styles.lockTitle}>คุณยังไม่มีกลุ่มโปรเจกต์</div>
-              <div style={styles.lockDesc}>กรุณาเข้าร่วมกลุ่มก่อนเพื่อปลดล็อกหน้านี้</div>
 
-              <div style={styles.lockSteps}>
-                <div style={styles.lockStep}>
-                  <b>1)</b> ไปยังหน้า <b> กลุ่มของฉัน</b>
+     
+      <div style={styles.mainContainer}>
+     
+        <div style={styles.headerSection}>
+            <div style={styles.titleWrapper}>
+                <div style={styles.redLine}></div>
+                <div>
+                    <h1 style={styles.pageTitle}>ติดตามความคืบหน้า</h1>
+                    <p style={styles.pageSubtitle}>บันทึกความคืบหน้าโครงงาน </p>
                 </div>
-                <div style={styles.lockStep}>
-                  <b>2)</b> กดเข้าร่วมกลุ่ม
-                </div>
-                <div style={styles.lockStep}>
-                  <b>3)</b> กลับมาหน้านี้
-                </div>
-              </div>
-
-              <div style={styles.lockHint}>(หากคิดว่านี่เป็นข้อผิดพลาด โปรดรายงานปัญหา.)</div>
             </div>
-          ) : (
-            <>
-              {mode === "view" && (
-                <div style={styles.card}>
-                  <div style={styles.cardTitle}>รีเฟรชระบบ</div>
-                  <div style={styles.cardDesc}>หากระบบยังไม่อัปเดตสามารถกดปุ่มนี้ได้.</div>
 
-                  <button onClick={handleView} disabled={isLoading} style={styles.primaryBtn}>
-                    {isLoading ? "Loading..." : "Refresh"}
-                  </button>
-                </div>
-              )}
-
-              {mode === "submit" && (
-                <div style={styles.card}>
-                  <div style={styles.cardTitle}>ส่งความคืบหน้า</div>
-
-                  <div style={styles.field}>
-                    <label style={styles.label}>ชื่อโครงงาน (Progress title)</label>
-                    <input
-                      value={progressTitle}
-                      onChange={(e) => setProgressTitle(e.target.value)}
-                      placeholder='e.g. "Work 1", "Fix small bug"'
-                      style={styles.input}
-                      disabled={isLoading}
-                    />
-                  </div>
-
-                  <div style={styles.field}>
-                    <label style={styles.label}>ไฟล์</label>
-                    <input
-                      type="file"
-                      onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                      style={styles.input}
-                      disabled={isLoading}
-                    />
-                    {file?.name ? <div style={styles.smallText}>Selected: {file.name}</div> : null}
-                  </div>
-
-                  <div style={styles.field}>
-                    <label style={styles.label}>ความคิดเห็น</label>
-                    <textarea
-                      value={comment}
-                      onChange={(e) => setComment(e.target.value)}
-                      placeholder="อยากมีอะไรจะบอกคนอื่นๆไหม"
-                      style={styles.textarea}
-                      disabled={isLoading}
-                    />
-                  </div>
-
-                  <button onClick={handleSubmit} disabled={isLoading} style={styles.primaryBtn}>
-                    {isLoading ? "Submitting..." : "ส่งความคืบหน้า"}
-                  </button>
-                </div>
-              )}
-
-              {mode === "edit" && (
-                <div style={styles.card}>
-                  <div style={styles.cardTitle}>Manage your updates</div>
-
-                  <div style={styles.field}>
-                    <label style={styles.label}>Select update</label>
-                    <select
-                      value={selectedId ?? ""}
-                      onChange={(e) => setSelectedId(Number(e.target.value) || null)}
-                      style={styles.select}
-                      disabled={isLoading || processlist.length === 0}
-                    >
-                      {processlist.length === 0 ? <option value="">No updates</option> : null}
-                      {processlist.map((p: any) => {
-                        const id = getId(p);
-                        const title = getProgressTitle(p);
-                        return (
-                          <option key={id} value={id}>
-                            {title || `Update #${id}`}
-                          </option>
-                        );
-                      })}
-                    </select>
-                  </div>
-
-                  <div style={styles.field}>
-                    <label style={styles.label}>New Name (Progress title) (optional)</label>
-                    <input
-                      value={progressTitle}
-                      onChange={(e) => setProgressTitle(e.target.value)}
-                      placeholder="field ที่ว่างจะยังคง value เดิมไว้"
-                      style={styles.input}
-                      disabled={isLoading}
-                    />
-                  </div>
-
-                  <div style={styles.field}>
-                    <label style={styles.label}>New file (optional)</label>
-                    <input
-                      type="file"
-                      onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                      style={styles.input}
-                      disabled={isLoading}
-                    />
-                    {file?.name ? <div style={styles.smallText}>Selected: {file.name}</div> : null}
-                  </div>
-
-                  <div style={styles.field}>
-                    <label style={styles.label}>New comment (optional)</label>
-                    <textarea
-                      value={comment}
-                      onChange={(e) => setComment(e.target.value)}
-                      placeholder="field ที่ว่างจะยังคง value เดิมไว้"
-                      style={styles.textarea}
-                      disabled={isLoading}
-                    />
-                  </div>
-
-                  <div style={{ display: "flex", gap: 10 }}>
-                    <button onClick={handleEdit} disabled={isLoading} style={styles.primaryBtn}>
-                      {isLoading ? "Saving..." : "บันทึก"}
-                    </button>
-                    <button onClick={handleDelete} disabled={isLoading} style={styles.dangerBtn}>
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
+            {!locked && (
+                <button 
+                    onClick={openAddModal} 
+                    style={styles.addButton}
+                    onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                    onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                >
+                    + สร้างความคืบหน้า (New Block)
+                </button>
+            )}
         </div>
 
-        <div style={styles.right}>
-          {locked ? (
-            <div style={styles.lockRight}>
-              <div style={{ fontWeight: 900, marginBottom: 6 }}>🔒 Locked</div>
-              <div style={{ fontSize: 13, opacity: 0.8 }}>
-                Progress list will appear after you join a group project.
-              </div>
-            </div>
-          ) : (
-            <>
-              <div style={styles.listHeader}>
-                <div style={{ fontWeight: 800 }}>Updates</div>
-                <div style={{ fontSize: 12, opacity: 0.7 }}>{processlist.length} items</div>
-              </div>
-
-              {processlist.length === 0 ? (
-                <div style={styles.empty}>No progress updates yet.</div>
-              ) : (
-                <div style={styles.list}>
-                  {processlist.map((p: any) => {
-                    const id = getId(p);
-                    const title = getProgressTitle(p);
-                    const filePath = getFilePath(p);
-                    const cmt = getCommentText(p);
-                    const updatedAt = getUpdatedAt(p);
-
+    
+        <div style={styles.gridContainer}>
+            {locked ? (
+                <div style={styles.emptyState}>
+                    <div style={{fontSize: '40px', marginBottom: '10px'}}>🔒</div>
+                    <h3>ไม่พบข้อมูลกลุ่ม</h3>
+                    <p>กรุณาเข้าร่วมกลุ่มโครงงานก่อน</p>
+                </div>
+            ) : processlist.length === 0 ? (
+                <div style={styles.emptyState}>
+                    <div style={{fontSize: '40px', marginBottom: '10px'}}>📦</div>
+                    <h3>Start Building</h3>
+                    <p>กดปุ่มด้านบนเพื่อวางบล็อกแรกของคุณ</p>
+                </div>
+            ) : (
+                processlist.map((item, index) => {
+                    const id = getId(item);
+      
+                    const animDelay = { animationDelay: `${index * 0.05}s` }; 
+                    
                     return (
-                      <div key={id} style={styles.item}>
-                        <div style={styles.itemTop}>
-                          <div style={styles.badge}>#{id}</div>
-                          <div style={styles.itemFile}>{title || `Update #${id}`}</div>
+                        <div key={id} style={{...styles.blockCard, ...animDelay}} className="progress-block">
+                
+                            <div style={styles.watermarkNumber}>{processlist.length - index}</div>
+
+                            <div style={styles.cardHeader}>
+                                <span style={styles.dateBadge}>{getUpdatedAt(item)}</span>
+                                <div style={styles.actions}>
+                                    <button onClick={() => openEditModal(item)} style={styles.actionBtn}>✏️</button>
+                                    <button onClick={() => handleDelete(id)} style={styles.actionBtn}>🗑️</button>
+                                </div>
+                            </div>
+
+                            <div style={styles.cardBody}>
+                                <h3 style={styles.cardTitle}>{getProgressTitle(item)}</h3>
+                                <p style={styles.cardDesc}>{getCommentText(item)}</p>
+                                
+                                {getFilePath(item) && (
+                                    <a 
+                                      href={`${process.env.NEXT_PUBLIC_API_URL}${getFilePath(item)}`}
+                                      target="_blank"
+                                      rel="noreferrer" 
+                                      style={styles.fileChip}
+                                    >
+                                        📄 {getFilePath(item)}
+                                    </a>
+                                )}
+                            </div>
+                            
+    
+                            <div style={styles.cardBottomStrip}></div>
                         </div>
-
-                        {filePath ? (
-                          <div style={{ fontSize: 12, opacity: 0.75 }}>
-                            File:{" "}
-                            <a
-                              href={`${process.env.NEXT_PUBLIC_API_URL}${filePath}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              {filePath}
-                            </a>
-                          </div>
-                        ) : null}
-
-                        <div style={styles.itemComment}>{cmt}</div>
-                        <div style={styles.itemMeta}>{updatedAt ? `Updated: ${updatedAt}` : ""}</div>
-                      </div>
                     );
-                  })}
-                </div>
-              )}
-            </>
-          )}
+                })
+            )}
         </div>
       </div>
+
+      {/* --- MODAL (Standard Light Theme) --- */}
+      {isModalOpen && (
+        <div style={styles.modalOverlay}>
+            <div style={styles.modal}>
+                <div style={styles.modalHeader}>
+                    <h3>{modalMode === 'add' ? 'เพิ่มบล็อกความคืบหน้า' : 'แก้ไขข้อมูล'}</h3>
+                    <button onClick={() => setIsModalOpen(false)} style={styles.closeBtn}>×</button>
+                </div>
+                <div style={styles.modalBody}>
+                     <div style={styles.formGroup}>
+                        <label style={styles.label}>หัวข้อ (Title)</label>
+                        <input 
+                            style={styles.input} 
+                            value={progressTitle}
+                            onChange={e => setProgressTitle(e.target.value)}
+                            placeholder="เช่น บทที่ 1 เสร็จสมบูรณ์"
+                        />
+                     </div>
+                     <div style={styles.formGroup}>
+                        <label style={styles.label}>รายละเอียด (Details)</label>
+                        <textarea 
+                            style={styles.textarea} 
+                            value={comment}
+                            onChange={e => setComment(e.target.value)}
+                            placeholder="รายละเอียดสิ่งที่ทำ..."
+                        />
+                     </div>
+                     <div style={styles.formGroup}>
+                        <label style={styles.label}>แนบไฟล์ (Attachment)</label>
+                        <input 
+                            type="file" 
+                            style={styles.fileInput}
+                            onChange={e => setFile(e.target.files?.[0] ?? null)}
+                        />
+                     </div>
+                </div>
+                <div style={styles.modalFooter}>
+                    <button onClick={() => setIsModalOpen(false)} style={styles.cancelBtn}>ยกเลิก</button>
+                    <button onClick={handleSubmit} disabled={isLoading} style={styles.saveBtn}>
+                        {isLoading ? 'กำลังบันทึก...' : 'บันทึก (Save Block)'}
+                    </button>
+                </div>
+            </div>
+        </div>
+      )}
     </div>
   );
 }
 
+// --- STYLES: SUT Decoration + Unique Block UI ---
 const styles: Record<string, CSSProperties> = {
-  page: {
-    minHeight: "100vh",
-    background: "#f6f7fb",
-    fontFamily: "'Inter', system-ui, sans-serif",
-    color: "#111827",
-  },
-  header: {
+  // 1. HEADER (SUT STYLE)
+  topBar: {
+    backgroundColor: "#951B2E", // Official SUT Maroon
+    height: "60px",
+    width: "100%",
     position: "sticky",
     top: 0,
-    zIndex: 10,
-    background: "linear-gradient(100deg, #8A011D 0%, #7F666B 100%)",
-    padding: "18px 18px",
-    color: "white",
-    display: "flex",
-    justifyContent: "space-between",
-    gap: "14px",
-    alignItems: "center",
-    flexWrap: "wrap",
+    zIndex: 100,
+    boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
   },
-  appTitle: { fontSize: 20, fontWeight: 900, letterSpacing: 0.2 },
-  subTitle: { fontSize: 13, opacity: 0.9 },
-  modeTabs: {
-    display: "flex",
-    gap: 8,
-    background: "rgba(255,255,255,0.14)",
-    padding: 6,
-    borderRadius: 999,
-  },
-  tab: {
-    border: "none",
-    cursor: "pointer",
-    padding: "10px 14px",
-    borderRadius: 999,
-    background: "transparent",
-    color: "rgba(255,255,255,0.9)",
-    fontWeight: 700,
-    opacity: 0.95,
-  },
-  tabActive: {
-    border: "none",
-    cursor: "pointer",
-    padding: "10px 14px",
-    borderRadius: 999,
-    background: "white",
-    color: "#8A011D",
-    fontWeight: 900,
-  },
-  content: {
-    maxWidth: 1200,
+  topBarContent: {
+    maxWidth: "1200px",
     margin: "0 auto",
-    padding: 18,
-    display: "grid",
-    gridTemplateColumns: "420px 1fr",
-    gap: 16,
+    height: "100%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: "0 20px",
+    color: "white",
   },
-  left: { display: "flex", flexDirection: "column", gap: 12 },
-  right: {
-    background: "white",
-    borderRadius: 14,
-    boxShadow: "0 10px 25px rgba(0,0,0,0.06)",
+  logo: { fontSize: "24px", fontWeight: "900", letterSpacing: "1px" },
+  navLinks: { display: "flex", gap: "25px", fontSize: "14px", fontWeight: "500" },
+  navItem: { cursor: "pointer", opacity: 0.9 },
+  activeLink: { borderBottom: "2px solid white", fontWeight: "700", opacity: 1 },
+  userIcon: {
+    width: "32px", height: "32px", backgroundColor: "white", color: "#951B2E",
+    borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold"
+  },
+
+  // 2. MAIN LAYOUT
+  mainContainer: { maxWidth: "1200px", margin: "0 auto", padding: "40px 20px", minHeight: "calc(100vh - 60px)" },
+  
+  // 3. PAGE HEADER
+  headerSection: {
+    display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "40px"
+  },
+  titleWrapper: { display: "flex", gap: "15px", alignItems: "center" },
+  redLine: { width: "5px", height: "50px", backgroundColor: "#951B2E", borderRadius: "4px" },
+  pageTitle: { fontSize: "28px", fontWeight: "800", color: "#333", margin: 0 },
+  pageSubtitle: { fontSize: "14px", color: "#666", marginTop: "5px" },
+  
+  // 4. ACTION BUTTON
+  addButton: {
+    backgroundColor: "#951B2E",
+    color: "white",
+    border: "none",
+    padding: "12px 24px",
+    borderRadius: "50px", // Rounded pill shape
+    fontSize: "15px",
+    fontWeight: "600",
+    cursor: "pointer",
+    boxShadow: "0 4px 15px rgba(149, 27, 46, 0.3)", // Red glow shadow
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    transition: "transform 0.2s ease",
+  },
+
+  // 5. THE UNIQUE UI (GRID SYSTEM)
+  gridContainer: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", // Masonry effect
+    gap: "25px",
+  },
+  
+  // 6. BLOCK CARD (White with SUT accents)
+  blockCard: {
+    backgroundColor: "white",
+    borderRadius: "16px",
+    padding: "24px",
+    position: "relative",
     overflow: "hidden",
-    minHeight: 520,
+    boxShadow: "0 10px 30px rgba(0,0,0,0.05)", // Soft clean shadow
+    border: "1px solid #eee",
     display: "flex",
     flexDirection: "column",
+    justifyContent: "space-between",
+    minHeight: "200px",
+    transition: "transform 0.2s",
   },
-  status: { borderRadius: 12, padding: "12px 14px", fontSize: 14 },
-  card: {
-    background: "white",
-    borderRadius: 14,
-    boxShadow: "0 10px 25px rgba(0,0,0,0.06)",
-    padding: 16,
+  // The big number in the background
+  watermarkNumber: {
+    position: "absolute",
+    top: "-10px",
+    right: "10px",
+    fontSize: "100px",
+    fontWeight: "900",
+    color: "#f3f3f3", // Very subtle gray
+    zIndex: 0,
+    pointerEvents: "none",
+    fontFamily: "Arial, sans-serif"
   },
-  cardTitle: { fontSize: 16, fontWeight: 900, marginBottom: 6 },
-  cardDesc: { fontSize: 13, opacity: 0.8, marginBottom: 12 },
-  field: { display: "flex", flexDirection: "column", gap: 6, marginBottom: 12 },
-  label: { fontSize: 12, fontWeight: 800, textTransform: "uppercase", opacity: 0.7 },
+  cardHeader: {
+    display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px", zIndex: 1, position: 'relative'
+  },
+  dateBadge: {
+    fontSize: "12px",
+    fontWeight: "700",
+    color: "#951B2E",
+    backgroundColor: "rgba(149, 27, 46, 0.08)",
+    padding: "4px 10px",
+    borderRadius: "6px",
+  },
+  actions: { display: "flex", gap: "5px" },
+  actionBtn: { border: "none", background: "none", cursor: "pointer", fontSize: "14px", opacity: 0.5, transition: "opacity 0.2s" },
+  
+  cardBody: { zIndex: 1, position: 'relative', flex: 1 },
+  cardTitle: { fontSize: "18px", fontWeight: "700", color: "#222", marginBottom: "8px" },
+  cardDesc: { fontSize: "14px", color: "#555", lineHeight: "1.6", whiteSpace: "pre-wrap", marginBottom: "15px" },
+  
+  fileChip: {
+    display: "inline-flex", alignItems: "center",
+    fontSize: "12px", color: "#555",
+    backgroundColor: "#f5f5f5", border: "1px solid #e0e0e0",
+    padding: "6px 12px", borderRadius: "20px", textDecoration: "none",
+    fontWeight: "500"
+  },
+  cardBottomStrip: {
+    position: "absolute", bottom: 0, left: 0, width: "100%", height: "4px", backgroundColor: "#951B2E"
+  },
+
+  // 7. EMPTY STATE
+  emptyState: {
+    gridColumn: "1 / -1",
+    textAlign: "center",
+    padding: "60px",
+    backgroundColor: "white",
+    borderRadius: "16px",
+    border: "2px dashed #ddd",
+    color: "#888"
+  },
+
+  // 8. MODAL (Clean Light Theme)
+  modalOverlay: {
+    position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000,
+    backdropFilter: "blur(3px)"
+  },
+  modal: {
+    backgroundColor: "white", width: "500px", maxWidth: "90%",
+    borderRadius: "12px", boxShadow: "0 20px 50px rgba(0,0,0,0.2)", overflow: "hidden"
+  },
+  modalHeader: {
+    padding: "20px", backgroundColor: "#f9f9f9", borderBottom: "1px solid #eee",
+    display: "flex", justifyContent: "space-between", alignItems: "center"
+  },
+  closeBtn: { border: "none", background: "none", fontSize: "24px", cursor: "pointer", color: "#999" },
+  modalBody: { padding: "24px" },
+  formGroup: { marginBottom: "20px" },
+  label: { display: "block", fontSize: "14px", fontWeight: "600", marginBottom: "8px", color: "#333" },
   input: {
-    padding: "10px 12px",
-    borderRadius: 10,
-    border: "1px solid #e5e7eb",
-    outline: "none",
-    fontSize: 14,
+    width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid #ddd", fontSize: "14px", outline: "none"
   },
   textarea: {
-    padding: "10px 12px",
-    borderRadius: 10,
-    border: "1px solid #e5e7eb",
-    outline: "none",
-    fontSize: 14,
-    minHeight: 90,
-    resize: "vertical",
+    width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid #ddd", fontSize: "14px", minHeight: "100px", outline: "none", fontFamily: "inherit"
   },
-  select: {
-    padding: "10px 12px",
-    borderRadius: 10,
-    border: "1px solid #e5e7eb",
-    outline: "none",
-    fontSize: 14,
-    background: "white",
+  fileInput: { fontSize: "14px" },
+  modalFooter: {
+    padding: "20px", borderTop: "1px solid #eee", display: "flex", justifyContent: "flex-end", gap: "10px", backgroundColor: "#f9f9f9"
   },
-  primaryBtn: {
-    width: "100%",
-    padding: "12px 12px",
-    borderRadius: 12,
-    border: "none",
-    cursor: "pointer",
-    background: "#8A011D",
-    color: "white",
-    fontWeight: 900,
-    boxShadow: "0 8px 16px rgba(138, 1, 29, 0.25)",
+  cancelBtn: {
+    padding: "10px 20px", borderRadius: "6px", border: "1px solid #ddd", background: "white", cursor: "pointer"
   },
-  dangerBtn: {
-    padding: "12px 12px",
-    borderRadius: 12,
-    border: "none",
-    cursor: "pointer",
-    background: "#ef4444",
-    color: "white",
-    fontWeight: 900,
-    flex: 1,
-  },
-  listHeader: {
-    padding: "14px 16px",
-    borderBottom: "1px solid #eef2f7",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  list: { padding: 16, display: "flex", flexDirection: "column", gap: 12 },
-  item: { border: "1px solid #eef2f7", borderRadius: 14, padding: 14, background: "#ffffff" },
-  itemTop: { display: "flex", gap: 10, alignItems: "center", marginBottom: 6 },
-  badge: {
-    background: "#f3f4f6",
-    borderRadius: 999,
-    padding: "4px 10px",
-    fontWeight: 900,
-    fontSize: 12,
-    flexShrink: 0,
-  },
-  itemFile: { fontWeight: 900, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
-  itemComment: { fontSize: 14, opacity: 0.9, marginTop: 6, whiteSpace: "pre-wrap" },
-  itemMeta: { fontSize: 12, opacity: 0.6, marginTop: 8 },
-  empty: { padding: 28, textAlign: "center", color: "#6b7280" },
-  smallText: { fontSize: 12, opacity: 0.8 },
-
-  lockCard: {
-    background: "white",
-    borderRadius: 14,
-    boxShadow: "0 10px 25px rgba(0,0,0,0.06)",
-    padding: 18,
-    border: "1px solid #fde68a",
-  },
-  lockTitle: { fontSize: 18, fontWeight: 900, marginBottom: 6 },
-  lockDesc: { fontSize: 13, opacity: 0.85, marginBottom: 12 },
-  lockSteps: {
-    background: "#fffbeb",
-    border: "1px solid #fde68a",
-    borderRadius: 12,
-    padding: 12,
-    display: "flex",
-    flexDirection: "column",
-    gap: 8,
-    marginBottom: 10,
-  },
-  lockStep: { fontSize: 13, color: "#92400e" },
-  lockHint: { fontSize: 12, opacity: 0.75 },
-  lockRight: {
-    padding: 24,
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "center",
-    alignItems: "center",
-    minHeight: 520,
-    textAlign: "center",
-    background: "linear-gradient(180deg, #ffffff 0%, #fff7ed 100%)",
-  },
+  saveBtn: {
+    padding: "10px 20px", borderRadius: "6px", border: "none", background: "#951B2E", color: "white", cursor: "pointer", fontWeight: "600"
+  }
 };

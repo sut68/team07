@@ -2,12 +2,32 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
-import { GetAllChat, InsertChat, DropChat, Getteachergroup } from "../../../services/chat";
+import { GetAllChat, InsertChat, DropChat, Getteachergroup, UploadFile } from "../../../services/chat";
 import { GetProgress } from "../../../services/progress";
 import type { FullChat } from "../../../interfaces/Chat";
 import type { FullProgress } from "../../../interfaces/Progress";
+import { GetMe } from "@/app/services/login";
+import { 
+  SendOutlined, 
+  DeleteOutlined, 
+  MessageOutlined, 
+  UserOutlined, 
+  TeamOutlined, 
+  RocketOutlined, 
+  CommentOutlined,
+  DisconnectOutlined,
+  CheckCircleOutlined,
+  ProjectOutlined,
+  CaretDownOutlined,
+  AppstoreOutlined,
+  PaperClipOutlined,
+  CloseCircleOutlined,
+  FileOutlined,
+  LoadingOutlined,
+  PictureOutlined
+} from '@ant-design/icons';
+import { Avatar, Tooltip, Badge, Input, Button, Empty, Select, Tag } from 'antd';
 
-// ✅ you should have this interface somewhere central, but ok to keep local
 export interface GroupProject {
   id: number;
   group_number: number;
@@ -17,39 +37,51 @@ export interface GroupProject {
   teacher_id: number;
 }
 
-const RED = "#9a0120";
-const RED_DARK = "#7d0019";
-const BORDER = "#e5e7eb";
-const BG = "#fafafa";
+const THEME_RED = "#8A011D";
+const THEME_RED_LIGHT = "#a81835";
+const BG_COLOR = "#f0f2f5";
+const BORDER_COLOR = "#e5e7eb";
+const API_URL = "http://localhost:8080"; // Ensure this matches your backend port
 
 export default function ChatPage() {
   const [mounted, setMounted] = useState(false);
-
   const [userId, setUserId] = useState<string | null>(null);
-
-  // ✅ teacher may have many groups
+  const [myUsername, setMyUsername] = useState<string>("");
   const [teacherGroups, setTeacherGroups] = useState<GroupProject[]>([]);
   const [groupProjectId, setGroupProjectId] = useState<number>(0);
-
   const [processes, setProcesses] = useState<FullProgress[]>([]);
   const [activeRoomId, setActiveRoomId] = useState<number | null>(null);
-
   const [chats, setChats] = useState<FullChat[]>([]);
   const [message, setMessage] = useState("");
 
-  const bottomRef = useRef<HTMLDivElement>(null);
+  // --- New File Upload States ---
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // ✅ ONE socket per tab
+  const bottomRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket | null>(null);
 
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    (async () => {
+      try {
+        const me = await GetMe();
+        if (me?.id) {
+          setUserId(String(me.id));
+          setMyUsername(me.username || "");
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!mounted) return;
     setUserId(localStorage.getItem("user_id"));
   }, [mounted]);
 
-  // ✅ init socket once
   useEffect(() => {
     if (!mounted) return;
     if (socketRef.current) return;
@@ -63,8 +95,8 @@ export default function ChatPage() {
 
     socketRef.current = s;
 
-    s.on("connect", () => console.log("✅ socket connected:", s.id));
-    s.on("connect_error", (e) => console.error("❌ socket connect_error:", e));
+    s.on("connect", () => console.log("socket connected:", s.id));
+    s.on("connect_error", (e) => console.error("socket connect_error:", e));
 
     return () => {
       try {
@@ -90,10 +122,12 @@ export default function ChatPage() {
       message: data.message ?? data.Message ?? "",
       updated_at: timeString,
       created_at: data.created_at ?? data.CreatedAt ?? timeString,
-    };
+      name: data.name ?? data.Name ?? `ผู้ใช้ ${data.sender_id}`,
+      // Ensure we capture the type correctly
+      type: Number(data.type ?? data.ChatType ?? data.chattype ?? 1),
+    } as any;
   };
 
-  // ✅ load teacher groups once userId available
   useEffect(() => {
     if (!mounted) return;
     if (!userId) return;
@@ -123,7 +157,6 @@ export default function ChatPage() {
 
         setTeacherGroups(clean);
 
-        // ✅ choose default group: prefer In Process -> Pending -> first
         const preferred =
           clean.find((g) => g.group_status === "In Process") ??
           clean.find((g) => g.group_status === "Pending") ??
@@ -155,6 +188,7 @@ export default function ChatPage() {
       const res = await GetAllChat({
         group_project_id: groupProjectId,
         process_id: Number(rid),
+        name: "", 
       });
 
       const rawData = Array.isArray(res) ? res : [];
@@ -167,7 +201,6 @@ export default function ChatPage() {
     }
   };
 
-  // ✅ load progresses when groupProjectId changes
   useEffect(() => {
     if (!mounted) return;
     if (!idsOk) {
@@ -194,7 +227,6 @@ export default function ChatPage() {
     })();
   }, [mounted, groupProjectId, idsOk]);
 
-  // ✅ join/leave + receive per room
   useEffect(() => {
     if (!mounted) return;
     if (!idsOk) return;
@@ -241,12 +273,42 @@ export default function ChatPage() {
     setActiveRoomId(roomId);
   };
 
-  const sendChat = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // --- File Handling Functions ---
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (const item of items) {
+      if (item.kind === 'file') {
+        const file = item.getAsFile();
+        if (file) {
+          setSelectedFile(file);
+          e.preventDefault();
+        }
+      }
+    }
+  };
+
+  const clearFile = () => {
+    setSelectedFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const isImage = (filename: string) => {
+    return /\.(jpg|jpeg|png|gif|webp)$/i.test(filename);
+  };
+
+  const sendChat = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!roomJoined || !idsOk) return;
 
     const text = message.trim();
-    if (!text) return;
+    if (!text && !selectedFile) return;
 
     const socket = socketRef.current;
     if (!socket) {
@@ -254,22 +316,57 @@ export default function ChatPage() {
       return;
     }
 
-    const roomIdStr = `${groupProjectId}:${activeRoomId}`;
-
-    const payload = {
-      group_project_id: groupProjectId,
-      process_id: Number(activeRoomId),
-      sender_id: Number(userId),
-      message: text,
-    };
-
-    setMessage("");
+    setUploading(true);
 
     try {
-      await InsertChat(payload);
+      let finalMessage = text;
+      let finalType = 1;
+
+      // 1. Upload File if exists
+      if (selectedFile) {
+         const url = await UploadFile(selectedFile);
+         finalMessage = url;
+         finalType = 2; // Type 2 = File
+      }
+
+      const roomIdStr = `${groupProjectId}:${activeRoomId}`;
+
+      const payload = {
+        group_project_id: groupProjectId,
+        process_id: Number(activeRoomId),
+        sender_id: Number(userId),
+        type: finalType,
+        name: myUsername,
+        message: finalMessage,
+      };
+
+      // 2. Save to DB
+      const savedMessage = (await InsertChat(payload)) as any;
+      const dbId = Number(savedMessage?.id || savedMessage?.ID || 0);
+      const uniqueId = dbId > 0 ? dbId : Date.now() + Math.random();
+
+      // 3. Emit to Socket
+      const socketPayload = {
+        ...payload,
+        ...(typeof savedMessage === 'object' ? savedMessage : {}),
+        id: uniqueId,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        room_id: roomIdStr,
+        name: savedMessage?.name || savedMessage?.Name || myUsername,
+      };
+
+      socket.emit("send_message", socketPayload);
+      
+      // 4. Reset
+      setMessage("");
+      clearFile();
+
     } catch (err) {
       console.error("InsertChat failed:", err);
       alert("ส่งข้อความไม่สำเร็จ");
+    } finally {
+        setUploading(false);
     }
   };
 
@@ -304,7 +401,13 @@ export default function ChatPage() {
   const formatTime = (dateStr?: string) => {
     if (!mounted || !dateStr) return "";
     try {
-      return new Date(dateStr).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      const date = new Date(dateStr);
+      let hours = date.getHours();
+      const minutes = date.getMinutes().toString().padStart(2, "0");
+      const ampm = hours >= 12 ? "pm" : "am";
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      return `${hours}.${minutes} ${ampm}`;
     } catch {
       return "";
     }
@@ -320,184 +423,178 @@ export default function ChatPage() {
         display: "flex",
         height: "100vh",
         width: "100%",
-        fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, sans-serif",
-        background: BG,
+        fontFamily: "'Noto Sans Thai', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        background: BG_COLOR,
       }}
     >
-      {/* SIDEBAR */}
       <aside
         style={{
-          width: 280,
+          width: 320,
           background: "#fff",
-          borderRight: `1px solid ${BORDER}`,
+          borderRight: `1px solid ${BORDER_COLOR}`,
           display: "flex",
           flexDirection: "column",
+          boxShadow: "2px 0 8px rgba(0,0,0,0.05)",
+          zIndex: 10
         }}
       >
-        <div style={{ padding: 14, borderBottom: `1px solid ${BORDER}` }}>
-          <div style={{ fontSize: 16, fontWeight: 800, color: "#111827" }}>หัวข้อ</div>
-          <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>
-            กลุ่ม <b>{groupProjectId || "-"}</b> • ผู้ใช้ <b>{userId || "-"}</b>
+        <div style={{ padding: "24px 20px", borderBottom: `1px solid ${BORDER_COLOR}` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+            <div style={{ width: 4, height: 24, background: THEME_RED, borderRadius: 2 }}></div>
+            <h1 style={{ fontSize: 20, fontWeight: 700, color: "#1f1f1f", margin: 0 }}>
+              ห้องสนทนา
+            </h1>
           </div>
-
-          {/* ✅ group selector (teacher has many groups) */}
-          <div style={{ marginTop: 10 }}>
-            <select
-              value={groupProjectId}
-              onChange={(e) => setGroupProjectId(Number(e.target.value))}
-              style={{
-                width: "100%",
-                height: 36,
-                borderRadius: 10,
-                border: `1px solid ${BORDER}`,
-                padding: "0 10px",
-                outline: "none",
-              }}
-            >
-              {teacherGroups.length === 0 ? (
-                <option value={0}>ไม่มีกลุ่ม</option>
-              ) : (
-                <>
-                  {teacherGroups.map((g) => (
-                    <option key={g.id} value={g.id}>
-                      กลุ่ม {g.group_number} • {g.group_status} • {g.year}
-                    </option>
-                  ))}
-                </>
-              )}
-            </select>
+          <div style={{ fontSize: 13, color: "#6b7280", display: 'flex', alignItems: 'center', gap: 6 }}>
+             <TeamOutlined style={{ color: THEME_RED }} />
+             <span>จัดการและให้คำปรึกษา</span>
           </div>
         </div>
 
-        <div style={{ padding: 10, overflowY: "auto" }}>
+        <div style={{ flex: 1, padding: "16px 12px", overflowY: "auto" }}>
           {locked ? (
-            <div style={{ padding: 10, color: "#6b7280", fontSize: 13 }}>
-              คุณยังไม่มีกลุ่ม โปรดเข้าร่วมกลุ่มก่อนจึงจะใช้งานแชทได้
+            <div style={{ padding: 20, textAlign: 'center', color: "#999", background: '#f9f9f9', borderRadius: 8, marginTop: 20 }}>
+              <ProjectOutlined style={{ fontSize: 24, marginBottom: 8 }} />
+              <div style={{ fontSize: 13 }}>กรุณาเลือกกลุ่มโครงงาน<br/>จากมุมขวาบน</div>
             </div>
           ) : processes.length === 0 ? (
-            <div style={{ padding: 10, color: "#6b7280", fontSize: 13 }}>ยังไม่มีหัวข้อ</div>
+            <div style={{ padding: 20, textAlign: 'center', color: "#999", marginTop: 20 }}>
+              <RocketOutlined style={{ fontSize: 24, marginBottom: 8 }} />
+              <div>ยังไม่มีหัวข้อที่อนุมัติ</div>
+            </div>
           ) : (
             processes.map((p) => {
               const isActive = Number(p.id) === Number(activeRoomId);
               return (
-                <button
+                <div
                   key={p.id}
-                  type="button"
                   onClick={() => onClickRoom(Number(p.id))}
-                  title={(p as any).file}
                   style={{
                     width: "100%",
                     display: "flex",
                     alignItems: "center",
-                    gap: 10,
-                    padding: "10px 10px",
-                    marginBottom: 6,
-                    borderRadius: 10,
-                    border: isActive ? `1px solid ${RED}` : `1px solid transparent`,
-                    background: isActive ? RED : "transparent",
-                    color: isActive ? "#fff" : "#111827",
+                    gap: 12,
+                    padding: "12px 16px",
+                    marginBottom: 8,
+                    borderRadius: 12,
+                    background: isActive ? `linear-gradient(135deg, ${THEME_RED}, ${THEME_RED_LIGHT})` : "#fff",
+                    color: isActive ? "#fff" : "#1f1f1f",
                     cursor: "pointer",
-                    textAlign: "left",
-                    fontWeight: isActive ? 800 : 600,
+                    transition: "all 0.2s ease",
+                    boxShadow: isActive ? "0 4px 12px rgba(138, 1, 29, 0.2)" : "0 2px 4px rgba(0,0,0,0.02)",
+                    border: isActive ? "none" : `1px solid ${BORDER_COLOR}`,
                     opacity: locked ? 0.6 : 1,
                   }}
-                  disabled={locked}
                 >
-                  <span
-                    style={{
-                      width: 10,
-                      height: 10,
-                      borderRadius: 999,
-                      background: isActive ? "#fff" : RED,
-                      opacity: isActive ? 1 : 0.7,
-                      flexShrink: 0,
-                    }}
+                  <Avatar 
+                    size="small" 
+                    icon={<CommentOutlined />} 
+                    style={{ 
+                        backgroundColor: isActive ? 'rgba(255,255,255,0.2)' : '#f0f0f0',
+                        color: isActive ? '#fff' : '#666'
+                    }} 
                   />
-                  <span
-                    style={{
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                      flex: 1,
-                    }}
-                  >
-                    {(p as any).Name ?? (p as any).file ?? `Room ${p.id}`}
-                  </span>
-                </button>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: isActive ? 600 : 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      {(p as any).Name ?? (p as any).file ?? `Process ${p.id}`}
+                    </div>
+                  </div>
+                  {isActive && <CheckCircleOutlined style={{ color: 'rgba(255,255,255,0.8)' }} />}
+                </div>
               );
             })
           )}
         </div>
+        
+        <div style={{ padding: 16, borderTop: `1px solid ${BORDER_COLOR}`, background: '#f8f9fa' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Avatar style={{ backgroundColor: THEME_RED }} icon={<UserOutlined />} />
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontSize: 12, color: '#666' }}>เข้าสู่ระบบในชื่อ</span>
+                    <span style={{ fontSize: 13, fontWeight: 600 }}>{myUsername || `อาจารย์ (${userId})`}</span>
+                </div>
+            </div>
+        </div>
       </aside>
 
-      {/* MAIN CHAT AREA */}
-      <main style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+      <main style={{ flex: 1, display: "flex", flexDirection: "column", background: "#f5f7fa" }}>
         <div
           style={{
-            padding: 14,
+            padding: "12px 24px",
             background: "#fff",
-            borderBottom: `1px solid ${BORDER}`,
+            borderBottom: `1px solid ${BORDER_COLOR}`,
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            gap: 12,
+            boxShadow: "0 2px 4px rgba(0,0,0,0.02)",
+            zIndex: 9,
+            height: 72
           }}
         >
-          <div style={{ minWidth: 0 }}>
-            <div
-              style={{
-                fontSize: 16,
-                fontWeight: 900,
-                color: "#111827",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {locked ? "ยังไม่พร้อมใช้งาน" : currentRoom ? (currentRoom as any).file : "เลือกหัวข้อ"}
+          <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: "#1f1f1f", display: 'flex', alignItems: 'center', gap: 8 }}>
+              {locked ? "เลือกกลุ่มเพื่อเริ่ม" : currentRoom ? (currentRoom as any).file : "เลือกหัวข้อ"}
             </div>
-            <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>
-              {locked ? "โปรดเข้าร่วมกลุ่มก่อน" : roomJoined ? `${chats.length} ข้อความ` : "คลิกหัวข้อทางซ้าย"}
+            <div style={{ fontSize: 12, color: "#6b7280" }}>
+              {locked ? "กรุณาเลือกกลุ่มจากด้านขวา" : roomJoined ? `ประวัติการสนทนา ${chats.length} ข้อความ` : "คลิกหัวข้อทางซ้ายเพื่อเริ่มสนทนา"}
             </div>
           </div>
 
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-              padding: "8px 10px",
-              borderRadius: 999,
-              border: `1px solid ${BORDER}`,
-              background: "#fff",
-              fontSize: 12,
-              color: "#374151",
-              whiteSpace: "nowrap",
-            }}
-          >
-            <span
-              style={{
-                width: 8,
-                height: 8,
-                borderRadius: 999,
-                background: locked ? "#9ca3af" : roomJoined ? "#22c55e" : "#9ca3af",
-              }}
-            />
-            {locked ? "ยังไม่พร้อม" : roomJoined ? "เชื่อมต่อแล้ว" : "ยังไม่ได้เข้าห้อง"}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+             <Select
+                value={groupProjectId}
+                onChange={(val) => setGroupProjectId(Number(val))}
+                style={{ width: 220 }}
+                placeholder="เลือกกลุ่มโครงงาน"
+                suffixIcon={<CaretDownOutlined style={{ color: THEME_RED }} />}
+                options={teacherGroups.map(g => ({
+                    value: g.id,
+                    label: (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span>กลุ่ม {g.group_number}</span>
+                        <Tag color={g.group_status === 'Approved' ? 'green' : 'orange'} style={{ marginRight: 0, fontSize: 10 }}>
+                        {g.group_status}
+                        </Tag>
+                    </div>
+                    )
+                }))}
+                dropdownRender={(menu) => (
+                    <>
+                    {menu}
+                    {teacherGroups.length === 0 && (
+                        <div style={{ padding: '8px', fontSize: '12px', color: '#999', textAlign: 'center' }}>
+                        ไม่พบกลุ่มในที่ปรึกษา
+                        </div>
+                    )}
+                    </>
+                )}
+             />
+
+             <Badge status={locked ? "default" : roomJoined ? "success" : "warning"} text={
+                <span style={{ color: locked ? "#999" : roomJoined ? "#52c41a" : "#faad14", fontWeight: 500 }}>
+                    {locked ? "No Group" : roomJoined ? "Live" : "Waiting"}
+                </span>
+             } />
           </div>
         </div>
 
-        <div style={{ flex: 1, padding: 16, overflowY: "auto", background: BG }}>
+        {/* Chat Area */}
+        <div style={{ flex: 1, padding: "20px 24px", overflowY: "auto", display: 'flex', flexDirection: 'column' }}>
           {locked ? (
-            <div style={{ textAlign: "center", marginTop: 90, color: "#6b7280" }}>
-              คุณยังไม่มีกลุ่ม โปรดเข้าร่วมกลุ่มก่อนจึงจะใช้งานแชทได้
+            <div style={{ margin: 'auto', textAlign: "center", color: "#9ca3af" }}>
+               <AppstoreOutlined style={{ fontSize: 48, marginBottom: 16, color: '#e5e7eb' }} />
+               <div style={{ fontWeight: 600, color: "#374151" }}>กรุณาเลือกกลุ่มโครงงาน</div>
+               <div style={{ fontSize: 13 }}>เลือกกลุ่มที่ต้องการให้คำปรึกษาจากมุมขวาบน</div>
             </div>
           ) : !roomJoined ? (
-            <div style={{ textAlign: "center", marginTop: 90, color: "#6b7280" }}>เลือกหัวข้อทางซ้าย</div>
+            <div style={{ margin: 'auto', textAlign: "center", color: "#9ca3af" }}>
+               <Empty description="เลือกหัวข้อทางซ้ายเพื่อเริ่มแชท" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+            </div>
           ) : chats.length === 0 ? (
-            <div style={{ textAlign: "center", marginTop: 90, color: "#6b7280" }}>
-              <div style={{ fontWeight: 800, color: "#111827" }}>ยังไม่มีข้อความ</div>
-              <div style={{ marginTop: 6 }}>พิมพ์ข้อความแรกได้เลย</div>
+            <div style={{ margin: 'auto', textAlign: "center", color: "#9ca3af" }}>
+               <MessageOutlined style={{ fontSize: 48, marginBottom: 16, color: '#e5e7eb' }} />
+               <div style={{ fontWeight: 600, color: "#374151" }}>ยังไม่มีข้อความ</div>
+               <div style={{ fontSize: 13 }}>เริ่มการให้คำปรึกษาได้เลย</div>
             </div>
           ) : (
             chats.map((c, index) => {
@@ -509,129 +606,188 @@ export default function ChatPage() {
                   style={{
                     display: "flex",
                     justifyContent: isMe ? "flex-end" : "flex-start",
-                    marginBottom: 10,
+                    marginBottom: 16,
+                    alignItems: 'flex-end',
+                    gap: 8
                   }}
                 >
-                  <div style={{ maxWidth: "72%" }}>
-                    <div
-                      style={{
-                        fontSize: 12,
-                        fontWeight: 800,
-                        color: "#6b7280",
-                        marginBottom: 4,
-                        textAlign: isMe ? "right" : "left",
-                      }}
-                    >
-                      {isMe ? "ฉัน" : `ผู้ใช้ ${c.sender_id}`}
-                    </div>
-
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        padding: "10px 12px",
-                        borderRadius: 14,
-                        background: isMe ? RED : "#fff",
-                        color: isMe ? "#fff" : "#111827",
-                        border: isMe ? `1px solid ${RED}` : `1px solid ${BORDER}`,
-                        boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
-                      }}
-                    >
-                      <div style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{c.message}</div>
-
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          marginTop: 8,
-                          paddingTop: 6,
-                          borderTop: isMe ? "1px solid rgba(255,255,255,0.3)" : `1px solid ${BORDER}`,
-                          gap: 15,
-                          fontSize: 10,
-                          opacity: 0.9,
-                        }}
+                  {!isMe && (
+                      <Avatar 
+                        size={32} 
+                        style={{ backgroundColor: '#1890ff', marginBottom: 4 }}
+                        icon={<UserOutlined />}
                       >
-                        <span>{formatTime(c.updated_at)}</span>
+                          {(c.name || '').charAt(0).toUpperCase()}
+                      </Avatar>
+                  )}
+                  
+                  <div style={{ maxWidth: "65%" }}>
+                    {!isMe && (
+                        <div style={{ fontSize: 11, color: "#6b7280", marginBottom: 4, marginLeft: 4 }}>
+                            {(c.name || `ผู้ใช้ ${c.sender_id}`).split('@')[0]}
+                        </div>
+                    )}
 
+                    <div
+                      style={{
+                        position: 'relative',
+                        padding: "12px 16px",
+                        borderRadius: isMe ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
+                        background: isMe ? THEME_RED : "#fff",
+                        color: isMe ? "#fff" : "#1f1f1f",
+                        boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+                        wordBreak: "break-word",
+                        lineHeight: 1.5,
+                        fontSize: 14
+                      }}
+                    >
+                      {/* === RENDER LOGIC: Check for Type 2 (File) === */}
+                      {(c.type === 2 || (c as any).chattype === 2) ? (
+                         <div>
+                            {isImage(c.message) ? (
+                                <img 
+                                    src={`${API_URL}${c.message}`}
+                                    alt="sent file" 
+                                    style={{ maxWidth: '200px', borderRadius: '8px', display: 'block', cursor: 'pointer' }}
+                                    onClick={() => window.open(`${API_URL}${c.message}`, '_blank')}
+                                />
+                            ) : (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <FileOutlined style={{ fontSize: 24 }} />
+                                    <a 
+                                        href={`${API_URL}${c.message}`} 
+                                        target="_blank" 
+                                        rel="noreferrer"
+                                        style={{ color: isMe ? 'white' : 'blue', textDecoration: 'underline' }}
+                                    >
+                                        Download File
+                                    </a>
+                                </div>
+                            )}
+                         </div>
+                      ) : (
+                         c.message
+                      )}
+                    </div>
+                    
+                    <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: isMe ? 'flex-end' : 'flex-start',
+                        gap: 8,
+                        marginTop: 4,
+                        padding: '0 4px'
+                    }}>
+                        <span style={{ fontSize: 10, color: "#9ca3af" }}>{formatTime(c.updated_at)}</span>
                         {isMe && (
-                          <button
-                            onClick={() => deleteMessage(Number(c.id))}
-                            style={{
-                              background: "transparent",
-                              border: "none",
-                              color: "inherit",
-                              cursor: "pointer",
-                              textDecoration: "underline",
-                              padding: 0,
-                              fontSize: 10,
-                            }}
-                          >
-                            ลบ
-                          </button>
+                            <Tooltip title="ลบข้อความ">
+                                <DeleteOutlined 
+                                    onClick={() => deleteMessage(Number(c.id))}
+                                    style={{ fontSize: 10, color: "#9ca3af", cursor: "pointer" }} 
+                                />
+                            </Tooltip>
                         )}
-                      </div>
                     </div>
                   </div>
                 </div>
               );
             })
           )}
-
           <div ref={bottomRef} />
         </div>
 
-        <form
-          onSubmit={sendChat}
+        {/* Input Area (New Design) */}
+        <div
           style={{
-            padding: 12,
-            borderTop: `1px solid ${BORDER}`,
+            padding: "16px 24px",
             background: "#fff",
+            borderTop: `1px solid ${BORDER_COLOR}`,
             display: "flex",
-            gap: 10,
-            alignItems: "center",
+            flexDirection: "column",
+            boxShadow: "0 -2px 10px rgba(0,0,0,0.02)"
           }}
         >
-          <input
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            disabled={locked || !roomJoined}
-            placeholder={locked ? "ยังไม่สามารถส่งข้อความได้" : !roomJoined ? "กรุณาเลือกหัวข้อก่อน" : "พิมพ์ข้อความ..."}
-            style={{
-              flex: 1,
-              height: 42,
-              padding: "0 12px",
-              borderRadius: 10,
-              border: `1px solid ${BORDER}`,
-              outline: "none",
-            }}
-            onFocus={(e) => (e.currentTarget.style.borderColor = RED)}
-            onBlur={(e) => (e.currentTarget.style.borderColor = BORDER)}
-          />
+          {/* A. FILE PREVIEW */}
+          {selectedFile && (
+            <div style={{ 
+              marginBottom: 10, 
+              padding: "8px 12px", 
+              background: "#f0f2f5", 
+              borderRadius: 8, 
+              display: "flex", 
+              alignItems: "center", 
+              justifyContent: "space-between",
+              fontSize: 13
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                {isImage(selectedFile.name) ? <PictureOutlined /> : <FileOutlined />}
+                <span style={{ maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {selectedFile.name}
+                </span>
+                <span style={{ color: "#999", fontSize: 11 }}>
+                  ({(selectedFile.size / 1024).toFixed(1)} KB)
+                </span>
+              </div>
+              <CloseCircleOutlined 
+                onClick={clearFile} 
+                style={{ cursor: "pointer", color: "#666", fontSize: 16 }} 
+              />
+            </div>
+          )}
 
-          <button
-            type="submit"
-            disabled={locked || !roomJoined || !message.trim()}
-            style={{
-              height: 42,
-              padding: "0 18px",
-              borderRadius: 10,
-              border: "none",
-              background: locked || !roomJoined || !message.trim() ? "#e5e7eb" : RED,
-              color: locked || !roomJoined || !message.trim() ? "#6b7280" : "#fff",
-              cursor: locked || !roomJoined || !message.trim() ? "not-allowed" : "pointer",
-              fontWeight: 900,
-            }}
-            onMouseEnter={(e) => {
-              if (!(locked || !roomJoined || !message.trim())) e.currentTarget.style.background = RED_DARK;
-            }}
-            onMouseLeave={(e) => {
-              if (!(locked || !roomJoined || !message.trim())) e.currentTarget.style.background = RED;
-            }}
-          >
-            ส่ง
-          </button>
-        </form>
+          {/* B. MAIN INPUT ROW */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, width: '100%' }}>
+             {/* Hidden File Input */}
+             <input 
+               type="file" 
+               hidden 
+               ref={fileInputRef} 
+               onChange={handleFileSelect} 
+             />
+
+             {/* Paperclip Button */}
+             <Button 
+               shape="circle" 
+               icon={<PaperClipOutlined />} 
+               onClick={() => fileInputRef.current?.click()}
+               disabled={locked || !roomJoined}
+               style={{ border: 'none', boxShadow: 'none' }}
+             />
+
+             {/* Text Input */}
+             <Input
+                size="large"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                onPaste={handlePaste} // Paste support
+                disabled={locked || !roomJoined || !!selectedFile}
+                placeholder={
+                   selectedFile 
+                   ? "กดส่งเพื่ออัปโหลดไฟล์..." 
+                   : (locked ? "ยังไม่สามารถส่งข้อความได้" : "พิมพ์ข้อความ... (หรือวางรูปภาพ)")
+                }
+                style={{ borderRadius: 24, paddingLeft: 20 }}
+                onPressEnter={(e) => {
+                   if(!e.shiftKey) sendChat(e);
+                }}
+             />
+
+             {/* Send Button */}
+             <Button
+               type="primary"
+               shape="circle"
+               size="large"
+               onClick={sendChat}
+               disabled={locked || !roomJoined || (!message.trim() && !selectedFile) || uploading}
+               icon={uploading ? <LoadingOutlined /> : <SendOutlined style={{ marginLeft: 2 }} />}
+               style={{ 
+                  background: (locked || !roomJoined || (!message.trim() && !selectedFile)) ? undefined : THEME_RED,
+                  borderColor: (locked || !roomJoined || (!message.trim() && !selectedFile)) ? undefined : THEME_RED,
+                  minWidth: 40
+               }}
+             />
+          </div>
+        </div>
       </main>
     </div>
   );

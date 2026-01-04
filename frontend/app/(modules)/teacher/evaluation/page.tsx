@@ -6,7 +6,7 @@ import {
   SettingOutlined,
   TeamOutlined
 } from '@ant-design/icons';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { GetEvaluationProjects } from '../../../services/evaluation';
 import CriteriaManager from '../../../components/evaluation/criteriaManager';
 import AdvisorProjectCard from '../../../components/evaluation/AdvisorProjectCard';
@@ -21,11 +21,15 @@ const LABEL_MAP: Record<string, string> = {
 
 export default function TeacherEvaluationDashboard() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const tabParam = searchParams.get('tab');
 
     const [projects, setProjects] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const [activeTab, setActiveTab] = useState<'advisor' | 'committee'>('advisor');
+    const [activeTab, setActiveTab] = useState<'advisor' | 'committee'>(
+        (tabParam === 'committee') ? 'committee' : 'advisor'
+    );
     const [showCriteriaManager, setShowCriteriaManager] = useState(false);
 
     const [openSelect, setOpenSelect] = useState(false);
@@ -45,6 +49,12 @@ export default function TeacherEvaluationDashboard() {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        if (tabParam === 'committee' || tabParam === 'advisor') {
+            setActiveTab(tabParam);
+        }
+    }, [tabParam]);
 
     useEffect(() => {
         fetchData();

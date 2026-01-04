@@ -918,6 +918,38 @@
   gap: 24px;
 }
 
+.exam-tabs-wrapper {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  padding: 24px;
+}
+
+.exam-tabs-wrapper .ant-tabs-nav::before {
+  border-bottom: 1px solid #e5e7eb !important;
+}
+
+.exam-tabs-wrapper .ant-tabs-tab {
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 10px 16px;
+}
+
+.exam-tabs-wrapper .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: #9a0120 !important;
+}
+
+.exam-tabs-wrapper .ant-tabs-ink-bar {
+  background: #9a0120 !important;
+}
+
+.dashboard-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .menu-card {
   background: white;
   border: 1px solid #e2e8f0;

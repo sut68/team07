@@ -14,6 +14,9 @@ export default function StudentTopbar({ userRole, children }: { userRole: string
     const router = useRouter();
     const { logoutClient } = useAuth();
 
+    const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+
+    // --- State Declarations (ประกาศตัวแปร State ไว้บนสุด) ---
     const [userInitial, setUserInitial] = useState("?");
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const pathname = usePathname() || '';
@@ -22,7 +25,9 @@ export default function StudentTopbar({ userRole, children }: { userRole: string
         return pathname === href || (href !== '/' && pathname.startsWith(href));
     };
 
+    // --- Effects ---
     useEffect(() => {
+        // ฟังก์ชันดึงข้อมูลผู้ใช้
         const fetchUserData = async () => {
             try {
                 const res = await GetUserProfile();
@@ -37,8 +42,10 @@ export default function StudentTopbar({ userRole, children }: { userRole: string
         };
 
         fetchUserData();
+
     }, []);
 
+    // --- Styles ---
     const navLinkStyle: React.CSSProperties = { color: 'rgba(255,255,255,0.95)', textDecoration: 'none', fontWeight: 700 };
 
     const getNavStyle = (href: string): React.CSSProperties => {
@@ -66,12 +73,12 @@ export default function StudentTopbar({ userRole, children }: { userRole: string
         {
             key: 'profile',
             icon: <UserOutlined />,
-            label: <Link href="/profile" style={{ color: 'inherit' }}>โปรไฟล์ของฉัน</Link>,
+            label: <Link href="/student/profile" style={{ color: 'inherit' }}>โปรไฟล์ของฉัน</Link>,
         },
         {
             key: 'report',
             icon: <ExclamationCircleOutlined />,
-            label: <Link href="/student/issueReport" style={{ color: 'inherit' }}>รายงานปัญหา</Link>,
+            label: 'รายงานปัญหา',
         },
         {
             key: 'logout',
@@ -90,6 +97,9 @@ export default function StudentTopbar({ userRole, children }: { userRole: string
                 cancelText: 'ยกเลิก',
                 onOk: handleLogout,
             });
+        } else if (key === 'report') {
+            // สั่งเปิด Modal เมื่อกดปุ่มรายงานปัญหา
+            setIsReportModalOpen(true);
         }
     };
 
@@ -181,7 +191,7 @@ export default function StudentTopbar({ userRole, children }: { userRole: string
                     <Link href="/student/group" style={getNavStyle('/student/group')}>กลุ่มของฉัน</Link>
                     <Link href="/student/selectAdvisor" style={getNavStyle('/student/selectAdvisor')}>เลือกที่ปรึกษา</Link>
                     <Link href="/student/topic" style={getNavStyle('/student/topic')}>หัวข้อโครงงาน</Link>
-                    <Link href="/student/progress" style={getNavStyle('/student/progress')}>ความคืบหน้า</Link>
+        
                 </nav>
 
                 {/* Logo - Centered */}

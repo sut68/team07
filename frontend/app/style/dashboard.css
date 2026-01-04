@@ -1,0 +1,243 @@
+/* std dashboard.css */
+.container {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+  margin: 0;
+  padding: 16px; /* เพิ่ม Padding รอบนอกเหมือน Teacher */
+  overflow: hidden;
+  box-sizing: border-box;
+  background-color: #f3f4f6; /* เปลี่ยนพื้นหลังเป็นสีเทาแบบ Teacher */
+  gap: 16px; /* เพิ่มระยะห่างระหว่างซ้าย-ขวา */
+}
+
+/* --- ส่วนซ้าย: ข่าวสาร --- */
+.news-section {
+  flex: 0 0 40%;
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e5e7eb;
+  display: block; 
+  overflow: hidden; 
+}
+
+/* --- ส่วนขวา: กล่องรวม --- */
+.right-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 16px;
+}
+
+.section {
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* --- นัดหมาย (Top Right) --- */
+.top-right {
+  flex: 0 0 45%;
+  padding: 0;
+}
+
+/* --- โครงงาน (Bottom Right) --- */
+.bottom-right {
+  flex: 1;
+  background-color: #ffffff;
+  padding: 20px;
+}
+.top-right .student-dashboard-appointment {
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  height: 100%;
+  background-color: transparent;
+}
+
+.dashboard-section-card {
+  width: 100%;
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+  border: 1px solid #e5e7eb;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  transition: box-shadow 0.2s ease;
+}
+
+.dashboard-section-card:hover {
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+}
+
+.dashboard-section-title h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 8px 0;
+}
+
+.dashboard-section-title p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.95rem;
+}
+
+.dashboard-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+.student-dashboard-appointment {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.1);
+  padding: 20px;
+  gap: 16px;
+  height: 100%;
+}
+
+.student-dashboard-appointment__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.student-dashboard-appointment__header h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.student-dashboard-appointment__header p {
+  margin: 6px 0 0 0;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.student-dashboard-appointment__action,
+.student-dashboard-appointment__action:hover,
+.student-dashboard-appointment__action:focus {
+  background-color: #9a0120 !important;
+  border-color: #9a0120 !important;
+}
+
+.student-dashboard-appointment__body {
+  flex: 1;
+  min-height: 150px;
+  display: flex;
+  flex-direction: column;
+}
+
+.student-dashboard-appointment__loading,
+.student-dashboard-appointment__empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+
+.student-dashboard-appointment__carousel {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin: 0 -2px;
+  padding-left: 2px;
+  scrollbar-width: thin;
+}
+
+/* teacher dashboard.css */
+
+.container-teacher-dashboard {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+  margin: 0;
+  padding: 16px;
+  overflow: hidden;
+  box-sizing: border-box;
+  background-color: #f3f4f6; /* Light gray background for the whole dashboard */
+  gap: 16px;
+}
+
+/* --- ส่วนซ้าย: ข่าวสาร --- */
+.news-section-teacher {
+  flex: 0 0 50%;
+  background-color: #ffffff; 
+  display: block; 
+  overflow: hidden; 
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e5e7eb;
+}
+
+/* --- ส่วนขวา: กล่องรวม 3 ชั้น --- */
+.right-panel-teacher {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 16px;
+  min-width: 0; /* Prevent flex item from overflowing */
+}
+
+/* --- สไตล์ของ 3 กล่องด้านขวา --- */
+.section-teacher {
+  flex: 1;
+  display: flex; /* Use flex to manage internal layout */
+  flex-direction: column;
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e5e7eb;
+  padding: 20px;
+  overflow: hidden; /* Lock the container, prevent scrollbars on the card itself */
+  min-width: 0; /* Prevent flex item from overflowing */
+}
+
+/* Appointment css */
+.full-height-tabs {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.full-height-tabs .ant-tabs-nav {
+  flex-shrink: 0; /* หัวข้อ Tabs ห้ามหด */
+  margin-bottom: 12px; /* เว้นระยะห่างจากเนื้อหาเล็กน้อย */
+}
+
+.full-height-tabs .ant-tabs-content-holder {
+  flex: 1; /* ให้ส่วนเนื้อหาขยายเต็มพื้นที่ที่เหลือ */
+  min-height: 0; /* สำคัญ: เพื่อให้ scrollbar ทำงานได้ถูกต้องใน flex item */
+  overflow: hidden; 
+}
+
+.full-height-tabs .ant-tabs-content,
+.full-height-tabs .ant-tabs-tabpane {
+  height: 100%;
+}
+
+/* group css */
+
+/* progress css */

@@ -1,18 +1,17 @@
 package issues
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sut68/team07/backend/controller/log"
 	"github.com/sut68/team07/backend/database"
 	"github.com/sut68/team07/backend/entity"
 	"github.com/sut68/team07/backend/middleware"
 )
 
-// CreateIssueInput ใช้สำหรับรับค่าจากหน้าบ้าน
-// ไม่ต้องรับ StatusID เพราะตอนสร้างควรเป็นค่าเริ่มต้น (เช่น Pending)
-// ไม่ต้องรับ ReportDate เพราะควรใช้วันเวลาปัจจุบัน (time.Now)
 type CreateIssueInput struct {
 	Detail string `json:"detail" binding:"required"`
 	TypeID uint   `json:"type_id" binding:"required"`
@@ -47,8 +46,8 @@ func CreateIssue(c *gin.Context) {
 	// สร้าง Object IssueReport
 	issue := entity.IssueReport{
 		Detail:     input.Detail,
-		ReportDate: time.Now(), // ใช้วันเวลาปัจจุบัน
-		StatusID:   3,          // Default Status 3 = Pending
+		ReportDate: time.Now(),
+		StatusID:   3,
 		TypeID:     input.TypeID,
 		UserID:     input.UserID,
 	}
@@ -58,7 +57,7 @@ func CreateIssue(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
+	log.InsertLog(c, 31)
 	// ส่งผลลัพธ์กลับ
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Issue reported successfully",
@@ -66,16 +65,55 @@ func CreateIssue(c *gin.Context) {
 	})
 }
 
+// PATCH: ผู้ใช้แก้ไขรายละเอียดปัญหาของตัวเอง (เฉพาะสถานะ In Progress)
+func UpdateIssueReport(c *gin.Context) {
+	db := database.DB()
+	id := c.Param("id")
+
+	// รับค่า Input 
+	var input CreateIssueInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// ค้นหา Issue เดิม
+	var issue entity.IssueReport
+	if err := db.Preload("Status").First(&issue, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Issue not found"})
+		return
+	}
+
+	// เช็คสิทธิ์: ต้องเป็นเจ้าของ Issue เท่านั้น
+	if issue.UserID != input.UserID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "You are not allowed to edit this issue"})
+		return
+	}
+
+	// เช็คสถานะ: ต้องเป็น "In Progress" เท่านั้นถึงจะแก้ได้
+	if issue.StatusID != 3 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Can only edit issues that are Pending"})
+		return
+	}
+
+	// อัปเดตข้อมูล
+	issue.Detail = input.Detail
+	issue.TypeID = input.TypeID
+
+	if err := db.Save(&issue).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Issue updated successfully", "data": issue})
+}
+
 // GET: ดึงข้อมูลรายการแจ้งปัญหาทั้งหมด
 func GetIssueReports(c *gin.Context) {
 	db := database.DB()
 	var issues []entity.IssueReport
 
-	// Preload ข้อมูลที่เกี่ยวข้อง: User, Status, Type
-	// Preload("User") ทำให้เห็นว่าใครเป็นคนแจ้ง
-	// Preload("Status") ทำให้เห็นสถานะเป็น text (เช่น Completed)
-	// Preload("Type") ทำให้เห็นประเภทเป็น text (เช่น Bug, Feature)
-	if err := db.Preload("User").Preload("Status").Preload("Type").Find(&issues).Error; err != nil {
+	if err := db.Preload("User").Preload("User.Role").Preload("Status").Preload("Type").Find(&issues).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -108,11 +146,11 @@ func GetMyIssues(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Invalid Token"})
 		return
 	}
-	userId := claims.ID // ดึง ID จาก Claims
+	userId := claims.ID
 
 	// ค้นหา Issue โดยใส่เงื่อนไข WHERE user_id = ?
 	if err := db.Preload("User").Preload("Status").Preload("Type").
-		Where("user_id = ?", userId). // userId ที่ได้จาก Token
+		Where("user_id = ?", userId).
 		Find(&issues).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -123,15 +161,16 @@ func GetMyIssues(c *gin.Context) {
 
 // struct สำหรับรับค่า status_id
 type UpdateIssueStatusInput struct {
-	StatusID uint `json:"status_id" binding:"required"`
+	StatusID   uint   `json:"status_id" binding:"required"`
+	AdminReply string `json:"admin_reply"`
 }
 
-// PATCH: อัปเดตสถานะรายการแจ้งปัญหา
+// PATCH: อัปเดตสถานะรายการแจ้งปัญหา + ตอบกลับ + แจ้งเตือน
 func UpdateIssueStatus(c *gin.Context) {
 	db := database.DB()
 	id := c.Param("id")
 
-	// รับค่า StatusID ใหม่
+	// รับค่า Input (StatusID + AdminReply)
 	var input UpdateIssueStatusInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -140,25 +179,59 @@ func UpdateIssueStatus(c *gin.Context) {
 
 	// ค้นหา Issue ที่จะอัปเดต
 	var issue entity.IssueReport
-	if err := db.First(&issue, id).Error; err != nil {
+	if err := db.Preload("Type").First(&issue, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Issue not found"})
 		return
 	}
 
-	// ตรวจสอบว่า StatusID มีอยู่จริงไหม
+	// ตรวจสอบ StatusID
 	var status entity.IssueStatus
 	if err := db.First(&status, input.StatusID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Status not found"})
 		return
 	}
 
-	// อัปเดตสถานะ
-	if err := db.Model(&issue).Update("status_id", input.StatusID).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	// เริ่ม Transaction (เพื่อให้แน่ใจว่าบันทึกทั้ง Issue และ Notification สำเร็จพร้อมกัน)
+	tx := db.Begin()
+
+	// อัปเดตข้อมูล Issue
+	issue.StatusID = input.StatusID
+	if input.AdminReply != "" {
+		issue.AdminReply = input.AdminReply
+	}
+
+	if err := tx.Save(&issue).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update issue: " + err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Status updated successfully", "data": issue})
+	// สร้าง Notification แจ้งเตือนผู้ใช้
+	notificationMsg := fmt.Sprintf("สถานะปัญหา '%s' เปลี่ยนเป็น '%s'", issue.Type.Type, status.Status)
+	if input.AdminReply != "" {
+		notificationMsg = fmt.Sprintf("Admin ตอบกลับ: %s", input.AdminReply)
+	}
+
+	notification := entity.Notification{
+		UserID:  issue.UserID, // ส่งแจ้งเตือนไปหาเจ้าของ Issue
+		Title:   "มีการอัปเดตรายงานปัญหา",
+		Message: notificationMsg,
+		IsRead:  false,
+	}
+
+	if err := tx.Create(&notification).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create notification: " + err.Error()})
+		return
+	}
+
+	// Commit Transaction
+	tx.Commit()
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Status updated and notification sent",
+		"data":    issue,
+	})
 }
 
 func GetIssueStatus(c *gin.Context) {
@@ -169,5 +242,3 @@ func GetIssueStatus(c *gin.Context) {
 
 	c.JSON(http.StatusOK, &issueStatus)
 }
-
-//yeah

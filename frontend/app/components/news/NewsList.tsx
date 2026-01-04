@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { News } from '../../interfaces/News';
 import { getNews, deleteNews } from '../../services/news';
 import NewsCard from './NewsCard';
 import { Empty, Spin, Modal } from 'antd';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
-import './news.css';
+import '../../style/news.css';
 import { Toast_success, Toast_fail } from '../Webmessage';
 
 interface NewsListProps {
@@ -20,7 +20,7 @@ export default function NewsList({ currentUserId, role, onEditClick, refreshTrig
     const [newsList, setNewsList] = useState<News[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const fetchNewsData = async () => {
+    const fetchNewsData = useCallback(async () => {
         setLoading(true);
         try {
             const data = await getNews();
@@ -30,11 +30,22 @@ export default function NewsList({ currentUserId, role, onEditClick, refreshTrig
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
         fetchNewsData();
-    }, [refreshTrigger]);
+    }, [fetchNewsData, refreshTrigger]);
+
+    useEffect(() => {
+        const handleNewsUpdated = () => {
+            fetchNewsData();
+        };
+
+        window.addEventListener('news:updated', handleNewsUpdated);
+        return () => {
+            window.removeEventListener('news:updated', handleNewsUpdated);
+        };
+    }, [fetchNewsData]);
 
     const handleDelete = (id: number) => {
         Modal.confirm({

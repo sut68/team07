@@ -3,7 +3,9 @@ export interface FullChat {
   group_project_id: number;
   process_id: number;
   sender_id: number;
+  type: number;
   message: string;
+  name: string;
   created_at?: string;
   updated_at?: string;
   deleted_at?: string | null;
@@ -14,8 +16,8 @@ export interface ChatCreate {
   group_project_id: number;
   process_id: number;
   sender_id: number;
-
-  // frontend uses message
+  type: number;
+  name: string;
   message: string;
 }
 
@@ -31,6 +33,7 @@ export interface ProcessInterface {
 export interface GetChat {
   process_id: number;
   group_project_id: number;
+  name: string;
 
   
 }
@@ -52,5 +55,10 @@ export interface GroupProject {
   year: number;
   membership: number;
   teacher_id: number;
+}
+
+export interface UploadResponse {
+  status: string;
+  url: string; 
 }
 

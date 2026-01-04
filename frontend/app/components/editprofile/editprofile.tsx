@@ -1,83 +1,113 @@
 "use client";
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { GetUserProfile, UpdateUserProfile } from '../../services/user'; // ปรับ path ให้ตรงกับโฟลเดอร์ของคุณ
-import { UserProfileInterface, UpdateUserProfileInterface } from '../../interfaces/Users'; // ปรับ path ให้ตรงกับโฟลเดอร์ของคุณ
-import "../../style/edit-profile.css"; // Import CSS
+import { useState } from 'react';
+import { UpdateUserProfile } from '../../services/user'; 
+import { UserProfileInterface, UpdateUserProfileInterface } from '../../interfaces/Users';
+import Swal from 'sweetalert2'; 
+import "../../style/edit-profile.css";
 
-export default function EditProfilePage() {
-    const router = useRouter();
-    
-    // State สำหรับข้อมูล User (ใช้แสดงผลในช่องที่ห้ามแก้)
-    const [user, setUser] = useState<UserProfileInterface | null>(null);
+// กำหนด Interface สำหรับ Props ที่จะรับมา
+interface EditProfileProps {
+    user: UserProfileInterface; // รับข้อมูล User เดิมมาเลย
+    onCancel: () => void;       // ฟังก์ชันสำหรับปุ่มยกเลิก
+    onSuccess: () => void;      // ฟังก์ชันสำหรับเมื่อบันทึกสำเร็จ
+}
+
+// เปลี่ยน Function Component ให้รับ Props
+export default function EditProfilePage({ user, onCancel, onSuccess }: EditProfileProps) {
     
     // State สำหรับฟอร์มแก้ไข (Email, Phone)
+    // ใช้ user จาก props มากำหนดค่าเริ่มต้นเลย
     const [formData, setFormData] = useState<UpdateUserProfileInterface>({
-        email: '',
-        phone: ''
+        email: user.email || '',
+        phone: user.phone || ''
     });
 
-    const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
 
-    // 1. โหลดข้อมูลเดิมมาใส่ Form
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const res = await GetUserProfile();
-                if (res.status === 200 && res.data) {
-                    const userData = res.data.data;
-                    setUser(userData);
-                    
-                    // Set ค่าเริ่มต้นให้ Form
-                    setFormData({
-                        email: userData.email || '',
-                        phone: userData.phone || ''
-                    });
-                }
-            } catch (error) {
-                console.error("Error fetching profile:", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchData();
-    }, []);
-
-    // 2. จัดการเมื่อพิมพ์ข้อมูล
+    // จัดการเมื่อพิมพ์ข้อมูล
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    // 3. บันทึกข้อมูล
+    // บันทึกข้อมูล
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setIsSaving(true);
-        try {
-            const res = await UpdateUserProfile(formData);
-            if (res.status === 200) {
-                alert("บันทึกข้อมูลสำเร็จ!");
-                router.push('/profile'); // กลับไปหน้า Profile เพื่อดูผลลัพธ์
-            } else {
-                alert("เกิดข้อผิดพลาด: " + res.data.error);
+
+        // ส่วนตรวจสอบข้อมูลว่าง (Validation)
+        if (!formData.email || !formData.phone) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'ข้อมูลไม่ครบถ้วน',
+                text: 'กรุณากรอกอีเมลและเบอร์โทรศัพท์ให้ครบถ้วน',
+                customClass: {
+                    container: 'swal-z-index-high' 
+                }
+            });
+            return; // หยุดการทำงานถ้าข้อมูลไม่ครบ
+        }
+
+        const confirmResult = await Swal.fire({
+            title: 'ยืนยันการแก้ไขข้อมูล?',
+            text: "คุณต้องการบันทึกการเปลี่ยนแปลงใช่หรือไม่",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'ใช่, บันทึกเลย',
+            cancelButtonText: 'ยกเลิก',
+            confirmButtonColor: '#1f4d2b', 
+            cancelButtonColor: '#9a0120',
+            customClass: {
+                container: 'swal-z-index-high' 
             }
-        } catch (error) {
-            console.error("Error updating profile:", error);
-            alert("บันทึกข้อมูลไม่สำเร็จ โปรดลองใหม่");
-        } finally {
-            setIsSaving(false);
+        });
+
+        if (confirmResult.isConfirmed) {
+            setIsSaving(true);
+            try {
+
+                Swal.fire({ 
+                    title: 'กำลังบันทึก...', 
+                    didOpen: () => Swal.showLoading() 
+                });
+
+                const res = await UpdateUserProfile(formData);
+                
+                if (res.status === 200) {
+                    Swal.close(); 
+        
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'บันทึกสำเร็จ!',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    
+                    onSuccess(); 
+                } else {
+                    Swal.close();
+                    Swal.fire({ 
+                        icon: 'error', 
+                        title: 'เกิดข้อผิดพลาด', 
+                        text: res.data.error || 'ไม่สามารถบันทึกข้อมูลได้' 
+                    });
+                }
+            } catch (error: any) {
+                console.error("Error updating profile:", error);
+                Swal.close();
+                Swal.fire({ 
+                    icon: 'error', 
+                    title: 'บันทึกไม่สำเร็จ',
+                    text: 'กรุณาตรวจสอบรูปแบบข้อมูลและลองใหม่อีกครั้ง'
+                });
+            } finally {
+                setIsSaving(false);
+            }
         }
     };
 
-    if (isLoading) {
-        return <div className="edit-profile-container">Loading...</div>;
-    }
-
     return (
         <div className="edit-profile-container">
-            <div className="edit-profile-card">
-                
+            <div className="edit-profile-card">    
                 {/* Header */}
                 <div className="edit-header">
                     <h2>แก้ไขข้อมูลส่วนตัว</h2>
@@ -86,8 +116,7 @@ export default function EditProfilePage() {
 
                 {/* Form */}
                 <div className="edit-form-content">
-                    <form onSubmit={handleSubmit}>
-                        
+                    <form onSubmit={handleSubmit}>    
                         {/* ส่วน Read-only: ข้อมูลที่ระบบไม่อนุญาตให้แก้ */}
                         <div className="form-grid">
                             <div className="form-group">
@@ -95,8 +124,8 @@ export default function EditProfilePage() {
                                 <input 
                                     type="text" 
                                     className="form-input" 
-                                    value={user?.firstname || ''} 
-                                    disabled // ห้ามแก้
+                                    value={user.firstname || ''} 
+                                    disabled 
                                 />
                             </div>
                             <div className="form-group">
@@ -104,7 +133,7 @@ export default function EditProfilePage() {
                                 <input 
                                     type="text" 
                                     className="form-input" 
-                                    value={user?.lastname || ''} 
+                                    value={user.lastname || ''} 
                                     disabled 
                                 />
                             </div>
@@ -113,7 +142,7 @@ export default function EditProfilePage() {
                                 <input 
                                     type="text" 
                                     className="form-input" 
-                                    value={user?.username || ''} 
+                                    value={user.username || ''} 
                                     disabled 
                                 />
                             </div>
@@ -122,14 +151,15 @@ export default function EditProfilePage() {
                                 <input 
                                     type="text" 
                                     className="form-input" 
-                                    value={user?.branch?.branch_name || ''} 
+                                    value={user.branch?.branch_name || ''} 
                                     disabled 
                                 />
                             </div>
                         </div>
 
                         <hr style={{ border: '0', borderTop: '1px solid #eee', margin: '20px 0' }} />
-                        <p style={{ fontSize: '0.9rem', color: '#9a0120', marginBottom: '15px', fontWeight: 'bold' }}>
+
+                        <p style={{ fontSize: '1.2rem', color: '#9a0120', marginBottom: '15px', fontWeight: 'bold' }}>
                             ข้อมูลที่สามารถแก้ไขได้
                         </p>
 
@@ -143,10 +173,8 @@ export default function EditProfilePage() {
                                 value={formData.email} 
                                 onChange={handleInputChange}
                                 placeholder="example@sut.ac.th"
-                                required
                             />
                         </div>
-
                         <div className="form-group">
                             <label className="form-label">เบอร์โทรศัพท์ (Phone)</label>
                             <input 
@@ -156,7 +184,6 @@ export default function EditProfilePage() {
                                 value={formData.phone} 
                                 onChange={handleInputChange}
                                 placeholder="09xxxxxxxx"
-                                required
                             />
                         </div>
 
@@ -165,7 +192,7 @@ export default function EditProfilePage() {
                             <button 
                                 type="button" 
                                 className="btn-cancel"
-                                onClick={() => router.back()} // ย้อนกลับ
+                                onClick={onCancel} 
                             >
                                 ยกเลิก
                             </button>
@@ -177,7 +204,6 @@ export default function EditProfilePage() {
                                 {isSaving ? 'กำลังบันทึก...' : 'บันทึกการเปลี่ยนแปลง'}
                             </button>
                         </div>
-
                     </form>
                 </div>
             </div>
