@@ -1,13 +1,12 @@
 'use client'
 
 import React, { useState } from 'react';
-import GroupCard from './GroupCard'; // Import คอมโพเนนต์เดิมของคุณ
-// Import Interfaces ที่จำเป็น (สมมติ path)
+import GroupCard from './GroupCard'; 
 import { SelectAdvisor } from '../../interfaces/Advisor'; 
 import '../../style/TeacherSelectPage.css';
 
 interface AdvisorCardWrapperProps {
-    selectionData: SelectAdvisor; // รับข้อมูลการเลือกทั้งก้อน (มี GroupProject และ Description)
+    selectionData: SelectAdvisor; 
     type: 'pending' | 'accepted'; // บอกสถานะเพื่อตัดสินใจว่าจะโชว์ปุ่ม Action ไหม
     onAccept?: (selectionId: number) => void;
     onReject?: (selectionId: number) => void;
@@ -26,16 +25,15 @@ const AdvisorCardWrapper: React.FC<AdvisorCardWrapperProps> = ({
 
     return (
         <div className="advisor-card-wrapper">
-            {/* 1. Reuse GroupCard เดิม */}
-            {/* เราส่ง currentUserId เป็น null หรือ 0 ไป เพราะในมุมมองอาจารย์ ไม่จำเป็นต้องไฮไลท์ตัวเองในกลุ่ม */}
+            {/*  Reuse GroupCard เดิม */}
             <GroupCard 
                 group={group_project} 
-                currentUserId={0} 
+                currentUserId={0} // ไฮไลท์ตัวเองในกลุ่ม
                 globalUserHasGroup={false}
                 hideAction={true} // ซ่อนปุ่ม Join ของนักศึกษาออกไป
             />
 
-            {/* 2. ส่วนขยายด้านล่าง (Teacher's UI Only) */}
+            {/* ส่วนขยายด้านล่าง (Teacher's UI Only) */}
             <div className="card-extension-footer">
                 
                 {/* แสดงลำดับที่นักศึกษาเลือก (เฉพาะ Pending) */}

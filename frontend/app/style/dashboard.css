@@ -239,5 +239,34 @@
 }
 
 /* group css */
+.btn-view-all-theme {
+  background-color: white;
+  color: #8A011D; /* สีแดงธีมหลัก */
+  border: 1px solid rgba(138, 1, 29, 0.15);
+  padding: 8px 18px;
+  border-radius: 50px; /* ทรงแคปซูล */
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-view-all-theme:hover {
+  background-color: #8A011D;
+  color: white;
+  border-color: #8A011D;
+  transform: translateY(-2px); /* ลอยขึ้นเล็กน้อย */
+  box-shadow: 0 4px 12px rgba(138, 1, 29, 0.2); /* เงาฟุ้งสวยงาม */
+}
+
+.btn-view-all-theme span {
+  font-size: 1.2em;
+  line-height: 0.5;
+  margin-top: -3px;
+}
 
 /* progress css */
