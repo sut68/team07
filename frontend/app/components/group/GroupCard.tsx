@@ -1,6 +1,6 @@
 import React from "react";
-import { GroupProject } from "../interfaces/Group";
-import "../style/StudentGroupCard.css";
+import { GroupProject } from "../../interfaces/Group";
+import "../../style/StudentGroupCard.css";
 
 interface GroupCardProps {
   group: GroupProject;

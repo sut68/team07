@@ -20,7 +20,7 @@ type GenerateGroupInput struct {
 type AddMemberInput struct {
 	GroupProjectID uint `json:"group_project_id" binding:"required"`
 	StudentID      uint `json:"student_id" binding:"required"`
-	BypassQuota    bool `json:"bypass_quota"` 
+	BypassQuota    bool `json:"bypass_quota"`
 }
 
 type RemoveMemberInput struct {
@@ -30,12 +30,12 @@ type RemoveMemberInput struct {
 
 type ChangeLeaderInput struct {
 	GroupProjectID uint `json:"group_project_id" binding:"required"`
-	NewLeaderID    uint `json:"new_leader_id" binding:"required"` 
+	NewLeaderID    uint `json:"new_leader_id" binding:"required"`
 }
 
 type UpdateAdvisorInput struct {
 	GroupProjectID uint  `json:"group_project_id" binding:"required"`
-	TeacherID      *uint `json:"teacher_id"` 
+	TeacherID      *uint `json:"teacher_id"`
 }
 
 func GetEligibleStudentCount(c *gin.Context) {
@@ -148,9 +148,9 @@ func SearchAvailableStudents(c *gin.Context) {
 	var students []entity.User
 
 	subQuery := db.Model(&entity.GroupMember{}). // ใช้ Model เพื่อให้ GORM กรอง Soft Delete
-		Select("group_members.student_id").
-		Joins("JOIN group_projects ON group_members.group_project_id = group_projects.id").
-		Where("group_projects.year = ?", year)
+							Select("group_members.student_id").
+							Joins("JOIN group_projects ON group_members.group_project_id = group_projects.id").
+							Where("group_projects.year = ?", year)
 
 	// Query หลักดึงรายชื่อนักศึกษา
 	if err := db.Model(&entity.User{}).
@@ -360,7 +360,7 @@ func GetAllTeachers(c *gin.Context) {
 	db := database.DB()
 	var teachers []entity.User
 
-	if err := db.Where("role_id = ?", 2).Find(&teachers).Error; err != nil {
+	if err := db.Where("role_id = ? AND status_id = ?", 2, 1).Find(&teachers).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

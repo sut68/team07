@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Swal from "sweetalert2";
-import GroupManagementModal from "../../../components/GroupModal";
+import GroupManagementModal from "../../../components/group/GroupModal";
 import { GetEligibleStudentCount, GenerateGroups, GetGroupProjects } from "../../../services/group";
 import { GroupProject } from "../../../interfaces/Group";
 import '../../../style/AdminGroupPage.css';

@@ -19,7 +19,8 @@ func GetAllTeachers(c *gin.Context) {
 	db := database.DB()
 	var teachers []entity.User
 
-	if err := db.Select("id, firstname, lastname, username").Where("role_id = ?", 2).Find(&teachers).Error; err != nil {
+	if err := db.Select("id, firstname, lastname, username").Where("role_id = ? AND status_id = ?", 2, 1).
+		Find(&teachers).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

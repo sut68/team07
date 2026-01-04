@@ -3,8 +3,8 @@
 import React, { useState } from 'react';
 import GroupCard from './GroupCard'; // Import คอมโพเนนต์เดิมของคุณ
 // Import Interfaces ที่จำเป็น (สมมติ path)
-import { SelectAdvisor } from '../interfaces/Advisor'; 
-import '../style/TeacherSelectPage.css';
+import { SelectAdvisor } from '../../interfaces/Advisor'; 
+import '../../style/TeacherSelectPage.css';
 
 interface AdvisorCardWrapperProps {
     selectionData: SelectAdvisor; // รับข้อมูลการเลือกทั้งก้อน (มี GroupProject และ Description)
