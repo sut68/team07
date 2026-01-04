@@ -1,0 +1,355 @@
+/* Teacher Layout - Responsive Sidebar */
+
+.layoutContainer {
+    font-family: 'Noto Sans Thai', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Desktop - Topbar Layout (> 1400px) */
+.header {
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 24px;
+    background: linear-gradient(100deg, #8A011D 0%, #7F666B 100%);
+    color: #fff;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    z-index: 100;
+    transition: left 300ms ease;
+}
+
+.navLeft {
+    position: absolute;
+    left: 120px;
+    display: flex;
+    gap: 40px;
+}
+
+.navRight {
+    position: absolute;
+    right: 200px;
+    display: flex;
+    gap: 40px;
+    align-items: center;
+}
+
+.logoContainer {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.userActions {
+    position: absolute;
+    right: 30px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.navLink {
+    color: rgba(255, 255, 255, 0.95);
+    text-decoration: none;
+    font-weight: 700;
+    padding-bottom: 0;
+    border-bottom: 3px solid transparent;
+    transition: border-color 150ms ease, padding-bottom 150ms ease;
+}
+
+.navLink:hover {
+    color: #fff;
+}
+
+.navLinkActive {
+    padding-bottom: 6px;
+    border-bottom: 3px solid #ffffff;
+}
+
+.bellIcon {
+    font-size: 20px;
+    cursor: pointer;
+    color: #fff;
+}
+
+.mainContent {
+    padding: 20px;
+    padding-top: 30px;
+    flex-grow: 1;
+    transition: margin-left 300ms ease, width 300ms ease;
+}
+
+/* Sidebar - Hidden by default */
+.sidebar {
+    display: none;
+}
+
+/* Hamburger Toggle Button */
+.hamburgerButton {
+    display: none;
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 101;
+    background: rgba(138, 1, 29, 0.9);
+    border: none;
+    color: #fff;
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    transition: all 200ms ease;
+}
+
+.hamburgerButton:hover {
+    background: rgba(138, 1, 29, 1);
+    transform: scale(1.05);
+}
+
+.hamburgerButton:active {
+    transform: scale(0.95);
+}
+
+/* Hide hamburger when sidebar is open */
+.hamburgerButtonHidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Close Button in Sidebar */
+.sidebarCloseButton {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 200ms ease;
+    z-index: 102;
+}
+
+.sidebarCloseButton:hover {
+    transform: scale(1.1);
+    opacity: 0.8;
+}
+
+.sidebarCloseButton:active {
+    transform: scale(0.95);
+}
+
+/* Tablet/Sidebar Layout (<= 1400px) */
+@media (max-width: 1400px) {
+    .layoutContainer {
+        flex-direction: row;
+    }
+
+    .sidebar {
+        display: flex;
+        flex-direction: column;
+        width: 240px;
+        background: linear-gradient(180deg, #8A011D 0%, #7F666B 100%);
+        color: #fff;
+        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.06);
+        z-index: 150;
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        overflow-y: auto;
+        transition: transform 300ms ease;
+    }
+
+    .sidebarCollapsed {
+        transform: translateX(-240px);
+    }
+
+    .sidebarLogo {
+        padding: 24px 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .sidebarNav {
+        display: flex;
+        flex-direction: column;
+        padding: 60px 0 20px 0;
+        flex-grow: 1;
+    }
+
+    .sidebarLink {
+        color: rgba(255, 255, 255, 0.95);
+        text-decoration: none;
+        font-weight: 600;
+        padding: 14px 24px;
+        border-left: 4px solid transparent;
+        transition: all 150ms ease;
+        display: block;
+    }
+
+    .sidebarLink:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+    }
+
+    .sidebarLinkActive {
+        background: rgba(255, 255, 255, 0.15);
+        border-left-color: #fff;
+        color: #fff;
+    }
+
+    .hamburgerButton {
+        display: flex;
+    }
+
+    .header {
+        position: fixed;
+        top: 0;
+        left: 240px;
+        right: 0;
+        justify-content: center;
+    }
+
+    .headerCollapsed {
+        left: 0;
+    }
+
+    .navLeft,
+    .navRight {
+        display: none;
+    }
+
+    .logoContainer {
+        position: static;
+    }
+
+    .userActions {
+        position: absolute;
+        right: 30px;
+    }
+
+    .mainContent {
+        margin-left: 240px;
+        margin-top: 72px;
+        width: calc(100% - 240px);
+    }
+
+    .mainContentCollapsed {
+        margin-left: 0;
+        width: 100%;
+    }
+}
+
+/* Mobile adjustments (<= 768px) */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 70%;
+        max-width: 280px;
+    }
+
+    .sidebarCollapsed {
+        transform: translateX(-100%);
+    }
+
+    .hamburgerButton {
+        left: 16px;
+        top: 16px;
+        width: 36px;
+        height: 36px;
+        font-size: 20px;
+    }
+
+    .header {
+        left: 0;
+        padding: 0 16px;
+    }
+
+    .mainContent {
+        margin-left: 0;
+        width: 100%;
+        padding: 16px;
+        margin-top: 72px;
+    }
+
+    .sidebarLink {
+        padding: 12px 16px;
+        font-size: 14px;
+    }
+}
+
+/* Small mobile (<= 480px) */
+@media (max-width: 480px) {
+    .sidebar {
+        width: 75%;
+        max-width: 260px;
+    }
+
+    .sidebarCollapsed {
+        transform: translateX(-100%);
+    }
+
+    .hamburgerButton {
+        left: 12px;
+        top: 16px;
+        width: 34px;
+        height: 34px;
+        font-size: 18px;
+    }
+
+    .sidebarCloseButton {
+        top: 16px;
+        right: 16px;
+        font-size: 22px;
+    }
+
+    .sidebarNav {
+        padding: 50px 0 20px 0;
+    }
+
+    .sidebarLink {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+
+    .header {
+        left: 0;
+        padding: 0 12px;
+        height: 60px;
+    }
+
+    .mainContent {
+        margin-left: 0;
+        width: 100%;
+        padding: 12px;
+        margin-top: 60px;
+    }
+
+    .userActions {
+        right: 12px;
+        gap: 8px;
+    }
+
+    .bellIcon {
+        font-size: 18px;
+    }
+
+    .logoContainer img {
+        width: 70px !important;
+        height: auto !important;
+    }
+}

@@ -1,0 +1,236 @@
+package project
+
+import (
+	"fmt"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strconv"
+	"time"
+
+	"github.com/asaskevich/govalidator"
+	"github.com/gin-gonic/gin"
+	"github.com/sut68/team07/backend/database"
+	"github.com/sut68/team07/backend/entity"
+	"github.com/sut68/team07/backend/middleware"
+)
+
+// CreateProject - สร้างข้อมูลโครงงาน (นักศึกษากรอกข้อมูล)
+func CreateProject(c *gin.Context) {
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	db := database.DB()
+
+	// ตรวจสอบว่านักศึกษาอยู่ในกลุ่มหรือไม่
+	var member entity.GroupMember
+	if err := db.Preload("GroupProject").
+		Where("student_id = ?", claims.ID).
+		First(&member).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "You do not belong to any project group"})
+		return
+	}
+
+	groupID := member.GroupProjectID
+
+	// ตรวจสอบว่ามี TopicSelection ที่ Active หรือไม่
+	var selection entity.TopicSelection
+	if err := db.Preload("Topic").
+		Preload("GroupProject").
+		Where("group_project_id = ? AND status = ?", groupID, "Active").
+		First(&selection).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "No active topic selection found for your group. Please select a topic first."})
+		return
+	}
+
+	// ตรวจสอบว่ามี Project อยู่แล้วหรือไม่
+	var existingProject entity.Project
+	if err := db.Where("selection_id = ?", selection.ID).First(&existingProject).Error; err == nil {
+		c.JSON(http.StatusConflict, gin.H{"error": "Project information already exists. Please update instead."})
+		return
+	}
+
+	// รับข้อมูลจาก form
+	abstract := c.PostForm("abstract")
+	keywords := c.PostForm("keywords")
+	
+	// ดึงข้อมูลจาก Topic และ GroupProject
+	title := selection.Topic.Title
+	year := selection.GroupProject.Year
+
+	// จัดการไฟล์อัปโหลด
+	var filePath string
+	file, err := c.FormFile("project_document")
+	if err == nil {
+		// มีไฟล์อัปโหลด
+		// สร้างโฟลเดอร์ถ้ายังไม่มี
+		if err := os.MkdirAll("./uploads/projects", 0755); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create upload directory"})
+			return
+		}
+		
+		timestamp := time.Now().Unix()
+		filename := fmt.Sprintf("%d_%s", timestamp, filepath.Base(file.Filename))
+		uploadPath := fmt.Sprintf("./uploads/projects/%s", filename)
+		
+		if err := c.SaveUploadedFile(file, uploadPath); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
+			return
+		}
+		filePath = uploadPath
+	} else {
+		// ไม่มีไฟล์ - ใช้ค่าว่าง
+		filePath = ""
+	}
+
+	// สร้าง Project object
+	project := entity.Project{
+		Title:       title,
+		Abstract:    abstract,
+		Keywords:    keywords,
+		Year:        year,
+		Status:      "In Progress", // สถานะเริ่มต้น
+		FilePath:    filePath,
+		SelectionID: selection.ID,
+	}
+
+	// Validate
+	if _, err := govalidator.ValidateStruct(project); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// บันทึกลงฐานข้อมูล
+	if err := db.Create(&project).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create project"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "Project created successfully",
+		"data":    project,
+	})
+}
+
+// GetMyProject - ดึงข้อมูลโครงงานของนักศึกษา
+func GetMyProject(c *gin.Context) {
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	db := database.DB()
+
+	// ตรวจสอบว่านักศึกษาอยู่ในกลุ่มหรือไม่
+	var member entity.GroupMember
+	if err := db.Where("student_id = ?", claims.ID).First(&member).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "You do not belong to any project group"})
+		return
+	}
+
+	groupID := member.GroupProjectID
+
+	// ดึง TopicSelection
+	var selection entity.TopicSelection
+	if err := db.Where("group_project_id = ?", groupID).First(&selection).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "No topic selection found"})
+		return
+	}
+
+	// ดึง Project
+	var project entity.Project
+	if err := db.Preload("TopicSelection.Topic").
+		Preload("TopicSelection.GroupProject").
+		Where("selection_id = ?", selection.ID).
+		First(&project).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "No project information found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": project})
+}
+
+// UpdateProject - แก้ไขข้อมูลโครงงาน
+func UpdateProject(c *gin.Context) {
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	projectID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid project ID"})
+		return
+	}
+
+	db := database.DB()
+
+	// ตรวจสอบว่านักศึกษาอยู่ในกลุ่มหรือไม่
+	var member entity.GroupMember
+	if err := db.Where("student_id = ?", claims.ID).First(&member).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "You do not belong to any project group"})
+		return
+	}
+
+	// ดึง Project และตรวจสอบสิทธิ์
+	var project entity.Project
+	if err := db.Preload("TopicSelection").
+		Where("id = ?", projectID).
+		First(&project).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Project not found"})
+		return
+	}
+
+	// ตรวจสอบว่า Project นี้เป็นของกลุ่มนักศึกษาหรือไม่
+	if project.TopicSelection.GroupProjectID != member.GroupProjectID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "You don't have permission to update this project"})
+		return
+	}
+
+	// รับข้อมูลจาก form
+	if abstract := c.PostForm("abstract"); abstract != "" {
+		project.Abstract = abstract
+	}
+	if keywords := c.PostForm("keywords"); keywords != "" {
+		project.Keywords = keywords
+	}
+	if status := c.PostForm("status"); status != "" {
+		project.Status = status
+	}
+
+	// จัดการไฟล์อัปโหลดใหม่
+	file, err := c.FormFile("project_document")
+	if err == nil {
+		timestamp := time.Now().Unix()
+		filename := fmt.Sprintf("%d_%s", timestamp, filepath.Base(file.Filename))
+		uploadPath := fmt.Sprintf("./uploads/projects/%s", filename)
+		
+		if err := c.SaveUploadedFile(file, uploadPath); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
+			return
+		}
+		project.FilePath = uploadPath
+	}
+
+	// Validate
+	if _, err := govalidator.ValidateStruct(project); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// บันทึกการเปลี่ยนแปลง
+	if err := db.Save(&project).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update project"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Project updated successfully",
+		"data":    project,
+	})
+}

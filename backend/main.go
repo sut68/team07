@@ -13,6 +13,7 @@ import (
 	"github.com/sut68/team07/backend/controller/issues"
 	"github.com/sut68/team07/backend/controller/news"
 	"github.com/sut68/team07/backend/controller/progress"
+	"github.com/sut68/team07/backend/controller/project"
 	"github.com/sut68/team07/backend/controller/storage"
 	"github.com/sut68/team07/backend/controller/topic"
 	"github.com/sut68/team07/backend/controller/updateStatus"
@@ -36,7 +37,6 @@ func main() {
 	service.InitEmailConfig()
 	service.StartCleanupWorker(database.DB())
 	r := gin.Default()
-	r.Static("/uploads", "./uploads")
 	r.Use(database.CORSMiddleware())
 	r.Static("/uploads", "./uploads")
 
@@ -201,6 +201,11 @@ func main() {
 			// Storage (Read-only for students)
 			studentGroup.GET("/storage/projects", storage.ListProjectsStudent)
 			studentGroup.GET("/storage/projects/:id", storage.GetProjectStudent)
+
+			// Project Information
+			studentGroup.POST("/project", project.CreateProject)
+			studentGroup.GET("/project", project.GetMyProject)
+			studentGroup.PATCH("/project/:id", project.UpdateProject)
 		}
 
 		teacherOrStudentGroup := protected.Group("/groupProject")

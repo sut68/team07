@@ -14,6 +14,7 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   ExclamationCircleOutlined,
+  MenuOutlined,
 } from '@ant-design/icons';
 import { Logout } from '../../services/login';
 import 'antd/dist/reset.css';
@@ -28,6 +29,7 @@ export default function AdminSidebar({ children }: SidebarProps) {
   const router = useRouter();
   const { logoutClient } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const selectedKey = useMemo(() => {
     // Map pathname to menu key; use the first two segments
@@ -65,12 +67,30 @@ export default function AdminSidebar({ children }: SidebarProps) {
       return;
     }
     router.push(key);
+    // Close mobile menu after navigation
+    setMobileOpen(false);
   };
 
   return (
     <div className="app-container">
+      {/* Hamburger Menu Button (visible on mobile/tablet) - toggles sidebar */}
+      <button
+        className="hamburger-btn"
+        onClick={() => setMobileOpen(!mobileOpen)}
+        aria-label={mobileOpen ? "Close menu" : "Open menu"}
+      >
+        <MenuOutlined style={{ fontSize: '24px' }} />
+      </button>
+
+      {/* Overlay (visible when mobile menu is open) */}
+      <div
+        className={`sidebar-overlay ${mobileOpen ? 'active' : ''}`}
+        onClick={() => setMobileOpen(false)}
+      />
+
       {/* Fixed full-height sidebar (collapsible) */}
-      <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
+      <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
+
         <div className="sidebar-header">
           <Link href="/admin/dashboard" className="logo-link">
             <img src="/image/logo1.png" alt="Admin logo" className={`logo`} />

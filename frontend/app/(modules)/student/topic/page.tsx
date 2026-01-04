@@ -1,22 +1,25 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Typography, Row, Col, Modal, Form, Input, Tag, Space, Empty, message, ConfigProvider, Tabs, Steps, Upload, Tooltip } from 'antd';
+import { Card, Button, Typography, Row, Col, Modal, Form, Input, Tag, Space, Empty, message, ConfigProvider, Tabs, Steps, Upload, Tooltip, DatePicker } from 'antd';
 import { ProjectOutlined, SendOutlined, TeamOutlined, FileTextOutlined, CheckCircleOutlined, ExclamationCircleOutlined, ClockCircleOutlined, CloseCircleOutlined, UploadOutlined, EyeOutlined, PaperClipOutlined, PlusOutlined } from '@ant-design/icons';
 import { Topic, TopicApproval } from '@/app/interfaces/Topic';
 import { getTopics, createTopic, updateTopic, selectTopic, cancelSelection, getStudentTopic } from '@/app/services/topic';
 import { GetMyGroup } from '@/app/services/group';
 import { GetMe } from '@/app/services/login';
+import { CreateProject, GetMyProject } from '@/app/services/project';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
 
 export default function StudentTopicPage() {
     const [form] = Form.useForm();
+    const [projectForm] = Form.useForm();
     const [activeTab, setActiveTab] = useState('1');
     const [loading, setLoading] = useState(false);
     const [studentID, setStudentID] = useState<number | null>(null);
     const [groupID, setGroupID] = useState<number | null>(null);
     const [advisorID, setAdvisorID] = useState<number | null>(null);
+    const [groupYear, setGroupYear] = useState<number | null>(null);
 
     // Data States
     const [availableTopics, setAvailableTopics] = useState<Topic[]>([]);
@@ -26,6 +29,7 @@ export default function StudentTopicPage() {
     const [viewTopic, setViewTopic] = useState<Topic | null>(null);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [isProposeModalOpen, setIsProposeModalOpen] = useState(false);
+    const [isProjectInfoModalOpen, setIsProjectInfoModalOpen] = useState(false);
 
     const fetchData = async () => {
         setLoading(true);
@@ -51,6 +55,9 @@ export default function StudentTopicPage() {
                     if (groupData.teacher_id) {
                         setAdvisorID(groupData.teacher_id);
                         currentAdvisorID = groupData.teacher_id;
+                    }
+                    if (groupData.year) {
+                        setGroupYear(groupData.year);
                     }
                 }
             } catch (err) {
@@ -325,6 +332,39 @@ export default function StudentTopicPage() {
                         <div>
                             <StatusBadge status={myTopic.status} approval={undefined} />
 
+                            {myTopic.status === 'Approved' && (
+                                <Card style={{ marginBottom: 24, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', border: 'none' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <div>
+                                            <Title level={4} style={{ margin: 0, color: 'white' }}>
+                                                <CheckCircleOutlined style={{ marginRight: 8 }} />
+                                                หัวข้อของคุณได้รับการอนุมัติแล้ว!
+                                            </Title>
+                                            <Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: 14 }}>
+                                                คุณสามารถเริ่มกรอกข้อมูลโครงงานและติดตามความคืบหน้าได้แล้ว
+                                            </Text>
+                                        </div>
+                                        <Button
+                                            type="primary"
+                                            size="large"
+                                            icon={<FileTextOutlined />}
+                                            onClick={() => setIsProjectInfoModalOpen(true)}
+                                            style={{
+                                                background: 'white',
+                                                color: '#667eea',
+                                                borderColor: 'white',
+                                                fontWeight: 'bold',
+                                                height: 48,
+                                                paddingLeft: 24,
+                                                paddingRight: 24
+                                            }}
+                                        >
+                                            กรอกข้อมูลโครงงาน
+                                        </Button>
+                                    </div>
+                                </Card>
+                            )}
+
                             <Card title="รายละเอียดหัวข้อโครงงาน" extra={<Button danger onClick={handleCancelProposal}>ยกเลิก/สละสิทธิ์</Button>}>
                                 <Title level={4}>{myTopic.title}</Title>
 
@@ -511,6 +551,122 @@ export default function StudentTopicPage() {
                                 style={{ background: '#8A011D', borderColor: '#8A011D' }}>
                                 ส่งข้อเสนอโครงงาน
                             </Button>
+                        </Form.Item>
+                    </Form>
+                </Modal>
+
+                {/* Project Information Modal */}
+                <Modal
+                    title={<span><FileTextOutlined style={{ marginRight: 8, color: '#667eea' }} />กรอกข้อมูลโครงงาน</span>}
+                    open={isProjectInfoModalOpen}
+                    onCancel={() => {
+                        setIsProjectInfoModalOpen(false);
+                        projectForm.resetFields();
+                    }}
+                    footer={null}
+                    centered
+                    width={900}
+                >
+
+                    <Form
+                        form={projectForm}
+                        layout="vertical"
+                        onFinish={(values) => {
+                            Modal.confirm({
+                                title: 'ยืนยันการบันทึกข้อมูล',
+                                content: 'คุณต้องการบันทึกข้อมูลโครงงานนี้ใช่หรือไม่?',
+                                okText: 'ยืนยัน',
+                                cancelText: 'ยกเลิก',
+                                onOk: async () => {
+                                    try {
+                                        // เตรียมข้อมูลสำหรับส่ง API
+                                        const projectData: any = {
+                                            abstract: values.abstract_th,
+                                            keywords: values.tools_and_technologies,
+                                        };
+
+                                        // เพิ่มไฟล์ถ้ามี
+                                        if (values.project_document?.fileList?.length > 0) {
+                                            projectData.project_document = values.project_document.fileList[0].originFileObj;
+                                        }
+
+                                        // เรียก API
+                                        await CreateProject(projectData);
+                                        message.success('บันทึกข้อมูลโครงงานเรียบร้อยแล้ว');
+                                        setIsProjectInfoModalOpen(false);
+                                        projectForm.resetFields();
+                                    } catch (error: any) {
+                                        console.error('Error creating project:', error);
+                                        const errMsg = error?.response?.data?.error || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล';
+                                        message.error(errMsg);
+                                    }
+                                }
+                            });
+                        }}
+                        size="large"
+                    >
+                        {/* Display Project Name and Year (Read-only from Topic Selection and Group) */}
+                        <div style={{ marginBottom: 24, padding: 16, background: '#f0f5ff', borderRadius: 8, border: '1px solid #d6e4ff' }}>
+                            <Row gutter={16}>
+                                <Col span={16}>
+                                    <Text type="secondary" style={{ fontSize: 12 }}>ชื่อโครงงาน (จากหัวข้อที่อนุมัติ)</Text>
+                                    <div style={{ marginTop: 4 }}>
+                                        <Text strong style={{ fontSize: 16, color: '#1890ff' }}>{myTopic?.title || 'ไม่พบข้อมูล'}</Text>
+                                    </div>
+                                </Col>
+                                <Col span={8}>
+                                    <Text type="secondary" style={{ fontSize: 12 }}>ปีการศึกษา</Text>
+                                    <div style={{ marginTop: 4 }}>
+                                        <Text strong style={{ fontSize: 16, color: '#1890ff' }}>{groupYear || 'ไม่พบข้อมูล'}</Text>
+                                    </div>
+                                </Col>
+                            </Row>
+                        </div>
+
+                        <Form.Item
+                            name="abstract_th"
+                            label="บทคัดย่อ (ภาษาไทย)"
+                            rules={[{ required: true, message: 'กรุณากรอกบทคัดย่อภาษาไทย' }]}
+                        >
+                            <TextArea rows={4} placeholder="สรุปโครงงานโดยย่อ..." />
+                        </Form.Item>
+
+                        <Form.Item
+                            name="tools_and_technologies"
+                            label="เครื่องมือและเทคโนโลยีที่ใช้"
+                            rules={[{ required: true, message: 'กรุณากรอกเครื่องมือและเทคโนโลยี' }]}
+                        >
+                            <TextArea rows={3} placeholder="เช่น React, Node.js, PostgreSQL, Docker..." />
+                        </Form.Item>
+
+                        <Form.Item
+                            name="project_document"
+                            label="เอกสารโครงงาน ( ไฟล์นำเสนอและไฟล์รายงาน )"
+                        >
+                            <Upload maxCount={1} beforeUpload={() => false}>
+                                <Button icon={<UploadOutlined />}>คลิกเพื่ออัพโหลดเอกสาร</Button>
+                            </Upload>
+                        </Form.Item>
+
+                        <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
+                            <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
+                                <Button
+                                    onClick={() => {
+                                        setIsProjectInfoModalOpen(false);
+                                        projectForm.resetFields();
+                                    }}
+                                >
+                                    ยกเลิก
+                                </Button>
+                                <Button
+                                    type="primary"
+                                    htmlType="submit"
+                                    icon={<SendOutlined />}
+                                    style={{ background: '#667eea', borderColor: '#667eea' }}
+                                >
+                                    บันทึกข้อมูลโครงงาน
+                                </Button>
+                            </Space>
                         </Form.Item>
                     </Form>
                 </Modal>
