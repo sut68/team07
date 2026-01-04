@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 import Swal from "sweetalert2";
-import "../style/AdminGroupModal.css";
+import "../../style/AdminGroupModal.css";
 
 import { 
   GroupProject, 
   StudentSearchResult, 
   GroupMember,
   User 
-} from "../interfaces/Group"; 
+} from "../../interfaces/Group"; 
 
 import { 
   GetGroupDetailById, 
@@ -18,7 +18,7 @@ import {
   AdminDeleteGroup,
   GetAllTeachers,     
   UpdateGroupAdvisor  
-} from "../services/group"; 
+} from "../../services/group"; 
 interface Props {
   isOpen: boolean;
   onClose: () => void;

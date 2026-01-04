@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import { GetGroupProjects, JoinGroup, GetAcademicYears } from "../../../services/group";
 import { GroupProject } from "../../../interfaces/Group";
-import GroupCard from "../../../components/GroupCard";
+import GroupCard from "../../../components/group/GroupCard";
 import api from "../../../services/api"; // เรียกใช้ axios instance เพื่อยิง /me
 
 import "../../../style/StudentGroupPage.css"

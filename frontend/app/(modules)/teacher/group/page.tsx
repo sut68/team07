@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react';
-import AdvisorCardWrapper from '../../../components/AdvisorCardWrapper';
+import AdvisorCardWrapper from '../../../components/group/AdvisorCardWrapper';
 import { SelectAdvisor } from '../../../interfaces/Advisor';
 import { GetAcademicYears } from '../../../services/group';
 import { 
@@ -26,9 +26,11 @@ const TeacherSelectPage = () => {
         setLoading(true);
         try {
             const resYear = await GetAcademicYears();
+            let yearToUse = new Date().getFullYear() + 543;
             if (resYear.data && resYear.data.length > 0) {
                 setAcademicYears(resYear.data);
-                setSelectedYear(prev => prev || resYear.data[0]); 
+                yearToUse = resYear.data[0];
+                setSelectedYear(yearToUse); 
             }
             const resRequests = await GetAdvisorRequests();
             

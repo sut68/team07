@@ -26,10 +26,10 @@ func TestAdvisor(t *testing.T) {
 		g.Expect(err).To(BeNil())
 	})
 
-	// กรณีที่ 2: เช็ค No ต้องอยู่ระหว่าง 1-10
-	t.Run(`Number must be between 1 and 10`, func(t *testing.T) {
+	// กรณีที่ 2: เช็ค No ต้องอยู่ระหว่าง 1-20
+	t.Run(`Number must be between 1 and 20`, func(t *testing.T) {
 		acstatus := &entity.SelectAdvisor{
-			No:             21, // ผิดตรงนี้ (เกิน 10)
+			No:             21, // ผิดตรงนี้ (เกิน 20)
 			Description:    "Test description",
 			Status:         "pending",
 			GroupProjectID: 1,
