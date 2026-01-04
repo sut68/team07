@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"path/filepath"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sut68/team07/backend/controller/advisor"
@@ -9,6 +10,7 @@ import (
 	"github.com/sut68/team07/backend/controller/auth"
 	"github.com/sut68/team07/backend/controller/chat"
 	"github.com/sut68/team07/backend/controller/evaluation"
+	filter "github.com/sut68/team07/backend/controller/filter/code"
 	"github.com/sut68/team07/backend/controller/group"
 	"github.com/sut68/team07/backend/controller/issues"
 	"github.com/sut68/team07/backend/controller/news"
@@ -39,12 +41,21 @@ func main() {
 	r.Static("/uploads", "./uploads")
 	r.Use(database.CORSMiddleware())
 
+	cwd, _ := os.Getwd()
+    spamCtrl := filter.NewSpamController(
+        filepath.Join(cwd, "controller", "filter", "data", "gambling.onnx"), // Model
+        filepath.Join(cwd, "controller", "filter", "data", "gambling_meta.json"), // Meta
+        filepath.Join(cwd, "lib", "onnxruntime.dll"),                        // DLL
+    )
+
 	authHandler := auth.NewLoginHandler()
 
 	r.POST("/login", authHandler.Login)
 	r.POST("/refresh", authHandler.Refresh)
 	r.POST("/forgot-password", authHandler.ForgotPassword)
 	r.POST("/reset-password", authHandler.ResetPassword)
+
+	r.POST("/checkspam", spamCtrl.CheckSpam)
 	//r.Static("/chatsave", "./chatsave") ย้ายไปใช้ uploads แทน
 	// Backward compatibility for old chat images
 	r.Static("/chatsave", "./uploads/chats")
@@ -54,6 +65,9 @@ func main() {
 	{
 
 		// user ทุก Role สามารถเข้าถึงได้
+
+		//protected.POST("/checkspam", spamCtrl.CheckSpam)// pls fix it on docker also
+
 		protected.GET("/GetChat", chat.GetAllChat)
 		protected.GET("/get_teacher_id", chat.GetGroupbyteacherid)
 		protected.POST("/SendChat", chat.InsertChat)

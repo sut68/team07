@@ -1,0 +1,5 @@
+{
+  "model": "gambling_v1",
+  "validation_accuracy": 0.9624060150375939,
+  "input_name": "input"
+}
