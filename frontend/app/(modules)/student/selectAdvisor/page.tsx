@@ -3,13 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
-import { GetMyGroup } from '../../../services/group'; 
+import { GetMyGroup } from '../../../services/group';
 import { GetAllTeachers, SaveAdvisorSelection, GetAdvisorSelection } from '../../../services/advisor';
 import { GroupProject } from '../../../interfaces/Group';
 import { Teacher } from '../../../interfaces/Advisor';
-import GroupCard from '../../../components/GroupCard';
+import GroupCard from '../../../components/group/GroupCard';
 import '../../../style/StudentSelectAdvisorPage.css';
-import api from '../../../services/api'; 
+import api from '../../../services/api';
 
 const AdvisorSelectionPage = () => {
     const router = useRouter();
@@ -17,13 +17,14 @@ const AdvisorSelectionPage = () => {
     const [currentUserId, setCurrentUserId] = useState<number | null>(null);
     const [myGroup, setMyGroup] = useState<GroupProject | null>(null);
     const [teachers, setTeachers] = useState<Teacher[]>([]);
-    
+
     // State สำหรับฟอร์ม
-    const [selections, setSelections] = useState<(number | "")[]>(Array(10).fill(""));
+    const [selections, setSelections] = useState<(number | "")[]>([]);
     const [description, setDescription] = useState("");
     const [isAlreadySelected, setIsAlreadySelected] = useState(false);
 
-    // 1. เริ่มต้นโหลดข้อมูล
+    const hasDataToShow = isAlreadySelected || selections.some(s => s !== "") || description.trim() !== "";
+
     useEffect(() => {
         initData();
     }, []);
@@ -31,6 +32,7 @@ const AdvisorSelectionPage = () => {
     const initData = async () => {
         setLoading(true);
         try {
+            // 1. หา User ID
             let uid = 0;
             try {
                 const resMe = await api.get("/me");
@@ -49,23 +51,26 @@ const AdvisorSelectionPage = () => {
                     confirmButtonText: 'ตกลง'
                 });
                 setLoading(false);
-                return; 
+                return;
             }
+            let currentTeachers: Teacher[] = [];
             try {
                 const resTeachers = await GetAllTeachers();
                 const teacherList = (resTeachers.data as any).data || resTeachers.data;
                 if (Array.isArray(teacherList)) {
                     setTeachers(teacherList);
+                    currentTeachers = teacherList;
                 }
             } catch (err) {
                 console.error("Failed to fetch teachers:", err);
             }
+            let finalSelections = Array(currentTeachers.length).fill("");
 
             let groupID = 0;
             try {
                 const resGroup = await GetMyGroup();
                 const groupData = (resGroup.data as any).data || resGroup.data;
-                
+
                 if (groupData && groupData.ID) {
                     setMyGroup(groupData);
                     groupID = groupData.ID;
@@ -74,30 +79,31 @@ const AdvisorSelectionPage = () => {
                 console.log("User has no group yet.");
             }
 
-            // --- 4. ดึงข้อมูลการเลือกเดิม (ถ้ามี) ---
-            if (groupID > 0) {
+            // --- ดึงข้อมูลการเลือกเดิม (ถ้ามี) ---
+                if (groupID > 0) {
                 try {
                     const resSelection = await GetAdvisorSelection(groupID);
                     const selectionData = (resSelection.data as any).data || resSelection.data;
 
                     if (Array.isArray(selectionData) && selectionData.length > 0) {
                         setIsAlreadySelected(true);
-                        const newSelections = Array(10).fill("");
                         selectionData.forEach((item: any) => {
-                            const itemNo = item.no || item.No; 
-                            const itemTeacherID = item.teacher_id || item.TeacherID;
-                            if (itemNo >= 1 && itemNo <= 10) {
-                                newSelections[itemNo - 1] = itemTeacherID;
+                            const itemNo = item.no || item.No ; 
+                            const itemTeacherID = item.teacher_id || item.TeacherID ;
+                            if (itemNo >= 1 && itemNo <= 10 && itemTeacherID) {
+                                finalSelections[itemNo - 1] = Number(itemTeacherID);
                             }
                         });
-                        setSelections(newSelections);
-                        
-                        if (selectionData[0]?.Description || selectionData[0]?.description) {
-                            setDescription(selectionData[0].Description || selectionData[0].description);
+                        const desc = selectionData[0]?.Description || selectionData[0]?.description;
+                        if (desc) {
+                            setDescription(desc);
                         }
                     }
-                } catch (err) { /* No previous selection */ }
+                } catch (err) { 
+                    console.log("No previous selection found");
+                }
             }
+            setSelections(finalSelections);
 
         } catch (error) {
             console.error("Error init data:", error);
@@ -119,7 +125,7 @@ const AdvisorSelectionPage = () => {
 
     const handleClear = () => {
         if (isAlreadySelected) return;
-        setSelections(Array(10).fill(""));
+        setSelections(Array(teachers.length).fill(""));
         setDescription("");
         Swal.fire({ icon: 'success', title: 'ล้างข้อมูลสำเร็จ', timer: 1000, showConfirmButton: false });
     };
@@ -153,8 +159,13 @@ const AdvisorSelectionPage = () => {
         }
 
         const selectedAdvisors = selections.filter(s => s !== "") as number[];
-        if (selectedAdvisors.length < 10 || !description.trim()) {
-            Swal.fire({ icon: "warning", title: "ข้อมูลไม่ครบ", text: "กรุณาเลือกให้ครบ 10 ท่าน และระบุรายละเอียดโครงงาน", confirmButtonText: "ตกลง" });
+        if (selectedAdvisors.length < teachers.length || !description.trim()) {
+            Swal.fire({
+                icon: "warning",
+                title: "ข้อมูลไม่ครบ",
+                text: `กรุณาเลือกให้ครบ ${teachers.length} ท่าน และระบุรายละเอียดโครงงาน`,
+                confirmButtonText: "ตกลง"
+            });
             return;
         }
 
@@ -204,7 +215,7 @@ const AdvisorSelectionPage = () => {
                         description: description,
                         advisor_order: selectedAdvisors
                     });
-                    
+
                     await Swal.fire("สำเร็จ", "บันทึกข้อมูลเรียบร้อยแล้ว", "success");
                     initData();
                 } catch (error: any) {
@@ -217,7 +228,7 @@ const AdvisorSelectionPage = () => {
     if (loading) {
         return (
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column', gap: '10px', color: '#666' }}>
-                <div className="spinner" style={{width: '40px', height: '40px', border: '4px solid #f3f3f3', borderTop: '4px solid #8A011D', borderRadius: '50%', animation: 'spin 1s linear infinite'}}></div>
+                <div className="spinner" style={{ width: '40px', height: '40px', border: '4px solid #f3f3f3', borderTop: '4px solid #8A011D', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
                 <span>กำลังโหลดข้อมูล...</span>
                 <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
             </div>
@@ -241,8 +252,8 @@ const AdvisorSelectionPage = () => {
                             {selections.map((sel, index) => (
                                 <div key={index} className="form-group">
                                     <label className="form-label">ลำดับที่ {index + 1}</label>
-                                    <select 
-                                        className={`advisor-select ${sel !== "" ? "has-value" : ""}`} 
+                                    <select
+                                        className={`advisor-select ${sel !== "" ? "has-value" : ""}`}
                                         value={sel}
                                         onChange={(e) => handleSelectChange(index, e.target.value)}
                                         disabled={isAlreadySelected}
@@ -262,7 +273,7 @@ const AdvisorSelectionPage = () => {
                             ))}
                             <div className="form-group">
                                 <label className="form-label">รายละเอียดโครงงานที่ต้องการทำ</label>
-                                <textarea 
+                                <textarea
                                     className={`project-desc-textarea ${description.trim() !== "" ? "has-value" : ""}`}
                                     placeholder="ระบุรายละเอียด..."
                                     value={description}
@@ -273,8 +284,8 @@ const AdvisorSelectionPage = () => {
                             </div>
                             <div className="form-actions">
                                 {!isAlreadySelected && <button className="btn-clear" onClick={handleClear}>เคลียร์ข้อมูล</button>}
-                                <button 
-                                    className="btn-submit" 
+                                <button
+                                    className="btn-submit"
                                     onClick={handleSubmit}
                                     style={isAlreadySelected ? { backgroundColor: '#ccc', cursor: 'not-allowed' } : {}}
                                 >
@@ -287,12 +298,12 @@ const AdvisorSelectionPage = () => {
                     <div className="right-column">
                         {myGroup ? (
                             <div style={{ marginBottom: '20px' }}>
-                                <GroupCard 
-                                    group={myGroup} 
+                                <GroupCard
+                                    group={myGroup}
                                     currentUserId={currentUserId}
                                     globalUserHasGroup={true}
                                     // hideAction={true} 
-                                    onJoin={() => {}} 
+                                    onJoin={() => { }}
                                 />
                             </div>
                         ) : (
@@ -305,8 +316,7 @@ const AdvisorSelectionPage = () => {
                         <div className="selection-summary-card">
                             <h3 className="summary-title">รายละเอียดการเลือกอาจารย์ที่ปรึกษา</h3>
                             <div style={{ paddingLeft: '10px' }}>
-                                
-                                {isAlreadySelected ? (
+                                {hasDataToShow ? (
                                     <>
                                         <div style={{ marginBottom: '15px', borderBottom: '1px dashed #ccc', paddingBottom: '10px' }}>
                                             <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#666', marginBottom: '5px' }}>
@@ -336,7 +346,7 @@ const AdvisorSelectionPage = () => {
                                         <p style={{ fontStyle: 'italic', marginBottom: '5px' }}>--- ยังไม่มีการบันทึกข้อมูล ---</p>
                                     </div>
                                 )}
-                                
+
                             </div>
                         </div>
                     </div>

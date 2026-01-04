@@ -11,6 +11,11 @@ import { IAppointment } from '../../../interfaces/Appointment';
 import AppointmentSlider from '../../../components/dashboard/appointmentSlider';
 import { Tabs } from 'antd';
 
+// Group Selection
+import DashboardPendingWidget from '../../../components/group/SelectGroupCard';
+import { GetAdvisorRequests } from '../../../services/advisor';
+import { SelectAdvisor } from '../../../interfaces/Advisor';
+
 export default function TeacherDashboardPage() {
     const { user } = useAuth();
     const [editingNews, setEditingNews] = useState<News | null>(null);
@@ -19,6 +24,10 @@ export default function TeacherDashboardPage() {
     
     const [appointments, setAppointments] = useState<IAppointment[]>([]);
     const [loadingAppt, setLoadingAppt] = useState(true);
+
+    // Group Selection
+    const [pendingRequests, setPendingRequests] = useState<SelectAdvisor[]>([]);
+    const [currentYear, setCurrentYear] = useState<number>(new Date().getFullYear() + 543);
 
     useEffect(() => {
         const fetchAppointments = async () => {
@@ -34,6 +43,22 @@ export default function TeacherDashboardPage() {
             }
         };
         fetchAppointments();
+
+        // Group Selection
+        const fetchGroupData = async () => {
+            try {
+                const res = await GetAdvisorRequests();
+                if (res.data && res.data.data) {
+                    const allRequests = res.data.data;
+                    const pending = allRequests.filter((r: any) => r.status === 'pending');
+                    setPendingRequests(pending);
+                }
+            } catch (error) {
+                console.error("Dashboard fetch error:", error);
+            }
+        };
+        fetchGroupData();
+
     }, []);
 
     const handleEditNews = (news: News) => {
@@ -110,7 +135,11 @@ export default function TeacherDashboardPage() {
 
                 {/* แจ้งเตือนกลุ่ม */}
                 <div className="section-teacher middle-teacher">
-                    <h1>กลุ่มของเอ แจ้งว่ามีใครเลือกคุณ (Middle) ทำเเบบขึ้นว่ามีเฉยๆเป็นการ์ด เเล้วมีปุ่มให้คลิ๊กไป</h1>
+                    {/* <h1>กลุ่มของเอ แจ้งว่ามีใครเลือกคุณ (Middle) ทำเเบบขึ้นว่ามีเฉยๆเป็นการ์ด เเล้วมีปุ่มให้คลิ๊กไป</h1> */}
+                        <DashboardPendingWidget 
+                        requests={pendingRequests} 
+                        year={currentYear} 
+                        />
                 </div>
 
                 {/* ความคืบหน้า */}

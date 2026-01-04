@@ -36,7 +36,7 @@ export interface StudentSearchResult {
   username: string; 
 }
 
-// Payload: เพิ่มสมาชิก (Admin)
+// Payload: เพิ่มสมาชิก 
 export interface AddMemberRequest {
   group_project_id: number;
   student_id: number; 

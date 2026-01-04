@@ -15,25 +15,25 @@ export interface SelectAdvisor {
     UpdatedAt?: string;
     DeletedAt?: string | null;
 
-    no: number;             // ลำดับ (1-10)
-    description: string;    // รายละเอียด
-    status: string;         // 'pending', 'accepted', 'rejected', 'skipped' (สำคัญ!)
+    no: number;             
+    description: string;    
+    status: string;        
 
     group_project_id: number;
-    group_project?: GroupProject; // ข้อมูลกลุ่ม (สำคัญ! ต้องมีเพื่อเอาไปแสดงในการ์ด)
+    group_project?: GroupProject; 
 
     teacher_id: number;
-    teacher?: Teacher;      // ข้อมูลอาจารย์
+    teacher?: Teacher;     
 }
 
-// Teacher's view
+// ----- Teacher -----
 
-// 2. สำหรับ Payload เวลาจะกด Accept/Reject
+// Payload เวลาจะกด Accept/Reject
 export interface AdvisorActionRequest {
   selection_id: number;
 }
 
-// 3. สำหรับ Payload เวลาจะกด ปิด/เปิด รับสมัคร
+// Payload เวลาจะกด ปิด/เปิด รับสมัคร
 export interface AdvisorStatusRequest {
   is_open: boolean;
 }
