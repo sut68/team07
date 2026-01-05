@@ -1,0 +1,152 @@
+{
+  "id": "46d610f7-b933-4e7f-90a6-d19998493ab1",
+  "version": "2.0",
+  "name": "group",
+  "url": "http://localhost:5173",
+  "tests": [{
+    "id": "3149585d-8628-40f4-b426-ab4947bac811",
+    "name": "group_ne",
+    "commands": [{
+      "id": "0269fb41-6230-41c0-a97f-60b9db227e84",
+      "comment": "",
+      "command": "open",
+      "target": "/login",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "054b14ec-8d9a-4c3d-befd-5bc40530b068",
+      "comment": "",
+      "command": "setWindowSize",
+      "target": "653x800",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "8c7a1dff-3488-45ec-8a8a-00d6d426febe",
+      "comment": "",
+      "command": "click",
+      "target": "name=username",
+      "targets": [
+        ["name=username", "name"],
+        ["css=.login-info:nth-child(2)", "css:finder"],
+        ["xpath=//input[@name='username']", "xpath:attributes"],
+        ["xpath=//input", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "f37c8c89-05ca-46f4-8d8d-97210dcb4ce3",
+      "comment": "",
+      "command": "type",
+      "target": "name=username",
+      "targets": [
+        ["name=username", "name"],
+        ["css=.login-info:nth-child(2)", "css:finder"],
+        ["xpath=//input[@name='username']", "xpath:attributes"],
+        ["xpath=//input", "xpath:position"]
+      ],
+      "value": "Admin@sut.ac.th"
+    }, {
+      "id": "90a38507-0bdf-48c1-8e9b-f46683c23e13",
+      "comment": "",
+      "command": "click",
+      "target": "name=password",
+      "targets": [
+        ["name=password", "name"],
+        ["css=.login-info:nth-child(1)", "css:finder"],
+        ["xpath=//input[@name='password']", "xpath:attributes"],
+        ["xpath=//div[2]/div/input", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "39cc2bee-1d28-40ce-858f-99717c937e9c",
+      "comment": "",
+      "command": "click",
+      "target": "css=button:nth-child(2)",
+      "targets": [
+        ["css=button:nth-child(2)", "css:finder"],
+        ["xpath=//button[@type='button']", "xpath:attributes"],
+        ["xpath=//button", "xpath:position"],
+        ["xpath=//button[contains(.,'แสดง')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "8ef21b54-0a04-4785-b426-28e7e1e79fd7",
+      "comment": "",
+      "command": "click",
+      "target": "name=password",
+      "targets": [
+        ["name=password", "name"],
+        ["css=.login-info:nth-child(1)", "css:finder"],
+        ["xpath=//input[@name='password']", "xpath:attributes"],
+        ["xpath=//div[2]/div/input", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "6548055e-5c1b-43bb-bdca-d0b96a582843",
+      "comment": "",
+      "command": "type",
+      "target": "name=password",
+      "targets": [
+        ["name=password", "name"],
+        ["css=.login-info:nth-child(1)", "css:finder"],
+        ["xpath=//input[@name='password']", "xpath:attributes"],
+        ["xpath=//div[2]/div/input", "xpath:position"]
+      ],
+      "value": "adm123"
+    }, {
+      "id": "fa0afee0-e6c8-45e8-aa4a-65d29fa6ea8d",
+      "comment": "",
+      "command": "click",
+      "target": "css=.login-button",
+      "targets": [
+        ["css=.login-button", "css:finder"],
+        ["xpath=//button[@type='submit']", "xpath:attributes"],
+        ["xpath=//div[4]/button", "xpath:position"],
+        ["xpath=//button[contains(.,'เข้าสู่ระบบ')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "f7fae30b-d1de-4389-8373-092ba9d83dc3",
+      "comment": "",
+      "command": "click",
+      "target": "css=.ant-menu-item-active > .ant-menu-title-content > span",
+      "targets": [
+        ["css=.ant-menu-item-active > .ant-menu-title-content > span", "css:finder"],
+        ["xpath=//li[3]/span[2]/span", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "c62fddae-f4f2-4838-bc72-76d2d549222f",
+      "comment": "",
+      "command": "click",
+      "target": "css=.btn-submit",
+      "targets": [
+        ["css=.btn-submit", "css:finder"],
+        ["xpath=//div[5]/button", "xpath:position"],
+        ["xpath=//button[contains(.,'ยืนยันการสร้างกลุ่ม')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "887db63c-eacc-4bd3-8620-705224ccc606",
+      "comment": "",
+      "command": "click",
+      "target": "css=.swal2-confirm",
+      "targets": [
+        ["css=.swal2-confirm", "css:finder"],
+        ["xpath=(//button[@type='button'])[2]", "xpath:attributes"],
+        ["xpath=//div[6]/button", "xpath:position"],
+        ["xpath=//button[contains(.,'OK')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }]
+  }],
+  "suites": [{
+    "id": "5271d3ef-6b32-4306-9f2e-535d7e4a25a5",
+    "name": "Default Suite",
+    "persistSession": false,
+    "parallel": false,
+    "timeout": 300,
+    "tests": ["3149585d-8628-40f4-b426-ab4947bac811"]
+  }],
+  "urls": ["http://localhost:5173/"],
+  "plugins": []
+}

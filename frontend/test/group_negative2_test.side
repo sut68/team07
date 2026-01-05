@@ -1,0 +1,172 @@
+{
+  "id": "46d610f7-b933-4e7f-90a6-d19998493ab1",
+  "version": "2.0",
+  "name": "group",
+  "url": "http://localhost:5173",
+  "tests": [{
+    "id": "0ebad3d8-b1c1-407e-96d3-ad899727f763",
+    "name": "negative2",
+    "commands": [{
+      "id": "db917ceb-4776-4e24-b721-589dd7f62b32",
+      "comment": "",
+      "command": "open",
+      "target": "/login",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "f8d4ca11-10c5-4889-b37f-a18c49a0dcc5",
+      "comment": "",
+      "command": "setWindowSize",
+      "target": "653x800",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "6f2bbfcb-8122-460f-8892-f32b8fa657f1",
+      "comment": "",
+      "command": "click",
+      "target": "name=username",
+      "targets": [
+        ["name=username", "name"],
+        ["css=.login-info:nth-child(2)", "css:finder"],
+        ["xpath=//input[@name='username']", "xpath:attributes"],
+        ["xpath=//input", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "0fe81b2a-0831-481c-a08f-948851b78463",
+      "comment": "",
+      "command": "type",
+      "target": "name=username",
+      "targets": [
+        ["name=username", "name"],
+        ["css=.login-info:nth-child(2)", "css:finder"],
+        ["xpath=//input[@name='username']", "xpath:attributes"],
+        ["xpath=//input", "xpath:position"]
+      ],
+      "value": "Admin@sut.ac.th"
+    }, {
+      "id": "67b1198c-9f8a-44d6-9599-614f09cc3b4c",
+      "comment": "",
+      "command": "click",
+      "target": "css=button:nth-child(2)",
+      "targets": [
+        ["css=button:nth-child(2)", "css:finder"],
+        ["xpath=//button[@type='button']", "xpath:attributes"],
+        ["xpath=//button", "xpath:position"],
+        ["xpath=//button[contains(.,'แสดง')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "55936411-f7c4-4eb3-bf4f-9ae60b86cf0b",
+      "comment": "",
+      "command": "click",
+      "target": "name=password",
+      "targets": [
+        ["name=password", "name"],
+        ["css=.login-info:nth-child(1)", "css:finder"],
+        ["xpath=//input[@name='password']", "xpath:attributes"],
+        ["xpath=//div[2]/div/input", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "457c0456-fb7d-4e44-81a4-46cb024737eb",
+      "comment": "",
+      "command": "type",
+      "target": "name=password",
+      "targets": [
+        ["name=password", "name"],
+        ["css=.login-info:nth-child(1)", "css:finder"],
+        ["xpath=//input[@name='password']", "xpath:attributes"],
+        ["xpath=//div[2]/div/input", "xpath:position"]
+      ],
+      "value": "adm123"
+    }, {
+      "id": "45ecf031-4a54-4755-8c3c-573e21665f69",
+      "comment": "",
+      "command": "click",
+      "target": "css=.login-button",
+      "targets": [
+        ["css=.login-button", "css:finder"],
+        ["xpath=//button[@type='submit']", "xpath:attributes"],
+        ["xpath=//div[4]/button", "xpath:position"],
+        ["xpath=//button[contains(.,'เข้าสู่ระบบ')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "42891a4e-e0ac-45a3-aace-7469abee16c9",
+      "comment": "",
+      "command": "click",
+      "target": "css=.ant-menu-item-active > .ant-menu-title-content",
+      "targets": [
+        ["css=.ant-menu-item-active > .ant-menu-title-content", "css:finder"],
+        ["xpath=//li[3]/span[2]", "xpath:position"],
+        ["xpath=//span[contains(.,'จัดการกลุ่ม')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "232da8ac-514d-4f02-9db4-d5c232c31836",
+      "comment": "",
+      "command": "click",
+      "target": "css=.form-row:nth-child(1) .form-input",
+      "targets": [
+        ["css=.form-row:nth-child(1) .form-input", "css:finder"],
+        ["xpath=//input[@value='2569']", "xpath:attributes"],
+        ["xpath=//input", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "0f852e1f-7996-4147-a23b-0b1e3467d874",
+      "comment": "",
+      "command": "type",
+      "target": "css=.form-row:nth-child(1) .form-input",
+      "targets": [
+        ["css=.form-row:nth-child(1) .form-input", "css:finder"],
+        ["xpath=//input[@value='2569']", "xpath:attributes"],
+        ["xpath=//input", "xpath:position"]
+      ],
+      "value": "2559"
+    }, {
+      "id": "4c068032-23bd-4836-afda-74226907d946",
+      "comment": "",
+      "command": "click",
+      "target": "css=.group-card:nth-child(1) .btn-detail",
+      "targets": [
+        ["css=.group-card:nth-child(1) .btn-detail", "css:finder"],
+        ["xpath=//div[3]/button", "xpath:position"],
+        ["xpath=//button[contains(.,'รายละเอียด')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "73d98068-c2bc-4f54-bc77-d1b727666b40",
+      "comment": "",
+      "command": "click",
+      "target": "css=.btn-remove:nth-child(1) > .h-5",
+      "targets": [
+        ["css=.btn-remove:nth-child(1) > .h-5", "css:finder"]
+      ],
+      "value": ""
+    }, {
+      "id": "097da738-b17e-4011-9a87-22e08b83fede",
+      "comment": "",
+      "command": "click",
+      "target": "css=.swal2-confirm",
+      "targets": [
+        ["css=.swal2-confirm", "css:finder"],
+        ["xpath=(//button[@type='button'])[2]", "xpath:attributes"],
+        ["xpath=//div[3]/div/div[6]/button", "xpath:position"],
+        ["xpath=//button[contains(.,'OK')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }]
+  }],
+  "suites": [{
+    "id": "5271d3ef-6b32-4306-9f2e-535d7e4a25a5",
+    "name": "Default Suite",
+    "persistSession": false,
+    "parallel": false,
+    "timeout": 300,
+    "tests": []
+  }],
+  "urls": ["http://localhost:5173/"],
+  "plugins": []
+}

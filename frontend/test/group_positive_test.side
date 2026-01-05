@@ -1,27 +1,27 @@
 {
-  "id": "be0fc153-e02b-4f10-9603-730d363251e1",
+  "id": "df779433-7047-4e67-9ebd-37f787091072",
   "version": "2.0",
   "name": "group",
   "url": "http://localhost:5173",
   "tests": [{
-    "id": "612301b6-3e1b-4e0d-b47e-33fbd38cfa70",
-    "name": "group",
+    "id": "88d9f360-4554-4cf7-acc7-80f0df8c1ffd",
+    "name": "test_group_po",
     "commands": [{
-      "id": "42927247-8952-4e98-84fc-c3905cdab41c",
+      "id": "0c626f1d-d9fa-4daf-b3c5-280459086393",
       "comment": "",
       "command": "open",
       "target": "/login",
       "targets": [],
       "value": ""
     }, {
-      "id": "ded65de2-b910-4122-8705-baad25369407",
+      "id": "0ea1cb78-1a64-4f95-8c66-57f4ee0c7457",
       "comment": "",
       "command": "setWindowSize",
       "target": "1294x814",
       "targets": [],
       "value": ""
     }, {
-      "id": "a2c5c300-d1ef-4bf0-a7e3-4102e5a4aeda",
+      "id": "8bb2e24a-631e-47bc-8c45-af3248c85518",
       "comment": "",
       "command": "click",
       "target": "name=username",
@@ -33,7 +33,7 @@
       ],
       "value": ""
     }, {
-      "id": "4e853e9b-48b4-4e03-8291-c1a528e5163a",
+      "id": "83587ef2-2cd5-467c-b74c-029da2f79562",
       "comment": "",
       "command": "type",
       "target": "name=username",
@@ -45,19 +45,7 @@
       ],
       "value": "Admin@sut.ac.th"
     }, {
-      "id": "54b6cb8b-cd12-4a57-8a4d-42c8fcdbb681",
-      "comment": "",
-      "command": "click",
-      "target": "css=button:nth-child(2)",
-      "targets": [
-        ["css=button:nth-child(2)", "css:finder"],
-        ["xpath=//button[@type='button']", "xpath:attributes"],
-        ["xpath=//button", "xpath:position"],
-        ["xpath=//button[contains(.,'แสดง')]", "xpath:innerText"]
-      ],
-      "value": ""
-    }, {
-      "id": "022d986b-a2e2-4522-83e3-b2bd72c7d7bd",
+      "id": "5f6b4611-9ac6-4bf0-8d9b-9772f7d51c83",
       "comment": "",
       "command": "click",
       "target": "name=password",
@@ -69,7 +57,7 @@
       ],
       "value": ""
     }, {
-      "id": "3eebeb8b-b04b-4faf-8ad7-db338a222da7",
+      "id": "77686141-f1fd-4da8-a280-98356c6e2847",
       "comment": "",
       "command": "type",
       "target": "name=password",
@@ -81,7 +69,19 @@
       ],
       "value": "adm123"
     }, {
-      "id": "08377287-4bdd-4385-90cf-bdc0d4ad8e9e",
+      "id": "1d8b208d-7ce6-44b1-b8a8-20a8d1ddd83a",
+      "comment": "",
+      "command": "click",
+      "target": "css=button:nth-child(2)",
+      "targets": [
+        ["css=button:nth-child(2)", "css:finder"],
+        ["xpath=//button[@type='button']", "xpath:attributes"],
+        ["xpath=//button", "xpath:position"],
+        ["xpath=//button[contains(.,'แสดง')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "416ce006-7452-40e0-aff6-37afa69a2e20",
       "comment": "",
       "command": "click",
       "target": "css=.login-button",
@@ -93,40 +93,39 @@
       ],
       "value": ""
     }, {
-      "id": "82af84b3-2306-4d6d-8317-1d5ecc82928e",
+      "id": "3042789d-0cfd-4498-b6db-96e1ddec2249",
       "comment": "",
       "command": "click",
-      "target": "css=.ant-menu-item-active > .ant-menu-title-content",
+      "target": "css=.ant-menu-item-active > .ant-menu-title-content > span",
       "targets": [
-        ["css=.ant-menu-item-active > .ant-menu-title-content", "css:finder"],
-        ["xpath=//li[3]/span[2]", "xpath:position"],
-        ["xpath=//span[contains(.,'จัดการกลุ่ม')]", "xpath:innerText"]
+        ["css=.ant-menu-item-active > .ant-menu-title-content > span", "css:finder"],
+        ["xpath=//li[3]/span[2]/span", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "a6b29028-4643-469a-a5df-b317b1e4450b",
+      "id": "f3202c5b-fffc-4223-856a-bae86c43038a",
       "comment": "",
       "command": "click",
       "target": "css=.form-row:nth-child(1) .form-input",
       "targets": [
         ["css=.form-row:nth-child(1) .form-input", "css:finder"],
-        ["xpath=//input[@value='2568']", "xpath:attributes"],
+        ["xpath=//input[@value='2569']", "xpath:attributes"],
         ["xpath=//input", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "104640cd-268b-48ac-9e23-c7e6729424de",
+      "id": "b3e472a0-a5d4-449c-b1ec-8c24fad1f093",
       "comment": "",
       "command": "type",
       "target": "css=.form-row:nth-child(1) .form-input",
       "targets": [
         ["css=.form-row:nth-child(1) .form-input", "css:finder"],
-        ["xpath=//input[@value='2568']", "xpath:attributes"],
+        ["xpath=//input[@value='2569']", "xpath:attributes"],
         ["xpath=//input", "xpath:position"]
       ],
-      "value": "2560"
+      "value": "2559"
     }, {
-      "id": "0e3bd1dd-0193-4924-a5bd-afb4fab79a71",
+      "id": "40e25399-5d1d-4deb-b555-06998b610222",
       "comment": "",
       "command": "click",
       "target": "css=.form-row:nth-child(2) .form-input",
@@ -137,7 +136,7 @@
       ],
       "value": ""
     }, {
-      "id": "4f2e9120-8d0c-4615-b5ca-31c28c08d733",
+      "id": "4188402c-45b7-487b-9722-3f517c1cfb7b",
       "comment": "",
       "command": "type",
       "target": "css=.form-row:nth-child(2) .form-input",
@@ -148,7 +147,7 @@
       ],
       "value": "1"
     }, {
-      "id": "a6beb613-05fc-449a-9d95-2f27daf73134",
+      "id": "4f69f308-da59-465c-bc1f-17f87dde55bf",
       "comment": "",
       "command": "click",
       "target": "css=.form-row:nth-child(3) .form-input",
@@ -159,7 +158,7 @@
       ],
       "value": ""
     }, {
-      "id": "e062d6fb-5465-498a-a3ba-323a9bfe794e",
+      "id": "537efec2-fa11-4800-9884-ca200562d6e3",
       "comment": "",
       "command": "type",
       "target": "css=.form-row:nth-child(3) .form-input",
@@ -170,17 +169,7 @@
       ],
       "value": "2"
     }, {
-      "id": "889604ac-3f44-492d-b473-d26a7ccfce0c",
-      "comment": "",
-      "command": "click",
-      "target": "css=.form-container",
-      "targets": [
-        ["css=.form-container", "css:finder"],
-        ["xpath=//div[2]/div[2]", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "2af8513f-cbca-4bf1-b22b-62f0b6543a88",
+      "id": "fd1f1617-2e61-4bb3-8db6-bdb4c3e8bd4e",
       "comment": "",
       "command": "click",
       "target": "css=.form-row:nth-child(4) .form-input",
@@ -191,7 +180,7 @@
       ],
       "value": ""
     }, {
-      "id": "b0aed124-8f5c-471f-bdd1-caa4a5440e61",
+      "id": "cf678001-785c-4060-82dd-07c6c16a49d4",
       "comment": "",
       "command": "type",
       "target": "css=.form-row:nth-child(4) .form-input",
@@ -202,18 +191,18 @@
       ],
       "value": "3"
     }, {
-      "id": "ae9f791a-0c63-4f6f-80e5-6bebc767c6c0",
+      "id": "2c3dcb13-cb07-4676-a5a0-c929acc365d4",
       "comment": "",
       "command": "click",
       "target": "css=.btn-submit",
       "targets": [
         ["css=.btn-submit", "css:finder"],
-        ["xpath=//button", "xpath:position"],
+        ["xpath=//div[5]/button", "xpath:position"],
         ["xpath=//button[contains(.,'ยืนยันการสร้างกลุ่ม')]", "xpath:innerText"]
       ],
       "value": ""
     }, {
-      "id": "b8789b65-1da0-4e84-979a-2e3bbd631d47",
+      "id": "da4b4336-c38f-4759-99fe-662e9cf14666",
       "comment": "",
       "command": "click",
       "target": "css=.swal2-confirm",
@@ -224,7 +213,7 @@
       ],
       "value": ""
     }, {
-      "id": "77c4dccb-e3f1-476a-bd69-1506ca81a756",
+      "id": "e2991b6c-fc93-4499-9579-3659da6f8516",
       "comment": "",
       "command": "click",
       "target": "css=.group-card:nth-child(1) .btn-detail",
@@ -235,29 +224,7 @@
       ],
       "value": ""
     }, {
-      "id": "39a71bfd-feb9-4505-8b9b-96787a4d4d76",
-      "comment": "",
-      "command": "mouseOver",
-      "target": "css=.group-card:nth-child(1) .btn-detail",
-      "targets": [
-        ["css=.group-card:nth-child(1) .btn-detail", "css:finder"],
-        ["xpath=//div[3]/button", "xpath:position"],
-        ["xpath=//button[contains(.,'รายละเอียด')]", "xpath:innerText"]
-      ],
-      "value": ""
-    }, {
-      "id": "4ef70a62-6867-42c4-8233-59d1397d6b8e",
-      "comment": "",
-      "command": "mouseOut",
-      "target": "css=.group-card:nth-child(1) .btn-detail",
-      "targets": [
-        ["css=.group-card:nth-child(1) .btn-detail", "css:finder"],
-        ["xpath=//div[3]/button", "xpath:position"],
-        ["xpath=//button[contains(.,'รายละเอียด')]", "xpath:innerText"]
-      ],
-      "value": ""
-    }, {
-      "id": "265da74b-2c06-4125-87fa-00ba103ec4dc",
+      "id": "84be241d-61d0-46b3-b2ff-1965ca89d43a",
       "comment": "",
       "command": "click",
       "target": "css=.advisor-select",
@@ -267,91 +234,69 @@
       ],
       "value": ""
     }, {
-      "id": "9258c789-6c3a-44eb-921d-8acbc5381403",
+      "id": "c18daf05-7a10-4fe5-b6ec-af10002213c7",
       "comment": "",
       "command": "select",
       "target": "css=.advisor-select",
       "targets": [],
-      "value": "label=Teacher3 Three"
+      "value": "label=Teacher1 One"
     }, {
-      "id": "0eab486e-bfed-44bf-95c6-2f8c5a492663",
+      "id": "149d68fa-6c9c-4dbe-8443-6ea33fc6f746",
       "comment": "",
       "command": "click",
       "target": "css=.student-search-item:nth-child(1) > .btn-add > span",
       "targets": [
         ["css=.student-search-item:nth-child(1) > .btn-add > span", "css:finder"],
-        ["xpath=//button/span", "xpath:position"],
+        ["xpath=//div/div/button/span", "xpath:position"],
         ["xpath=//span[contains(.,'+ เพิ่มเข้ากลุ่ม')]", "xpath:innerText"]
       ],
       "value": ""
     }, {
-      "id": "d0d3fcc0-e57c-4c1a-ab00-03a4a947e4d9",
-      "comment": "",
-      "command": "mouseOver",
-      "target": "css=.student-search-item:nth-child(1) > .btn-add > span",
-      "targets": [
-        ["css=.student-search-item:nth-child(1) > .btn-add > span", "css:finder"],
-        ["xpath=//button/span", "xpath:position"],
-        ["xpath=//span[contains(.,'+ เพิ่มเข้ากลุ่ม')]", "xpath:innerText"]
-      ],
-      "value": ""
-    }, {
-      "id": "0ab8539c-4b74-40e0-b2e3-356f10ac6a78",
+      "id": "3310a79f-83fc-47c6-9386-99e87e7b8d88",
       "comment": "",
       "command": "click",
       "target": "css=.student-search-item:nth-child(1) > .btn-add > span",
       "targets": [
         ["css=.student-search-item:nth-child(1) > .btn-add > span", "css:finder"],
-        ["xpath=//button/span", "xpath:position"],
+        ["xpath=//div/div/button/span", "xpath:position"],
         ["xpath=//span[contains(.,'+ เพิ่มเข้ากลุ่ม')]", "xpath:innerText"]
       ],
       "value": ""
     }, {
-      "id": "5bb6ae22-11c1-4e36-8d2c-6a2344950916",
+      "id": "524d693e-9c27-4036-af00-199c725cd764",
       "comment": "",
       "command": "mouseOver",
       "target": "css=.student-search-item:nth-child(1) > .btn-add > span",
       "targets": [
         ["css=.student-search-item:nth-child(1) > .btn-add > span", "css:finder"],
-        ["xpath=//button/span", "xpath:position"],
+        ["xpath=//div/div/button/span", "xpath:position"],
         ["xpath=//span[contains(.,'+ เพิ่มเข้ากลุ่ม')]", "xpath:innerText"]
       ],
       "value": ""
     }, {
-      "id": "afe89d44-c13e-42cf-8aa2-baf7c93048c2",
+      "id": "60bdfb4d-31df-4678-a5c6-a7552d657169",
+      "comment": "",
+      "command": "click",
+      "target": "css=.student-search-item:nth-child(1) > .btn-add > span",
+      "targets": [
+        ["css=.student-search-item:nth-child(1) > .btn-add > span", "css:finder"],
+        ["xpath=//div/div/button/span", "xpath:position"],
+        ["xpath=//span[contains(.,'+ เพิ่มเข้ากลุ่ม')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "d71301b5-28c8-41c1-81a0-f58ed82137ec",
       "comment": "",
       "command": "click",
       "target": "css=.member-card:nth-child(1) .btn-promote",
       "targets": [
         ["css=.member-card:nth-child(1) .btn-promote", "css:finder"],
-        ["xpath=//div[2]/button", "xpath:position"],
+        ["xpath=//div/div[2]/button", "xpath:position"],
         ["xpath=//button[contains(.,'ตั้งเป็นหัวหน้า')]", "xpath:innerText"]
       ],
       "value": ""
     }, {
-      "id": "406b7eba-9bc5-456f-9258-564a1d928a47",
-      "comment": "",
-      "command": "mouseOver",
-      "target": "css=.member-card:nth-child(1) .btn-promote",
-      "targets": [
-        ["css=.member-card:nth-child(1) .btn-promote", "css:finder"],
-        ["xpath=//div[2]/button", "xpath:position"],
-        ["xpath=//button[contains(.,'ตั้งเป็นหัวหน้า')]", "xpath:innerText"]
-      ],
-      "value": ""
-    }, {
-      "id": "9b27333c-e165-47aa-aa34-a46d967a1e7c",
-      "comment": "",
-      "command": "mouseOut",
-      "target": "css=.member-card:nth-child(1) .btn-promote",
-      "targets": [
-        ["css=.member-card:nth-child(1) .btn-promote", "css:finder"],
-        ["xpath=//div[2]/button", "xpath:position"],
-        ["xpath=//button[contains(.,'ตั้งเป็นหัวหน้า')]", "xpath:innerText"]
-      ],
-      "value": ""
-    }, {
-      "id": "baac8ee9-22ad-4a54-bb6c-a519d6301c68",
+      "id": "83a3f3a3-187c-4c44-a374-049a114b72f1",
       "comment": "",
       "command": "click",
       "target": "css=.swal2-confirm",
@@ -362,91 +307,16 @@
       ],
       "value": ""
     }, {
-      "id": "83aaa136-6db5-4f05-8e07-9edc35e395fd",
-      "comment": "",
-      "command": "mouseOver",
-      "target": "css=.btn-remove:nth-child(1) > .h-5",
-      "targets": [
-        ["css=.btn-remove:nth-child(1) > .h-5", "css:finder"]
-      ],
-      "value": ""
-    }, {
-      "id": "7d82338c-2d76-43a5-8608-6c63fa051abd",
+      "id": "fc4fd679-598e-4974-b4db-dcb4bcd4fff6",
       "comment": "",
       "command": "click",
-      "target": "css=.btn-remove:nth-child(1) > .h-5",
+      "target": "css=.member-card:nth-child(3) .h-5",
       "targets": [
-        ["css=.btn-remove:nth-child(1) > .h-5", "css:finder"]
+        ["css=.member-card:nth-child(3) .h-5", "css:finder"]
       ],
       "value": ""
     }, {
-      "id": "a7683225-a11b-4d0a-8aa3-6e5512d37361",
-      "comment": "",
-      "command": "click",
-      "target": "css=.swal2-confirm",
-      "targets": [
-        ["css=.swal2-confirm", "css:finder"],
-        ["xpath=(//button[@type='button'])[2]", "xpath:attributes"],
-        ["xpath=//div[3]/div/div[6]/button", "xpath:position"],
-        ["xpath=//button[contains(.,'OK')]", "xpath:innerText"]
-      ],
-      "value": ""
-    }, {
-      "id": "ad3ebd6c-718d-44cb-a4ff-dd8f725aabba",
-      "comment": "",
-      "command": "click",
-      "target": "css=.btn-promote",
-      "targets": [
-        ["css=.btn-promote", "css:finder"],
-        ["xpath=//div[2]/div[2]/button", "xpath:position"],
-        ["xpath=//button[contains(.,'ตั้งเป็นหัวหน้า')]", "xpath:innerText"]
-      ],
-      "value": ""
-    }, {
-      "id": "12d6aa73-6ac8-42e3-b33b-c4e92024ee66",
-      "comment": "",
-      "command": "mouseOver",
-      "target": "css=.btn-promote",
-      "targets": [
-        ["css=.btn-promote", "css:finder"],
-        ["xpath=//div[2]/div[2]/button", "xpath:position"],
-        ["xpath=//button[contains(.,'ตั้งเป็นหัวหน้า')]", "xpath:innerText"]
-      ],
-      "value": ""
-    }, {
-      "id": "d2350d65-382f-4ac0-a5c4-30599d3f0c1e",
-      "comment": "",
-      "command": "mouseOut",
-      "target": "css=.btn-promote",
-      "targets": [
-        ["css=.btn-promote", "css:finder"],
-        ["xpath=//div[2]/div[2]/button", "xpath:position"],
-        ["xpath=//button[contains(.,'ตั้งเป็นหัวหน้า')]", "xpath:innerText"]
-      ],
-      "value": ""
-    }, {
-      "id": "dd534e92-9358-45f8-97ec-d7ab589de411",
-      "comment": "",
-      "command": "click",
-      "target": "css=.swal2-confirm",
-      "targets": [
-        ["css=.swal2-confirm", "css:finder"],
-        ["xpath=(//button[@type='button'])[2]", "xpath:attributes"],
-        ["xpath=//div[3]/div/div[6]/button", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "c54e9287-4327-4ae5-9c7f-2a1467dc06de",
-      "comment": "",
-      "command": "click",
-      "target": "css=.btn-remove:nth-child(2)",
-      "targets": [
-        ["css=.btn-remove:nth-child(2)", "css:finder"],
-        ["xpath=//button[2]", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "d53bace5-54c4-46a7-aa69-2248f4298079",
+      "id": "5f1f67b9-f7e5-4233-957e-cb44dad546d1",
       "comment": "",
       "command": "click",
       "target": "css=.swal2-confirm",
@@ -458,7 +328,7 @@
       ],
       "value": ""
     }, {
-      "id": "ac0d6fc1-28f3-4fdd-a2bb-bd2c33c2b595",
+      "id": "62e18567-775a-42fe-b597-800073c54040",
       "comment": "",
       "command": "click",
       "target": "css=.close-btn",
@@ -469,17 +339,7 @@
       ],
       "value": ""
     }, {
-      "id": "36fcf564-c378-4c90-992c-803b51a42b33",
-      "comment": "",
-      "command": "mouseOver",
-      "target": "css=.group-card:nth-child(4) .btn-detail",
-      "targets": [
-        ["css=.group-card:nth-child(4) .btn-detail", "css:finder"],
-        ["xpath=//div[4]/div[3]/button", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "2684365a-d92a-4f28-ae7f-c4a574d10115",
+      "id": "9ba07951-8c86-4e37-aa33-8d7b969d841b",
       "comment": "",
       "command": "click",
       "target": "css=.group-card:nth-child(4) .btn-detail",
@@ -489,27 +349,7 @@
       ],
       "value": ""
     }, {
-      "id": "9ca18bae-5664-47e7-b640-9f8428bc3b7c",
-      "comment": "",
-      "command": "mouseOver",
-      "target": "css=.group-card:nth-child(4) .btn-detail",
-      "targets": [
-        ["css=.group-card:nth-child(4) .btn-detail", "css:finder"],
-        ["xpath=//div[4]/div[3]/button", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "ee3779a1-ac73-4ca2-9fdb-9dffb498b6ce",
-      "comment": "",
-      "command": "mouseOut",
-      "target": "css=.group-card:nth-child(4) .btn-detail",
-      "targets": [
-        ["css=.group-card:nth-child(4) .btn-detail", "css:finder"],
-        ["xpath=//div[4]/div[3]/button", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "b3635848-c2fc-47d6-bd86-2e5b81bfec7c",
+      "id": "0a5d8a9e-6ce5-4957-9272-6b8593093362",
       "comment": "",
       "command": "click",
       "target": "css=.btn-delete-group",
@@ -520,7 +360,7 @@
       ],
       "value": ""
     }, {
-      "id": "5f5b8e89-7594-4fbe-847e-cfef9e46dfd8",
+      "id": "7a1a71a4-f3c7-4dd5-b9bc-a7f109ab9b68",
       "comment": "",
       "command": "click",
       "target": "css=.swal2-confirm",
@@ -532,7 +372,7 @@
       ],
       "value": ""
     }, {
-      "id": "7508a66a-a1d6-45e9-b8e4-2852be28091f",
+      "id": "3ed8ddb1-ade6-49ac-8f48-acf03e8a92cb",
       "comment": "",
       "command": "click",
       "target": "css=.swal2-confirm",
@@ -546,12 +386,12 @@
     }]
   }],
   "suites": [{
-    "id": "4b8a2da4-b6f8-4857-9a56-fcad1494d326",
+    "id": "119f72ce-2cdd-49b7-98f2-772f070ef15a",
     "name": "Default Suite",
     "persistSession": false,
     "parallel": false,
     "timeout": 300,
-    "tests": ["612301b6-3e1b-4e0d-b47e-33fbd38cfa70"]
+    "tests": ["88d9f360-4554-4cf7-acc7-80f0df8c1ffd"]
   }],
   "urls": ["http://localhost:5173/"],
   "plugins": []
