@@ -3,7 +3,9 @@ package main
 import (
 	"os"
 	"path/filepath"
-
+	"fmt"
+	"log"
+	"runtime"
 	"github.com/gin-gonic/gin"
 	"github.com/sut68/team07/backend/controller/advisor"
 	"github.com/sut68/team07/backend/controller/appointment"
@@ -30,12 +32,18 @@ func main() {
 	database.ConnectDatabase()
 	database.SetUpDatabase()
 
-	// ถ้าอยาก Mock ข้อมูล ให้รันคำสั่ง go run main.go --seed หรือ go run main.go seed ****ถ้า go run main.go จะไม่ Mock ข้อมูล ****
+	// เช็คคำสั่ง Seed (แก้ให้รองรับทั้ง --seed และ seed)
 	if len(os.Args) > 1 && (os.Args[1] == "--seed" || os.Args[1] == "seed") {
+		fmt.Println("FOUND SEED COMMAND: Starting Seeding Process...")
 		Data := database.DB()
+		if Data == nil {
+			fmt.Println("ERROR: Database Connection is NIL")
+			return
+		}
 		mockdata.InsertMock(Data)
+		fmt.Println("SEED COMPLETED: Data should be in DB now.")
+		return
 	}
-
 	service.InitEmailConfig()
 	service.StartCleanupWorker(database.DB())
 	r := gin.Default()
@@ -43,11 +51,20 @@ func main() {
 	r.Static("/uploads", "./uploads")
 
 	cwd, _ := os.Getwd()
-    spamCtrl := filter.NewSpamController(
-        filepath.Join(cwd, "controller", "filter", "data", "gambling.onnx"), // Model
-        filepath.Join(cwd, "controller", "filter", "data", "gambling_meta.json"), // Meta
-        filepath.Join(cwd, "lib", "onnxruntime.dll"),                        // DLL
+
+	libName := "onnxruntime.dll"
+	if runtime.GOOS == "linux" {
+		libName = "onnxruntime.so"
+	}
+
+    spamCtrl, err := filter.NewSpamController(
+        filepath.Join(cwd, "controller", "filter", "data", "gambling.onnx"),
+        filepath.Join(cwd, "controller", "filter", "data", "gambling_meta.json"),
+        filepath.Join(cwd, "lib", libName),           
     )
+	if err != nil {
+		log.Printf("⚠️ Warning: Failed to initialize Spam Controller: %v", err)
+	}
 
 	authHandler := auth.NewLoginHandler()
 
@@ -56,7 +73,9 @@ func main() {
 	r.POST("/forgot-password", authHandler.ForgotPassword)
 	r.POST("/reset-password", authHandler.ResetPassword)
 
-	r.POST("/checkspam", spamCtrl.CheckSpam)
+	if spamCtrl != nil {
+		r.POST("/checkspam", spamCtrl.CheckSpam)
+	}
 	//r.Static("/chatsave", "./chatsave") ย้ายไปใช้ uploads แทน
 	// Backward compatibility for old chat images
 	r.Static("/chatsave", "./uploads/chats")
