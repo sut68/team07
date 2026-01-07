@@ -167,7 +167,7 @@ export default function PeerEvaluationPage() {
                         })}
                     </div>
                 )) : (
-                    <Empty description="ไม่พบการนัดหมายประเมิน" />
+                    <Empty description="ไม่พบการนัดหมายประเมินเเบบ Peer Assessment." />
                 )}
 
             </div>
