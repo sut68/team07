@@ -56,7 +56,7 @@ func main() {
 	r.POST("/forgot-password", authHandler.ForgotPassword)
 	r.POST("/reset-password", authHandler.ResetPassword)
 
-	r.POST("/checkspam", spamCtrl.CheckSpam)
+
 	//r.Static("/chatsave", "./chatsave") ย้ายไปใช้ uploads แทน
 	// Backward compatibility for old chat images
 	r.Static("/chatsave", "./uploads/chats")
@@ -67,7 +67,7 @@ func main() {
 
 		// user ทุก Role สามารถเข้าถึงได้
 
-		//protected.POST("/checkspam", spamCtrl.CheckSpam)// pls fix it on docker also
+		protected.POST("/checkspam", spamCtrl.CheckSpam)// pls fix it on docker also
 
 		protected.GET("/GetChat", chat.GetAllChat)
 		protected.GET("/get_teacher_id", chat.GetGroupbyteacherid)
