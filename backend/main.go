@@ -90,6 +90,7 @@ func main() {
 		protected.POST("/SendChat", chat.InsertChat)
 		protected.DELETE("/DeleteChat", chat.DeleteChat)
 		protected.DELETE("/Deletechatbyid", chat.DeleteChatbyProgress)
+		protected.POST("/uploadfile", chat.GetFile)
 
 		protected.GET("/getUserProfile", users.GetUserProfile)
 		protected.PATCH("/updateUserProfile", users.UpdateUserProfile)

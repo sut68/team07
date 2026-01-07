@@ -59,7 +59,8 @@ func GetFile(c *gin.Context){
 	}
 
 	finalpath := filepath.Join("uploads", "chats", new)
-	webPath := "/uploads/chats/" + new
+	webPath := "/chatsave/" + new
+
 
 	out, err := os.Create(finalpath)
 	if err != nil {
