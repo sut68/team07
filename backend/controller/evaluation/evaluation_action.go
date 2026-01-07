@@ -219,5 +219,6 @@ func SavePeerEvaluation(c *gin.Context) {
 	}
 
 	tx.Commit()
+	log.InsertLog(c, 20)
 	c.JSON(http.StatusOK, gin.H{"message": "Peer evaluation saved successfully"})
 }
