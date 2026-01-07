@@ -85,18 +85,18 @@ var MockGroupProject = []entity.GroupProject{
 
 var MockGroupMember = []entity.GroupMember{
 	{Leader: true, StudentID: 12, GroupProjectID: 1},
-	{Leader: true, StudentID: 13, GroupProjectID: 1},
-	{Leader: false, StudentID: 14, GroupProjectID: 2},
-	{Leader: true, StudentID: 16, GroupProjectID: 2},
+	{Leader: false, StudentID: 13, GroupProjectID: 1},
+	{Leader: true, StudentID: 14, GroupProjectID: 2},
+	{Leader: false, StudentID: 16, GroupProjectID: 2},
 	{Leader: true, StudentID: 15, GroupProjectID: 3},
 
 	{Leader: false, StudentID: 17, GroupProjectID: 3},
 	{Leader: false, StudentID: 18, GroupProjectID: 3},
-	{Leader: false, StudentID: 19, GroupProjectID: 4},
-	{Leader: true, StudentID: 20, GroupProjectID: 4},
-	{Leader: false, StudentID: 21, GroupProjectID: 5},
-	{Leader: true, StudentID: 22, GroupProjectID: 5},
-	{Leader: false, StudentID: 23, GroupProjectID: 6},
+	{Leader: true, StudentID: 19, GroupProjectID: 4},
+	{Leader: false, StudentID: 20, GroupProjectID: 4},
+	{Leader: true, StudentID: 21, GroupProjectID: 5},
+	{Leader: false, StudentID: 22, GroupProjectID: 5},
+	{Leader: true, StudentID: 23, GroupProjectID: 6},
 	{Leader: false, StudentID: 24, GroupProjectID: 6},
 }
 

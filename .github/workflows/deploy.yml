@@ -59,7 +59,7 @@ jobs:
             docker compose down
 
             # 4.1 สั่ง Build ใหม่แบบ
-            docker compose build --no-cache
+            docker compose build
 
             # 4.2 รันขึ้นมาใหม่แบบบังคับสร้าง Container ใหม่
             docker compose up -d --force-recreate

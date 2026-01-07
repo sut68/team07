@@ -195,6 +195,7 @@ export default function StudentTopbar({ userRole, children }: { userRole: string
 
                 {/* Desktop Navigation - Right (visible > 1400px) */}
                 <nav className={styles.navRight}>
+                    <Link href="/student/progress" style={getNavStyle('/student/progress')}>ความคืบหน้า</Link>
                     <Link href="/student/chat" style={getNavStyle('/student/chat')}>แชท</Link>
                     <Link href="/student/exam" style={getNavStyle('/student/exam')}>เกี่ยวกับสอบ</Link>
                     <Link href="/student/storage" style={getNavStyle('/student/storage')}>คลังโครงงาน</Link>
