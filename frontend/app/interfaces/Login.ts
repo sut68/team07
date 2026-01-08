@@ -11,6 +11,7 @@ export interface UserDataInterface {
 }
 
 export interface ForgotPasswordInterface {
+    username: string;
     email: string;
 }
 

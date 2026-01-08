@@ -1,11 +1,12 @@
 package main
 
 import (
-	"os"
-	"path/filepath"
 	"fmt"
 	"log"
+	"os"
+	"path/filepath"
 	"runtime"
+
 	"github.com/gin-gonic/gin"
 	"github.com/sut68/team07/backend/controller/advisor"
 	"github.com/sut68/team07/backend/controller/appointment"
@@ -16,6 +17,7 @@ import (
 	"github.com/sut68/team07/backend/controller/group"
 	"github.com/sut68/team07/backend/controller/issues"
 	"github.com/sut68/team07/backend/controller/news"
+	"github.com/sut68/team07/backend/controller/notification"
 	"github.com/sut68/team07/backend/controller/progress"
 	"github.com/sut68/team07/backend/controller/project"
 	"github.com/sut68/team07/backend/controller/storage"
@@ -57,11 +59,11 @@ func main() {
 		libName = "onnxruntime.so"
 	}
 
-    spamCtrl, err := filter.NewSpamController(
-        filepath.Join(cwd, "controller", "filter", "data", "gambling.onnx"),
-        filepath.Join(cwd, "controller", "filter", "data", "gambling_meta.json"),
-        filepath.Join(cwd, "lib", libName),           
-    )
+	spamCtrl, err := filter.NewSpamController(
+		filepath.Join(cwd, "controller", "filter", "data", "gambling.onnx"),
+		filepath.Join(cwd, "controller", "filter", "data", "gambling_meta.json"),
+		filepath.Join(cwd, "lib", libName),
+	)
 	if err != nil {
 		log.Printf("⚠️ Warning: Failed to initialize Spam Controller: %v", err)
 	}
@@ -83,7 +85,7 @@ func main() {
 
 		// user ทุก Role สามารถเข้าถึงได้
 
-		protected.POST("/checkspam", spamCtrl.CheckSpam)// pls fix it on docker also
+		protected.POST("/checkspam", spamCtrl.CheckSpam) // pls fix it on docker also
 
 		protected.GET("/GetChat", chat.GetAllChat)
 		protected.GET("/get_teacher_id", chat.GetGroupbyteacherid)
@@ -112,6 +114,9 @@ func main() {
 		protected.GET("/academicYears", group.GetAcademicYears)
 		r.GET("/group", group.GetGroupProject)
 		// r.POST("/addMember", group.PostGroupMember)
+		//Notification
+		protected.GET("/notifications/my", notification.GetMyNotifications)
+		protected.PATCH("/notifications/:id/read", notification.MarkAsRead)
 
 		adminGroup := protected.Group("/admin")
 		adminGroup.Use(middleware.RoleGuard("Admin"))
@@ -259,10 +264,11 @@ func main() {
 		// อนุญาตให้ Admin, Teacher, Student เข้าถึงได้
 		issueGroup.Use(middleware.RoleGuard("Admin", "Teacher", "Student"))
 		{
-			issueGroup.GET("", issues.GetIssueReports)        // GET /issues (List)
-			issueGroup.POST("", issues.CreateIssue)           // POST /issues (Create)
-			issueGroup.GET("/:id", issues.GetIssueReportByID) // GET /issues/:id (Get By ID)
-			issueGroup.GET("/my", issues.GetMyIssues)         // GET /issues/my (Get My Issues)
+			issueGroup.GET("", issues.GetIssueReports)         // GET /issues (List)
+			issueGroup.POST("", issues.CreateIssue)            // POST /issues (Create)
+			issueGroup.GET("/:id", issues.GetIssueReportByID)  // GET /issues/:id (Get By ID)
+			issueGroup.GET("/my", issues.GetMyIssues)          // GET /issues/my (Get My Issues)
+			issueGroup.PATCH("/:id", issues.UpdateIssueReport) // PATCH /issues/:id (User Edit)
 		}
 
 		protected.POST("/logout", authHandler.Logout)

@@ -22,7 +22,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
 
   const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
-  const [forgotEmail, setForgotEmail] = useState<ForgotPasswordInterface>({ email: '' });
+  const [forgotInfo, setForgotInfo] = useState<ForgotPasswordInterface>({ username: '', email: '' });
   const [forgotMessage, setForgotMessage] = useState<string | null>(null);
   const [isForgotLoading, setIsLoadingForgot] = useState(false);
 
@@ -87,14 +87,14 @@ export default function LoginPage() {
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setForgotMessage(null);
-    if (!forgotEmail.email) {
-      setForgotMessage("Please enter your email address.");
+    if (!forgotInfo.username || !forgotInfo.email) {
+      setForgotMessage("Please enter your username and email address.");
       return;
     }
 
     setIsLoadingForgot(true);
     try {
-      await ForgotPassword(forgotEmail);
+      await ForgotPassword(forgotInfo);
       setForgotMessage("ระบบได้ส่งลิงก์รีเซ็ตไปแล้ว หากบัญชีมีอยู่จริง โปรดตรวจสอบอีเมลของคุณ");
     } catch (err: any) {
       setForgotMessage("ระบบได้ส่งลิงก์รีเซ็ตไปแล้ว หากบัญชีมีอยู่จริง โปรดตรวจสอบอีเมลของคุณ");
@@ -205,7 +205,7 @@ export default function LoginPage() {
                     setIsForgotModalOpen(true);
                     setError(null);
                     setForgotMessage(null);
-                    setForgotEmail({ email: '' });
+                    setForgotInfo({ username: '', email: '' });
                   }}
                 >
                   ลืมรหัสผ่าน?
@@ -271,19 +271,35 @@ export default function LoginPage() {
             <h2 style={{ marginBottom: '5px', textAlign: 'center', fontFamily: originalFont }}>ลืมรหัสผ่าน ?</h2>
             <form onSubmit={handleForgotPassword}>
               <p style={{ marginBottom: '30px', fontSize: '0.9em', color: '#666', textAlign: 'center', fontFamily: originalFont }}>
-                กรุณากรอกอีเมลเพื่อรับลิงก์ตั้งรหัสผ่านใหม่
+                กรุณากรอกชื่อผู้ใช้และอีเมลเพื่อรับลิงก์ตั้งรหัสผ่านใหม่
               </p>
 
               {/* แสดงข้อความแจ้งเตือน */}
               {forgotMessage && <p style={{ color: forgotMessage.includes("ส่งลิงก์รีเซ็ต") ? '#2ecc71' : '#e74c3c', textAlign: 'center', marginBottom: '15px', fontWeight: 'bold', }}>{forgotMessage}</p>}
+
+              <label htmlFor="username" style={{ display: 'block', fontSize: '0.9rem', color: '#666', marginBottom: '10px', fontFamily: originalFont }}>ชื่อผู้ใช้</label>
+              <input
+                type="text"
+                placeholder="กรอกชื่อผู้ใช้"
+                name="username"
+                value={forgotInfo.username}
+                onChange={(e) => {
+                  setForgotInfo({ ...forgotInfo, username: e.target.value });
+                  setForgotMessage(null);
+                }}
+                className='login-info'
+                style={{ width: '100%', marginBottom: '15px' }}
+                required
+              />
+
               <label htmlFor="email" style={{ display: 'block', fontSize: '0.9rem', color: '#666', marginBottom: '10px', fontFamily: originalFont }}>อีเมล</label>
               <input
                 type="email"
                 placeholder="กรอกอีเมลของคุณ"
                 name="email"
-                value={forgotEmail.email}
+                value={forgotInfo.email}
                 onChange={(e) => {
-                  setForgotEmail({ email: e.target.value });
+                  setForgotInfo({ ...forgotInfo, email: e.target.value });
                   setForgotMessage(null);
                 }}
                 className='login-info'

@@ -45,7 +45,8 @@ type RefreshResponse struct {
 }
 
 type ForgotPasswordInput struct {
-	Email string `json:"email" binding:"required,email"`
+	Username string `json:"username" binding:"required"`
+	Email    string `json:"email" binding:"required,email"`
 }
 
 type ResetPasswordInput struct {
@@ -270,15 +271,18 @@ func setAuthCookies(c *gin.Context, accessToken, refreshToken, csrfToken string)
 func (h *LoginHandler) ForgotPassword(c *gin.Context) {
 	var input ForgotPasswordInput
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid email format"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Username and Email are required"})
 		return
 	}
 
 	var user entity.User
-	// 1. ค้นหาผู้ใช้ด้วยอีเมล
-	if err := h.DB.Where("email = ?", input.Email).First(&user).Error; err != nil {
-		logSys.Printf("INFO: Forgot password request for non-existent email: %s", input.Email)
-		c.JSON(http.StatusOK, gin.H{"message": "If the email exists, a password reset link has been sent."})
+
+	normalizedUsername := service.NormalizeUsername(input.Username)
+
+	// 1. ค้นหาผู้ใช้ด้วย Username และ Email
+	if err := h.DB.Where("username = ? AND email = ?", normalizedUsername, input.Email).First(&user).Error; err != nil {
+		logSys.Printf("INFO: Forgot password request for invalid credential: %s, %s", input.Username, input.Email)
+		c.JSON(http.StatusOK, gin.H{"message": "If the account exists, a password reset link has been sent."})
 		return
 	}
 
