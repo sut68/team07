@@ -145,6 +145,7 @@ export default function ReportIssueContent() {
                     >
                         <option value={1}>Bug (ข้อผิดพลาดของระบบ)</option>
                         <option value={2}>Feature Request (ขอฟีเจอร์เพิ่ม)</option>
+                        <option value={3}>Security (ปัญหาด้านความปลอดภัย)</option>
                     </select>
                 </div>
                 <div className="form-group">
