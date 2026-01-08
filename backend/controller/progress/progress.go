@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 	"gorm.io/gorm"
+	"fmt"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sut68/team07/backend/controller/log"
@@ -72,57 +73,70 @@ func GetGroupProjectIDByStudentID(c *gin.Context) {
 }
 
 func AssignProGress(c *gin.Context) {
-	db := database.DB()
+    db := database.DB()
 
-	c.Request.ParseMultipartForm(32 << 20)
 
-	group_projectid := c.PostForm("group_project_id")
-	name := c.PostForm("Name")
-	comment := c.PostForm("comment")
+    const MaxFileSize int64 = 20 * 1024 * 1024
+    c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, MaxFileSize)
 
-	fh, err := c.FormFile("file")
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
 
-	contoint, err := strconv.ParseUint(group_projectid, 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid group project id"})
-		return
-	}
+    fh, err := c.FormFile("file")
+    if err != nil {
+    
+        c.JSON(http.StatusRequestEntityTooLarge, gin.H{
+            "error": "File exceeds 20MB limit or invalid upload",
+        })
+        return
+    }
 
-	var gp entity.GroupProject
-	if err := db.Where("id = ?", uint(contoint)).First(&gp).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid project_id"})
-		return
-	}
+  
+    group_projectid := c.PostForm("group_project_id")
+    name := c.PostForm("Name")
+    comment := c.PostForm("comment")
 
-	uploadDir := "./uploads/progress"
-	_ = os.MkdirAll(uploadDir, os.ModePerm)
+    contoint, err := strconv.ParseUint(group_projectid, 10, 64)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid group project id"})
+        return
+    }
 
-	ext := filepath.Ext(fh.Filename)
-	newName := strconv.FormatInt(time.Now().UnixNano(), 10) + ext
-	savePath := filepath.Join(uploadDir, newName)
+    var gp entity.GroupProject
+    if err := db.Where("id = ?", uint(contoint)).First(&gp).Error; err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid project_id"})
+        return
+    }
 
-	if err := c.SaveUploadedFile(fh, savePath); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "cannot save file"})
-		return
-	}
+    uploadDir := "./uploads/progress"
+    _ = os.MkdirAll(uploadDir, os.ModePerm)
 
-	progress := entity.Progress{
-		GroupProjectID: uint(contoint),
-		File:           "/uploads/progress/" + newName,
-		Name:           name,
-		Comment:        comment,
-	}
+ 
+    safeFileName := filepath.Base(fh.Filename)
+    ext := filepath.Ext(safeFileName)
+    newName := fmt.Sprintf("%d%s", time.Now().UnixNano(), ext)
+    savePath := filepath.Join(uploadDir, newName)
 
-	db.Create(&progress)
-	log.InsertLog(c, 5)
 
-	c.JSON(http.StatusOK, progress)
+    if err := c.SaveUploadedFile(fh, savePath); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save file"})
+        return
+    }
+
+    progress := entity.Progress{
+        GroupProjectID: uint(contoint),
+        File:           "/uploads/progress/" + newName,
+        Name:           name,
+        Comment:        comment,
+    }
+
+    if err := db.Create(&progress).Error; err != nil {
+    
+        os.Remove(savePath)
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Database save failed"})
+        return
+    }
+
+    log.InsertLog(c, 5)
+    c.JSON(http.StatusOK, progress)
 }
 
 func UpdateProGress(c *gin.Context) {
