@@ -250,6 +250,18 @@ export default function ChatPage() {
       setSpamCheckEnabled(false);
       setSpamWarning(null);
     }
+    const file = e.target.files?.[0];
+    if (file) {
+   
+      if (file.size > 20 * 1024 * 1024) {
+        alert("ไฟล์นี้ใหญ่เกินไป (เกิน 20MB) ระบบจะไม่ทำการอัปโหลด");
+        e.target.value = ""; 
+        setSelectedFile(null);
+        return;
+      }
+      setSelectedFile(file);
+      setSpamWarning(null);
+    }
   };
 
   const handlePaste = (e: React.ClipboardEvent) => {
@@ -345,9 +357,21 @@ export default function ChatPage() {
       setMessage("");
       setSpamWarning(null);
       clearFile();
-    } catch (err) {
-      console.error("InsertChat failed:", err);
-      alert("ส่งข้อความไม่สำเร็จ");
+    }catch (err: any) {
+    
+      const serverErrorMessage = err.response?.data?.error; 
+      const statusCode = err.response?.status;
+
+      console.error(`Backend Error (${statusCode}):`, serverErrorMessage);
+
+      if (statusCode === 413) {
+        alert(`ไฟล์ใหญ่เกินไป: ${serverErrorMessage || "จำกัดที่ 20MB"}`);
+      } else if (serverErrorMessage) {
+        alert(`ข้อผิดพลาดจากระบบ: ${serverErrorMessage}`);
+      } else {
+        alert("เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์");
+      }
+
     } finally {
       setUploading(false);
     }

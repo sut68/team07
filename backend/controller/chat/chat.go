@@ -114,7 +114,8 @@ func GetFile(c *gin.Context) {
 
 	contentType := http.DetectContentType(header)
 	if !allowedUploadContentType(contentType) {
-		c.JSON(http.StatusForbidden, gin.H{"error": "File type not allowed"})
+		c.JSON(http.StatusForbidden, gin.H{"error": "File type not allowed "})
+		fmt.Println(contentType)
 		return
 	}
 
