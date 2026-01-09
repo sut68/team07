@@ -139,6 +139,7 @@ func CreateAppointment(c *gin.Context) {
 		appointment.AppointmentTypeID, appointment.GroupProjectID, appointment.EvaluationID)
 
 	if appointment.AppointmentTypeID != 3 {
+		appointment.EvaluationID = nil
 		if groupProject.TeacherID == nil || *groupProject.TeacherID != claims.ID {
 			c.JSON(http.StatusForbidden, gin.H{"error": "You are not the advisor of this group."})
 			return
@@ -240,8 +241,12 @@ func UpdateAppointment(c *gin.Context) {
 		return
 	}
 
-	// Check if GroupProjectID is changing, if so, clear old evaluation results
-	if payload.GroupProjectID != 0 && payload.GroupProjectID != existingAppt.GroupProjectID {
+	// Check if GroupProjectID OR AppointmentTypeID is changing
+	// If so, clear old evaluation results and scores because they are no longer valid contextually
+	isGroupChanged := payload.GroupProjectID != 0 && payload.GroupProjectID != existingAppt.GroupProjectID
+	isTypeChanged := payload.AppointmentTypeID != 0 && payload.AppointmentTypeID != existingAppt.AppointmentTypeID
+
+	if isGroupChanged || isTypeChanged {
 		if err := db.Where("appointment_id = ?", existingAppt.ID).Delete(&entity.EvaResult{}).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to clear old evaluation results"})
 			return
@@ -250,6 +255,25 @@ func UpdateAppointment(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to clear old individual scores"})
 			return
 		}
+	}
+
+	// If AppointmentTypeID is changing, we must reset EvaluationID as the old evaluation might not apply to the new type
+	if isTypeChanged {
+		if err := db.Model(&existingAppt).Update("evaluation_id", nil).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to reset evaluation ID"})
+			return
+		}
+	}
+
+	// Enforce: Only Final Defense (ID 3) can have an evaluation.
+	// Check the target type (either from payload or existing)
+	targetTypeID := existingAppt.AppointmentTypeID
+	if payload.AppointmentTypeID != 0 {
+		targetTypeID = payload.AppointmentTypeID
+	}
+
+	if targetTypeID != 3 {
+		payload.EvaluationID = nil
 	}
 
 	if err := db.Model(&existingAppt).Updates(payload).Error; err != nil {
