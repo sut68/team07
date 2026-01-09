@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation"; 
 import { GetIssues } from "../../../services/issue"; 
-import { GetUsers } from "../../../services/user";
+import { ListUsers } from "../../../services/user";
 import { IssueReportInterface } from "../../../interfaces/Issue";
 import { UserProfileInterface } from "../../../interfaces/Users";
 import { LoadingOutlined, FileTextOutlined, UserOutlined, TeamOutlined, ReadOutlined } from "@ant-design/icons";
@@ -35,7 +35,7 @@ export default function AdminDashboardPage() {
     // ฟังก์ชันโหลดและนับจำนวน User
     const fetchUserCounts = async () => {
         try {
-            const res = await GetUsers();
+            const res = await ListUsers();
             if (res.status === 200) {
                 const users: UserProfileInterface[] = res.data;
                 // นับจำนวนตาม Role

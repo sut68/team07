@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
-import { GetUsers, ImportUsersCSV, CreateUser, GetGenders, GetBranches, GetRoles, GetUserStatuses, DeleteUser, UpdateUser } from '../../../services/user';
+import { ListUsers, ImportUsersCSV, CreateUser, GetGenders, GetBranches, GetRoles, GetUserStatuses, DeleteUser, UpdateUser } from '../../../services/user';
 import { UserProfileInterface, GenderInterface, BranchInterface, RoleInterface, StatusInterface, CreateUserInterface } from '../../../interfaces/Users';
 import "../../../style/import-user.css";
 import "../../../style/admin-dashboard.css";
@@ -42,7 +42,7 @@ export default function UsersManagePage() {
         setLoading(true);
         try {
             const [usersRes, gendersRes, branchesRes, rolesRes, statusesRes] = await Promise.all([
-                GetUsers(),
+                ListUsers(),
                 GetGenders(),
                 GetBranches(),
                 GetRoles(),
