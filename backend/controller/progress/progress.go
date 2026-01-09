@@ -63,7 +63,7 @@ func sanitizeFilename(name string) string {
 }
 
 func allowedProgressContentType(ct string) bool {
-	// ✅ Allowlist: adjust as needed
+	
 	switch ct {
 	case "application/pdf",
 		"image/jpeg", "image/png", "image/gif", "image/webp":
