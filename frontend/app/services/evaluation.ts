@@ -12,16 +12,25 @@ import type {
 
 // TEACHER:
 
-async function GetEvaluationProjects(typeId?: number, mode?: 'advisor' | 'committee') {
+async function GetEvaluationProjects(typeId?: number, mode?: 'advisor' | 'committee', year?: number) {
     let url = "/teacher/evaluation/projects";
     const params = new URLSearchParams();
     if (typeId) params.append("type_id", typeId.toString());
     if (mode) params.append("mode", mode);
+    if (year) params.append("year", year.toString());
     
     if (params.toString()) {
         url += `?${params.toString()}`;
     }
     return await api.get<IEvaluationProject[]>(url);
+}
+
+async function GetEvaluationProjectYears(mode?: 'advisor' | 'committee') {
+    let url = "/teacher/evaluation/projects/years";
+    if (mode) {
+        url += `?mode=${mode}`;
+    }
+    return await api.get<{years: number[]}>(url);
 }
 
 // ดึงฟอร์มประเมิน (เกณฑ์ + รายชื่อเด็ก)
@@ -102,6 +111,7 @@ async function SavePeerEvaluation(data: ISaveEvaluationPeerRequest) {
 
 export {
     GetEvaluationProjects,
+    GetEvaluationProjectYears,
     GetEvaluationForm,
     GetEvaluationResult,
     GetEvaluationSummary,

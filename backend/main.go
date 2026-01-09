@@ -166,6 +166,7 @@ func main() {
 			teacherGroup.DELETE("/deleteAppointment/:id", appointment.DeleteAppointment)
 			// Evaluation ===================================
 			teacherGroup.GET("/evaluation/projects", evaluation.ListEvaluationProjects)
+			teacherGroup.GET("/evaluation/projects/years", evaluation.GetEvaluationProjectYears)
 			teacherGroup.GET("/evaluation/form/:appointment_id", evaluation.GetEvaluationForm)
 			teacherGroup.GET("/evaluation/result/:appointment_id", evaluation.GetEvaluationResult)
 			teacherGroup.GET("/evaluation/summary/:group_project_id", evaluation.GetEvaluationSummary)

@@ -1,13 +1,14 @@
 "use client";
 import { useEffect, useState } from 'react';
-import { Spin, Modal, message } from 'antd';
+import { Spin, Modal, message, Select } from 'antd';
 import { 
   CheckCircleOutlined,  
   SettingOutlined,
-  TeamOutlined
+  TeamOutlined,
+  CalendarOutlined
 } from '@ant-design/icons';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { GetEvaluationProjects } from '../../../services/evaluation';
+import { GetEvaluationProjects, GetEvaluationProjectYears } from '../../../services/evaluation';
 import CriteriaManager from '../../../components/evaluation/criteriaManager';
 import AdvisorProjectCard from '../../../components/evaluation/AdvisorProjectCard';
 import CommitteeProjectCard from '../../../components/evaluation/CommitteeProjectCard';
@@ -30,15 +31,34 @@ export default function TeacherEvaluationDashboard() {
     const [activeTab, setActiveTab] = useState<'advisor' | 'committee'>(
         (tabParam === 'committee') ? 'committee' : 'advisor'
     );
+    
+    // Year Filter State
+    const [availableYears, setAvailableYears] = useState<number[]>([]);
+    const [selectedYear, setSelectedYear] = useState<number | undefined>(undefined);
+
     const [showCriteriaManager, setShowCriteriaManager] = useState(false);
 
     const [openSelect, setOpenSelect] = useState(false);
     const [selectedProject, setSelectedProject] = useState<any>(null);
 
+    // Fetch Years
+    const fetchYears = async () => {
+        try {
+            const res = await GetEvaluationProjectYears(activeTab);
+            setAvailableYears(res.data.years || []);
+            // Default select latest year if available and not set
+            if (res.data.years?.length > 0 && !selectedYear) {
+               // setSelectedYear(res.data.years[0]); // Optional: Auto select latest
+            }
+        } catch (error) {
+            console.error("Failed to fetch years", error);
+        }
+    };
+
     const fetchData = async () => {
         setLoading(true);
         try {
-            const res = await GetEvaluationProjects(undefined, activeTab);
+            const res = await GetEvaluationProjects(undefined, activeTab, selectedYear);
             const uniqueProjects = Array.from(
                 new Map(res.data.map((item: any) => [item.id, item])).values()
             );
@@ -57,8 +77,16 @@ export default function TeacherEvaluationDashboard() {
     }, [tabParam]);
 
     useEffect(() => {
-        fetchData();
+        fetchYears();
+        // Reset selected year when tab changes? Maybe not necessary if years are shared or user wants to keep year.
+        // For now let's keep selectedYear unless it's invalid for the new tab (handled by fetchYears logic if we strictly validated).
+        // Check if selectedYear is still in availableYears after fetch? 
+        // Actually fetchYears is async, so better rely on fetchData dependency
     }, [activeTab]);
+
+    useEffect(() => {
+        fetchData();
+    }, [activeTab, selectedYear]);
 
     const handleSelectEvaluation = (type: string, project?: any) => {
         const targetProject = project || selectedProject;
@@ -96,12 +124,24 @@ export default function TeacherEvaluationDashboard() {
                         </p>
                     </div>
 
-                    <button 
-                        className="btn-config" 
-                        onClick={() => setShowCriteriaManager(true)}
-                    >
-                        <SettingOutlined /> ตั้งค่าเกณฑ์คะแนน
-                    </button>
+                    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                         <Select
+                            placeholder="เลือกปีการศึกษา"
+                            style={{ width: 140, height: 40, color: '#000' }}
+                            allowClear
+                            value={selectedYear}
+                            onChange={(val) => setSelectedYear(val)}
+                            options={availableYears.map(y => ({ label: `ปี ${y}`, value: y }))}
+                            suffixIcon={<CalendarOutlined style={{ color: '#000' }} />}
+                        />
+
+                        <button 
+                            className="btn-config" 
+                            onClick={() => setShowCriteriaManager(true)}
+                        >
+                            <SettingOutlined /> ตั้งค่าเกณฑ์คะแนน
+                        </button>
+                    </div>
                 </header>
 
                 {/* Tabs */}
