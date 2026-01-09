@@ -57,7 +57,7 @@ func CreateIssue(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	log.InsertLog(c, 31)
+	log.InsertLog(c, 32)
 	// ส่งผลลัพธ์กลับ
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Issue reported successfully",
@@ -105,6 +105,7 @@ func UpdateIssueReport(c *gin.Context) {
 		return
 	}
 
+	log.InsertLog(c, 33)
 	c.JSON(http.StatusOK, gin.H{"message": "Issue updated successfully", "data": issue})
 }
 
@@ -227,7 +228,7 @@ func UpdateIssueStatus(c *gin.Context) {
 
 	// Commit Transaction
 	tx.Commit()
-
+	log.InsertLog(c, 33)
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Status updated and notification sent",
 		"data":    issue,

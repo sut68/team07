@@ -65,7 +65,7 @@ func main() {
 		filepath.Join(cwd, "lib", libName),
 	)
 	if err != nil {
-		log.Printf("⚠️ Warning: Failed to initialize Spam Controller: %v", err)
+		log.Printf("Warning: Failed to initialize Spam Controller: %v", err)
 	}
 
 	authHandler := auth.NewLoginHandler()
@@ -85,8 +85,7 @@ func main() {
 
 		// user ทุก Role สามารถเข้าถึงได้
 
-		protected.POST("/checkspam", spamCtrl.CheckSpam) // pls fix it on docker also
-
+		protected.POST("/checkspam", spamCtrl.CheckSpam)
 		protected.GET("/GetChat", chat.GetAllChat)
 		protected.GET("/get_teacher_id", chat.GetGroupbyteacherid)
 		protected.POST("/SendChat", chat.InsertChat)
@@ -113,7 +112,6 @@ func main() {
 		// Group
 		protected.GET("/academicYears", group.GetAcademicYears)
 		r.GET("/group", group.GetGroupProject)
-		// r.POST("/addMember", group.PostGroupMember)
 		//Notification
 		protected.GET("/notifications/my", notification.GetMyNotifications)
 		protected.PATCH("/notifications/:id/read", notification.MarkAsRead)
@@ -172,7 +170,7 @@ func main() {
 			teacherGroup.GET("/evaluation/result/:appointment_id", evaluation.GetEvaluationResult)
 			teacherGroup.GET("/evaluation/summary/:group_project_id", evaluation.GetEvaluationSummary)
 			teacherGroup.POST("/evaluation/save", evaluation.SaveEvaluation)
-			// Evaluation and Appointment Admin
+			// Evaluation and Appointment Editing
 			teacherGroup.POST("/createAppointmentTypes", appointment.CreateAppointmentType)
 			teacherGroup.DELETE("/deleteAppointmentTypes/:id", appointment.DeleteAppointmentType)
 			teacherGroup.GET("/criteria", evaluation.ListCriteria)
@@ -259,9 +257,7 @@ func main() {
 
 		}
 
-		//สร้าง Group สำหรับ Issues โดยเฉพาะ
 		issueGroup := protected.Group("/issues")
-		// อนุญาตให้ Admin, Teacher, Student เข้าถึงได้
 		issueGroup.Use(middleware.RoleGuard("Admin", "Teacher", "Student"))
 		{
 			issueGroup.GET("", issues.GetIssueReports)         // GET /issues (List)

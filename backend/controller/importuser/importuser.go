@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sut68/team07/backend/controller/log"
 	"github.com/sut68/team07/backend/service"
 )
 
@@ -38,6 +39,7 @@ func ImportUsersHandler(c *gin.Context) {
 		return
 	}
 
+	log.InsertLog(c, 47)
 	c.JSON(200, gin.H{
 		"imported": imported,
 		"errors":   errs,

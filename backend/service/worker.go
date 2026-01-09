@@ -29,10 +29,31 @@ func CleanExpiredTokens(db *gorm.DB) {
 	}
 }
 
-//เพื่อทำความสะอาด Token ที่หมดอายุทุกๆ  2 ชั่วโมง
+// ฟังก์ชันลบ Log ที่เก่ากว่า 6 เดือน (Hard Delete)
+func CleanOldLogs(db *gorm.DB) {
+	now := time.Now()
+	isCleanupDay := now.Day() == 1 && (now.Month() == time.January || now.Month() == time.July)
+
+	if isCleanupDay {
+		// ย้อนหลัง 6 เดือน
+		sixMonthsAgo := now.AddDate(0, -6, 0)
+
+		result := db.Unscoped().Where("created_at < ?", sixMonthsAgo).Delete(&entity.Log{})
+
+		if result.Error != nil {
+			log.Printf("ERROR: Failed to clean up old logs: %v", result.Error)
+		} else if result.RowsAffected > 0 {
+			log.Printf("SUCCESS: Cleaned up %d old logs (Hard Delete).", result.RowsAffected)
+		} else {
+			log.Println("Pool cleanup: No old logs to delete.")
+		}
+	}
+}
+
+// เพื่อทำความสะอาด Token ที่หมดอายุทุกๆ  2 ชั่วโมง
 func StartCleanupWorker(db *gorm.DB) {
 	CleanExpiredTokens(db)
-	
+	CleanOldLogs(db)
 	ticker := time.NewTicker(2 * time.Hour)
 	log.Println("Background Token Cleanup Worker started. Running every 2 hours.")
 
@@ -40,6 +61,9 @@ func StartCleanupWorker(db *gorm.DB) {
 		for range ticker.C {
 			log.Println("--- Running Scheduled Token Cleanup ---")
 			CleanExpiredTokens(db)
+
+			// เช็ค Log Cleanup ใน Loop เดียวกัน (จะทำงานเฉพาะวันที่กำหนด)
+			CleanOldLogs(db)
 		}
 	}()
 }

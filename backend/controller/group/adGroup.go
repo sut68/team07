@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sut68/team07/backend/controller/log"
 	"github.com/sut68/team07/backend/database"
 	"github.com/sut68/team07/backend/entity"
 	"gorm.io/gorm"
@@ -113,6 +114,7 @@ func GenerateGroups(c *gin.Context) {
 
 	tx.Commit()
 
+	log.InsertLog(c, 38)
 	c.JSON(http.StatusCreated, gin.H{
 		"message":           "Groups generated successfully",
 		"year":              input.Year,
@@ -255,7 +257,8 @@ func AddMemberToGroup(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add member"})
 		return
 	}
-
+log.InsertLog(c, 39)
+	
 	c.JSON(http.StatusOK, gin.H{"message": "Member added successfully"})
 }
 
@@ -287,7 +290,7 @@ func RemoveMemberFromGroup(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to remove member"})
 		return
 	}
-
+	log.InsertLog(c, 40)
 	c.JSON(http.StatusOK, gin.H{"message": "Member removed successfully"})
 }
 
@@ -326,7 +329,8 @@ func ChangeLeader(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to change leader", "details": err.Error()})
 		return
 	}
-
+	log.InsertLog(c, 41)
+	
 	c.JSON(http.StatusOK, gin.H{"message": "Leader changed successfully"})
 }
 
@@ -352,7 +356,7 @@ func DeleteGroup(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete group"})
 		return
 	}
-
+	log.InsertLog(c, 42)
 	c.JSON(http.StatusOK, gin.H{"message": "Group deleted successfully"})
 }
 
@@ -391,6 +395,8 @@ func UpdateGroupAdvisor(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update advisor"})
 		return
 	}
-
+	log.InsertLog(c, 43)
+	
 	c.JSON(http.StatusOK, gin.H{"message": "Advisor updated successfully"})
 }
+
