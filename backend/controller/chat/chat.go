@@ -22,10 +22,10 @@ import (
 const socketBroadcastBaseURL = "http://socket:3001"
 
 const (
-	ChatTypeText  uint = 1
-	ChatTypeFile  uint = 2
-	MaxFileSize        = 20 * 1024 * 1024 // 20MB
-	maxNameLen         = 120
+	ChatTypeText uint = 1
+	ChatTypeFile uint = 2
+	MaxFileSize       = 20 * 1024 * 1024 // 20MB
+	maxNameLen        = 120
 )
 
 type InsertChatBody struct {
@@ -50,20 +50,16 @@ func broadcast(path string, payload any) {
 	}()
 }
 
-
 func sanitizeFilename(name string) string {
 	name = strings.TrimSpace(name)
 	if name == "" {
 		return "file"
 	}
 
-
 	name = filepath.Base(name)
 
-	
 	name = strings.ReplaceAll(name, "/", "_")
 	name = strings.ReplaceAll(name, "\\", "_")
-
 
 	var b strings.Builder
 	b.Grow(len(name))
@@ -88,20 +84,26 @@ func sanitizeFilename(name string) string {
 }
 
 func allowedUploadContentType(ct string) bool {
-	
+
 	switch ct {
-	case "image/jpeg", "image/png", "image/gif", "image/webp", "application/pdf","application/docx","":
+	case "image/jpeg", "image/png", "image/gif", "image/webp", "application/pdf", "application/docx", "":
 		return true
+	case "application/zip":
+
+		if ct == ".docx" || ct == ".xlsx" || ct == ".pptx" {
+			return true
+		} else {
+			return false
+		}
+
 	default:
 		return false
 	}
 }
 
-
 func GetFile(c *gin.Context) {
 	original := sanitizeFilename(c.Query("filename"))
 
-	
 	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, MaxFileSize)
 
 	header := make([]byte, 512)
@@ -119,7 +121,6 @@ func GetFile(c *gin.Context) {
 		return
 	}
 
-
 	if err := os.MkdirAll(filepath.Join("uploads", "chats"), os.ModePerm); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create upload directory"})
 		return
@@ -134,7 +135,6 @@ func GetFile(c *gin.Context) {
 		return
 	}
 	defer out.Close()
-
 
 	if len(header) > 0 {
 		if _, err := out.Write(header); err != nil {
@@ -155,7 +155,6 @@ func GetFile(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to save upload"})
 		return
 	}
-
 
 	webPath := "/chatsave/" + filename
 
@@ -191,7 +190,6 @@ func GetAllChat(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error retrieving chats"})
 		return
 	}
-
 
 	for i := range chats {
 		if chats[i].ChatType == ChatTypeFile && strings.HasPrefix(chats[i].Message, "/chatsave/") {
@@ -236,9 +234,8 @@ func InsertChat(c *gin.Context) {
 		body.Message = c.Query("message")
 	}
 	if body.Message == "" {
-		body.Message = c.Query("messege") 
+		body.Message = c.Query("messege")
 	}
-
 
 	if body.GroupProjectID == 0 || body.ProcessID == 0 || body.SenderID == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "missing id(s)"})
@@ -252,7 +249,6 @@ func InsertChat(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid chat type"})
 		return
 	}
-
 
 	var sender entity.User
 	if err := db.Select("username").Where("id = ?", body.SenderID).First(&sender).Error; err != nil {
@@ -313,8 +309,6 @@ func DeleteChat(c *gin.Context) {
 		return
 	}
 
-	
-
 	result := db.Where("group_project_id = ? AND process_id = ? AND id = ?", group, pro, chatID).
 		Delete(&entity.Chat{})
 	if result.Error != nil {
@@ -351,8 +345,6 @@ func DeleteChatbyProgress(c *gin.Context) {
 		return
 	}
 
-	
-
 	result := db.Where("group_project_id = ? AND process_id = ?", group, pro).Delete(&entity.Chat{})
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete chats"})
@@ -361,8 +353,8 @@ func DeleteChatbyProgress(c *gin.Context) {
 
 	log.InsertLog(c, 10)
 	c.JSON(http.StatusOK, gin.H{
-		"message":        "successfully deleted",
-		"rows_affected":  result.RowsAffected,
+		"message":       "successfully deleted",
+		"rows_affected": result.RowsAffected,
 	})
 }
 
@@ -374,8 +366,6 @@ func GetGroupbyteacherid(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid (blank) teacher ID"})
 		return
 	}
-
-	
 
 	var groupProj []entity.GroupProject
 	result := db.Where("teacher_id = ?", teacherID).Find(&groupProj)
