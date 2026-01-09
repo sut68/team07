@@ -34,13 +34,13 @@ export default function LoginPage() {
   const redirectToDashboard = (role: string) => {
     switch (role.toLowerCase()) {
       case 'admin':
-        router.push('/admin/dashboard');
+        router.replace('/admin/dashboard');
         break;
       case 'teacher':
-        router.push('/teacher/dashboard');
+        router.replace('/teacher/dashboard');
         break;
       case 'student':
-        router.push('/student/dashboard');
+        router.replace('/student/dashboard');
         break;
     }
   };
