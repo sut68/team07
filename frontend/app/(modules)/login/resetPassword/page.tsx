@@ -120,15 +120,8 @@ const ResetPasswordComponent: React.FC = () => {
         <div className="rp-fullscreen">
             <div className="rp-card" role="main" aria-labelledby="rp-title">
                 <div className="rp-icon" aria-hidden="true">
-                    <svg width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path
-                            d="M12.3212 10.6852L4 19L6 21M7 16L9 18M20 7.5C20 9.98528 17.9853 12 15.5 12C13.0147 12 11 9.98528 11 7.5C11 5.01472 13.0147 3 15.5 3C17.9853 3 20 5.01472 20 7.5Z"
-                            stroke="#000000"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        />
-
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="rp-icon-svg">
+                       <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                 </div>
 
@@ -194,7 +187,7 @@ const ResetPasswordPage: React.FC = () => {
     return (
         <Suspense fallback={
             <div className="flex items-center justify-center min-h-screen bg-gray-100">
-                <p className="text-gray-600" style={{ fontFamily: originalFont }}>กำลังเตรียมหน้า...</p>
+                <p className="text-gray-600" style={{ fontFamily: "'Inter', sans-serif" }}>กำลังเตรียมหน้า...</p>
             </div>
         }>
             <ResetPasswordComponent />

@@ -1,8 +1,6 @@
-FROM golang:1.24-alpine AS builder
+FROM golang:1.24 AS builder
 
 WORKDIR /app
-
-RUN apk add --no-cache git
 
 COPY go.mod go.sum ./
 RUN go mod download
@@ -10,11 +8,14 @@ RUN go mod download
 COPY . .
 
 # Build Binary (CGO_ENABLED=0 คือ Build แบบ Static ไม่ต้องพึ่ง Library เครื่อง)
-RUN CGO_ENABLED=0 GOOS=linux go build -o /goapp -ldflags "-s -w" ./main.go
+RUN CGO_ENABLED=1 GOOS=linux go build -o /goapp ./main.go
 
-FROM alpine:latest
+FROM debian:bookworm-slim
 
 WORKDIR /app
+
+# ลง CA-Certificates เผื่อต้องยิง HTTPS ไปข้างนอก (SendGrid/Database)
+RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /goapp /app/goapp
 

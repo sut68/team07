@@ -31,6 +31,24 @@ func DeleteAppointmentType(c *gin.Context) {
 	id := c.Param("id")
 	db := database.DB()
 
+	var appointmentType entity.AppointmentType
+	if err := db.First(&appointmentType, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Appointment type not found"})
+		return
+	}
+
+	if appointmentType.Name == "Final Defense" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Cannot delete appointment type 'Final Defense'"})
+		return
+	}
+
+	var count int64
+	db.Model(&entity.Appointment{}).Where("appointment_type_id = ?", id).Count(&count)
+	if count > 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Cannot delete appointment type with existing appointments"})
+		return
+	}
+
 	if err := db.Delete(&entity.AppointmentType{}, id).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

@@ -1,8 +1,11 @@
 package main
 
 import (
+	"fmt"
+	"log"
 	"os"
 	"path/filepath"
+	"runtime"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sut68/team07/backend/controller/advisor"
@@ -14,6 +17,7 @@ import (
 	"github.com/sut68/team07/backend/controller/group"
 	"github.com/sut68/team07/backend/controller/issues"
 	"github.com/sut68/team07/backend/controller/news"
+	"github.com/sut68/team07/backend/controller/notification"
 	"github.com/sut68/team07/backend/controller/progress"
 	"github.com/sut68/team07/backend/controller/project"
 	"github.com/sut68/team07/backend/controller/storage"
@@ -30,12 +34,18 @@ func main() {
 	database.ConnectDatabase()
 	database.SetUpDatabase()
 
-	// ถ้าอยาก Mock ข้อมูล ให้รันคำสั่ง go run main.go --seed หรือ go run main.go seed ****ถ้า go run main.go จะไม่ Mock ข้อมูล ****
+	// เช็คคำสั่ง Seed (แก้ให้รองรับทั้ง --seed และ seed)
 	if len(os.Args) > 1 && (os.Args[1] == "--seed" || os.Args[1] == "seed") {
+		fmt.Println("FOUND SEED COMMAND: Starting Seeding Process...")
 		Data := database.DB()
+		if Data == nil {
+			fmt.Println("ERROR: Database Connection is NIL")
+			return
+		}
 		mockdata.InsertMock(Data)
+		fmt.Println("SEED COMPLETED: Data should be in DB now.")
+		return
 	}
-
 	service.InitEmailConfig()
 	service.StartCleanupWorker(database.DB())
 	r := gin.Default()
@@ -43,11 +53,20 @@ func main() {
 	r.Static("/uploads", "./uploads")
 
 	cwd, _ := os.Getwd()
-    spamCtrl := filter.NewSpamController(
-        filepath.Join(cwd, "controller", "filter", "data", "gambling.onnx"), // Model
-        filepath.Join(cwd, "controller", "filter", "data", "gambling_meta.json"), // Meta
-        filepath.Join(cwd, "lib", "onnxruntime.dll"),                        // DLL
-    )
+
+	libName := "onnxruntime.dll"
+	if runtime.GOOS == "linux" {
+		libName = "onnxruntime.so"
+	}
+
+	spamCtrl, err := filter.NewSpamController(
+		filepath.Join(cwd, "controller", "filter", "data", "gambling.onnx"),
+		filepath.Join(cwd, "controller", "filter", "data", "gambling_meta.json"),
+		filepath.Join(cwd, "lib", libName),
+	)
+	if err != nil {
+		log.Printf("⚠️ Warning: Failed to initialize Spam Controller: %v", err)
+	}
 
 	authHandler := auth.NewLoginHandler()
 
@@ -56,7 +75,6 @@ func main() {
 	r.POST("/forgot-password", authHandler.ForgotPassword)
 	r.POST("/reset-password", authHandler.ResetPassword)
 
-	r.POST("/checkspam", spamCtrl.CheckSpam)
 	//r.Static("/chatsave", "./chatsave") ย้ายไปใช้ uploads แทน
 	// Backward compatibility for old chat images
 	r.Static("/chatsave", "./uploads/chats")
@@ -67,13 +85,14 @@ func main() {
 
 		// user ทุก Role สามารถเข้าถึงได้
 
-		//protected.POST("/checkspam", spamCtrl.CheckSpam)// pls fix it on docker also
+		protected.POST("/checkspam", spamCtrl.CheckSpam) // pls fix it on docker also
 
 		protected.GET("/GetChat", chat.GetAllChat)
 		protected.GET("/get_teacher_id", chat.GetGroupbyteacherid)
 		protected.POST("/SendChat", chat.InsertChat)
 		protected.DELETE("/DeleteChat", chat.DeleteChat)
 		protected.DELETE("/Deletechatbyid", chat.DeleteChatbyProgress)
+		protected.POST("/uploadfile", chat.GetFile)
 
 		protected.GET("/getUserProfile", users.GetUserProfile)
 		protected.PATCH("/updateUserProfile", users.UpdateUserProfile)
@@ -95,6 +114,9 @@ func main() {
 		protected.GET("/academicYears", group.GetAcademicYears)
 		r.GET("/group", group.GetGroupProject)
 		// r.POST("/addMember", group.PostGroupMember)
+		//Notification
+		protected.GET("/notifications/my", notification.GetMyNotifications)
+		protected.PATCH("/notifications/:id/read", notification.MarkAsRead)
 
 		adminGroup := protected.Group("/admin")
 		adminGroup.Use(middleware.RoleGuard("Admin"))
@@ -242,10 +264,11 @@ func main() {
 		// อนุญาตให้ Admin, Teacher, Student เข้าถึงได้
 		issueGroup.Use(middleware.RoleGuard("Admin", "Teacher", "Student"))
 		{
-			issueGroup.GET("", issues.GetIssueReports)        // GET /issues (List)
-			issueGroup.POST("", issues.CreateIssue)           // POST /issues (Create)
-			issueGroup.GET("/:id", issues.GetIssueReportByID) // GET /issues/:id (Get By ID)
-			issueGroup.GET("/my", issues.GetMyIssues)         // GET /issues/my (Get My Issues)
+			issueGroup.GET("", issues.GetIssueReports)         // GET /issues (List)
+			issueGroup.POST("", issues.CreateIssue)            // POST /issues (Create)
+			issueGroup.GET("/:id", issues.GetIssueReportByID)  // GET /issues/:id (Get By ID)
+			issueGroup.GET("/my", issues.GetMyIssues)          // GET /issues/my (Get My Issues)
+			issueGroup.PATCH("/:id", issues.UpdateIssueReport) // PATCH /issues/:id (User Edit)
 		}
 
 		protected.POST("/logout", authHandler.Logout)

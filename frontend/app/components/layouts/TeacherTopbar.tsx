@@ -4,11 +4,13 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { Dropdown, Avatar, Modal } from 'antd';
-import { DownOutlined, UserOutlined, ExclamationCircleOutlined, LogoutOutlined, NotificationOutlined, BellOutlined, MenuOutlined } from '@ant-design/icons';
+import { DownOutlined, UserOutlined, ExclamationCircleOutlined, LogoutOutlined, NotificationOutlined, MenuOutlined } from '@ant-design/icons';
 import { GetUserProfile } from '../../services/user';
 import { Logout } from '../../services/login';
 import { useAuth } from "../../(modules)/roleCheck/authContext";
 import NewsModal from '../news/NewsModal';
+import ReportIssueContent from '../issue/issueReport';
+import NotificationBell from '../notification/NotificationBell';
 import styles from './TeacherLayout.module.css';
 
 export default function TeacherTopbar({ userRole, children }: { userRole: string; children?: React.ReactNode }) {
@@ -16,6 +18,7 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
     const pathname = usePathname() || '';
 
     const [isNewsModalOpen, setIsNewsModalOpen] = useState(false);
+    const [isReportModalOpen, setIsReportModalOpen] = useState(false);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [userInitial, setUserInitial] = useState("?");
     const { logoutClient } = useAuth();
@@ -41,7 +44,7 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
         {
             key: 'profile',
             icon: <UserOutlined />,
-            label: <Link href="/profile" style={{ color: 'inherit' }}>โปรไฟล์ของฉัน</Link>,
+            label: <Link href="/teacher/profile" style={{ color: 'inherit' }}>โปรไฟล์ของฉัน</Link>,
         },
         {
             key: 'create_news',
@@ -51,7 +54,7 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
         {
             key: 'report',
             icon: <ExclamationCircleOutlined />,
-            label: <Link href="/teacher/issueReport" style={{ color: 'inherit' }}>รายงานปัญหา</Link>,
+            label: 'รายงานปัญหา',
         },
         {
             key: 'logout',
@@ -82,6 +85,8 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
             });
         } else if (key === 'create_news') {
             setIsNewsModalOpen(true);
+        } else if (key === 'report') {
+            setIsReportModalOpen(true);
         }
     };
 
@@ -107,6 +112,14 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
                 isOpen={isNewsModalOpen}
                 onClose={() => setIsNewsModalOpen(false)}
             />
+            <Modal
+                title="รายงานปัญหา"
+                open={isReportModalOpen}
+                onCancel={() => setIsReportModalOpen(false)}
+                footer={null}
+            >
+                <ReportIssueContent />
+            </Modal>
 
             {/* Hamburger Toggle Button - Visible on screens <= 1400px */}
             <button
@@ -205,7 +218,7 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
 
                 {/* User Actions - Always visible */}
                 <div className={styles.userActions}>
-                    <BellOutlined className={styles.bellIcon} />
+                    <NotificationBell />
                     <Dropdown
                         menu={{ items: menuItems, onClick: onMenuClick }}
                         placement="bottomRight"

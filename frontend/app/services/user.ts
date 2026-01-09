@@ -19,7 +19,7 @@ async function ImportUsersCSV(file: File) {
 }
 
 // GET: ดึงข้อมูล User ทั้งหมด 
-async function GetUsers() {
+async function ListUsers() {
     return await api.get("/admin/users");
 }
 
@@ -66,7 +66,7 @@ export {
     GetBranches,
     GetRoles,
     GetUserStatuses,
-    GetUsers,
+    ListUsers,
     GetUserProfile,
     UpdateUserProfile,
     ImportUsersCSV,

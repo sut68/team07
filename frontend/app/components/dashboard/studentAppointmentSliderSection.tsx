@@ -91,7 +91,7 @@ export default function StudentAppointmentSliderSection({
             >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
-                        <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: '#1f2937' }}>{item.type}</h3>
+                        <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 720, color: '#1f2937' }}>{item.type}</h3>
                         <p style={{ margin: '2px 0 0 0', color: '#6b7280', fontSize: '0.8rem' }}>
                             กลุ่มที่ {groupNumber} · {projectName}
                         </p>

@@ -49,6 +49,9 @@ func GetFile(c *gin.Context){
 	if orn == ""{
 		orn = "tem"
 	}
+	const MaxFileSize = 20*1024*1024 //20 mb if im still good at math
+
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, MaxFileSize)
 
 	new := fmt.Sprintf("%d_%s", time.Now().Unix(), orn)
 
@@ -59,7 +62,8 @@ func GetFile(c *gin.Context){
 	}
 
 	finalpath := filepath.Join("uploads", "chats", new)
-	webPath := "/uploads/chats/" + new
+	webPath := "/chatsave/" + new
+
 
 	out, err := os.Create(finalpath)
 	if err != nil {
@@ -68,12 +72,14 @@ func GetFile(c *gin.Context){
     }
     defer out.Close()
 
-
 	_, err = io.Copy(out, c.Request.Body)
     if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file content"})
+  
+        c.JSON(http.StatusRequestEntityTooLarge, gin.H{"error": "cant upload more than 20mb file if that file was your progress use progress instead"})
         return
     }
+
+
 
 
     c.JSON(http.StatusOK, gin.H{

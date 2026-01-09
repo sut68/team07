@@ -24,18 +24,18 @@ type SpamController struct {
 }
 
 
-func NewSpamController(modelPath, metaPath, libPath string) *SpamController {
+func NewSpamController(modelPath, metaPath, libPath string) (*SpamController, error) {
 
     ort.SetSharedLibraryPath(libPath)
     err := ort.InitializeEnvironment()
     if err != nil {
-        log.Printf("⚠️ Warning: ORT might already be initialized: %v", err)
+        log.Printf("Warning: ORT might already be initialized: %v", err)
     }
 
 
     file, err := os.ReadFile(metaPath)
     if err != nil {
-        log.Fatal("❌ Cannot read meta json:", err)
+        return nil, fmt.Errorf("Cannot read meta json: %w", err)
     }
     var meta MetaData
     json.Unmarshal(file, &meta)
@@ -46,12 +46,12 @@ func NewSpamController(modelPath, metaPath, libPath string) *SpamController {
 
     inputInfo, outputInfo, err := ort.GetInputOutputInfo(modelPath)
     if err != nil {
-        log.Fatal("❌ Failed to get model input/output info:", err)
+        return nil, fmt.Errorf("Failed to get model input/output info: %w", err)
     }
 
 
     if len(inputInfo) == 0 || len(outputInfo) == 0 {
-        log.Fatal("❌ Model structure invalid: No inputs or outputs found")
+        return nil, fmt.Errorf("Model structure invalid: No inputs or outputs found")
     }
 
     inputName := inputInfo[0].Name
@@ -67,14 +67,14 @@ func NewSpamController(modelPath, metaPath, libPath string) *SpamController {
         nil,
     )
     if err != nil {
-        log.Fatal("❌ Failed to load ONNX model:", err)
+        return nil, fmt.Errorf("Failed to load ONNX model: %w", err)
     }
 
-    fmt.Println("✅ AI Model Loaded Successfully")
+    fmt.Println("AI Model Loaded Successfully")
     return &SpamController{
         Session: session,
         Meta:    meta,
-    }
+    }, nil
 }
 
 
@@ -109,7 +109,7 @@ func (sc *SpamController) predict(text string) (bool, float32) {
 
     inputTensor, err := ort.NewStringTensor(inputShape)
     if err != nil {
-        log.Println("❌ Error creating string input tensor:", err)
+        log.Println("Error creating string input tensor:", err)
         return false, 0
     }
     defer inputTensor.Destroy()
@@ -121,7 +121,7 @@ func (sc *SpamController) predict(text string) (bool, float32) {
     
     outputTensor, err := ort.NewEmptyTensor[int64](outputShape)
     if err != nil {
-        log.Println("❌ Error creating output tensor:", err)
+        log.Println("Error creating output tensor:", err)
         return false, 0
     }
     defer outputTensor.Destroy()
@@ -132,7 +132,7 @@ func (sc *SpamController) predict(text string) (bool, float32) {
         []ort.Value{outputTensor},
     )
     if err != nil {
-        log.Println("❌ Inference Error:", err)
+        log.Println("Inference Error:", err)
         return false, 0.0
     }
 

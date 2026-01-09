@@ -13,6 +13,13 @@ dayjs.extend(isoWeek);
 
 const { Option } = Select;
 
+const mockEvaluations = [
+    { id: 1, name: "Ethics Test", type_id: 3 },
+    { id: 2, name: "Peer Assessment", type_id: 3 },
+    { id: 3, name: "Advisor Evaluation", type_id: 3 },
+    { id: 4, name: "Committee Evaluation", type_id: 3 },
+];
+
 interface ModalProps {
     visible: boolean;
     onClose: () => void;
@@ -29,14 +36,6 @@ export default function BookingModal({ visible, onClose, onSuccess, rooms, types
     const [mode, setMode] = useState<'manual' | 'auto'>('manual');
     const [groups, setGroups] = useState<any[]>([]);
     const [evaluations, setEvaluations] = useState<any[]>([]);
-
-    // Mock evaluations data (In real app, fetch from API based on type)
-    const mockEvaluations = [
-        { id: 1, name: "Ethics Test", type_id: 3 },
-        { id: 2, name: "Peer Assessment", type_id: 3 },
-        { id: 3, name: "Advisor Evaluation", type_id: 3 },
-        { id: 4, name: "Committee Evaluation", type_id: 3 },
-    ];
 
     const handleSearch = async (value: string) => {
         try {
@@ -83,10 +82,10 @@ export default function BookingModal({ visible, onClose, onSuccess, rooms, types
                 }
 
                 form.setFieldsValue({
-                    date: start.clone(),
+                    date: start,
                     time_range: [
-                        start.clone(),
-                        start.clone().add(initialData.duration_min, 'minute')
+                        start,
+                        start.add(initialData.duration_min, 'minute')
                     ],
                     room_id: initialData.room_id ?? undefined,
                     type_id: typeId ?? undefined,

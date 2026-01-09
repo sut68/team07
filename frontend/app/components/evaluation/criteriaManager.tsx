@@ -58,6 +58,27 @@ export default function CriteriaManager({ visible, onClose }: Props) {
         if (visible) fetchData();
     }, [visible]);
 
+    // Fix: Use useEffect to set form values when modal opens to ensure Form instance is connected
+    useEffect(() => {
+        if (isCriteriaModalOpen) {
+            if (editingCriteria) {
+                form.setFieldsValue(editingCriteria);
+            } else {
+                form.resetFields();
+            }
+        }
+    }, [isCriteriaModalOpen, editingCriteria, form]);
+
+    useEffect(() => {
+        if (isLevelModalOpen) {
+            if (editingLevel) {
+                levelForm.setFieldsValue(editingLevel);
+            } else {
+                levelForm.resetFields();
+            }
+        }
+    }, [isLevelModalOpen, editingLevel, levelForm]);
+
     // --- Save Handlers ---
     const handleSaveCriteria = async (values: any) => {
         try {
@@ -120,7 +141,7 @@ export default function CriteriaManager({ visible, onClose }: Props) {
                         e.stopPropagation();
                         setSelectedEvalId(eva.id);
                         setEditingCriteria(null);
-                        form.resetFields();
+                        
                         setIsCriteriaModalOpen(true);
                     }}
                 >
@@ -141,7 +162,7 @@ export default function CriteriaManager({ visible, onClose }: Props) {
                             <div className="manager-actions">
                                 <Button size="small" icon={<EditOutlined />} onClick={() => {
                                     setEditingCriteria(cri);
-                                    form.setFieldsValue(cri);
+                                    
                                     setIsCriteriaModalOpen(true);
                                 }}/>
                                 <Popconfirm title="ลบเกณฑ์นี้?" onConfirm={() => handleDeleteCriteria(cri.id)}>
@@ -157,7 +178,7 @@ export default function CriteriaManager({ visible, onClose }: Props) {
                                 <Button type="dashed" size="small" icon={<PlusOutlined />} onClick={() => {
                                     setSelectedCriteriaId(cri.id);
                                     setEditingLevel(null);
-                                    levelForm.resetFields();
+                                    
                                     setIsLevelModalOpen(true);
                                 }}>เพิ่มตัวเลือก</Button>
                             </div>
@@ -171,7 +192,7 @@ export default function CriteriaManager({ visible, onClose }: Props) {
                                     <div className="manager-actions">
                                         <Button type="text" size="small" icon={<EditOutlined />} className="text-blue-500" onClick={() => {
                                             setEditingLevel(lvl);
-                                            levelForm.setFieldsValue(lvl);
+                                            
                                             setIsLevelModalOpen(true);
                                         }}/>
                                         <Popconfirm title="ลบ?" onConfirm={() => handleDeleteLevel(lvl.id)}>

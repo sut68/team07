@@ -5,9 +5,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { Dropdown, Avatar, Modal } from 'antd';
-import { DownOutlined, UserOutlined, ExclamationCircleOutlined, LogoutOutlined, BellOutlined, MenuOutlined } from '@ant-design/icons';
+import { DownOutlined, UserOutlined, ExclamationCircleOutlined, LogoutOutlined, MenuOutlined } from '@ant-design/icons';
 import { Logout } from '../../services/login';
 import { useAuth } from "../../(modules)/roleCheck/authContext";
+import ReportIssueContent from '../issue/issueReport';
+import NotificationBell from '../notification/NotificationBell';
 import styles from './StudentLayout.module.css';
 
 export default function StudentTopbar({ userRole, children }: { userRole: string; children?: React.ReactNode }) {
@@ -163,10 +165,10 @@ export default function StudentTopbar({ userRole, children }: { userRole: string
                         แชท
                     </Link>
                     <Link
-                        href="/student/evaluation"
-                        className={`${styles.sidebarLink} ${isActive('/student/evaluation') ? styles.sidebarLinkActive : ''}`}
+                        href="/student/exam"
+                        className={`${styles.sidebarLink} ${isActive('/student/exam') ? styles.sidebarLinkActive : ''}`}
                     >
-                        การประเมิน
+                        เกี่ยวกับสอบ
                     </Link>
                     <Link
                         href="/student/storage"
@@ -195,14 +197,15 @@ export default function StudentTopbar({ userRole, children }: { userRole: string
 
                 {/* Desktop Navigation - Right (visible > 1400px) */}
                 <nav className={styles.navRight}>
+                    <Link href="/student/progress" style={getNavStyle('/student/progress')}>ความคืบหน้า</Link>
                     <Link href="/student/chat" style={getNavStyle('/student/chat')}>แชท</Link>
-                    <Link href="/student/evaluation" style={getNavStyle('/student/evaluation')}>การประเมิน</Link>
+                    <Link href="/student/exam" style={getNavStyle('/student/exam')}>เกี่ยวกับสอบ</Link>
                     <Link href="/student/storage" style={getNavStyle('/student/storage')}>คลังโครงงาน</Link>
                 </nav>
 
                 {/* User Actions - Always visible */}
                 <div className={styles.userActions}>
-                    <BellOutlined className={styles.bellIcon} />
+                    <NotificationBell />
                     <Dropdown
                         menu={{ items: menuItems, onClick: onMenuClick }}
                         placement="bottomRight"
@@ -220,6 +223,15 @@ export default function StudentTopbar({ userRole, children }: { userRole: string
                     </Dropdown>
                 </div>
             </header>
+
+            <Modal
+                title="รายงานปัญหา"
+                open={isReportModalOpen}
+                onCancel={() => setIsReportModalOpen(false)}
+                footer={null}
+            >
+                <ReportIssueContent />
+            </Modal>
 
             {/* Main Content */}
             <main className={`${styles.mainContent} ${isSidebarCollapsed ? styles.mainContentCollapsed : ''}`}>
