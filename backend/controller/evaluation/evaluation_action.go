@@ -49,11 +49,19 @@ func SaveEvaluation(c *gin.Context) {
 
 	// 1. Get GroupProjectID to ensure we clean up scores across ALL appointments for this project
 	var appointment entity.Appointment
-	if err := db.First(&appointment, req.AppointmentID).Error; err != nil {
+	if err := db.Preload("GroupProject").First(&appointment, req.AppointmentID).Error; err != nil {
 		tx.Rollback()
 		c.JSON(http.StatusNotFound, gin.H{"error": "Appointment not found"})
 		return
 	}
+
+	// CHECK STATUS: Cannot save evaluation if project is completed
+	if appointment.GroupProject.GroupStatus == "Completed" {
+		tx.Rollback()
+		c.JSON(http.StatusForbidden, gin.H{"error": "This project is already graduated/completed. Evaluation cannot be saved."})
+		return
+	}
+
 	groupProjectID := appointment.GroupProjectID
 
 	// 2. Find IDs of EvaResult to delete (Scoped by Project, Teacher, and EvaluationName)

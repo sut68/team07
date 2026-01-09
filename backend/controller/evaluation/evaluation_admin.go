@@ -171,26 +171,6 @@ func DeleteCriteria(c *gin.Context) {
 		return
 	}
 
-	
-	// if criteria.Evaluation != nil && criteria.Evaluation.Name == "Committee Evaluation" {
-	// 	c.JSON(http.StatusForbidden, gin.H{"error": "Cannot delete criteria from Committee Evaluation"})
-	// 	return
-	// }
-
-	// if criteria.Evaluation != nil && criteria.Evaluation.Name == "Peer Evaluation" {
-	// 	c.JSON(http.StatusForbidden, gin.H{"error": "Cannot delete criteria from Peer Evaluation"})
-	// 	return
-	// }
-
-	// if criteria.Evaluation != nil && criteria.Evaluation.Name == "Ethics Test" {
-	// 	c.JSON(http.StatusForbidden, gin.H{"error": "Cannot delete criteria from Ethics Test"})
-	// 	return
-	// }
-
-	// if criteria.Evaluation != nil && criteria.Evaluation.Name == "Advisor Evaluation" {
-	// 	c.JSON(http.StatusForbidden, gin.H{"error": "Cannot delete criteria from Advisor Evaluation"})
-	// 	return
-	// }
 
 	if err := db.Delete(&criteria).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

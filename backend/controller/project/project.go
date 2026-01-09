@@ -10,6 +10,7 @@ import (
 
 	"github.com/asaskevich/govalidator"
 	"github.com/gin-gonic/gin"
+	"github.com/sut68/team07/backend/controller/log"
 	"github.com/sut68/team07/backend/database"
 	"github.com/sut68/team07/backend/entity"
 	"github.com/sut68/team07/backend/middleware"
@@ -108,7 +109,7 @@ func CreateProject(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create project"})
 		return
 	}
-
+	log.InsertLog(c, 48)	
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Project created successfully",
 		"data":    project,
@@ -236,7 +237,7 @@ func UpdateProject(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update project"})
 		return
 	}
-
+	log.InsertLog(c, 49)	
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Project updated successfully",
 		"data":    project,

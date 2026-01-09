@@ -19,7 +19,12 @@ RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/
 
 COPY --from=builder /goapp /app/goapp
 
-RUN mkdir -p /app/uploads
+# Create necessary directories
+RUN mkdir -p /app/lib /app/controller/filter/data /app/uploads
+
+# Copy AI Model assets and Libraries
+COPY --from=builder /app/lib /app/lib
+COPY --from=builder /app/controller/filter/data /app/controller/filter/data
 
 EXPOSE 8080
 
