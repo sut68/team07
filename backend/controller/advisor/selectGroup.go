@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sut68/team07/backend/controller/log"
 	"github.com/sut68/team07/backend/database"
 	"github.com/sut68/team07/backend/entity"
 	"github.com/sut68/team07/backend/middleware"
@@ -208,6 +209,7 @@ func RejectRequest(c *gin.Context) {
 		return
 	}
 
+	log.InsertLog(c, 36)
 	c.JSON(http.StatusOK, gin.H{"message": "ปฏิเสธคำขอเรียบร้อยแล้ว"})
 }
 
@@ -267,6 +269,7 @@ func ToggleAdvisorStatus(c *gin.Context) {
 		}
 	}
 
+	log.InsertLog(c, 37)
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Status updated successfully",
 		"data":    status,

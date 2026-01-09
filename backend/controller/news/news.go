@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sut68/team07/backend/controller/log"
 	"github.com/sut68/team07/backend/database"
 	"github.com/sut68/team07/backend/entity"
 	"github.com/sut68/team07/backend/middleware"
@@ -68,6 +69,7 @@ func CreateNews(c *gin.Context) {
 		return
 	}
 
+	log.InsertLog(c, 44)
 	c.JSON(http.StatusCreated, gin.H{"data": news})
 }
 
@@ -136,6 +138,7 @@ func UpdateNews(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	log.InsertLog(c, 45)
 
 	c.JSON(http.StatusOK, gin.H{"data": news})
 }
@@ -170,6 +173,7 @@ func DeleteNews(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	log.InsertLog(c, 46)
 
 	c.JSON(http.StatusOK, gin.H{"data": "News deleted successfully"})
 }
@@ -188,6 +192,7 @@ func GetNews(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
+
 	} else if claims.Role == "Student" {
 		var groupMember entity.GroupMember
 		if err := database.DB().Preload("GroupProject").Where("student_id = ?", claims.ID).First(&groupMember).Error; err != nil {

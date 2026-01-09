@@ -9,8 +9,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sut68/team07/backend/entity"
+	"github.com/sut68/team07/backend/controller/log"
 	"github.com/sut68/team07/backend/database"
+	"github.com/sut68/team07/backend/entity"
 	"github.com/sut68/team07/backend/middleware"
 )
 
@@ -35,7 +36,7 @@ func CreateTopic(c *gin.Context) {
 	switch topic.ProposerRole {
 	case "Teacher":
 		topic.Status = "Approved"
-		
+
 		// Get teacher_id from authenticated user
 		claims, err := middleware.GetClaimsFromContext(c)
 		if err != nil {
@@ -101,9 +102,9 @@ func CreateTopic(c *gin.Context) {
 		return
 	}
 
+	log.InsertLog(c, 51)
 	c.JSON(http.StatusOK, gin.H{"data": topic})
 }
-
 
 // GET /topics/:id
 func GetTopic(c *gin.Context) {
@@ -169,6 +170,7 @@ func DeleteTopic(c *gin.Context) {
 		return
 	}
 
+	log.InsertLog(c, 53)
 	c.JSON(http.StatusOK, gin.H{"data": id})
 }
 
@@ -191,10 +193,10 @@ func UpdateTopic(c *gin.Context) {
 	payload.Scope = c.PostForm("scope")
 	payload.Description = c.PostForm("description")
 	payload.Status = c.PostForm("status")
-	
+
 	// Handle File Upload (Multiple)
 	form, err := c.MultipartForm()
-	
+
 	// Collect files: existing + new
 	var finalFileList []string
 
@@ -222,14 +224,14 @@ func UpdateTopic(c *gin.Context) {
 			}
 		}
 	}
-	
+
 	if len(finalFileList) > 0 {
 		payload.FileAttachment = finalFileList[0]
 	} else if c.Request.MultipartForm != nil {
 		payload.FileAttachment = topic.FileAttachment
 	} else {
-         payload.FileAttachment = topic.FileAttachment
-    }
+		payload.FileAttachment = topic.FileAttachment
+	}
 
 	// Update fields
 	// Update fields only if they are not empty in payload
@@ -245,7 +247,7 @@ func UpdateTopic(c *gin.Context) {
 	if payload.Description != "" {
 		topic.Description = payload.Description
 	}
-	
+
 	// Only update status if provided
 	if payload.Status != "" {
 		topic.Status = payload.Status
@@ -258,9 +260,9 @@ func UpdateTopic(c *gin.Context) {
 		return
 	}
 
+	log.InsertLog(c, 52)
 	c.JSON(http.StatusOK, gin.H{"data": topic})
 }
-
 
 // PATCH /topics/:id/approval
 // Used for Approving or Rejecting a topic
@@ -306,6 +308,7 @@ func ApproveTopic(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	log.InsertLog(c, 54)
 
 	c.JSON(http.StatusOK, gin.H{"data": topic, "approval": approval})
 }
@@ -358,10 +361,9 @@ func SelectTopic(c *gin.Context) {
 	if err == nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "This topic has already been selected by another group",
-    })
-    return
-}
-
+		})
+		return
+	}
 
 	selection := entity.TopicSelection{
 		TopicID:        uint(tid),
@@ -374,6 +376,7 @@ func SelectTopic(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	log.InsertLog(c, 55)
 
 	c.JSON(http.StatusOK, gin.H{"data": selection})
 }
@@ -397,7 +400,7 @@ func CancelSelection(c *gin.Context) {
 	resultSel := db.Model(&entity.TopicSelection{}).
 		Where("group_project_id = ? AND status = ?", payload.GroupProjectID, "Active").
 		Update("status", "Cancelled")
-	
+
 	if resultSel.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": resultSel.Error.Error()})
 		return
@@ -420,6 +423,7 @@ func CancelSelection(c *gin.Context) {
 	if result.RowsAffected > 0 {
 		cancelled = true
 	}
+	log.InsertLog(c, 56)
 
 	if cancelled {
 		c.JSON(http.StatusOK, gin.H{"message": "Selection/Proposal cancelled successfully"})
@@ -429,7 +433,6 @@ func CancelSelection(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "No active selection found, but treated as success"})
 	}
 }
-
 
 // GET /student/topic
 func GetStudentTopic(c *gin.Context) {
@@ -444,7 +447,7 @@ func GetStudentTopic(c *gin.Context) {
 	// 1. Check for Selection (Active only)
 	var selection entity.TopicSelection
 	if err := db.Preload("Topic").Where("group_project_id = ? AND status = ?", groupID, "Active").First(&selection).Error; err == nil {
-		// Self-healing: If the selected topic is Closed or Cancelled (e.g. by teacher), 
+		// Self-healing: If the selected topic is Closed or Cancelled (e.g. by teacher),
 		// the selection should be invalidated.
 		if selection.Topic != nil && (selection.Topic.Status == "Closed" || selection.Topic.Status == "Cancelled") {
 			// Auto-cancel this selection
@@ -459,10 +462,9 @@ func GetStudentTopic(c *gin.Context) {
 	// 2. Check for Student Proposal
 	var topic entity.Topic
 	if err := db.Where("group_project_id = ? AND proposer_role = ? AND status != ?", groupID, "Student", "Closed").First(&topic).Error; err == nil {
-			c.JSON(http.StatusOK, gin.H{"data": topic, "source": "proposal"})
-			return
+		c.JSON(http.StatusOK, gin.H{"data": topic, "source": "proposal"})
+		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"data": nil})
 }
-

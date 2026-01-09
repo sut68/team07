@@ -152,21 +152,28 @@ func GetEvaluationSummary(c *gin.Context) {
 		Find(&indResults).Error; err != nil {
 	}
 
-	studentScores := make(map[uint]map[string][]float64)
+	studentScores := make(map[uint]map[string]map[uint]float64)
 	studentDetails := make(map[uint]string)
 
 	for _, res := range indResults {
 		sID := res.StudentID
 		evalName := res.Criteria.Evaluation.Name
+		teacherID := uint(0)
+		if res.TeacherID != nil {
+			teacherID = *res.TeacherID
+		}
 
 		if studentScores[sID] == nil {
-			studentScores[sID] = make(map[string][]float64)
+			studentScores[sID] = make(map[string]map[uint]float64)
 			if res.Student != nil {
 				rawCode := strings.Split(res.Student.Username, "@")[0]
 				studentDetails[sID] = strings.ToUpper(rawCode) + " " + res.Student.Firstname
 			}
 		}
-		studentScores[sID][evalName] = append(studentScores[sID][evalName], res.Score)
+		if studentScores[sID][evalName] == nil {
+			studentScores[sID][evalName] = make(map[uint]float64)
+		}
+		studentScores[sID][evalName][teacherID] += res.Score
 	}
 
 	individualSummary := []gin.H{}
@@ -174,14 +181,18 @@ func GetEvaluationSummary(c *gin.Context) {
 		evalList := []gin.H{}
 		var myTotalIndScore float64 = 0
 
-		for evalName, scores := range evals {
-			sum := 0.0
-			for _, s := range scores {
-				sum += s
+		for evalName, teacherScores := range evals {
+			sumTeacherAvg := 0.0
+			teacherCount := 0
+
+			for _, score := range teacherScores {
+				sumTeacherAvg += score
+				teacherCount++
 			}
+
 			avg := 0.0
-			if len(scores) > 0 {
-				avg = sum / float64(len(scores))
+			if teacherCount > 0 {
+				avg = sumTeacherAvg / float64(teacherCount)
 			}
 
 			myTotalIndScore += avg
@@ -189,7 +200,7 @@ func GetEvaluationSummary(c *gin.Context) {
 			evalList = append(evalList, gin.H{
 				"evaluation_name": evalName,
 				"average_score":   fmt.Sprintf("%.2f", avg),
-				"count":           len(scores),
+				"count":           teacherCount,
 			})
 		}
 
@@ -299,23 +310,36 @@ func GetStudentEvaluationResult(c *gin.Context) {
 		return
 	}
 
-	studentScores := make(map[string][]float64)
+	// evalName -> teacherID -> scoreSum
+	studentScores := make(map[string]map[uint]float64)
 	for _, res := range indResults {
 		evalName := res.Criteria.Evaluation.Name
-		studentScores[evalName] = append(studentScores[evalName], res.Score)
+		teacherID := uint(0)
+		if res.TeacherID != nil {
+			teacherID = *res.TeacherID
+		}
+
+		if studentScores[evalName] == nil {
+			studentScores[evalName] = make(map[uint]float64)
+		}
+		studentScores[evalName][teacherID] += res.Score
 	}
 
 	var myTotalIndScore float64 = 0
 	individualDetails := []gin.H{}
 
-	for evalName, scores := range studentScores {
-		sum := 0.0
-		for _, s := range scores {
-			sum += s
+	for evalName, teacherScores := range studentScores {
+		sumTeacherAvg := 0.0
+		teacherCount := 0
+
+		for _, score := range teacherScores {
+			sumTeacherAvg += score
+			teacherCount++
 		}
+
 		avg := 0.0
-		if len(scores) > 0 {
-			avg = sum / float64(len(scores))
+		if teacherCount > 0 {
+			avg = sumTeacherAvg / float64(teacherCount)
 		}
 		myTotalIndScore += avg
 

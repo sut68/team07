@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sut68/team07/backend/controller/log"
 	"github.com/sut68/team07/backend/database"
 	"github.com/sut68/team07/backend/entity"
 	"github.com/sut68/team07/backend/middleware"
@@ -30,7 +31,7 @@ func CreateProject(c *gin.Context) {
 			project.Year = year
 		}
 	}
-	
+
 	// Get teacher_id from authenticated user
 	claims, err := middleware.GetClaimsFromContext(c)
 	if err != nil {
@@ -75,6 +76,7 @@ func CreateProject(c *gin.Context) {
 	// Preload teacher data
 	db.Preload("Teacher").First(&project, project.ID)
 
+	log.InsertLog(c, 48)
 	c.JSON(http.StatusOK, gin.H{"data": project})
 }
 
@@ -106,11 +108,11 @@ func ListProjects(c *gin.Context) {
 	keyword := c.Query("keyword")
 
 	db := database.DB()
-	
+
 	// 1. Query ProjectStorage (teacher's own projects)
 	var storageProjects []entity.ProjectStorage
 	query1 := db.Preload("Teacher").Where("teacher_id = ?", claims.ID)
-	
+
 	if year != "" {
 		query1 = query1.Where("year = ?", year)
 	}
@@ -119,7 +121,7 @@ func ListProjects(c *gin.Context) {
 		query1 = query1.Where("title LIKE ? OR abstract LIKE ? OR keywords LIKE ?",
 			searchPattern, searchPattern, searchPattern)
 	}
-	
+
 	if err := query1.Find(&storageProjects).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -133,7 +135,7 @@ func ListProjects(c *gin.Context) {
 		Joins("JOIN group_projects ON group_projects.id = topic_selections.group_project_id").
 		Where("projects.status = ?", "Complete").
 		Where("group_projects.teacher_id = ?", claims.ID)
-	
+
 	if year != "" {
 		query2 = query2.Where("projects.year = ?", year)
 	}
@@ -142,7 +144,7 @@ func ListProjects(c *gin.Context) {
 		query2 = query2.Where("projects.title LIKE ? OR projects.abstract LIKE ? OR projects.keywords LIKE ?",
 			searchPattern, searchPattern, searchPattern)
 	}
-	
+
 	if err := query2.Find(&studentProjects).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -184,7 +186,7 @@ func ListProjects(c *gin.Context) {
 		if p.TopicSelection != nil && p.TopicSelection.GroupProject != nil && p.TopicSelection.GroupProject.TeacherID != nil {
 			teacherID = *p.TopicSelection.GroupProject.TeacherID
 		}
-		
+
 		results = append(results, ProjectResponse{
 			ID:        p.ID,
 			Title:     p.Title,
@@ -272,6 +274,7 @@ func UpdateProject(c *gin.Context) {
 	// Reload with teacher data
 	db.Preload("Teacher").First(&project, project.ID)
 
+	log.InsertLog(c, 49)
 	c.JSON(http.StatusOK, gin.H{"data": project})
 }
 
@@ -297,6 +300,7 @@ func DeleteProject(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	log.InsertLog(c, 50)
 
 	c.JSON(http.StatusOK, gin.H{"data": id})
 }
