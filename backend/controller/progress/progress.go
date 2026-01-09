@@ -1,13 +1,18 @@
 package progress
 
 import (
+	"errors"
+	"fmt"
+	"io"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
+
 	"gorm.io/gorm"
-	"fmt"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sut68/team07/backend/controller/log"
@@ -15,24 +20,118 @@ import (
 	"github.com/sut68/team07/backend/entity"
 )
 
+const (
+	MaxFileSize int64 = 20 * 1024 * 1024 // 20MB
+	maxNameLen        = 120
+)
+
+
 func ensureDir(dir string) error {
-	return os.MkdirAll(dir, os.ModePerm)
+	return os.MkdirAll(dir, 0755)
 }
+
+func sanitizeFilename(name string) string {
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return "file"
+	}
+
+	name = filepath.Base(name)
+	name = strings.ReplaceAll(name, "/", "_")
+	name = strings.ReplaceAll(name, "\\", "_")
+
+	var b strings.Builder
+	b.Grow(len(name))
+	for _, r := range name {
+		if (r >= 'a' && r <= 'z') ||
+			(r >= 'A' && r <= 'Z') ||
+			(r >= '0' && r <= '9') ||
+			r == '.' || r == '-' || r == '_' {
+			b.WriteRune(r)
+		} else {
+			b.WriteRune('_')
+		}
+	}
+	out := b.String()
+	if out == "" {
+		out = "file"
+	}
+	if len(out) > maxNameLen {
+		out = out[:maxNameLen]
+	}
+	return out
+}
+
+func allowedProgressContentType(ct string) bool {
+	// ✅ Allowlist: adjust as needed
+	switch ct {
+	case "application/pdf",
+		"image/jpeg", "image/png", "image/gif", "image/webp":
+		return true
+	default:
+		return false
+	}
+}
+
+func allowedProgressExt(ext string) bool {
+	ext = strings.ToLower(ext)
+	switch ext {
+	case ".pdf", ".jpg", ".jpeg", ".png", ".gif", ".webp", ".docx":
+		return true
+	default:
+		return false
+	}
+}
+
+func detectContentTypeFromHeader(fh *multipart.FileHeader) (string, error) {
+	f, err := fh.Open()
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	buf := make([]byte, 512)
+	n, err := f.Read(buf)
+	if err != nil && !errors.Is(err, io.EOF) {
+		return "", err
+	}
+	return http.DetectContentType(buf[:n]), nil
+}
+
+func safeRemoveUploadedProgressPath(fileURL string) {
+	// only delete within our upload folder
+	if strings.HasPrefix(fileURL, "/uploads/progress/") {
+		_ = os.Remove("." + fileURL) // "/uploads/..." -> "./uploads/..."
+	}
+}
+
+
 
 func GetProGressByID(c *gin.Context) {
 	db := database.DB()
 
-	group_projectid := c.Query("group_project_id")
-	var group_progress []entity.Progress
+	groupStr := c.Query("group_project_id")
+	group64, err := strconv.ParseUint(groupStr, 10, 64)
+	if err != nil || group64 == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid group_project_id"})
+		return
+	}
 
-	db.Where("group_project_id = ? and deleted_at is null", group_projectid).Find(&group_progress)
+
+
+	var groupProgress []entity.Progress
+	if err := db.Where("group_project_id = ? AND deleted_at IS NULL", uint(group64)).
+		Order("id DESC").
+		Find(&groupProgress).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		return
+	}
+
 	log.InsertLog(c, 4)
-
-	c.JSON(http.StatusOK, &group_progress)
+	c.JSON(http.StatusOK, &groupProgress)
 }
 
 func GetGroupProjectIDByStudentID(c *gin.Context) {
-
 	sidStr := c.Query("student_id")
 	if sidStr == "" {
 		sidStr = c.Param("student_id")
@@ -45,130 +144,168 @@ func GetGroupProjectIDByStudentID(c *gin.Context) {
 	}
 	studentID := uint(studentID64)
 
-	db:= database.DB()
+
+
+	db := database.DB()
 
 	var gm entity.GroupMember
-	err = db.
-		Model(&entity.GroupMember{}).
-		Where("student_id = ?", studentID).
-		Where("deleted_at IS NULL").
-		Order("id DESC"). 
+	err = db.Model(&entity.GroupMember{}).
+		Where("student_id = ? AND deleted_at IS NULL", studentID).
+		Order("id DESC").
 		First(&gm).Error
 
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			c.JSON(http.StatusOK, gin.H{
 				"group_project_id": 0,
-				"message":"you still don't have a group yet",
+				"message":          "you still don't have a group yet",
 			})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"group_project_id": gm.GroupProjectID,
-	})
+	c.JSON(http.StatusOK, gin.H{"group_project_id": gm.GroupProjectID})
 }
 
 func AssignProGress(c *gin.Context) {
-    db := database.DB()
+	db := database.DB()
 
 
-    const MaxFileSize int64 = 20 * 1024 * 1024
-    c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, MaxFileSize)
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, MaxFileSize)
+	fh, err := c.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing or invalid file upload"})
+		return
+	}
 
 
-    fh, err := c.FormFile("file")
-    if err != nil {
-    
-        c.JSON(http.StatusRequestEntityTooLarge, gin.H{
-            "error": "File exceeds 20MB limit or invalid upload",
-        })
-        return
-    }
+	if fh.Size <= 0 || fh.Size > MaxFileSize {
+		c.JSON(http.StatusRequestEntityTooLarge, gin.H{"error": "file too large (max 20MB)"})
+		return
+	}
 
-  
-    group_projectid := c.PostForm("group_project_id")
-    name := c.PostForm("Name")
-    comment := c.PostForm("comment")
+	groupStr := c.PostForm("group_project_id")
+	group64, err := strconv.ParseUint(groupStr, 10, 64)
+	if err != nil || group64 == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid group project id"})
+		return
+	}
+	groupID := uint(group64)
 
-    contoint, err := strconv.ParseUint(group_projectid, 10, 64)
-    if err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid group project id"})
-        return
-    }
+	// TODO (SECURITY): verify caller can upload progress for this groupID
 
-    var gp entity.GroupProject
-    if err := db.Where("id = ?", uint(contoint)).First(&gp).Error; err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid project_id"})
-        return
-    }
+	// Validate group exists
+	var gp entity.GroupProject
+	if err := db.Where("id = ?", groupID).First(&gp).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid project_id"})
+		return
+	}
 
-    uploadDir := "./uploads/progress"
-    _ = os.MkdirAll(uploadDir, os.ModePerm)
-
- 
-    safeFileName := filepath.Base(fh.Filename)
-    ext := filepath.Ext(safeFileName)
-    newName := fmt.Sprintf("%d%s", time.Now().UnixNano(), ext)
-    savePath := filepath.Join(uploadDir, newName)
+	name := strings.TrimSpace(c.PostForm("Name"))
+	comment := strings.TrimSpace(c.PostForm("comment"))
 
 
-    if err := c.SaveUploadedFile(fh, savePath); err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save file"})
-        return
-    }
+	ct, err := detectContentTypeFromHeader(fh)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "cannot read uploaded file"})
+		return
+	}
+	if !allowedProgressContentType(ct) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "file type not allowed"})
+		return
+	}
 
-    progress := entity.Progress{
-        GroupProjectID: uint(contoint),
-        File:           "/uploads/progress/" + newName,
-        Name:           name,
-        Comment:        comment,
-    }
+	uploadDir := "./uploads/progress"
+	if err := ensureDir(uploadDir); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "cannot create upload folder"})
+		return
+	}
 
-    if err := db.Create(&progress).Error; err != nil {
-    
-        os.Remove(savePath)
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Database save failed"})
-        return
-    }
+	orig := sanitizeFilename(fh.Filename)
+	ext := filepath.Ext(orig)
+	if !allowedProgressExt(ext) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "file extension not allowed"})
+		return
+	}
 
-    log.InsertLog(c, 5)
-    c.JSON(http.StatusOK, progress)
+	newName := fmt.Sprintf("%d%s", time.Now().UnixNano(), strings.ToLower(ext))
+	savePath := filepath.Join(uploadDir, newName)
+
+	if err := c.SaveUploadedFile(fh, savePath); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save file"})
+		return
+	}
+
+	progress := entity.Progress{
+		GroupProjectID: groupID,
+		File:           "/uploads/progress/" + newName,
+		Name:           name,
+		Comment:        comment,
+	}
+
+	if err := db.Create(&progress).Error; err != nil {
+		_ = os.Remove(savePath)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "database save failed"})
+		return
+	}
+
+	log.InsertLog(c, 5)
+	c.JSON(http.StatusOK, progress)
 }
 
 func UpdateProGress(c *gin.Context) {
 	db := database.DB()
 
 	idStr := c.PostForm("id")
-	name := c.PostForm("Name")
-	newcomment := c.PostForm("comment")
-
-	pro_id, err := strconv.ParseUint(idStr, 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid id"})
-		return
-	}
-
-	// find existing
-	var prog entity.Progress
-	if err := db.Where("id = ?", uint(pro_id)).First(&prog).Error; err != nil {
+	proID64, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil || proID64 == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
 	}
 
-	fh, fileErr := c.FormFile("file")
-	if fileErr == nil && fh != nil {
+
+
+	var prog entity.Progress
+	if err := db.Where("id = ?", uint(proID64)).First(&prog).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, MaxFileSize)
+
+
+	if fh, fileErr := c.FormFile("file"); fileErr == nil && fh != nil {
+		if fh.Size <= 0 || fh.Size > MaxFileSize {
+			c.JSON(http.StatusRequestEntityTooLarge, gin.H{"error": "file too large (max 20MB)"})
+			return
+		}
+
+		ct, err := detectContentTypeFromHeader(fh)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "cannot read uploaded file"})
+			return
+		}
+		if !allowedProgressContentType(ct) {
+			c.JSON(http.StatusForbidden, gin.H{"error": "file type not allowed"})
+			return
+		}
+
 		uploadDir := "./uploads/progress"
 		if err := ensureDir(uploadDir); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "cannot create upload folder"})
 			return
 		}
 
-		ext := filepath.Ext(fh.Filename)
-		newName := strconv.FormatInt(time.Now().UnixNano(), 10) + ext
+		orig := sanitizeFilename(fh.Filename)
+		ext := filepath.Ext(orig)
+		if !allowedProgressExt(ext) {
+			c.JSON(http.StatusForbidden, gin.H{"error": "file extension not allowed"})
+			return
+		}
+
+		newName := fmt.Sprintf("%d%s", time.Now().UnixNano(), strings.ToLower(ext))
 		savePath := filepath.Join(uploadDir, newName)
 
 		if err := c.SaveUploadedFile(fh, savePath); err != nil {
@@ -176,14 +313,17 @@ func UpdateProGress(c *gin.Context) {
 			return
 		}
 
+
+		old := prog.File
 		prog.File = "/uploads/progress/" + newName
+		safeRemoveUploadedProgressPath(old)
 	}
 
-	if name != "" {
+	if name := strings.TrimSpace(c.PostForm("Name")); name != "" {
 		prog.Name = name
 	}
-	if newcomment != "" {
-		prog.Comment = newcomment
+	if comment := strings.TrimSpace(c.PostForm("comment")); comment != "" {
+		prog.Comment = comment
 	}
 
 	if err := db.Save(&prog).Error; err != nil {
@@ -198,17 +338,32 @@ func UpdateProGress(c *gin.Context) {
 func DeleteProgress(c *gin.Context) {
 	db := database.DB()
 
-	id_str := c.Query("id")
-	id_int, _ := strconv.ParseInt(id_str, 10, 64)
-
-	var group_progress []entity.Progress
-	result := db.Where("id = ?", id_int).Find(&group_progress)
-	if result.RowsAffected == 0 {
+	idStr := c.Query("id")
+	id64, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil || id64 == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
 	}
 
-	db.Delete(&entity.Progress{}, id_int)
+
+
+	var prog entity.Progress
+	if err := db.Where("id = ?", uint(id64)).First(&prog).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		return
+	}
+
+	if err := db.Delete(&prog).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete"})
+		return
+	}
+
+	safeRemoveUploadedProgressPath(prog.File)
+
 	log.InsertLog(c, 7)
-	c.JSON(http.StatusOK, "suscessfully delete")
+	c.JSON(http.StatusOK, gin.H{"message": "successfully deleted"})
 }

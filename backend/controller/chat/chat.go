@@ -86,7 +86,7 @@ func sanitizeFilename(name string) string {
 func allowedUploadContentType(ct string) bool {
 
 	switch ct {
-	case "image/jpeg", "image/png", "image/gif", "image/webp", "application/pdf", "application/docx", "":
+	case "image/jpeg", "image/png", "image/gif", "image/webp", "application/pdf",  "":
 		return true
 	case "application/zip":
 
