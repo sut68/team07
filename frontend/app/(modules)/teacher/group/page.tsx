@@ -135,8 +135,8 @@ const TeacherSelectPage = () => {
             text: "ระบบจะส่งกลุ่มนี้ไปให้อาจารย์ลำดับถัดไปพิจารณา",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'ปฏิเสธ',
-            confirmButtonColor: '#d33',
+            confirmButtonText: 'ยืนยัน',
+            // confirmButtonColor: '#d33',
             cancelButtonText: 'ยกเลิก'
         });
 
