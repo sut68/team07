@@ -16,6 +16,10 @@ import DashboardPendingWidget from '../../../components/group/SelectGroupCard';
 import { GetAdvisorRequests } from '../../../services/advisor';
 import { SelectAdvisor } from '../../../interfaces/Advisor';
 
+import DashboardProgressWidget from '../../../components/progress/progress';
+import { GetProgress } from '../../../services/progress';
+import { FullProgress } from '../../../interfaces/Progress'
+
 export default function TeacherDashboardPage() {
     const { user } = useAuth();
     const [editingNews, setEditingNews] = useState<News | null>(null);
@@ -28,6 +32,9 @@ export default function TeacherDashboardPage() {
     // Group Selection
     const [pendingRequests, setPendingRequests] = useState<SelectAdvisor[]>([]);
     const [currentYear, setCurrentYear] = useState<number>(new Date().getFullYear() + 543);
+
+    const [progressData, setProgressData] = useState<FullProgress[]>([]);
+    const [loadingProgress, setLoadingProgress] = useState(true);
 
     useEffect(() => {
         const fetchAppointments = async () => {
@@ -59,7 +66,26 @@ export default function TeacherDashboardPage() {
         };
         fetchGroupData();
 
+        const fetchProgressData = async () => {
+            try {
+                setLoadingProgress(false);
+                setProgressData([]);
+            } catch (error) {
+                console.error("Error fetching progress:", error);
+                setLoadingProgress(false);
+            }
+        };
+        fetchProgressData();
+
     }, []);
+
+     const handleViewAllProgress = () => {
+        window.location.href = '/components/progress';
+    };
+
+    const handleViewProgressFile = (progress: FullProgress) => {
+        window.open(progress.file, '_blank');
+    };
 
     const handleEditNews = (news: News) => {
         setEditingNews(news);
@@ -144,7 +170,7 @@ export default function TeacherDashboardPage() {
 
                 {/* ความคืบหน้า */}
                 <div className="section-teacher bottom-teacher">
-                    <h1>ของพู แสดงความคืบหน้า (Bottom) ทำเเบบขึ้นว่ามีอะไรเฉยๆเป็นการ์ด เเล้วมีปุ่มให้คลิ๊กไป</h1>
+                    <DashboardProgressWidget teacherId={user?.id} />
                 </div>
 
             </div>
