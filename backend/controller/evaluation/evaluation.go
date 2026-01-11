@@ -138,6 +138,7 @@ func ListEvaluationProjects(c *gin.Context) {
 
 		if totalCount > 0 {
 			var completedEvaluations []string
+			// 1. Check Group Scores (EvaResult)
 			db.Model(&entity.EvaResult{}).
 				Joins("JOIN criteria ON criteria.id = eva_results.criteria_id").
 				Joins("JOIN evaluations ON evaluations.id = criteria.evaluation_id").
@@ -146,9 +147,24 @@ func ListEvaluationProjects(c *gin.Context) {
 				Distinct("evaluations.name").
 				Pluck("evaluations.name", &completedEvaluations)
 
+			// 2. Check Individual Scores (IndividualScore) - For Ethics Test
+			var completedIndividualEvaluations []string
+			db.Model(&entity.IndividualScore{}).
+				Joins("JOIN criteria ON criteria.id = individual_scores.criteria_id").
+				Joins("JOIN evaluations ON evaluations.id = criteria.evaluation_id").
+				Joins("JOIN appointments ON appointments.id = individual_scores.appointment_id").
+				Where("appointments.group_project_id = ? AND individual_scores.teacher_id = ?", p.ID, claims.ID).
+				Distinct("evaluations.name").
+				Pluck("evaluations.name", &completedIndividualEvaluations)
+
+			completedEvaluations = append(completedEvaluations, completedIndividualEvaluations...)
+
+			// Use map to prevent double counting
+			countedMap := make(map[string]bool)
 			for _, completed := range completedEvaluations {
-				if availableEvaluationsMap[completed] {
+				if availableEvaluationsMap[completed] && !countedMap[completed] {
 					gradedCount++
+					countedMap[completed] = true
 				}
 			}
 		}

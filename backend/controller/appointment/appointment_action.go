@@ -229,6 +229,11 @@ func UpdateAppointment(c *gin.Context) {
 		return
 	}
 
+	if !payload.StartDateTime.IsZero() && payload.StartDateTime.Before(time.Now()) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ไม่สามารถแก้ไขนัดหมายเป็นเวลาย้อนหลังได้"})
+		return
+	}
+
 	claims, err := middleware.GetClaimsFromContext(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
