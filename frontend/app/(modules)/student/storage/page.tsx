@@ -1,17 +1,20 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Typography, Row, Col, Modal, Tag, Space, Empty, message, ConfigProvider, Select, Descriptions } from 'antd';
-import { BookOutlined, FileTextOutlined, UserOutlined, CalendarOutlined, DownloadOutlined, SearchOutlined } from '@ant-design/icons';
+import { Button, Empty, message, ConfigProvider, Select, Input, Tag, Row, Col } from 'antd';
+import { SearchOutlined, AppstoreOutlined, FilterOutlined } from '@ant-design/icons';
 import { ProjectStorage } from '@/app/interfaces/storage';
 import { getProjects } from '@/app/services/storage';
+import '../../../style/storage.css';
 
-const { Title, Text, Paragraph } = Typography;
+import ProjectCard from '../../../components/storage/ProjectCard';
+import CategoryModal from '../../../components/storage/CategoryModal';
+import ProjectDetailModal from '../../../components/storage/ProjectDetailModal';
+
 const { Search } = Input;
-import { Input } from 'antd';
-import '../../../style/evaluation.css';
 
-export default function StudentStoragePage() {
+const StudentStoragePage = () => {
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+    const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
     const [selectedProject, setSelectedProject] = useState<ProjectStorage | null>(null);
 
     const [projects, setProjects] = useState<ProjectStorage[]>([]);
@@ -19,13 +22,13 @@ export default function StudentStoragePage() {
     const [loading, setLoading] = useState(true);
     const [searchKeyword, setSearchKeyword] = useState('');
     const [selectedYear, setSelectedYear] = useState<number | undefined>(undefined);
+    const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
     const fetchProjects = async () => {
         setLoading(true);
         try {
             const res = await getProjects({ year: selectedYear, keyword: searchKeyword, role: 'Student' });
             setProjects(res.data);
-            setFilteredProjects(res.data);
         } catch (error) {
             console.error("Failed to fetch projects", error);
             message.error("ไม่สามารถโหลดข้อมูลได้");
@@ -38,6 +41,19 @@ export default function StudentStoragePage() {
         fetchProjects();
     }, [selectedYear, searchKeyword]);
 
+    useEffect(() => {
+        if (selectedTags.length > 0) {
+            const filtered = projects.filter(project => {
+                if (!project.keywords) return false;
+                const projectKeywords = project.keywords.toLowerCase();
+                return selectedTags.some(tag => projectKeywords.includes(tag.toLowerCase()));
+            });
+            setFilteredProjects(filtered);
+        } else {
+            setFilteredProjects(projects);
+        }
+    }, [projects, selectedTags]);
+
     const handleViewDetail = (project: ProjectStorage) => {
         setSelectedProject(project);
         setIsDetailModalOpen(true);
@@ -47,242 +63,137 @@ export default function StudentStoragePage() {
         setSearchKeyword(value);
     };
 
+    const handleTagToggle = (tag: string) => {
+        const trimmedTag = tag.trim();
+        setSelectedTags(prev => {
+            if (prev.includes(trimmedTag)) {
+                return prev.filter(t => t !== trimmedTag);
+            } else {
+                return [...prev, trimmedTag];
+            }
+        });
+    };
+
     const handleYearChange = (value: number | undefined) => {
         setSelectedYear(value);
     };
 
     const handleDownload = () => {
-        message.success('กำลังดาวน์โหลดไฟล์รายงาน...');
-        // In real implementation, this would trigger actual file download
+        if (selectedProject?.file_path) {
+            const link = document.createElement('a');
+            link.href = `http://localhost:8080/${selectedProject.file_path}`;
+            link.download = selectedProject.file_path.split('/').pop() || 'document';
+            link.target = '_blank';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            message.success('กำลังดาวน์โหลดไฟล์รายงาน...');
+        } else {
+            message.warning('ไม่พบไฟล์รายงานสำหรับโครงงานนี้');
+        }
     };
 
-    // Generate year options (2000-2025)
     const yearOptions = Array.from({ length: 26 }, (_, i) => ({
         label: (2000 + i).toString(),
         value: 2000 + i
     })).reverse();
 
     return (
-        <ConfigProvider
-            theme={{
-                token: {
-                    colorPrimary: '#F06522',
-                    fontFamily: "'Noto Sans Thai', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
-                },
-            }}
-        >
-            <div className="student-page">
-                <div className="student-container animate-fade-in">
-                    <div className="page-title-box">
-                        <h1>คลังโครงงาน</h1>
-                        <p>ค้นหาและศึกษาโครงงานที่ผ่านมาเพื่อใช้เป็นแนวทางในการทำโครงงาน</p>
-                    </div>
+        <div className="storage-page">
+            <div className="storage-container animate-fade-in">
+                <div className="page-title-box">
+                    <h1>คลังโครงงาน</h1>
+                    <p>ค้นหาและศึกษาโครงงานที่ผ่านมาเพื่อใช้เป็นแนวทางในการทำโครงงาน</p>
+                </div>
 
-                    {/* Search and Filter Bar */}
-                    <div style={{ marginBottom: 24, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                <div style={{ marginBottom: 24, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                    <ConfigProvider theme={{ token: { colorPrimary: '#9a0120', } }}>
                         <Search
-                            placeholder="ค้นหาโครงงาน (ชื่อ, บทคัดย่อ, คำสำคัญ)"
+                            placeholder="ค้นหาโครงงาน ชื่ออาจารย์ที่ปรึกษา"
                             allowClear
                             enterButton={<SearchOutlined />}
                             size="large"
                             onSearch={handleSearch}
                             onChange={(e) => !e.target.value && setSearchKeyword('')}
-                            style={{ flex: 1, minWidth: 300, maxWidth: 500 }}
+                            style={{ flex: 4, minWidth: 300 }}
                         />
-                        <Select
-                            placeholder="ปีการศึกษา"
-                            allowClear
-                            size="large"
-                            style={{ width: 200 }}
-                            options={[{ label: 'ทั้งหมด', value: undefined }, ...yearOptions]}
-                            onChange={handleYearChange}
-                            value={selectedYear}
-                        />
-                    </div>
-
-
-                    {/* Projects Grid */}
-                    {filteredProjects.length === 0 && !loading ? (
-                        <Empty
-                            image={Empty.PRESENTED_IMAGE_SIMPLE}
-                            description="ไม่พบโครงงานที่ตรงกับเงื่อนไขการค้นหา"
-                        />
-                    ) : (
-                        <Row gutter={[24, 24]}>
-                            {filteredProjects.map(project => (
-                                <Col xs={24} md={12} lg={8} key={project.ID}>
-                                    <Card
-                                        hoverable
-                                        onClick={() => handleViewDetail(project)}
-                                        style={{
-                                            borderRadius: 12,
-                                            overflow: 'hidden',
-                                            border: '1px solid #f0f0f0',
-                                            height: '100%',
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            transition: 'all 0.3s ease',
-                                            cursor: 'pointer'
-                                        }}
-                                        styles={{ body: { padding: 24, flex: 1 } }}
-                                        onMouseEnter={(e) => {
-                                            e.currentTarget.style.transform = 'translateY(-4px)';
-                                            e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.1)';
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            e.currentTarget.style.transform = 'translateY(0)';
-                                            e.currentTarget.style.boxShadow = 'none';
-                                        }}
-                                    >
-                                        <div style={{ marginBottom: 12 }}>
-                                            <Tag color="blue" icon={<CalendarOutlined />}>{project.year}</Tag>
-                                        </div>
-
-                                        <Title level={4} style={{ margin: '0 0 12px 0' }} ellipsis={{ rows: 2 }}>
-                                            {project.title}
-                                        </Title>
-
-                                        <Paragraph
-                                            ellipsis={{ rows: 3 }}
-                                            type="secondary"
-                                            style={{ marginBottom: 12, minHeight: 60 }}
-                                        >
-                                            {project.abstract}
-                                        </Paragraph>
-
-                                        <div style={{ marginBottom: 12 }}>
-                                            <Text type="secondary" style={{ fontSize: 12 }}>
-                                                <UserOutlined /> อาจารย์ที่ปรึกษา: {project.teacher?.firstname} {project.teacher?.lastname}
-                                            </Text>
-                                        </div>
-
-                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                                            {project.keywords.split(',').slice(0, 3).map((keyword, idx) => (
-                                                <Tag
-                                                    key={`${project.ID}-keyword-${idx}`}
-                                                    color="geekblue"
-                                                    style={{ fontSize: 11 }}
-                                                >
-                                                    {keyword.trim()}
-                                                </Tag>
-                                            ))}
-                                            {project.keywords.split(',').length > 3 && (
-                                                <Tag
-                                                    key={`${project.ID}-more`}
-                                                    style={{ fontSize: 11 }}
-                                                >
-                                                    +{project.keywords.split(',').length - 3}
-                                                </Tag>
-                                            )}
-                                        </div>
-
-                                        <div style={{ marginTop: 16, textAlign: 'center' }}>
-                                            <Button type="link" size="small" icon={<FileTextOutlined />}>
-                                                ดูรายละเอียด
-                                            </Button>
-                                        </div>
-                                    </Card>
-                                </Col>
-                            ))}
-                        </Row>
-                    )}
-
-                    {/* Detail Modal */}
-                    <Modal
-                        title={
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                <div style={{ background: '#e6f7ff', padding: 8, borderRadius: '50%', display: 'flex' }}>
-                                    <BookOutlined style={{ color: '#1890ff', fontSize: 18 }} />
-                                </div>
-                                <span>รายละเอียดโครงงาน</span>
-                            </div>
-                        }
-                        open={isDetailModalOpen}
-                        onCancel={() => setIsDetailModalOpen(false)}
-                        footer={[
-                            <Button key="close" onClick={() => setIsDetailModalOpen(false)}>
-                                ปิด
-                            </Button>,
-                            <Button
-                                key="download"
-                                type="primary"
-                                icon={<DownloadOutlined />}
-                                onClick={handleDownload}
-                                style={{ background: '#52c41a', borderColor: '#52c41a' }}
-                            >
-                                ดาวน์โหลดรายงานฉบับสมบูรณ์
-                            </Button>
-                        ]}
-                        centered
-                        width={800}
+                    </ConfigProvider>
+                    <Select
+                        placeholder="ปีการศึกษา"
+                        allowClear
+                        size="large"
+                        style={{ flex: 1, minWidth: 150 }}
+                        options={[{ label: 'ทั้งหมด', value: 0 }, ...yearOptions]}
+                        onChange={handleYearChange}
+                        value={selectedYear}
+                    />
+                    <Button
+                        type="default"
+                        size="large"
+                        icon={<AppstoreOutlined />}
+                        onClick={() => setIsCategoryModalOpen(true)}
+                        style={{ flex: 1, minWidth: 150, textAlign: 'left', color: '#666', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
                     >
-                        {selectedProject && (
-                            <div style={{ marginTop: 20 }}>
-                                <Title level={3} style={{ marginBottom: 24 }}>
-                                    {selectedProject.title}
-                                </Title>
-
-                                <Descriptions bordered column={1} size="middle">
-                                    <Descriptions.Item label="ปีการศึกษา">
-                                        <Tag color="blue" icon={<CalendarOutlined />}>{selectedProject.year}</Tag>
-                                    </Descriptions.Item>
-                                    <Descriptions.Item label="อาจารย์ที่ปรึกษา">
-                                        <Space>
-                                            <UserOutlined />
-                                            <Text>{selectedProject.teacher?.firstname} {selectedProject.teacher?.lastname}</Text>
-                                        </Space>
-                                    </Descriptions.Item>
-                                    <Descriptions.Item label="บทคัดย่อ">
-                                        <Paragraph style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
-                                            {selectedProject.abstract}
-                                        </Paragraph>
-                                    </Descriptions.Item>
-                                    <Descriptions.Item label="คำสำคัญ">
-                                        <Space wrap>
-                                            {selectedProject.keywords.split(',').map((keyword) => (
-                                                <Tag
-                                                    key={`${selectedProject.ID}-${keyword.trim()}`}
-                                                    color="geekblue"
-                                                >
-                                                    {keyword.trim()}
-                                                </Tag>
-                                            ))}
-
-                                        </Space>
-                                    </Descriptions.Item>
-                                    <Descriptions.Item label="ไฟล์รายงาน">
-                                        <Space>
-                                            <FileTextOutlined style={{ color: '#52c41a' }} />
-                                            <Text>{selectedProject.file_path}</Text>
-                                            <Button
-                                                type="link"
-                                                size="small"
-                                                icon={<DownloadOutlined />}
-                                                onClick={handleDownload}
-                                            >
-                                                ดาวน์โหลด
-                                            </Button>
-                                        </Space>
-                                    </Descriptions.Item>
-                                </Descriptions>
-
-                                <div style={{
-                                    marginTop: 24,
-                                    padding: 16,
-                                    background: '#f0f5ff',
-                                    borderRadius: 8,
-                                    border: '1px solid #adc6ff'
-                                }}>
-                                    <Text type="secondary" style={{ fontSize: 13 }}>
-                                        💡 <strong>หมายเหตุ:</strong> โครงงานในคลังนี้เป็นผลงานที่ผ่านการอนุมัติและทำเสร็จสมบูรณ์แล้ว
-                                        สามารถใช้เป็นแนวทางในการศึกษาและพัฒนาโครงงานของคุณได้
-                                    </Text>
-                                </div>
-                            </div>
-                        )}
-                    </Modal>
+                        <span>เลือกหมวดหมู่ ({selectedTags.length})</span>
+                    </Button>
                 </div>
+
+                {selectedTags.length > 0 && (
+                    <div style={{ marginBottom: 24, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                        <span style={{ display: 'flex', alignItems: 'center', marginRight: 8, color: '#666' }}>
+                            <FilterOutlined style={{ marginRight: 4 }} /> ที่เลือกไว้:
+                        </span>
+                        {selectedTags.map(tag => (
+                            <Tag
+                                key={tag}
+                                closable
+                                onClose={() => handleTagToggle(tag)}
+                                color="blue"
+                                style={{ fontSize: 14, padding: '4px 10px' }}
+                            >
+                                {tag}
+                            </Tag>
+                        ))}
+                        <Button type="link" size="small" onClick={() => setSelectedTags([])} style={{ color: '#999' }}>
+                            ล้างทั้งหมด
+                        </Button>
+                    </div>
+                )}
+
+                {filteredProjects.length === 0 && !loading ? (
+                    <Empty
+                        image={Empty.PRESENTED_IMAGE_SIMPLE}
+                        description="ไม่พบโครงงานที่ตรงกับเงื่อนไขการค้นหา"
+                    />
+                ) : (
+                    <Row gutter={[24, 24]}>
+                        {filteredProjects.map(project => (
+                            <ProjectCard
+                                key={project.ID}
+                                project={project}
+                                onClick={handleViewDetail}
+                            />
+                        ))}
+                    </Row>
+                )}
+
+                <CategoryModal
+                    open={isCategoryModalOpen}
+                    onCancel={() => setIsCategoryModalOpen(false)}
+                    selectedTags={selectedTags}
+                    onTagToggle={handleTagToggle}
+                    projectCount={filteredProjects.length}
+                />
+
+                <ProjectDetailModal
+                    open={isDetailModalOpen}
+                    onCancel={() => setIsDetailModalOpen(false)}
+                    project={selectedProject}
+                    onDownload={handleDownload}
+                />
             </div>
-        </ConfigProvider>
+        </div>
     );
-}
+};
+
+export default StudentStoragePage;

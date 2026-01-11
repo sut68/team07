@@ -190,6 +190,8 @@ func main() {
 			teacherGroup.PATCH("/topics/:id", topic.UpdateTopic)
 			teacherGroup.DELETE("/topics/:id", topic.DeleteTopic)
 			// == Storage ===========================
+			teacherGroup.GET("/storage/projects/pending", storage.ListPendingProjects)
+			teacherGroup.POST("/storage/projects/:id/approve", storage.ApproveProject)
 			teacherGroup.GET("/storage/projects", storage.ListProjects)
 			teacherGroup.GET("/storage/projects/:id", storage.GetProject)
 			teacherGroup.POST("/storage/projects", storage.CreateProject)

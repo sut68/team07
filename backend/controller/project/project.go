@@ -47,6 +47,12 @@ func CreateProject(c *gin.Context) {
 		return
 	}
 
+	// เพิ่มการตรวจสอบ: ต้องเป็น Completed เท่านั้นถึงจะกรอกข้อมูลได้
+	if selection.GroupProject.GroupStatus != "Completed" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "คุณสามารถกรอกข้อมูลโครงงานได้หลังจากที่กลุ่มมีสถานะ 'Completed' (ผ่านการประเมิน) แล้วเท่านั้น"})
+		return
+	}
+
 	// ตรวจสอบว่ามี Project อยู่แล้วหรือไม่
 	var existingProject entity.Project
 	if err := db.Where("selection_id = ?", selection.ID).First(&existingProject).Error; err == nil {
@@ -93,7 +99,7 @@ func CreateProject(c *gin.Context) {
 		Abstract:    abstract,
 		Keywords:    keywords,
 		Year:        year,
-		Status:      "In Progress", // สถานะเริ่มต้น
+		Status:      "Pending", // เปลี่ยนสถานะเป็น Pending Publish เพื่อรออาจารย์อนุมัติลงคลัง
 		FilePath:    filePath,
 		SelectionID: selection.ID,
 	}
@@ -183,6 +189,18 @@ func UpdateProject(c *gin.Context) {
 	var member entity.GroupMember
 	if err := db.Where("student_id = ?", claims.ID).First(&member).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "You do not belong to any project group"})
+		return
+	}
+
+	// เพิ่มการตรวจสอบ: ต้องเป็น Completed เท่านั้นถึงจะแก้ไขข้อมูลได้
+	var groupProject entity.GroupProject
+	if err := db.Select("group_status").First(&groupProject, member.GroupProjectID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Group information not found"})
+		return
+	}
+
+	if groupProject.GroupStatus != "Completed" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "คุณสามารถแก้ไขข้อมูลโครงงานได้เมื่อสถานะกลุ่มเป็น 'Completed' แล้วเท่านั้น"})
 		return
 	}
 

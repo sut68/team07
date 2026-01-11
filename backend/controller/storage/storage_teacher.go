@@ -24,6 +24,10 @@ func CreateProject(c *gin.Context) {
 	project.Title = c.PostForm("title")
 	project.Abstract = c.PostForm("abstract")
 	project.Keywords = c.PostForm("keywords")
+	project.Status = c.PostForm("status")
+	if project.Status == "" {
+		project.Status = "Public"
+	}
 
 	// Parse year
 	if yearStr := c.PostForm("year"); yearStr != "" {
@@ -151,16 +155,24 @@ func ListProjects(c *gin.Context) {
 	}
 
 	// 3. Merge results into common format
+	type TeacherResponse struct {
+		ID        uint   `json:"ID"`
+		FirstName string `json:"firstname"`
+		LastName  string `json:"lastname"`
+	}
+
 	type ProjectResponse struct {
-		ID        uint      `json:"id"`
-		Title     string    `json:"title"`
-		Abstract  string    `json:"abstract"`
-		Keywords  string    `json:"keywords"`
-		Year      int       `json:"year"`
-		FilePath  string    `json:"file_path"`
-		TeacherID uint      `json:"teacher_id"`
-		Source    string    `json:"source"`
-		CreatedAt time.Time `json:"created_at"`
+		ID        uint            `json:"ID"`
+		Title     string          `json:"title"`
+		Abstract  string          `json:"abstract"`
+		Keywords  string          `json:"keywords"`
+		Year      int             `json:"year"`
+		FilePath  string          `json:"file_path"`
+		Status    string          `json:"status"`
+		TeacherID uint            `json:"teacher_id"`
+		Teacher   TeacherResponse `json:"teacher"`
+		Source    string          `json:"source"`
+		CreatedAt time.Time       `json:"created_at"`
 	}
 
 	var results []ProjectResponse
@@ -174,7 +186,13 @@ func ListProjects(c *gin.Context) {
 			Keywords:  p.Keywords,
 			Year:      p.Year,
 			FilePath:  p.FilePath,
+			Status:    p.Status,
 			TeacherID: p.TeacherID,
+			Teacher: TeacherResponse{
+				ID:        p.Teacher.ID,
+				FirstName: p.Teacher.Firstname,
+				LastName:  p.Teacher.Lastname,
+			},
 			Source:    "manual",
 			CreatedAt: p.CreatedAt,
 		})
@@ -183,8 +201,19 @@ func ListProjects(c *gin.Context) {
 	// Add Project items
 	for _, p := range studentProjects {
 		var teacherID uint
-		if p.TopicSelection != nil && p.TopicSelection.GroupProject != nil && p.TopicSelection.GroupProject.TeacherID != nil {
-			teacherID = *p.TopicSelection.GroupProject.TeacherID
+		var teacherResp TeacherResponse
+
+		if p.TopicSelection != nil && p.TopicSelection.GroupProject != nil {
+			if p.TopicSelection.GroupProject.Teacher != nil {
+				teacherID = p.TopicSelection.GroupProject.Teacher.ID
+				teacherResp = TeacherResponse{
+					ID:        p.TopicSelection.GroupProject.Teacher.ID,
+					FirstName: p.TopicSelection.GroupProject.Teacher.Firstname,
+					LastName:  p.TopicSelection.GroupProject.Teacher.Lastname,
+				}
+			} else if p.TopicSelection.GroupProject.TeacherID != nil {
+				teacherID = *p.TopicSelection.GroupProject.TeacherID
+			}
 		}
 
 		results = append(results, ProjectResponse{
@@ -194,7 +223,9 @@ func ListProjects(c *gin.Context) {
 			Keywords:  p.Keywords,
 			Year:      p.Year,
 			FilePath:  p.FilePath,
+			Status:    "Public",
 			TeacherID: teacherID,
+			Teacher:   teacherResp,
 			Source:    "student",
 			CreatedAt: p.CreatedAt,
 		})
@@ -225,15 +256,13 @@ func UpdateProject(c *gin.Context) {
 	}
 
 	// Update fields from form data
-	if title := c.PostForm("title"); title != "" {
-		project.Title = title
+	project.Title = c.PostForm("title")
+	project.Abstract = c.PostForm("abstract")
+	project.Keywords = c.PostForm("keywords")
+	if status := c.PostForm("status"); status != "" {
+		project.Status = status
 	}
-	if abstract := c.PostForm("abstract"); abstract != "" {
-		project.Abstract = abstract
-	}
-	if keywords := c.PostForm("keywords"); keywords != "" {
-		project.Keywords = keywords
-	}
+
 	if yearStr := c.PostForm("year"); yearStr != "" {
 		if year, err := strconv.Atoi(yearStr); err == nil {
 			project.Year = year
@@ -276,6 +305,91 @@ func UpdateProject(c *gin.Context) {
 
 	log.InsertLog(c, 49)
 	c.JSON(http.StatusOK, gin.H{"data": project})
+}
+
+// ListPendingProjects - List projects waiting for approval
+func ListPendingProjects(c *gin.Context) {
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
+	db := database.DB()
+	var pendingProjects []entity.Project
+
+	// Query projects with status 'Pending Publish' belonging to groups advised by this teacher
+	err = db.Preload("TopicSelection.Topic").
+		Preload("TopicSelection.GroupProject").
+		Preload("TopicSelection.GroupProject.Teacher").
+		Joins("JOIN topic_selections ON topic_selections.id = projects.selection_id").
+		Joins("JOIN group_projects ON group_projects.id = topic_selections.group_project_id").
+		Where("projects.status = ?", "Pending").
+		Where("group_projects.teacher_id = ?", claims.ID).
+		Find(&pendingProjects).Error
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": pendingProjects})
+}
+
+// ApproveProject - Approve a student project to be published (ProjectStorage)
+func ApproveProject(c *gin.Context) {
+	id := c.Param("id")
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
+	db := database.DB()
+	var project entity.Project
+
+	// 1. Find the project and verify ownership (Advising)
+	if err := db.Preload("TopicSelection.GroupProject").
+		Joins("JOIN topic_selections ON topic_selections.id = projects.selection_id").
+		Joins("JOIN group_projects ON group_projects.id = topic_selections.group_project_id").
+		Where("projects.id = ? AND group_projects.teacher_id = ?", id, claims.ID).
+		First(&project).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Project not found or you are not the advisor"})
+		return
+	}
+
+	// 2. Start Transaction
+	tx := db.Begin()
+
+	// 3. Create ProjectStorage entry
+	// Note: We copy the file path. Ensure the path is accessible.
+	// Users might upload to "uploads/projects/" which works for both.
+	
+	newStorage := entity.ProjectStorage{
+		Title:     project.Title,
+		Abstract:  project.Abstract,
+		Keywords:  project.Keywords,
+		Year:      project.Year,
+		Status:    "Public", // Default to Public upon approval
+		FilePath:  project.FilePath,
+		TeacherID: claims.ID,
+	}
+
+	if err := tx.Create(&newStorage).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create storage entry: " + err.Error()})
+		return
+	}
+
+	// 4. Update Project status to 'Published' (or 'Archived') to indicate it's processed
+	if err := tx.Model(&project).Update("status", "Published").Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update project status"})
+		return
+	}
+
+	tx.Commit()
+	c.JSON(http.StatusOK, gin.H{"message": "Project approved and published successfully", "data": newStorage})
 }
 
 // DELETE /storage/projects/:id

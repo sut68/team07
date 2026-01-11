@@ -9,7 +9,8 @@ import { getTopics, createTopic, updateTopic, selectTopic, cancelSelection, getS
 import { GetMyGroup } from '@/app/services/group';
 import { GetMe } from '@/app/services/login';
 import { CreateProject, GetMyProject, UpdateProject } from '@/app/services/project';
-import '../../../style/evaluation.css';
+import CategoryModal from '@/app/components/storage/CategoryModal';
+import '../../../style/topic.css';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -28,6 +29,7 @@ export default function StudentTopicPage() {
     const [availableTopics, setAvailableTopics] = useState<Topic[]>([]);
     const [myTopic, setMyTopic] = useState<Topic | null>(null);
     const [myProject, setMyProject] = useState<any>(null);
+    const [groupStatus, setGroupStatus] = useState<string>('');
 
     // Modal States
     const [isSelectModalOpen, setIsSelectModalOpen] = useState(false);
@@ -35,6 +37,11 @@ export default function StudentTopicPage() {
     const [isProjectInfoModalOpen, setIsProjectInfoModalOpen] = useState(false);
     const [isTopicDetailModalOpen, setIsTopicDetailModalOpen] = useState(false);
     const [isProjectDetailModalOpen, setIsProjectDetailModalOpen] = useState(false);
+
+    // Category Selection State
+    const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+    const [selectedKeywords, setSelectedKeywords] = useState<string[]>([]);
+
 
     const fetchData = async () => {
         setLoading(true);
@@ -63,6 +70,9 @@ export default function StudentTopicPage() {
                     }
                     if (groupData.year) {
                         setGroupYear(groupData.year);
+                    }
+                    if (groupData.group_status) {
+                        setGroupStatus(groupData.group_status);
                     }
                 }
             } catch (err) {
@@ -245,6 +255,14 @@ export default function StudentTopicPage() {
         }
     };
 
+    const handleTagToggle = (tag: string) => {
+        const newTags = selectedKeywords.includes(tag)
+            ? selectedKeywords.filter(t => t !== tag)
+            : [...selectedKeywords, tag];
+        setSelectedKeywords(newTags);
+        projectForm.setFieldValue('keywords', newTags.join(','));
+    };
+
     return (
         <div className="student-page">
             <div className="student-container animate-fade-in">
@@ -269,7 +287,7 @@ export default function StudentTopicPage() {
                         <p className="menu-desc">
                             {myTopic ? (
                                 <>
-                                    <strong>{myTopic.title}</strong>
+                                    {myTopic.title}
                                     <br />
                                     <Tag color={getStatusInfo(myTopic.status).color} style={{ marginTop: 8 }}>
                                         {getStatusInfo(myTopic.status).icon} {getStatusInfo(myTopic.status).text}
@@ -282,21 +300,26 @@ export default function StudentTopicPage() {
                     </div>
 
                     {/* Card 2: กรอกข้อมูลโครงงาน */}
-                    <Tooltip title={myTopic?.status !== 'Approved' ? 'กรุณารอหัวข้อได้รับการอนุมัติก่อน' : ''}>
+                    <Tooltip title={
+                        myTopic?.status !== 'Approved'
+                            ? 'กรุณารอหัวข้อได้รับการอนุมัติก่อน'
+                            : (groupStatus !== 'Completed' ? 'กรอกข้อมูลโครงงานที่สมบูรณ์หลังจากผ่านการประเมิน' : '')
+                    }>
                         <div
-                            className={`menu-card ${myTopic?.status !== 'Approved' ? 'disabled' : ''}`}
+                            className={`menu-card ${!(myTopic?.status === 'Approved' && groupStatus === 'Completed') ? 'disabled' : ''}`}
                             onClick={() => {
-                                if (myTopic?.status === 'Approved') {
+                                if (myTopic?.status === 'Approved' && groupStatus === 'Completed') {
                                     if (myProject) {
                                         setIsProjectDetailModalOpen(true);
                                     } else {
                                         setIsProjectInfoModalOpen(true);
+                                        setSelectedKeywords([]);
                                     }
                                 }
                             }}
                             style={{
-                                opacity: myTopic?.status !== 'Approved' ? 0.6 : 1,
-                                cursor: myTopic?.status !== 'Approved' ? 'not-allowed' : 'pointer'
+                                opacity: !(myTopic?.status === 'Approved' && groupStatus === 'Completed') ? 0.6 : 1,
+                                cursor: !(myTopic?.status === 'Approved' && groupStatus === 'Completed') ? 'not-allowed' : 'pointer'
                             }}
                         >
                             <div className="menu-icon" style={{ background: myProject ? '#f0fdf4' : '#fff7ed', color: myProject ? '#16a34a' : '#ea580c' }}>
@@ -308,9 +331,9 @@ export default function StudentTopicPage() {
                             <p className="menu-desc">
                                 {myProject ? (
                                     <>
-                                        <Tag color="success" style={{ marginBottom: 4 }}>บันทึกแล้ว</Tag>
-                                        <br />
                                         คลิกเพื่อดูรายละเอียดหรือแก้ไข
+                                        <br />
+                                        <Tag color="success" style={{ marginTop: 8 }}>บันทึกแล้ว</Tag>
                                     </>
                                 ) : (
                                     'บันทึกบทคัดย่อ เครื่องมือที่ใช้ และเอกสารโครงงาน'
@@ -538,11 +561,14 @@ export default function StudentTopicPage() {
                                     try {
                                         const projectData: any = {
                                             abstract: values.abstract_th,
-                                            keywords: values.tools_and_technologies,
+                                            keywords: values.keywords,
                                         };
 
-                                        if (values.project_document?.fileList?.length > 0) {
-                                            projectData.project_document = values.project_document.fileList[0].originFileObj;
+                                        if (values.project_document && values.project_document.length > 0) {
+                                            const file = values.project_document[0].originFileObj;
+                                            if (file) {
+                                                projectData.project_document = file;
+                                            }
                                         }
 
                                         // ถ้ามี project อยู่แล้ว ให้ update แทน create
@@ -592,16 +618,38 @@ export default function StudentTopicPage() {
                         </Form.Item>
 
                         <Form.Item
-                            name="tools_and_technologies"
-                            label="เครื่องมือและเทคโนโลยีที่ใช้"
-                            rules={[{ required: true, message: 'กรุณากรอกเครื่องมือและเทคโนโลยี' }]}
+                            name="keywords"
+                            label="คำสำคัญของโครงงาน"
+                            rules={[{ required: true, message: 'กรุณากรอกคำสำคัญของโครงงาน' }]}
                         >
-                            <TextArea rows={3} placeholder="เช่น React, Node.js, PostgreSQL, Docker..." />
+                            <div style={{ padding: '8px 12px', border: '1px solid #d9d9d9', borderRadius: 6, minHeight: 80, background: '#fff' }}>
+                                <Space wrap style={{ marginBottom: 8 }}>
+                                    {selectedKeywords.map(tag => (
+                                        <Tag key={tag} closable onClose={() => handleTagToggle(tag)} color="geekblue">{tag}</Tag>
+                                    ))}
+                                </Space>
+                                <div style={{ marginTop: 8 }}>
+                                    <Button type="dashed" icon={<PlusOutlined />} onClick={() => setIsCategoryModalOpen(true)}>
+                                        เลือกจากหมวดหมู่
+                                    </Button>
+                                    <Text type="secondary" style={{ marginLeft: 8, fontSize: 12 }}>
+                                        (เลือกได้อย่างน้อย 1 รายการ)
+                                    </Text>
+                                </div>
+                            </div>
                         </Form.Item>
 
                         <Form.Item
                             name="project_document"
                             label="เอกสารโครงงาน ( ไฟล์นำเสนอและไฟล์รายงาน )"
+                            valuePropName="fileList"
+                            getValueFromEvent={(e) => {
+                                if (Array.isArray(e)) {
+                                    return e;
+                                }
+                                return e?.fileList;
+                            }}
+                            rules={[{ required: true, message: 'กรุณาอัพโหลดเอกสารโครงงาน' }]}
                         >
                             <Upload maxCount={1} beforeUpload={() => false}>
                                 <Button icon={<UploadOutlined />}>คลิกเพื่ออัพโหลดเอกสาร</Button>
@@ -651,8 +699,20 @@ export default function StudentTopicPage() {
                                 if (myProject) {
                                     projectForm.setFieldsValue({
                                         abstract_th: myProject.abstract,
-                                        tools_and_technologies: myProject.keywords,
+                                        keywords: myProject.keywords,
+                                        project_document: myProject.file_path ? [{
+                                            uid: '-1',
+                                            name: myProject.file_path.split('/').pop() || 'document.pdf',
+                                            status: 'done',
+                                            url: `http://localhost:8080/${myProject.file_path}`,
+                                        }] : [],
                                     });
+                                    if (myProject.keywords) {
+                                        const keywords = myProject.keywords.split(',').map((k: string) => k.trim()).filter((k: string) => k);
+                                        setSelectedKeywords(keywords);
+                                    } else {
+                                        setSelectedKeywords([]);
+                                    }
                                 }
                             }}
                             style={{ background: '#16a34a', borderColor: '#16a34a' }}
@@ -735,6 +795,14 @@ export default function StudentTopicPage() {
                         </div>
                     )}
                 </Modal>
+
+                <CategoryModal
+                    open={isCategoryModalOpen}
+                    onCancel={() => setIsCategoryModalOpen(false)}
+                    selectedTags={selectedKeywords}
+                    onTagToggle={handleTagToggle}
+                    mode="select"
+                />
 
             </div>
         </div>
