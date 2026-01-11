@@ -17,14 +17,14 @@ var MockUser = []entity.User{
 
 	{Username: "Admin@sut.ac.th", Password: jwtService.HashPassword("adm123"), Firstname: "Admin", Lastname: "Security", Email: "Admin@gmail.com", Phone: "09622934415", Pass: passNull, GenderID: 1, BranchID: 1, RoleID: 1, StatusID: 1},
 
-	{Username: "Teacher1@sut.ac.th", Password: jwtService.HashPassword("tch123"), Firstname: "Komsan", Lastname: "Srivisut", Email: "Teacher1@gmail.com", Phone: "0884567891", Pass: passNull, GenderID: 2, BranchID: 1, RoleID: 2, StatusID: 1},
+	{Username: "Teacher1@sut.ac.th", Password: jwtService.HashPassword("tch123"), Firstname: "Komsan", Lastname: "Srivisut", Email: "Teacher1@gmail.com", Phone: "0884567891", Pass: passNull, GenderID: 1, BranchID: 1, RoleID: 2, StatusID: 1},
 	{Username: "Teacher2@sut.ac.th", Password: jwtService.HashPassword("tch123"), Firstname: "Parin", Lastname: "Sornletrlamvanich", Email: "Teacher2@gmail.com", Phone: "0696543214", Pass: passNull, GenderID: 1, BranchID: 1, RoleID: 2, StatusID: 1},
 	{Username: "Teacher3@sut.ac.th", Password: jwtService.HashPassword("tch123"), Firstname: "Kacha", Lastname: "Chansilp", Email: "Teacher3@gmail.com", Phone: "0359874658", Pass: passNull, GenderID: 1, BranchID: 1, RoleID: 2, StatusID: 1},
-	{Username: "Teacher4@sut.ac.th", Password: jwtService.HashPassword("tch123"), Firstname: "Kittisak", Lastname: "Kerdprasop", Email: "Teacher4@gmail.com", Phone: "0977890123", Pass: passNull, GenderID: 2, BranchID: 1, RoleID: 2, StatusID: 1},
-	{Username: "Teacher5@sut.ac.th", Password: jwtService.HashPassword("tch123"), Firstname: "Nittaya", Lastname: "Kerdprasop", Email: "Teacher5@gmail.com", Phone: "0988901234", Pass: passNull, GenderID: 1, BranchID: 1, RoleID: 2, StatusID: 1},
-	{Username: "Teacher6@sut.ac.th", Password: jwtService.HashPassword("tch123"), Firstname: "Nuntawut", Lastname: "Kaoungku", Email: "Teacher6@gmail.com", Phone: "0811111111", Pass: passNull, GenderID: 2, BranchID: 1, RoleID: 2, StatusID: 1},
+	{Username: "Teacher4@sut.ac.th", Password: jwtService.HashPassword("tch123"), Firstname: "Kittisak", Lastname: "Kerdprasop", Email: "Teacher4@gmail.com", Phone: "0977890123", Pass: passNull, GenderID: 1, BranchID: 1, RoleID: 2, StatusID: 1},
+	{Username: "Teacher5@sut.ac.th", Password: jwtService.HashPassword("tch123"), Firstname: "Nittaya", Lastname: "Kerdprasop", Email: "Teacher5@gmail.com", Phone: "0988901234", Pass: passNull, GenderID: 2, BranchID: 1, RoleID: 2, StatusID: 1},
+	{Username: "Teacher6@sut.ac.th", Password: jwtService.HashPassword("tch123"), Firstname: "Nuntawut", Lastname: "Kaoungku", Email: "Teacher6@gmail.com", Phone: "0811111111", Pass: passNull, GenderID: 1, BranchID: 1, RoleID: 2, StatusID: 1},
 	{Username: "Teacher7@sut.ac.th", Password: jwtService.HashPassword("tch123"), Firstname: "Paramate", Lastname: "Horkaew", Email: "Teacher7@gmail.com", Phone: "0822222222", Pass: passNull, GenderID: 1, BranchID: 1, RoleID: 2, StatusID: 1},
-	{Username: "Teacher8@sut.ac.th", Password: jwtService.HashPassword("tch123"), Firstname: "Supaporn", Lastname: "Bunrit", Email: "Teacher8@gmail.com", Phone: "0833333333", Pass: passNull, GenderID: 1, BranchID: 1, RoleID: 2, StatusID: 1},
+	{Username: "Teacher8@sut.ac.th", Password: jwtService.HashPassword("tch123"), Firstname: "Supaporn", Lastname: "Bunrit", Email: "Teacher8@gmail.com", Phone: "0833333333", Pass: passNull, GenderID: 2, BranchID: 1, RoleID: 2, StatusID: 1},
 	{Username: "Teacher9@sut.ac.th", Password: jwtService.HashPassword("tch123"), Firstname: "Sarunya", Lastname: "Kanjanawattana", Email: "Teacher9@gmail.com", Phone: "0844444444", Pass: passNull, GenderID: 2, BranchID: 1, RoleID: 2, StatusID: 1},
 	{Username: "Teacher10@sut.ac.th", Password: jwtService.HashPassword("tch123"), Firstname: "Wichai", Lastname: "Srisuruk", Email: "Teacher10@gmail.com", Phone: "0855555555", Pass: passNull, GenderID: 1, BranchID: 1, RoleID: 2, StatusID: 1},
 
