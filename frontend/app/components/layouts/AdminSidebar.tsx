@@ -5,8 +5,6 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Menu, Modal } from 'antd';
 import {
   HomeOutlined,
-  DashboardOutlined,
-  SettingOutlined,
   UserOutlined,
   ProjectOutlined,
   BarChartOutlined,
@@ -18,7 +16,7 @@ import {
 } from '@ant-design/icons';
 import { Logout } from '../../services/login';
 import 'antd/dist/reset.css';
-import './AdminSidebar.css';
+import '../../style/AdminSidebar.css';
 import { useAuth } from "../../(modules)/roleCheck/authContext";
 interface SidebarProps {
   children?: ReactNode;

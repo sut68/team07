@@ -37,40 +37,62 @@ var MockIssueType = []entity.IssueType{
 }
 
 var MockActionType = []entity.ActionType{
-	{ActionType: "Created"},
-	{ActionType: "Update"},
-	{ActionType: "Delete"},
-	{ActionType: "GetAllProGress"},
-	{ActionType: "InsertProGress"},
-	{ActionType: "UpdateProGress"},
-	{ActionType: "DeleteProGress"},
-	{ActionType: "GetMessege"},
-	{ActionType: "SendMessege"},
-	{ActionType: "DeleteMessege"},
-	{ActionType: "Login"},
-	{ActionType: "Logout"},
-	{ActionType: "ResetPassword"},
-	{ActionType: "DeleteAppointment"},
-	{ActionType: "CreateAppointment"},
-	{ActionType: "UpdateAppointment"},
-	{ActionType: "CreateRoom"},
-	{ActionType: "CreateAppointmentType"},
-	{ActionType: "DeleteAppointmentType"},
-	{ActionType: "SaveEvaluation"},
-	{ActionType: "CreateCriteria"},
-	{ActionType: "DeleteCriteria"},
-	{ActionType: "UpdateCriteria"},
-	{ActionType: "CreateCriteriaLevel"},
-	{ActionType: "DeleteCriteriaLevel"},
-	{ActionType: "UpdateCriteriaLevel"},
-	{ActionType: "UpdateUserStatus"},
-	{ActionType: "UpdateGroupStatus"},
-	{ActionType: "CreateUser"},
-	{ActionType: "UpdateUser"},
-	{ActionType: "DeleteUser"},
-	{ActionType: "CreateIssue"},
-	{ActionType: "UpdateIssue"},
-	{ActionType: "DeleteIssue"},
+	{ActionType: "Created"},               // 1
+	{ActionType: "Update"},                // 2
+	{ActionType: "Delete"},                // 3
+	{ActionType: "GetAllProGress"},        // 4
+	{ActionType: "InsertProGress"},        // 5
+	{ActionType: "UpdateProGress"},        // 6
+	{ActionType: "DeleteProGress"},        // 7
+	{ActionType: "GetMessege"},            // 8
+	{ActionType: "SendMessege"},           // 9
+	{ActionType: "DeleteMessege"},         // 10
+	{ActionType: "Login"},                 // 11
+	{ActionType: "Logout"},                // 12
+	{ActionType: "ResetPassword"},         // 13
+	{ActionType: "DeleteAppointment"},     // 14
+	{ActionType: "CreateAppointment"},     // 15
+	{ActionType: "UpdateAppointment"},     // 16
+	{ActionType: "CreateRoom"},            // 17
+	{ActionType: "CreateAppointmentType"}, // 18
+	{ActionType: "DeleteAppointmentType"}, // 19
+	{ActionType: "SaveEvaluation"},        // 20
+	{ActionType: "CreateCriteria"},        // 21
+	{ActionType: "DeleteCriteria"},        // 22
+	{ActionType: "UpdateCriteria"},        // 23
+	{ActionType: "CreateCriteriaLevel"},   // 24
+	{ActionType: "DeleteCriteriaLevel"},   // 25
+	{ActionType: "UpdateCriteriaLevel"},   // 26
+	{ActionType: "UpdateUserStatus"},      // 27
+	{ActionType: "UpdateGroupStatus"},     // 28
+	{ActionType: "CreateUser"},            // 29
+	{ActionType: "UpdateUser"},            // 30
+	{ActionType: "DeleteUser"},            // 31
+	{ActionType: "CreateIssue"},           // 32
+	{ActionType: "UpdateIssue"},           // 33
+	{ActionType: "DeleteIssue"},           // 34
+	{ActionType: "SaveAdvisorSelection"},  // 35
+	{ActionType: "RejectRequest"},         // 36
+	{ActionType: "ToggleAdvisorStatus"},   // 37
+	{ActionType: "GenerateGroups"},        // 38
+	{ActionType: "AddMemberToGroup"},      // 39
+	{ActionType: "RemoveMemberFromGroup"}, // 40
+	{ActionType: "ChangeLeader"},          // 41
+	{ActionType: "DeleteGroup"},           // 42
+	{ActionType: "UpdateGroupAdvisor"},    // 43
+	{ActionType: "CreateNews"},            // 44
+	{ActionType: "UpdateNews"},            // 45
+	{ActionType: "DeleteNews"},            // 46
+	{ActionType: "ImportUsers"},           // 47
+	{ActionType: "CreateProject"},         // 48
+	{ActionType: "UpdateProject"},         // 49
+	{ActionType: "DeleteProject"},         // 50
+	{ActionType: "CreateTopic"},           // 51
+	{ActionType: "UpdateTopic"},           // 52
+	{ActionType: "DeleteTopic"},           // 53
+	{ActionType: "ApproveTopic"},          // 54
+	{ActionType: "SelectTopic"},           // 55
+	{ActionType: "CancelSelection"},       // 56
 }
 
 func Uint(v uint) *uint { return &v }

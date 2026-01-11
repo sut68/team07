@@ -173,18 +173,20 @@ func CreateAppointment(c *gin.Context) {
 		return
 	}
 
-	// 1. Check Room Conflict (Overlap)
-	var roomConflict int64
-	if err := db.Model(&entity.Appointment{}).
-		Where("room_id = ? AND appointment_status = 'scheduled'", appointment.RoomID).
-		Where("start_date_time < ? AND (start_date_time + (duration_min * interval '1 minute')) > ?", newEndTime, newStartTime).
-		Count(&roomConflict).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	if roomConflict > 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "ห้องนี้ถูกจองในช่วงเวลาดังกล่าวแล้ว"})
-		return
+	// 1. Check Room Conflict (Overlap) - ยกเว้น Final Defense/Committee Evaluation (TypeID = 3)
+	if appointment.AppointmentTypeID != 3 {
+		var roomConflict int64
+		if err := db.Model(&entity.Appointment{}).
+			Where("room_id = ? AND appointment_status = 'scheduled'", appointment.RoomID).
+			Where("start_date_time < ? AND (start_date_time + (duration_min * interval '1 minute')) > ?", newEndTime, newStartTime).
+			Count(&roomConflict).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		if roomConflict > 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "ห้องนี้ถูกจองในช่วงเวลาดังกล่าวแล้ว"})
+			return
+		}
 	}
 
 	// 2. Check Teacher Conflict (Overlap)

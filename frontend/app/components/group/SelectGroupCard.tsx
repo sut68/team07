@@ -40,7 +40,7 @@ const DashboardPendingWidget: React.FC<DashboardPendingWidgetProps> = ({ request
                         ไม่มีคำขอใหม่ในขณะนี้ (ปีการศึกษา {year})
                     </div>
                 ) : (
-                    requests.slice(0, 3).map(request => (
+                    requests.slice(0, 2).map(request => (
                         <div key={request.ID} style={{ position: 'relative' }}>
                             {request.group_project && (
                                 <GroupCard 
@@ -55,9 +55,9 @@ const DashboardPendingWidget: React.FC<DashboardPendingWidgetProps> = ({ request
                 )}
             </div>
             
-            {requests.length > 3 && (
+            {requests.length > 2 && (
                 <div style={{ textAlign: 'center', marginTop: '15px', fontSize: '0.9rem', color: '#888' }}>
-                    และอีก <span style={{ fontWeight: 'bold', color: '#8A011D' }}>{requests.length - 3}</span> กลุ่ม...
+                    และอีก <span style={{ fontWeight: 'bold', color: '#8A011D' }}>{requests.length - 2}</span> กลุ่ม...
                 </div>
             )}
         </div>

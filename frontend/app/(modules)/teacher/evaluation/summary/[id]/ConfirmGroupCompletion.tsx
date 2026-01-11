@@ -54,7 +54,9 @@ export default function ConfirmGroupCompletion({ groupId, currentStatus, onSucce
             style={{ 
                 backgroundColor: isCompleted ? '#52c41a' : '#9a0120', 
                 borderColor: isCompleted ? '#52c41a' : '#9a0120',
-                opacity: isCompleted ? 0.8 : 1
+                color: '#fff',
+                fontWeight: 'bold',
+                opacity: 1
             }}
         >
             {isCompleted ? "กลุ่มจบการศึกษาแล้ว" : "ยืนยันกลุ่มจบ"}
