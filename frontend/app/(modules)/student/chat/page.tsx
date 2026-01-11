@@ -563,7 +563,7 @@ export default function ChatPage() {
         >
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 18, fontWeight: 700, color: "#1f1f1f", display: "flex", alignItems: "center", gap: 8 }}>
-              {locked ? "ยังไม่พร้อมใช้งาน" : currentRoom ? (currentRoom as any).file : "เลือกหัวข้อ"}
+              {locked ? "ยังไม่พร้อมใช้งาน" : currentRoom ? (currentRoom as any).Name : "เลือกหัวข้อ"}
             </div>
             <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>
               {locked

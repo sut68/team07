@@ -566,7 +566,7 @@ return (
             disabled={teacherGroups.length === 0}
             options={teacherGroups.map((g) => ({
               value: g.id,
-              label: `Group ${g.group_number} • ${g.group_status} • ${g.year}`,
+              label: `Group ${g.group_number} ปีการศึกษา ${g.year}`,
             }))}
           />
         </div>
@@ -650,6 +650,7 @@ return (
                   border: isActive ? "none" : `1px solid ${BORDER_COLOR}`,
                   opacity: locked ? 0.6 : 1,
                 }}
+
               >
                 <Avatar
                   size="small"
@@ -715,13 +716,13 @@ return (
               gap: 8,
             }}
           >
-            {locked ? "ยังไม่พร้อมใช้งาน" : currentRoom ? (currentRoom as any).file : "เลือกหัวข้อ"}
+            {locked ? "ยังไม่พร้อมใช้งาน" : currentRoom ? (currentRoom as any).Name : "เลือกหัวข้อ"} 
           </div>
           <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>
             {locked
               ? "โปรดเลือกกลุ่มก่อน"
               : roomJoined
-              ? `ประวัติการสนทนา ${filteredChats.length}/${chats.length} ข้อความ`
+              ? `ประวัติการสนทนา ${filteredChats.length} ข้อความ`
               : "คลิกหัวข้อทางซ้ายเพื่อเริ่มสนทนา"}
           </div>
         </div>

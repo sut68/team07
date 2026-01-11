@@ -255,7 +255,7 @@ export default function ProgressPage() {
                                       rel="noreferrer" 
                                       style={styles.fileChip}
                                     >
-                                        📄 {getFilePath(item)}
+                                        📄 {getFilePath(item).split("/uploads/progress/")}
                                     </a>
                                 )}
                             </div>
