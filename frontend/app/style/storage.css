@@ -1,0 +1,42 @@
+.storage-page {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: #f8fafc;
+  min-height: 100vh;
+  padding-bottom: 60px;
+}
+
+.storage-container {
+  max-width: 150vh;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+/* Header Title Style */
+.page-title-box {
+  margin-bottom: 32px;
+  border-left: 6px solid #9a0120;
+  padding-left: 20px;
+}
+
+.page-title-box h1 {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #1a1a1a;
+  margin: 0 0 8px 0;
+}
+
+.page-title-box p {
+  color: #64748b;
+  font-size: 1rem;
+  margin: 0;
+}
+
+.full-height-table .ant-table-body {
+  height: calc(100vh - 450px) !important;
+  overflow-y: auto !important;
+}
+
+.full-height-table .ant-table-pagination.ant-pagination {
+  margin: 16px 0 0 0 !important;
+  justify-content: flex-end;
+}

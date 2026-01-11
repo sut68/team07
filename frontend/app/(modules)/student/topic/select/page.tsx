@@ -396,15 +396,6 @@ export default function TopicSelectPage() {
                                 <Text type="secondary" style={{ fontSize: 12 }}>ชื่อหัวข้อ</Text>
                                 <Title level={4} style={{ marginTop: 0 }}>{viewTopic.title}</Title>
                             </div>
-
-                            <Card size="small" style={{ background: '#fafafa' }}>
-                                <Space>
-                                    <TeamOutlined />
-                                    <Text strong>เสนอโดย:</Text>
-                                    <Text>อาจารย์ที่ปรึกษา {viewTopic.teacher_id ? `(ID: ${viewTopic.teacher_id})` : ''}</Text>
-                                </Space>
-                            </Card>
-
                             <Row gutter={16}>
                                 <Col span={12}>
                                     <Text strong>วัตถุประสงค์:</Text>

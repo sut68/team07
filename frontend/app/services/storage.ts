@@ -78,3 +78,23 @@ export const deleteProject = async (id: number, role?: string): Promise<{ data: 
         throw error;
     }
 };
+
+export const getPendingProjects = async (): Promise<{ data: any[] }> => {
+    try {
+        const response = await api.get('/teacher/storage/projects/pending');
+        return { data: response.data.data || [] };
+    } catch (error) {
+        console.error('Failed to fetch pending projects:', error);
+        throw error;
+    }
+};
+
+export const approveProject = async (id: number): Promise<{ message: string; data: any }> => {
+    try {
+        const response = await api.post(`/teacher/storage/projects/${id}/approve`);
+        return response.data;
+    } catch (error) {
+        console.error('Failed to approve project:', error);
+        throw error;
+    }
+};
