@@ -30,7 +30,7 @@ func SearchGroup(c *gin.Context) {
 		query = query.Where("teacher_id = ?", claims.ID)
 	}
 
-	query = query.Where("group_status IN ?", []string{"Pending", "In Process"})
+	query = query.Where("group_status IN ?", []string{"Pending", "In Process", "Approved"})
 
 	if keyword != "" {
 		query = query.Where("name_project LIKE ? OR CAST(group_number AS TEXT) LIKE ?", "%"+keyword+"%", "%"+keyword+"%")
