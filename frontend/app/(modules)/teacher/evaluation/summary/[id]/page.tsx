@@ -90,9 +90,9 @@ export default function EvaluationSummaryPage() {
                                 </div>
                             </div>
                             
-                            <div className="score-breakdown">
+                            <div className="score-breakdown" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                                 {data.group_details?.length > 0 && (
-                                    <div style={{marginBottom: 12}}>
+                                    <div>
                                         <div style={{fontSize: '0.8rem', color: '#94a3b8', marginBottom: 4, fontWeight: 600}}>คะแนนกลุ่ม (Group Scores)</div>
                                         {data.group_details.map((g: any, idx: number) => (
                                             <div key={`g-${idx}`} className="breakdown-item">

@@ -39,8 +39,8 @@ func ListEvaluationProjects(c *gin.Context) {
 	}
 
 	if mode == "committee" {
-		query = query.Joins("JOIN appointments ON appointments.group_project_id = group_projects.id").
-			Joins("JOIN users ON users.id = appointments.teacher_id").
+		query = query.Joins("JOIN appointments ON appointments.group_project_id = group_projects.id AND appointments.deleted_at IS NULL").
+			Joins("JOIN users ON users.id = appointments.teacher_id AND users.deleted_at IS NULL").
 			Where("appointments.appointment_type_id = ?", 3).
 			Where("users.branch_id = ?", claims.BranchID).
 			Group("group_projects.id")
