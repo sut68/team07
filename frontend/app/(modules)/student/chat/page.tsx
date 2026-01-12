@@ -31,7 +31,17 @@ const THEME_RED = "#8A011D";
 const THEME_RED_LIGHT = "#a81835";
 const BG_COLOR = "#f0f2f5";
 const BORDER_COLOR = "#e5e7eb";
-const API_URL = "http://localhost:8080";
+
+
+const STORAGE_DOMAIN = "https://storage.capstonehub.me";
+
+const getFileUrl = (path: string) => {
+  if (!path) return "";
+  if (/^https?:\/\//i.test(path)) return path;
+
+  const clean = path.startsWith("/") ? path : `/${path}`;
+  return `${STORAGE_DOMAIN}${clean}`; // keep /storage
+};
 
 export default function ChatPage() {
   const [mounted, setMounted] = useState(false);
@@ -252,7 +262,6 @@ export default function ChatPage() {
     }
     const file = e.target.files?.[0];
     if (file) {
-   
       if (file.size > 20 * 1024 * 1024) {
         alert("ไฟล์นี้ใหญ่เกินไป (เกิน 20MB) ระบบจะไม่ทำการอัปโหลด");
         e.target.value = ""; 
@@ -357,8 +366,7 @@ export default function ChatPage() {
       setMessage("");
       setSpamWarning(null);
       clearFile();
-    }catch (err: any) {
-    
+    } catch (err: any) {
       const serverErrorMessage = err.response?.data?.error; 
       const statusCode = err.response?.status;
 
@@ -644,21 +652,21 @@ export default function ChatPage() {
                         <div>
                           {isImage(c.message) ? (
                             <img
-                              src={`${API_URL}${c.message}`}
+                              src={getFileUrl(c.message)} // FIXED: Uses getFileUrl instead of API_URL
                               alt="sent file"
                               style={{ maxWidth: "200px", borderRadius: "8px", display: "block", cursor: "pointer" }}
-                              onClick={() => window.open(`${API_URL}${c.message}`, "_blank")}
+                              onClick={() => window.open(getFileUrl(c.message), "_blank")} // FIXED: Uses getFileUrl
                             />
                           ) : (
                             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                               <FileOutlined style={{ fontSize: 24 }} />
                               <a
-                                href={`${API_URL}${c.message}`}
+                                href={getFileUrl(c.message)} // FIXED: Uses getFileUrl
                                 target="_blank"
                                 rel="noreferrer"
                                 style={{ color: isMe ? "white" : "blue", textDecoration: "underline" }}
                               >
-                                Download File
+                                {c.message.split("/").pop() || "Download File"}
                               </a>
                             </div>
                           )}

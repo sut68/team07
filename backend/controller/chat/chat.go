@@ -2,8 +2,8 @@ package chat
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -14,19 +14,69 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/sut68/team07/backend/controller/log"
 	"github.com/sut68/team07/backend/database"
 	"github.com/sut68/team07/backend/entity"
 )
 
-const socketBroadcastBaseURL = "http://socket:3001"
-
+// --- Constants ---
 const (
-	ChatTypeText uint = 1
-	ChatTypeFile uint = 2
-	MaxFileSize       = 20 * 1024 * 1024 // 20MB
-	maxNameLen        = 120
+	socketBroadcastBaseURL = "http://socket:3001"
+	ChatTypeText           = 1
+	ChatTypeFile           = 2
+	MaxFileSize            = 20 * 1024 * 1024 // 20MB
+	maxNameLen             = 120
+	ChatBucket             = "chat-uploads"
+	ProgressBucket         = "progress-reports"
 )
+
+var minioClient *minio.Client
+
+// --- Initialization: Handles Connection & Auto-Bucket Creation ---
+func init() {
+	endpoint := os.Getenv("MINIO_ENDPOINT")
+	if endpoint == "" { endpoint = "minio:9000" }
+	
+	accessKey := os.Getenv("MINIO_ROOT_USER")
+	if accessKey == "" { accessKey = "admin" }
+	
+	secretKey := os.Getenv("MINIO_ROOT_PASSWORD")
+	if secretKey == "" { secretKey = "install123" }
+
+	client, err := minio.New(endpoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
+		Secure: false,
+	})
+	if err != nil {
+		fmt.Printf("[CRITICAL] MinIO Connection Failed: %v\n", err)
+		return
+	}
+	minioClient = client
+
+	
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	buckets := []string{ChatBucket, ProgressBucket}
+	for _, b := range buckets {
+		exists, err := minioClient.BucketExists(ctx, b)
+		if err == nil && !exists {
+			err = minioClient.MakeBucket(ctx, b, minio.MakeBucketOptions{})
+			if err == nil {
+				fmt.Printf("[INFO] Created bucket: %s\n", b)
+			
+				if b == ChatBucket {
+					policy := fmt.Sprintf(`{"Version":"2012-10-17","Statement":[{"Action":["s3:GetObject"],"Effect":"Allow","Principal":"*","Resource":["arn:aws:s3:::%s/*"]}]}`, b)
+					_ = minioClient.SetBucketPolicy(ctx, b, policy)
+				}
+			}
+		}
+	}
+}
+
+// --- Logic Helpers ---
 
 type InsertChatBody struct {
 	GroupProjectID uint   `json:"group_project_id"`
@@ -41,160 +91,97 @@ func roomKey(gp uint, pid uint) string {
 }
 
 func broadcast(path string, payload any) {
-	b, err := json.Marshal(payload)
-	if err != nil {
-		return
-	}
+	b, _ := json.Marshal(payload)
 	go func() {
-		_, _ = http.Post(socketBroadcastBaseURL+path, "application/json", bytes.NewBuffer(b))
+		client := &http.Client{Timeout: 5 * time.Second}
+		_, _ = client.Post(socketBroadcastBaseURL+path, "application/json", bytes.NewBuffer(b))
 	}()
 }
 
 func sanitizeFilename(name string) string {
-	name = strings.TrimSpace(name)
-	if name == "" {
-		return "file"
-	}
-
-	name = filepath.Base(name)
-
-	name = strings.ReplaceAll(name, "/", "_")
-	name = strings.ReplaceAll(name, "\\", "_")
-
+	name = filepath.Base(strings.TrimSpace(name))
 	var b strings.Builder
-	b.Grow(len(name))
 	for _, r := range name {
-		if (r >= 'a' && r <= 'z') ||
-			(r >= 'A' && r <= 'Z') ||
-			(r >= '0' && r <= '9') ||
-			r == '.' || r == '-' || r == '_' {
+		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '.' || r == '-' || r == '_' {
 			b.WriteRune(r)
 		} else {
 			b.WriteRune('_')
 		}
 	}
 	out := b.String()
-	if out == "" {
-		out = "file"
-	}
-	if len(out) > maxNameLen {
-		out = out[:maxNameLen]
-	}
+	if len(out) > maxNameLen { out = out[:maxNameLen] }
 	return out
 }
 
-func allowedUploadContentType(ct string) bool {
-
+func allowedUploadContentType(ct string, filename string) bool {
+	ext := strings.ToLower(filepath.Ext(filename))
 	switch ct {
-	case "image/jpeg", "image/png", "image/gif", "image/webp", "application/pdf",  "":
+	case "image/jpeg", "image/png", "image/gif", "image/webp", "application/pdf":
 		return true
-	case "application/zip":
-
-		if ct == ".docx" || ct == ".xlsx" || ct == ".pptx" {
-			return true
-		} else {
-			return false
-		}
-
+	case "application/zip", "application/x-zip-compressed":
+		return ext == ".docx" || ext == ".xlsx" || ext == ".pptx"
 	default:
 		return false
 	}
 }
 
-func GetFile(c *gin.Context) {
-	original := sanitizeFilename(c.Query("filename"))
+// --- Controller Actions ---
 
+func GetFile(c *gin.Context) {
+	originalName := sanitizeFilename(c.Query("filename"))
 	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, MaxFileSize)
 
 	header := make([]byte, 512)
-	n, readErr := io.ReadFull(c.Request.Body, header)
-	if readErr != nil && !errors.Is(readErr, io.EOF) && !errors.Is(readErr, io.ErrUnexpectedEOF) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read upload"})
+	n, err := c.Request.Body.Read(header)
+	if err != nil && err != io.EOF {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file"})
 		return
 	}
-	header = header[:n]
-
-	contentType := http.DetectContentType(header)
-	if !allowedUploadContentType(contentType) {
-		c.JSON(http.StatusForbidden, gin.H{"error": "File type not allowed "})
-		fmt.Println(contentType)
+	if n == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Empty file"})
 		return
 	}
 
-	if err := os.MkdirAll(filepath.Join("uploads", "chats"), os.ModePerm); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create upload directory"})
+	contentType := http.DetectContentType(header[:n])
+
+	if !allowedUploadContentType(contentType, originalName) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "File type not allowed"})
 		return
 	}
 
-	filename := fmt.Sprintf("%d_%s", time.Now().Unix(), original)
-	finalPath := filepath.Join("uploads", "chats", filename)
+	objectName := fmt.Sprintf("%d_%s", time.Now().Unix(), originalName)
+	combinedBody := io.MultiReader(bytes.NewReader(header[:n]), c.Request.Body)
 
-	out, err := os.Create(finalPath)
+	_, err = minioClient.PutObject(
+		c.Request.Context(),
+		ChatBucket,
+		objectName,
+		combinedBody,
+		-1,
+		minio.PutObjectOptions{ContentType: contentType},
+	)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create file"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Cloud Storage Error"})
 		return
 	}
-	defer out.Close()
-
-	if len(header) > 0 {
-		if _, err := out.Write(header); err != nil {
-			_ = os.Remove(finalPath)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to write file"})
-			return
-		}
-	}
-
-	if _, err := io.Copy(out, c.Request.Body); err != nil {
-		_ = os.Remove(finalPath)
-
-		var mbe *http.MaxBytesError
-		if errors.As(err, &mbe) {
-			c.JSON(http.StatusRequestEntityTooLarge, gin.H{"error": "File too large (max 20MB)"})
-			return
-		}
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to save upload"})
-		return
-	}
-
-	webPath := "/chatsave/" + filename
 
 	c.JSON(http.StatusOK, gin.H{
 		"status":       "ok",
-		"url":          webPath,
+		"url":          "/storage/" + ChatBucket + "/" + objectName,
 		"content_type": contentType,
 	})
 }
 
+
 func GetAllChat(c *gin.Context) {
 	db := database.DB()
-
-	groupStr := c.Query("group_project_id")
-	group, err := strconv.ParseUint(groupStr, 10, 64)
-	if err != nil || group == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid (blank) group project ID"})
-		return
-	}
-
-	proStr := c.Query("process_id")
-	pro, err := strconv.ParseUint(proStr, 10, 64)
-	if err != nil || pro == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid (blank) process_id"})
-		return
-	}
+	group, _ := strconv.ParseUint(c.Query("group_project_id"), 10, 64)
+	pro, _ := strconv.ParseUint(c.Query("process_id"), 10, 64)
 
 	var chats []entity.Chat
-	result := db.Where("group_project_id = ? AND process_id = ?", group, pro).
-		Order("id ASC").
-		Find(&chats)
-	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error retrieving chats"})
+	if err := db.Where("group_project_id = ? AND process_id = ?", group, pro).Order("id ASC").Find(&chats).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "DB Error"})
 		return
-	}
-
-	for i := range chats {
-		if chats[i].ChatType == ChatTypeFile && strings.HasPrefix(chats[i].Message, "/chatsave/") {
-			chats[i].Message = strings.Replace(chats[i].Message, "/chatsave/", "/uploads/chats/", 1)
-		}
 	}
 
 	log.InsertLog(c, 8)
@@ -203,58 +190,17 @@ func GetAllChat(c *gin.Context) {
 
 func InsertChat(c *gin.Context) {
 	db := database.DB()
-
 	var body InsertChatBody
+	_ = c.ShouldBindJSON(&body)
 
-	if err := c.ShouldBindJSON(&body); err != nil {
-
-	}
-
-	if body.GroupProjectID == 0 {
-		if v, err := strconv.ParseUint(c.Query("group_project_id"), 10, 64); err == nil {
-			body.GroupProjectID = uint(v)
-		}
-	}
-	if body.ProcessID == 0 {
-		if v, err := strconv.ParseUint(c.Query("process_id"), 10, 64); err == nil {
-			body.ProcessID = uint(v)
-		}
-	}
-	if body.SenderID == 0 {
-		if v, err := strconv.ParseUint(c.Query("sender_id"), 10, 64); err == nil {
-			body.SenderID = uint(v)
-		}
-	}
-	if body.ChatType == 0 {
-		if v, err := strconv.ParseUint(c.Query("type"), 10, 64); err == nil {
-			body.ChatType = uint(v)
-		}
-	}
-	if body.Message == "" {
-		body.Message = c.Query("message")
-	}
-	if body.Message == "" {
-		body.Message = c.Query("messege")
-	}
-
-	if body.GroupProjectID == 0 || body.ProcessID == 0 || body.SenderID == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "missing id(s)"})
-		return
-	}
-	if strings.TrimSpace(body.Message) == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "blank message"})
-		return
-	}
-	if body.ChatType != ChatTypeText && body.ChatType != ChatTypeFile {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid chat type"})
+	
+	if body.GroupProjectID == 0 || body.SenderID == 0 || body.Message == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing data"})
 		return
 	}
 
 	var sender entity.User
-	if err := db.Select("username").Where("id = ?", body.SenderID).First(&sender).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid sender"})
-		return
-	}
+	db.Select("username").Where("id = ?", body.SenderID).First(&sender)
 
 	chat := entity.Chat{
 		GroupProjectID: body.GroupProjectID,
@@ -266,22 +212,15 @@ func InsertChat(c *gin.Context) {
 	}
 
 	if err := db.Create(&chat).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save chat"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Save failed"})
 		return
 	}
 
-	rk := roomKey(chat.GroupProjectID, chat.ProcessID)
 	broadcast("/broadcast/chat", gin.H{
-		"room_id":          rk,
-		"id":               chat.ID,
-		"group_project_id": chat.GroupProjectID,
-		"process_id":       chat.ProcessID,
-		"sender_id":        chat.SenderID,
-		"name":             chat.Name,
-		"message":          chat.Message,
-		"chattype":         chat.ChatType,
-		"created_at":       chat.CreatedAt,
-		"updated_at":       chat.UpdatedAt,
+		"room_id": roomKey(chat.GroupProjectID, chat.ProcessID),
+		"name":    chat.Name,
+		"message": chat.Message,
+		"type":    chat.ChatType,
 	})
 
 	log.InsertLog(c, 9)
@@ -290,44 +229,20 @@ func InsertChat(c *gin.Context) {
 
 func DeleteChat(c *gin.Context) {
 	db := database.DB()
+	id, _ := strconv.ParseUint(c.Query("id"), 10, 64)
 
-	group, err := strconv.ParseUint(c.Query("group_project_id"), 10, 64)
-	if err != nil || group == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid (blank) group project ID"})
-		return
+	var chat entity.Chat
+	if err := db.Where("id = ?", id).First(&chat).Error; err == nil {
+		if chat.ChatType == ChatTypeFile {
+		
+			parts := strings.Split(chat.Message, "/")
+			_ = minioClient.RemoveObject(context.Background(), ChatBucket, parts[len(parts)-1], minio.RemoveObjectOptions{})
+		}
+		db.Delete(&chat)
 	}
 
-	pro, err := strconv.ParseUint(c.Query("process_id"), 10, 64)
-	if err != nil || pro == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid (blank) process_id"})
-		return
-	}
-
-	chatID, err := strconv.ParseUint(c.Query("id"), 10, 64)
-	if err != nil || chatID == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid (blank) chat id"})
-		return
-	}
-
-	result := db.Where("group_project_id = ? AND process_id = ? AND id = ?", group, pro, chatID).
-		Delete(&entity.Chat{})
-	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete chat"})
-		return
-	}
-	if result.RowsAffected == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "chat not found"})
-		return
-	}
-
-	rk := strconv.FormatUint(group, 10) + ":" + strconv.FormatUint(pro, 10)
-	broadcast("/broadcast/delete", gin.H{
-		"room_id": rk,
-		"id":      chatID,
-	})
-
-	log.InsertLog(c, 10)
-	c.JSON(http.StatusOK, gin.H{"message": "successfully deleted"})
+	broadcast("/broadcast/delete", gin.H{"id": id})
+	c.JSON(http.StatusOK, gin.H{"message": "deleted"})
 }
 
 func DeleteChatbyProgress(c *gin.Context) {
