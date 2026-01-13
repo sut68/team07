@@ -2,7 +2,9 @@
 
 .layoutContainer {
     font-family: 'Noto Sans Thai', sans-serif;
-    min-height: 100vh;
+    height: 100vh;
+    /* Fixed height to prevent window scroll */
+    overflow: hidden;
     display: flex;
     flex-direction: column;
 }
@@ -81,6 +83,10 @@
     padding: 20px;
     padding-top: 30px;
     flex-grow: 1;
+    overflow-y: auto;
+    /* Allow content to scroll independently */
+    height: 100%;
+    /* Ensure it fills the flex container */
     transition: margin-left 300ms ease, width 300ms ease;
 }
 

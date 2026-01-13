@@ -1,17 +1,14 @@
 /* std dashboard.css */
-.container {
+.student-dashboard-container {
   display: flex;
   flex-direction: row;
-  height: 100vh;
+  height: 100%;
   margin: 0;
   padding: 16px;
-  /* เพิ่ม Padding รอบนอกเหมือน Teacher */
   overflow: hidden;
   box-sizing: border-box;
   background-color: #f3f4f6;
-  /* เปลี่ยนพื้นหลังเป็นสีเทาแบบ Teacher */
   gap: 16px;
-  /* เพิ่มระยะห่างระหว่างซ้าย-ขวา */
 }
 
 /* --- ส่วนซ้าย: ข่าวสาร --- */
@@ -213,10 +210,9 @@
 .container-teacher-dashboard {
   display: flex;
   flex-direction: row;
-  height: 100vh;
+  min-height: 100%;
   margin: 0;
   padding: 16px;
-  overflow: hidden;
   box-sizing: border-box;
   background-color: #f3f4f6;
   /* Light gray background for the whole dashboard */
@@ -257,9 +253,8 @@
   border: 1px solid #e5e7eb;
   padding: 20px;
   overflow: hidden;
-  /* Lock the container, prevent scrollbars on the card itself */
   min-width: 0;
-  /* Prevent flex item from overflowing */
+  min-height: 350px;
 }
 
 /* Appointment css */
@@ -292,10 +287,12 @@
 /* group css */
 .btn-view-all-theme {
   background-color: white;
-  color: #8A011D; /* สีแดงธีมหลัก */
+  color: #8A011D;
+  /* สีแดงธีมหลัก */
   border: 1px solid rgba(138, 1, 29, 0.15);
   padding: 8px 18px;
-  border-radius: 50px; /* ทรงแคปซูล */
+  border-radius: 50px;
+  /* ทรงแคปซูล */
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
@@ -310,8 +307,10 @@
   background-color: #8A011D;
   color: white;
   border-color: #8A011D;
-  transform: translateY(-2px); /* ลอยขึ้นเล็กน้อย */
-  box-shadow: 0 4px 12px rgba(138, 1, 29, 0.2); /* เงาฟุ้งสวยงาม */
+  transform: translateY(-2px);
+  /* ลอยขึ้นเล็กน้อย */
+  box-shadow: 0 4px 12px rgba(138, 1, 29, 0.2);
+  /* เงาฟุ้งสวยงาม */
 }
 
 .btn-view-all-theme span {
