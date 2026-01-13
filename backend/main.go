@@ -1,13 +1,17 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 	"runtime"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/sut68/team07/backend/controller/advisor"
 	"github.com/sut68/team07/backend/controller/appointment"
 	"github.com/sut68/team07/backend/controller/auth"
@@ -34,7 +38,6 @@ func main() {
 	database.ConnectDatabase()
 	database.SetUpDatabase()
 
-	// เช็คคำสั่ง Seed (แก้ให้รองรับทั้ง --seed และ seed)
 	if len(os.Args) > 1 && (os.Args[1] == "--seed" || os.Args[1] == "seed") {
 		fmt.Println("FOUND SEED COMMAND: Starting Seeding Process...")
 		Data := database.DB()
@@ -51,6 +54,60 @@ func main() {
 	r := gin.Default()
 	r.Use(database.CORSMiddleware())
 	r.Static("/uploads", "./uploads")
+
+	endpoint := os.Getenv("MINIO_ENDPOINT")
+	if endpoint == "" {
+		endpoint = "minio:9000"
+	}
+	accessKey := os.Getenv("MINIO_ROOT_USER")
+	if accessKey == "" {
+		accessKey = "admin"
+	}
+	secretKey := os.Getenv("MINIO_ROOT_PASSWORD")
+	if secretKey == "" {
+		secretKey = "install123"
+	}
+
+	minioClient, err := minio.New(endpoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
+		Secure: false,
+	})
+	if err != nil {
+		log.Printf("Warning: MinIO init failed: %v", err)
+	}
+
+	r.GET("/storage/:bucket/:object", func(c *gin.Context) {
+		if minioClient == nil {
+			c.Status(503)
+			return
+		}
+
+		bucket := c.Param("bucket")
+		objectName := c.Param("object")
+
+		ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+		defer cancel()
+
+		obj, err := minioClient.GetObject(ctx, bucket, objectName, minio.GetObjectOptions{})
+		if err != nil {
+			c.Status(404)
+			return
+		}
+		defer obj.Close()
+
+		st, err := obj.Stat()
+		if err != nil {
+			c.Status(404)
+			return
+		}
+
+		ct := st.ContentType
+		if ct == "" {
+			ct = "application/octet-stream"
+		}
+
+		c.DataFromReader(200, st.Size, ct, obj, nil)
+	})
 
 	cwd, _ := os.Getwd()
 
@@ -75,15 +132,11 @@ func main() {
 	r.POST("/forgot-password", authHandler.ForgotPassword)
 	r.POST("/reset-password", authHandler.ResetPassword)
 
-	//r.Static("/chatsave", "./chatsave") ย้ายไปใช้ uploads แทน
-	// Backward compatibility for old chat images
 	r.Static("/chatsave", "./uploads/chats")
 
 	protected := r.Group("/")
 	protected.Use(middleware.CSRFCheckMiddleware(), middleware.AuthMiddleware())
 	{
-
-		// user ทุก Role สามารถเข้าถึงได้
 
 		protected.POST("/checkspam", spamCtrl.CheckSpam)
 		protected.GET("/GetChat", chat.GetAllChat)
@@ -103,23 +156,19 @@ func main() {
 		protected.POST("/modifyProgress", progress.UpdateProGress)
 		protected.DELETE("/deleteProgress", progress.DeleteProgress)
 
-		// News
 		protected.POST("/news", news.CreateNews)
 		protected.GET("/news", news.GetNews)
 		protected.PATCH("/news/:id", news.UpdateNews)
 		protected.DELETE("/news/:id", news.DeleteNews)
 
-		// Group
 		protected.GET("/academicYears", group.GetAcademicYears)
 		r.GET("/group", group.GetGroupProject)
-		//Notification
 		protected.GET("/notifications/my", notification.GetMyNotifications)
 		protected.PATCH("/notifications/:id/read", notification.MarkAsRead)
 
 		adminGroup := protected.Group("/admin")
 		adminGroup.Use(middleware.RoleGuard("Admin"))
 		{
-			// ถ้า API ไหนที่แอดมินเข้าถึงได้ ให้นำไปใส่ในนี้
 			adminGroup.GET("/genders", users.GetGenders)
 			adminGroup.GET("/branches", users.GetBranches)
 			adminGroup.GET("/roles", users.GetRoles)
@@ -133,7 +182,6 @@ func main() {
 			adminGroup.PATCH("/user/:id", users.UpdateUser)
 			adminGroup.DELETE("/user/:id", users.DeleteUser)
 
-			// Group
 			adminGroup.GET("/studentCount", group.GetEligibleStudentCount)
 			adminGroup.POST("/generateGroups", group.GenerateGroups)
 
@@ -152,7 +200,6 @@ func main() {
 		teacherGroup := protected.Group("/teacher")
 		teacherGroup.Use(middleware.RoleGuard("Teacher"))
 		{
-			// Appointment ================================
 			teacherGroup.GET("/listAppointments", appointment.ListAppointments)
 			teacherGroup.GET("/appointments/:id", appointment.GetAppointment)
 			teacherGroup.GET("/rooms", appointment.ListRooms)
@@ -164,14 +211,12 @@ func main() {
 			teacherGroup.PATCH("/updateAppointment/:id", appointment.UpdateAppointment)
 			teacherGroup.POST("/createRoom", appointment.CreateRoom)
 			teacherGroup.DELETE("/deleteAppointment/:id", appointment.DeleteAppointment)
-			// Evaluation ===================================
 			teacherGroup.GET("/evaluation/projects", evaluation.ListEvaluationProjects)
 			teacherGroup.GET("/evaluation/projects/years", evaluation.GetEvaluationProjectYears)
 			teacherGroup.GET("/evaluation/form/:appointment_id", evaluation.GetEvaluationForm)
 			teacherGroup.GET("/evaluation/result/:appointment_id", evaluation.GetEvaluationResult)
 			teacherGroup.GET("/evaluation/summary/:group_project_id", evaluation.GetEvaluationSummary)
 			teacherGroup.POST("/evaluation/save", evaluation.SaveEvaluation)
-			// Evaluation and Appointment Editing
 			teacherGroup.POST("/createAppointmentTypes", appointment.CreateAppointmentType)
 			teacherGroup.DELETE("/deleteAppointmentTypes/:id", appointment.DeleteAppointmentType)
 			teacherGroup.GET("/criteria", evaluation.ListCriteria)
@@ -182,14 +227,12 @@ func main() {
 			teacherGroup.POST("/createCriteriaLevel", evaluation.CreateCriteriaLevel)
 			teacherGroup.PATCH("/updateCriteriaLevel/:id", evaluation.UpdateCriteriaLevel)
 			teacherGroup.DELETE("/deleteCriteriaLevel/:id", evaluation.DeleteCriteriaLevel)
-			// == Topic ===========================
 			teacherGroup.PATCH("/topics/:id/approval", topic.ApproveTopic)
 			teacherGroup.GET("/topics", topic.ListTopics)
 			teacherGroup.GET("/topics/:id", topic.GetTopic)
 			teacherGroup.POST("/topics", topic.CreateTopic)
 			teacherGroup.PATCH("/topics/:id", topic.UpdateTopic)
 			teacherGroup.DELETE("/topics/:id", topic.DeleteTopic)
-			// == Storage ===========================
 			teacherGroup.GET("/storage/projects/pending", storage.ListPendingProjects)
 			teacherGroup.POST("/storage/projects/:id/approve", storage.ApproveProject)
 			teacherGroup.GET("/storage/projects", storage.ListProjects)
@@ -197,10 +240,8 @@ func main() {
 			teacherGroup.POST("/storage/projects", storage.CreateProject)
 			teacherGroup.PATCH("/storage/projects/:id", storage.UpdateProject)
 			teacherGroup.DELETE("/storage/projects/:id", storage.DeleteProject)
-			// Status Update
 			teacherGroup.PATCH("/groups/:id/status", updateStatus.UpdateGroupStatus)
 
-			// Select Group Advisor
 			teacherGroup.GET("/requests", advisor.GetAdvisorRequests)
 			teacherGroup.POST("/request/accept", advisor.AcceptRequest)
 			teacherGroup.POST("/request/reject", advisor.RejectRequest)
@@ -210,39 +251,31 @@ func main() {
 		studentGroup := protected.Group("/student")
 		studentGroup.Use(middleware.RoleGuard("Student"))
 		{
-			// ถ้า API ไหนที่นักเรียนเข้าถึงได้ ให้นำไปใส่ในนี้
 			studentGroup.GET("/getProcess", progress.GetProGressByID)
 			studentGroup.GET("/getProjectbyuser", progress.GetGroupProjectIDByStudentID)
 			studentGroup.POST("/assignProgress", progress.AssignProGress)
 			studentGroup.POST("/modifyProgress", progress.UpdateProGress)
 			studentGroup.DELETE("/deleteProgress", progress.DeleteProgress)
 
-			// Group
-			//studentGroup.GET("/group", group.GetGroupProject)
 			studentGroup.GET("/myGroup", group.GetMyGroup)
 			studentGroup.POST("/addMember", group.PostGroupMember)
 
-			//Select Advisor
 			studentGroup.POST("/select", advisor.SaveAdvisorSelection)
 			studentGroup.GET("/selection/:groupId", advisor.GetAdvisorSelection)
 			studentGroup.GET("/teachers/search", advisor.GetAllTeachers)
 
-			// Evaluation and Appointment
 			studentGroup.GET("/myAppointment", appointment.GetMyProjectAndAppointment)
 			studentGroup.GET("/evaluation/form", evaluation.GetStudentEvaluationForm)
 			studentGroup.GET("/evaluation/result", evaluation.GetStudentEvaluationResult)
 			studentGroup.POST("/evaluation/peer", evaluation.SavePeerEvaluation)
 
-			// Topic Selection
 			studentGroup.GET("/topic", topic.GetStudentTopic)
 			studentGroup.POST("/topics/:id/select", topic.SelectTopic)
 			studentGroup.POST("/topics/cancel-selection", topic.CancelSelection)
 
-			// Storage (Read-only for students)
 			studentGroup.GET("/storage/projects", storage.ListProjectsStudent)
 			studentGroup.GET("/storage/projects/:id", storage.GetProjectStudent)
 
-			// Project Information
 			studentGroup.POST("/project", project.CreateProject)
 			studentGroup.GET("/project", project.GetMyProject)
 			studentGroup.PATCH("/project/:id", project.UpdateProject)
@@ -251,7 +284,6 @@ func main() {
 		teacherOrStudentGroup := protected.Group("/groupProject")
 		teacherOrStudentGroup.Use(middleware.RoleGuard("Teacher", "Student"))
 		{
-			// ถ้า API ไหนที่ครูและนักเรียนเข้าถึงได้ ให้นำไปใส่ในนี้
 			teacherOrStudentGroup.GET("/topics", topic.ListTopics)
 			teacherOrStudentGroup.GET("/topics/:id", topic.GetTopic)
 			teacherOrStudentGroup.POST("/topics", topic.CreateTopic)
@@ -263,11 +295,11 @@ func main() {
 		issueGroup := protected.Group("/issues")
 		issueGroup.Use(middleware.RoleGuard("Admin", "Teacher", "Student"))
 		{
-			issueGroup.GET("", issues.GetIssueReports)         // GET /issues (List)
-			issueGroup.POST("", issues.CreateIssue)            // POST /issues (Create)
-			issueGroup.GET("/:id", issues.GetIssueReportByID)  // GET /issues/:id (Get By ID)
-			issueGroup.GET("/my", issues.GetMyIssues)          // GET /issues/my (Get My Issues)
-			issueGroup.PATCH("/:id", issues.UpdateIssueReport) // PATCH /issues/:id (User Edit)
+			issueGroup.GET("", issues.GetIssueReports)
+			issueGroup.POST("", issues.CreateIssue)
+			issueGroup.GET("/:id", issues.GetIssueReportByID)
+			issueGroup.GET("/my", issues.GetMyIssues)
+			issueGroup.PATCH("/:id", issues.UpdateIssueReport)
 		}
 
 		protected.POST("/logout", authHandler.Logout)

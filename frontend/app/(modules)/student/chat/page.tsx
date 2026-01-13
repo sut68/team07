@@ -33,14 +33,14 @@ const BG_COLOR = "#f0f2f5";
 const BORDER_COLOR = "#e5e7eb";
 
 
-const STORAGE_DOMAIN = "https://storage.capstonehub.me";
+const STORAGE_DOMAIN = process.env.NEXT_PUBLIC_STORAGE_URL ?? "http://localhost:8080";
 
 const getFileUrl = (path: string) => {
   if (!path) return "";
   if (/^https?:\/\//i.test(path)) return path;
 
   const clean = path.startsWith("/") ? path : `/${path}`;
-  return `${STORAGE_DOMAIN}${clean}`; // keep /storage
+  return `${STORAGE_DOMAIN}${clean}`;
 };
 
 export default function ChatPage() {
@@ -298,92 +298,89 @@ export default function ChatPage() {
     return /\.(jpg|jpeg|png|gif|webp)$/i.test(filename);
   };
 
-  const sendChat = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!roomJoined || !idsOk) return;
+const sendChat = async (e?: React.FormEvent) => {
+  if (e) e.preventDefault();
+  if (!roomJoined || !idsOk) return;
 
-    const text = message.trim();
-    if (!text && !selectedFile) return;
+  const text = message.trim();
+  if (!text && !selectedFile) return;
 
-    if (spamCheckEnabled && !selectedFile) {
-      try {
-        setCheckingSpam(true);
-        setSpamWarning(null);
-
-        const res = await CheckSpam({ text });
-        if (res.is_spam) {
-          setSpamWarning("ข้อความนี้ไม่เหมาะสมและจะไม่ถูกส่ง");
-          return;
-        }
-      } catch (err) {
-        console.error("Spam check failed:", err);
-      } finally {
-        setCheckingSpam(false);
-      }
-    }
-
-    const socket = socketRef.current;
-    if (!socket) {
-      alert("Socket not connected");
-      return;
-    }
-
-    setUploading(true);
-
+  if (spamCheckEnabled && !selectedFile) {
     try {
-      let finalMessage = text;
-      let finalType = 1;
-
-      if (selectedFile) {
-        const url = await UploadFile(selectedFile);
-        finalMessage = url;
-        finalType = 2;
-      }
-
-      const roomIdStr = `${groupProjectId}:${activeRoomId}`;
-      const payload = {
-        group_project_id: groupProjectId,
-        process_id: Number(activeRoomId),
-        sender_id: Number(userId),
-        type: finalType,
-        name: myUsername,
-        message: finalMessage,
-      };
-
-      const savedMessage = (await InsertChat(payload)) as any;
-      const dbId = Number(savedMessage?.id || savedMessage?.ID || 0);
-      const uniqueId = dbId > 0 ? dbId : Date.now() + Math.random();
-
-      const socketPayload = {
-        ...payload,
-        ...(typeof savedMessage === "object" ? savedMessage : {}),
-        id: uniqueId,
-        room_id: roomIdStr,
-        name: savedMessage?.name || savedMessage?.Name || myUsername,
-      };
-
-      socket.emit("send_message", socketPayload);
-      setMessage("");
+      setCheckingSpam(true);
       setSpamWarning(null);
-      clearFile();
-    } catch (err: any) {
-      const serverErrorMessage = err.response?.data?.error; 
-      const statusCode = err.response?.status;
 
-      console.error(`Backend Error (${statusCode}):`, serverErrorMessage);
-
-      if (statusCode === 413) {
-        alert(`ไฟล์ใหญ่เกินไป: ${serverErrorMessage || "จำกัดที่ 20MB"}`);
-      } else if (serverErrorMessage) {
-        alert(`ข้อผิดพลาดจากระบบ: ${serverErrorMessage}`);
-      } else {
-        alert("เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์");
+      const res = await CheckSpam({ text });
+      if (res.is_spam) {
+        setSpamWarning("ข้อความนี้ไม่เหมาะสมและจะไม่ถูกส่ง");
+        return;
       }
-
+    } catch (err) {
+      console.error("Spam check failed:", err);
     } finally {
-      setUploading(false);
+      setCheckingSpam(false);
     }
-  };
+  }
+
+  const socket = socketRef.current;
+  if (!socket) {
+    alert("Socket not connected");
+    return;
+  }
+
+  setUploading(true);
+
+  try {
+    let finalMessage = text;
+    let finalType = 1;
+
+    if (selectedFile) {
+      const url = await UploadFile(selectedFile);
+      finalMessage = url;
+      finalType = 2;
+    }
+
+    const roomIdStr = `${groupProjectId}:${activeRoomId}`;
+    const payload = {
+      group_project_id: groupProjectId,
+      process_id: Number(activeRoomId),
+      sender_id: Number(userId),
+      type: finalType,
+      name: myUsername,
+      message: finalMessage,
+    };
+
+    await InsertChat(payload);
+
+    const socketPayload = {
+      ...payload,
+      id: Date.now() + Math.random(),
+      room_id: roomIdStr,
+      name: myUsername,
+    };
+
+    socket.emit("send_message", socketPayload);
+    setMessage("");
+    setSpamWarning(null);
+    clearFile();
+  } catch (err: any) {
+    const serverErrorMessage = err.response?.data?.error;
+    const statusCode = err.response?.status;
+
+    console.error(`Backend Error (${statusCode}):`, serverErrorMessage);
+
+    if (statusCode === 413) {
+      alert(`ไฟล์ใหญ่เกินไป: ${serverErrorMessage || "จำกัดที่ 20MB"}`);
+    } else if (serverErrorMessage) {
+      alert(`ข้อผิดพลาดจากระบบ: ${serverErrorMessage}`);
+    } else {
+      alert("เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์");
+    }
+  } finally {
+    setUploading(false);
+  }
+};
+
 
   const deleteMessage = async (id: number) => {
     if (!id || isNaN(id)) {

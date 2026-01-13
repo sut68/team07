@@ -1,9 +1,6 @@
 import api from "./api";
 import type { FullChat, ChatCreate, GetChat, ChatDelete, Getteacher ,GroupProject } from "../interfaces/Chat";
 
-
-
-
 async function GetAllChat(payload: GetChat): Promise<FullChat[]> {
   const res = await api.get<FullChat[]>("/GetChat", {
     params: payload,
@@ -12,16 +9,14 @@ async function GetAllChat(payload: GetChat): Promise<FullChat[]> {
 }
 
 async function InsertChat(payload: ChatCreate) {
-
   await api.post("/SendChat", {
     group_project_id: payload.group_project_id,
     process_id: payload.process_id,
     sender_id: payload.sender_id,
     type: payload.type,
     name: payload.name,
-    message: payload.message, 
-    },
-  );
+    message: payload.message,
+  });
 }
 
 async function DropChat(payload: ChatDelete) {
@@ -42,16 +37,16 @@ async function Getteachergroup(payload: Getteacher): Promise<GroupProject[]> {
 }
 
 async function UploadFile(file: File): Promise<string> {
-
   const sm = encodeURIComponent(file.name);
-  
+
   const res = await api.post<{ url: string }>(`/uploadfile?filename=${sm}`, file, {
     headers: {
-
-      "Content-Type": "application/octet-stream", 
+      "Content-Type": "application/octet-stream",
     },
   });
-  return res.data.url; 
+
+  const base = api.defaults.baseURL || "";
+  return res.data.url.startsWith("http") ? res.data.url : `${base}${res.data.url}`;
 }
 
-export { GetAllChat, InsertChat, DropChat ,DropWholechat, Getteachergroup, UploadFile};
+export { GetAllChat, InsertChat, DropChat ,DropWholechat, Getteachergroup, UploadFile };
