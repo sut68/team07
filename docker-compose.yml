@@ -25,6 +25,7 @@ services:
       - vhost:/etc/nginx/vhost.d
       - html:/usr/share/nginx/html
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./nginx_config/custom.conf:/etc/nginx/conf.d/custom.conf:ro
       - acme:/etc/acme.sh
     environment:
       DEFAULT_EMAIL: b6640583@g.sut.ac.th
@@ -32,25 +33,6 @@ services:
     networks:
       - app-network
     restart: always
-
-  minio:
-    image: minio/minio
-    container_name: se68_minio
-    restart: always
-    environment:
-      MINIO_ROOT_USER: "admin"
-      MINIO_ROOT_PASSWORD: "install123"
-      VIRTUAL_HOST: storage.capstonehub.me
-      VIRTUAL_PORT: 9000
-      LETSENCRYPT_HOST: storage.capstonehub.me
-    volumes:
-      - minio_data:/data
-    command: server /data --console-address ":9001"
-    expose:
-      - "9000"
-      - "9001"
-    networks:
-      - app-network
 
   db:
     image: postgres:15-alpine
@@ -79,6 +61,41 @@ services:
     networks:
       - app-network
 
+  minio:
+    image: minio/minio:latest
+    container_name: se68_minio
+    restart: always
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-install123}
+      VIRTUAL_HOST: storage.capstonehub.me
+      VIRTUAL_PORT: 9000
+      LETSENCRYPT_HOST: storage.capstonehub.me
+    volumes:
+      - minio_data:/data
+    expose:
+      - "9000"
+      - "9001"
+    networks:
+      - app-network
+
+  minio-console:
+    image: minio/minio:latest
+    container_name: se68_minio_console
+    restart: always
+    command: server /data --console-address ":9001"
+    environment:
+      VIRTUAL_HOST: console.storage.capstonehub.me
+      VIRTUAL_PORT: 9001
+      LETSENCRYPT_HOST: console.storage.capstonehub.me
+    volumes:
+      - minio_data:/data
+    expose:
+      - "9001"
+    networks:
+      - app-network
+
   backend:
     build: ./backend
     container_name: se68_backend
@@ -88,14 +105,24 @@ services:
     depends_on:
       - db
       - minio
+    volumes:
+      - ./backend/uploads:/app/uploads
     environment:
       DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}?sslmode=disable
       FRONTEND_URL: https://capstonehub.me
-      MINIO_ENDPOINT: "minio:9000"
-      MINIO_ROOT_USER: "admin"
-      MINIO_ROOT_PASSWORD: "install123"
+      SMTP_SENDER_EMAIL: ${SMTP_SENDER_EMAIL}
+      SMTP_SENDER_NAME: ${SMTP_SENDER_NAME}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_USERNAME: ${SMTP_USERNAME}
       SOCKET_SERVICE_URL: "http://socket:3001"
+      MINIO_ENDPOINT: "minio:9000"
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-install123}
       GIN_MODE: release
+      APP_ENV: production
+      COOKIE_DOMAIN: capstonehub.me
       VIRTUAL_HOST: api.capstonehub.me
       VIRTUAL_PORT: 8080
       LETSENCRYPT_HOST: api.capstonehub.me
@@ -108,8 +135,8 @@ services:
     build:
       context: ./frontend
       args:
-        NEXT_PUBLIC_API_URL: "https://api.capstonehub.me"
-        NEXT_PUBLIC_SOCKET_URL: "https://socket.capstonehub.me"
+        NEXT_PUBLIC_API_URL: https://api.capstonehub.me
+        NEXT_PUBLIC_SOCKET_URL: https://socket.capstonehub.me
     container_name: se68_frontend
     restart: always
     expose:
@@ -118,6 +145,8 @@ services:
       - backend
       - socket
     environment:
+      NEXT_PUBLIC_API_URL: https://api.capstonehub.me
+      NEXT_PUBLIC_SOCKET_URL: https://socket.capstonehub.me
       VIRTUAL_HOST: capstonehub.me,www.capstonehub.me
       VIRTUAL_PORT: 5173
       LETSENCRYPT_HOST: capstonehub.me,www.capstonehub.me
