@@ -19,7 +19,7 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
 
     const [isNewsModalOpen, setIsNewsModalOpen] = useState(false);
     const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
     const [userInitial, setUserInitial] = useState("?");
     const { logoutClient } = useAuth();
 
@@ -194,7 +194,7 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
             </aside>
 
             {/* Header - Layout changes based on screen size */}
-            <header className={`${`header`} ${isSidebarCollapsed ? `headerCollapsed` : ''}`}>
+            <header className={`header ${isSidebarCollapsed ? 'headerCollapsed' : ''}`}>
                 {/* Desktop Navigation - Left (visible > 1400px) */}
                 <nav className={`navLeft`}>
                     <Link href="/teacher/dashboard" style={getNavStyle('/teacher/dashboard')}>หน้าหลัก</Link>
@@ -238,7 +238,7 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
             </header>
 
             {/* Main Content */}
-            <main className={`${`mainContent`} ${isSidebarCollapsed ? `mainContentCollapsed` : ''}`}>
+            <main className={`mainContent ${isSidebarCollapsed ? 'mainContentCollapsed' : ''}`}>
                 {children}
             </main>
         </div>

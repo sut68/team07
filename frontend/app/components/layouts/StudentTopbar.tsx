@@ -20,7 +20,7 @@ export default function StudentTopbar({ userRole, children }: { userRole: string
 
     // --- State Declarations (ประกาศตัวแปร State ไว้บนสุด) ---
     const [userInitial, setUserInitial] = useState("?");
-    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
     const pathname = usePathname() || '';
 
     const isActive = (href: string): boolean => {
@@ -180,14 +180,14 @@ export default function StudentTopbar({ userRole, children }: { userRole: string
             </aside>
 
             {/* Header - Layout changes based on screen size */}
-            <header className={`${`header`} ${isSidebarCollapsed ? `styles.headerCollapsed` : ''}`} role="banner">
+            <header className={`header ${isSidebarCollapsed ? 'headerCollapsed' : ''}`} role="banner">
                 {/* Desktop Navigation - Left (visible > 1400px) */}
                 <nav className={`navLeft`}>
                     <Link href="/student/dashboard" style={getNavStyle('/student/dashboard')}>หน้าหลัก</Link>
                     <Link href="/student/group" style={getNavStyle('/student/group')}>กลุ่มของฉัน</Link>
                     <Link href="/student/selectAdvisor" style={getNavStyle('/student/selectAdvisor')}>เลือกที่ปรึกษา</Link>
                     <Link href="/student/topic" style={getNavStyle('/student/topic')}>โครงงานของฉัน</Link>
-        
+
                 </nav>
 
                 {/* Logo - Centered */}
@@ -234,7 +234,7 @@ export default function StudentTopbar({ userRole, children }: { userRole: string
             </Modal>
 
             {/* Main Content */}
-            <main className={`${`mainContent`} ${isSidebarCollapsed ? `mainContentCollapsed` : ''}`}>
+            <main className={`mainContent ${isSidebarCollapsed ? 'mainContentCollapsed' : ''}`}>
                 {children}
             </main>
         </div>

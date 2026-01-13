@@ -16,7 +16,7 @@ export default function StudentDashboardPage() {
     };
 
     return (
-        <div className="container">
+        <div className="student-dashboard-container">
             {/* --- ส่วนซ้าย: ข่าวสาร (40%) --- */}
             <div className="news-section">
                 <NewsList currentUserId={user?.id} role="Student" />
