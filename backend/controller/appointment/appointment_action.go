@@ -30,7 +30,7 @@ func SearchGroup(c *gin.Context) {
 		query = query.Where("teacher_id = ?", claims.ID)
 	}
 
-	query = query.Where("group_status IN ?", []string{"Pending", "In Process"})
+	query = query.Where("group_status IN ?", []string{"Pending", "In Process", "Approved"})
 
 	if keyword != "" {
 		query = query.Where("name_project LIKE ? OR CAST(group_number AS TEXT) LIKE ?", "%"+keyword+"%", "%"+keyword+"%")
@@ -226,6 +226,11 @@ func UpdateAppointment(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if !payload.StartDateTime.IsZero() && payload.StartDateTime.Before(time.Now()) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ไม่สามารถแก้ไขนัดหมายเป็นเวลาย้อนหลังได้"})
 		return
 	}
 

@@ -32,7 +32,7 @@ export default function ProgressPage() {
   const getGroupOptionLabel = (g: any) => {
     const id = Number(g?.id ?? g?.ID ?? 0);
     const num = g?.group_number ?? g?.GroupNumber ?? "-";
-    return `กลุ่ม ${num} (ID: ${id})`;
+    return `กลุ่ม ${num} ปีการศึกษา ${g.year}`;
   };
 
   useEffect(() => {
@@ -261,7 +261,7 @@ export default function ProgressPage() {
                         rel="noreferrer"
                         style={styles.fileChip}
                       >
-                        📄 {getFilePath(item)}
+                        📄 {getFilePath(item).split("/uploads/progress/")}
                       </a>
                     )}
                   </div>

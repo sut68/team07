@@ -28,7 +28,7 @@ var MockUser = []entity.User{
 	{Username: "Teacher9@sut.ac.th", Password: jwtService.HashPassword("tch123"), Firstname: "Sarunya", Lastname: "Kanjanawattana", Email: "Teacher9@gmail.com", Phone: "0844444444", Pass: passNull, GenderID: 2, BranchID: 1, RoleID: 2, StatusID: 1},
 	{Username: "Teacher10@sut.ac.th", Password: jwtService.HashPassword("tch123"), Firstname: "Wichai", Lastname: "Srisuruk", Email: "Teacher10@gmail.com", Phone: "0855555555", Pass: passNull, GenderID: 1, BranchID: 1, RoleID: 2, StatusID: 1},
 
-	{Username: "B6500001@sut.ac.th", Password: jwtService.HashPassword("std123"), Firstname: "Rattasat", Lastname: "Thongsangiam", Email: "Student1@gmail.com", Phone: "0911234567", Pass: &passFalse, GenderID: 2, BranchID: 1, RoleID: 3, StatusID: 1},
+	{Username: "B6500001@sut.ac.th", Password: jwtService.HashPassword("std123"), Firstname: "Rattasat", Lastname: "Thongsangiam", Email: "Student1@gmail.com", Phone: "0911234567", Pass: &passFalse, GenderID: 1, BranchID: 1, RoleID: 3, StatusID: 1},
 	{Username: "B6500002@sut.ac.th", Password: jwtService.HashPassword("std123"), Firstname: "Thanathon", Lastname: "Hodon", Email: "Student2@gmail.com", Phone: "0922345678", Pass: &passFalse, GenderID: 1, BranchID: 1, RoleID: 3, StatusID: 1},
 	{Username: "B6500003@sut.ac.th", Password: jwtService.HashPassword("std123"), Firstname: "Student3", Lastname: "Sirilak", Email: "Student3@gmail.com", Phone: "0933456789", Pass: &passFalse, GenderID: 2, BranchID: 1, RoleID: 3, StatusID: 1},
 	{Username: "B6500004@sut.ac.th", Password: jwtService.HashPassword("std123"), Firstname: "Student4", Lastname: "Thammasak", Email: "Student4@gmail.com", Phone: "0944567890", Pass: &passFalse, GenderID: 1, BranchID: 1, RoleID: 3, StatusID: 1},
