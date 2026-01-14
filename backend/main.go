@@ -111,9 +111,9 @@ func main() {
 
 	cwd, _ := os.Getwd()
 
-	libName := "onnxruntime.dll"
+	libName := "libonnxruntime.so"
 	if runtime.GOOS == "linux" {
-		libName = "onnxruntime.so"
+		libName = "libonnxruntime.so"
 	}
 
 	spamCtrl, err := filter.NewSpamController(
