@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
-// Ensure these imports match your file structure
+
 import {
   GetProgress,
   AddProgress,
@@ -13,35 +13,48 @@ import {
 
 import { DropWholechat } from "@/app/services/chat";
 
+const web = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+
 export default function ProgressPage() {
-  // --- Logic State (Exact same as your provided code) ---
   const [gpji, setgpji] = useState<number>(0);
   const [userid, setuserid] = useState<number>(0);
   const [processlist, setprocesslist] = useState<any[]>([]);
 
-  // --- UI State ---
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // --- Form State ---
   const [file, setFile] = useState<File | null>(null);
   const [comment, setComment] = useState("");
   const [progressTitle, setProgressTitle] = useState("");
 
-  // --- Helpers ---
   const getId = (p: any) => Number(p?.id ?? p?.ID ?? 0) || 0;
   const getProgressTitle = (p: any) => String(p?.Name ?? "").trim();
   const getFilePath = (p: any) => String(p?.file ?? p?.File ?? "").trim();
   const getCommentText = (p: any) => String(p?.comment ?? "").trim();
   const getUpdatedAt = (p: any) => {
-    // Format date nicely
     const d = new Date(p?.update_at || new Date());
-    return isNaN(d.getTime()) ? "Just now" : d.toLocaleDateString("th-TH", { day: 'numeric', month: 'short', year: '2-digit' });
+    return isNaN(d.getTime())
+      ? "Just now"
+      : d.toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "2-digit" });
   };
 
-  // --- Effects ---
+  const fileHref = (path: string) => {
+    const p = String(path || "").trim();
+    if (!p) return "";
+    if (p.startsWith("http://") || p.startsWith("https://")) return p;
+    return `${process.env.NEXT_PUBLIC_API_URL}${p.startsWith("/") ? "" : "/"}${p}`;
+  };
+
+  const fileLabel = (path: string) => {
+    const p = String(path || "").trim();
+    if (!p) return "";
+    const noQuery = p.split("?")[0];
+    const parts = noQuery.split("/");
+    return parts[parts.length - 1] || noQuery;
+  };
+
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -73,7 +86,6 @@ export default function ProgressPage() {
       return;
     }
     const data = await GetProgress({ group_project_id: gpji });
-    // Sort Newest First to make the "Stacking" effect work
     const sorted = Array.isArray(data) ? data.sort((a, b) => getId(b) - getId(a)) : [];
     setprocesslist(sorted);
   };
@@ -85,7 +97,6 @@ export default function ProgressPage() {
     }
   }, [gpji, locked]);
 
-  // --- Handlers ---
   const openAddModal = () => {
     setModalMode("add");
     setFile(null);
@@ -153,7 +164,7 @@ export default function ProgressPage() {
       await DropWholechat({
         process_id: id,
         group_project_id: gpji,
-        name: ""
+        name: "",
       });
       await refresh();
     } catch (err) {
@@ -165,164 +176,210 @@ export default function ProgressPage() {
 
   return (
     <div className="sut-page">
-      {/* Inject CSS Styles directly for animations */}
       <style jsx global>{`
-        body { margin: 0; background-color: #f9f9f9; font-family: 'Sarabun', sans-serif; }
-        
-        /* 1. Animation for the Blocks appearing */
+        body {
+          margin: 0;
+          background-color: #f9f9f9;
+          font-family: "Sarabun", sans-serif;
+        }
+
         @keyframes popIn {
-          0% { opacity: 0; transform: scale(0.9) translateY(20px); }
-          100% { opacity: 1; transform: scale(1) translateY(0); }
+          0% {
+            opacity: 0;
+            transform: scale(0.9) translateY(20px);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+          }
         }
         .progress-block {
           animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
 
-        /* 2. Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #951B2E; }
+        ::-webkit-scrollbar {
+          width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+          background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+          background: #ccc;
+          border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+          background: #951b2e;
+        }
       `}</style>
 
-
-
-     
       <div style={styles.mainContainer}>
-     
         <div style={styles.headerSection}>
-            <div style={styles.titleWrapper}>
-                <div style={styles.redLine}></div>
-                <div>
-                    <h1 style={styles.pageTitle}>ติดตามความคืบหน้า</h1>
-                    <p style={styles.pageSubtitle}>บันทึกความคืบหน้าโครงงาน </p>
-                </div>
+          <div style={styles.titleWrapper}>
+            <div style={styles.redLine}></div>
+            <div>
+              <h1 style={styles.pageTitle}>ติดตามความคืบหน้า</h1>
+              <p style={styles.pageSubtitle}>บันทึกความคืบหน้าโครงงาน </p>
             </div>
+          </div>
 
-            {!locked && (
-                <button 
-                    onClick={openAddModal} 
-                    style={styles.addButton}
-                    onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-                    onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-                >
-                    + สร้างความคืบหน้า (New Block)
-                </button>
-            )}
+          {!locked && (
+            <button
+              onClick={openAddModal}
+              style={styles.addButton}
+              onMouseOver={(e) => (e.currentTarget.style.transform = "translateY(-2px)")}
+              onMouseOut={(e) => (e.currentTarget.style.transform = "translateY(0)")}
+            >
+              + สร้างความคืบหน้า (New Block)
+            </button>
+          )}
         </div>
 
-    
         <div style={styles.gridContainer}>
-            {locked ? (
-                <div style={styles.emptyState}>
-                    <div style={{fontSize: '40px', marginBottom: '10px'}}>🔒</div>
-                    <h3>ไม่พบข้อมูลกลุ่ม</h3>
-                    <p>กรุณาเข้าร่วมกลุ่มโครงงานก่อน</p>
-                </div>
-            ) : processlist.length === 0 ? (
-                <div style={styles.emptyState}>
-                    <div style={{fontSize: '40px', marginBottom: '10px'}}>📦</div>
-                    <h3>Start Building</h3>
-                    <p>กดปุ่มด้านบนเพื่อวางบล็อกแรกของคุณ</p>
-                </div>
-            ) : (
-                processlist.map((item, index) => {
-                    const id = getId(item);
-      
-                    const animDelay = { animationDelay: `${index * 0.05}s` }; 
-                    
-                    return (
-                        <div key={id} style={{...styles.blockCard, ...animDelay}} className="progress-block">
-                
-                            <div style={styles.watermarkNumber}>{processlist.length - index}</div>
+          {locked ? (
+            <div style={styles.emptyState}>
+              <div style={{ fontSize: "40px", marginBottom: "10px" }}>🔒</div>
+              <h3>ไม่พบข้อมูลกลุ่ม</h3>
+              <p>กรุณาเข้าร่วมกลุ่มโครงงานก่อน</p>
+            </div>
+          ) : processlist.length === 0 ? (
+            <div style={styles.emptyState}>
+              <div style={{ fontSize: "40px", marginBottom: "10px" }}>📦</div>
+              <h3>Start Building</h3>
+              <p>กดปุ่มด้านบนเพื่อวางบล็อกแรกของคุณ</p>
+            </div>
+          ) : (
+            processlist.map((item, index) => {
+              const id = getId(item);
 
-                            <div style={styles.cardHeader}>
-                                <span style={styles.dateBadge}>{getUpdatedAt(item)}</span>
-                                <div style={styles.actions}>
-                                    <button onClick={() => openEditModal(item)} style={styles.actionBtn}>✏️</button>
-                                    <button onClick={() => handleDelete(id)} style={styles.actionBtn}>🗑️</button>
-                                </div>
-                            </div>
+              const animDelay = { animationDelay: `${index * 0.05}s` };
 
-                            <div style={styles.cardBody}>
-                                <h3 style={styles.cardTitle}>{getProgressTitle(item)}</h3>
-                                <p style={styles.cardDesc}>{getCommentText(item)}</p>
-                                
-                                {getFilePath(item) && (
-                                    <a 
-                                      href={`${process.env.NEXT_PUBLIC_API_URL}${getFilePath(item)}`}
-                                      target="_blank"
-                                      rel="noreferrer" 
-                                      style={styles.fileChip}
-                                    >
-                                        📄 {getFilePath(item).split("/uploads/progress/")}
-                                    </a>
-                                )}
-                            </div>
-                            
-    
-                            <div style={styles.cardBottomStrip}></div>
-                        </div>
-                    );
-                })
-            )}
+              return (
+                <div key={id} style={{ ...styles.blockCard, ...animDelay }} className="progress-block">
+                  <div style={styles.watermarkNumber}>{processlist.length - index}</div>
+
+                  <div style={styles.cardHeader}>
+                    <span style={styles.dateBadge}>{getUpdatedAt(item)}</span>
+                    <div style={styles.actions}>
+                      <button onClick={() => openEditModal(item)} style={styles.actionBtn}>
+                        ✏️
+                      </button>
+                      <button onClick={() => handleDelete(id)} style={styles.actionBtn}>
+                        🗑️
+                      </button>
+                    </div>
+                  </div>
+
+                  <div style={styles.cardBody}>
+                    <h3 style={styles.cardTitle}>{getProgressTitle(item)}</h3>
+                    <p style={styles.cardDesc}>{getCommentText(item)}</p>
+
+                    {getFilePath(item) && (
+                      <a
+                        href={`${web}${getFilePath(item).startsWith("/") ? "" : "/"}${getFilePath(item)}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={styles.fileChip}
+                      >
+                        📄 {getFilePath(item).split("/").pop()}
+                      </a>
+                    )}
+                  </div>
+
+                  <div style={styles.cardBottomStrip}></div>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
 
-      {/* --- MODAL (Standard Light Theme) --- */}
-      {isModalOpen && (
-        <div style={styles.modalOverlay}>
-            <div style={styles.modal}>
-                <div style={styles.modalHeader}>
-                    <h3>{modalMode === 'add' ? 'เพิ่มบล็อกความคืบหน้า' : 'แก้ไขข้อมูล'}</h3>
-                    <button onClick={() => setIsModalOpen(false)} style={styles.closeBtn}>×</button>
-                </div>
-                <div style={styles.modalBody}>
-                     <div style={styles.formGroup}>
-                        <label style={styles.label}>หัวข้อ (Title)</label>
-                        <input 
-                            style={styles.input} 
-                            value={progressTitle}
-                            onChange={e => setProgressTitle(e.target.value)}
-                            placeholder="เช่น บทที่ 1 เสร็จสมบูรณ์"
-                        />
-                     </div>
-                     <div style={styles.formGroup}>
-                        <label style={styles.label}>รายละเอียด (Details)</label>
-                        <textarea 
-                            style={styles.textarea} 
-                            value={comment}
-                            onChange={e => setComment(e.target.value)}
-                            placeholder="รายละเอียดสิ่งที่ทำ..."
-                        />
-                     </div>
-                     <div style={styles.formGroup}>
-                        <label style={styles.label}>แนบไฟล์ (Attachment)</label>
-                        <input 
-                            type="file" 
-                            style={styles.fileInput}
-                            onChange={e => setFile(e.target.files?.[0] ?? null)}
-                        />
-                     </div>
-                </div>
-                <div style={styles.modalFooter}>
-                    <button onClick={() => setIsModalOpen(false)} style={styles.cancelBtn}>ยกเลิก</button>
-                    <button onClick={handleSubmit} disabled={isLoading} style={styles.saveBtn}>
-                        {isLoading ? 'กำลังบันทึก...' : 'บันทึก (Save Block)'}
-                    </button>
-                </div>
+     {isModalOpen && (
+      <div style={styles.modalOverlay}>
+        <div style={styles.modal}>
+          <div style={styles.modalHeader}>
+            <h3>{modalMode === "add" ? "เพิ่มบล็อกความคืบหน้า" : "แก้ไขข้อมูล"}</h3>
+            <button onClick={() => setIsModalOpen(false)} style={styles.closeBtn}>
+              ×
+            </button>
+          </div>
+
+          <div style={styles.modalBody}>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>หัวข้อ (Title)</label>
+              <input
+                style={styles.input}
+                value={progressTitle}
+                onChange={(e) => setProgressTitle(e.target.value)}
+                placeholder="เช่น บทที่ 1 เสร็จสมบูรณ์"
+              />
             </div>
+
+            <div style={styles.formGroup}>
+              <label style={styles.label}>รายละเอียด (Details)</label>
+              <textarea
+                style={styles.textarea}
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="รายละเอียดสิ่งที่ทำ..."
+              />
+            </div>
+
+            {/* ✅ SHOW CURRENT FILE WHEN EDITING */}
+            {modalMode === "edit" && selectedId != null && (
+              (() => {
+                const item = processlist.find(p => getId(p) === selectedId);
+                const path = item ? getFilePath(item) : "";
+                if (!path) return null;
+
+                const web = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+                const href = path.startsWith("http")
+                  ? path
+                  : `${web}${path.startsWith("/") ? "" : "/"}${path}`;
+
+                const filename = path.split("?")[0].split("/").pop();
+
+                return (
+                  <div style={{ marginBottom: "12px" }}>
+                    <a href={href} target="_blank" rel="noreferrer" style={styles.fileChip}>
+                      📎 Current file: {filename}
+                    </a>
+                  </div>
+                );
+              })()
+            )}
+
+            <div style={styles.formGroup}>
+              <label style={styles.label}>
+                แนบไฟล์ (Attachment)
+                {modalMode === "edit" && " – เลือกใหม่เฉพาะกรณีต้องการเปลี่ยน"}
+              </label>
+              <input
+                type="file"
+                style={styles.fileInput}
+                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              />
+            </div>
+          </div>
+
+          <div style={styles.modalFooter}>
+            <button onClick={() => setIsModalOpen(false)} style={styles.cancelBtn}>
+              ยกเลิก
+            </button>
+            <button onClick={handleSubmit} disabled={isLoading} style={styles.saveBtn}>
+              {isLoading ? "กำลังบันทึก..." : "บันทึก (Save Block)"}
+            </button>
+          </div>
         </div>
+      </div>
       )}
+
     </div>
   );
 }
 
-// --- STYLES: SUT Decoration + Unique Block UI ---
 const styles: Record<string, CSSProperties> = {
-  // 1. HEADER (SUT STYLE)
   topBar: {
-    backgroundColor: "#951B2E", // Official SUT Maroon
+    backgroundColor: "#951B2E",
     height: "60px",
     width: "100%",
     position: "sticky",
@@ -345,54 +402,59 @@ const styles: Record<string, CSSProperties> = {
   navItem: { cursor: "pointer", opacity: 0.9 },
   activeLink: { borderBottom: "2px solid white", fontWeight: "700", opacity: 1 },
   userIcon: {
-    width: "32px", height: "32px", backgroundColor: "white", color: "#951B2E",
-    borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold"
+    width: "32px",
+    height: "32px",
+    backgroundColor: "white",
+    color: "#951B2E",
+    borderRadius: "50%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontWeight: "bold",
   },
 
-  // 2. MAIN LAYOUT
   mainContainer: { maxWidth: "1200px", margin: "0 auto", padding: "40px 20px", minHeight: "calc(100vh - 60px)" },
-  
-  // 3. PAGE HEADER
+
   headerSection: {
-    display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "40px"
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "40px",
   },
   titleWrapper: { display: "flex", gap: "15px", alignItems: "center" },
   redLine: { width: "5px", height: "50px", backgroundColor: "#951B2E", borderRadius: "4px" },
   pageTitle: { fontSize: "28px", fontWeight: "800", color: "#333", margin: 0 },
   pageSubtitle: { fontSize: "14px", color: "#666", marginTop: "5px" },
-  
-  // 4. ACTION BUTTON
+
   addButton: {
     backgroundColor: "#951B2E",
     color: "white",
     border: "none",
     padding: "12px 24px",
-    borderRadius: "50px", // Rounded pill shape
+    borderRadius: "50px",
     fontSize: "15px",
     fontWeight: "600",
     cursor: "pointer",
-    boxShadow: "0 4px 15px rgba(149, 27, 46, 0.3)", // Red glow shadow
+    boxShadow: "0 4px 15px rgba(149, 27, 46, 0.3)",
     display: "flex",
     alignItems: "center",
     gap: "8px",
     transition: "transform 0.2s ease",
   },
 
-  // 5. THE UNIQUE UI (GRID SYSTEM)
   gridContainer: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", // Masonry effect
+    gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
     gap: "25px",
   },
-  
-  // 6. BLOCK CARD (White with SUT accents)
+
   blockCard: {
     backgroundColor: "white",
     borderRadius: "16px",
     padding: "24px",
     position: "relative",
     overflow: "hidden",
-    boxShadow: "0 10px 30px rgba(0,0,0,0.05)", // Soft clean shadow
+    boxShadow: "0 10px 30px rgba(0,0,0,0.05)",
     border: "1px solid #eee",
     display: "flex",
     flexDirection: "column",
@@ -400,20 +462,25 @@ const styles: Record<string, CSSProperties> = {
     minHeight: "200px",
     transition: "transform 0.2s",
   },
-  // The big number in the background
   watermarkNumber: {
     position: "absolute",
-    top: "-10px",
+    bottom: "-10px",
     right: "10px",
+    top: "auto",
     fontSize: "100px",
     fontWeight: "900",
-    color: "#f3f3f3", // Very subtle gray
+    color: "#f3f3f3",
     zIndex: 0,
     pointerEvents: "none",
-    fontFamily: "Arial, sans-serif"
+    fontFamily: "Arial, sans-serif",
   },
   cardHeader: {
-    display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px", zIndex: 1, position: 'relative'
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "15px",
+    zIndex: 1,
+    position: "relative",
   },
   dateBadge: {
     fontSize: "12px",
@@ -425,23 +492,36 @@ const styles: Record<string, CSSProperties> = {
   },
   actions: { display: "flex", gap: "5px" },
   actionBtn: { border: "none", background: "none", cursor: "pointer", fontSize: "14px", opacity: 0.5, transition: "opacity 0.2s" },
-  
-  cardBody: { zIndex: 1, position: 'relative', flex: 1 },
+
+  cardBody: { zIndex: 1, position: "relative", flex: 1 },
   cardTitle: { fontSize: "18px", fontWeight: "700", color: "#222", marginBottom: "8px" },
   cardDesc: { fontSize: "14px", color: "#555", lineHeight: "1.6", whiteSpace: "pre-wrap", marginBottom: "15px" },
-  
+
   fileChip: {
-    display: "inline-flex", alignItems: "center",
-    fontSize: "12px", color: "#555",
-    backgroundColor: "#f5f5f5", border: "1px solid #e0e0e0",
-    padding: "6px 12px", borderRadius: "20px", textDecoration: "none",
-    fontWeight: "500"
+    display: "inline-flex",
+    alignItems: "center",
+    fontSize: "12px",
+    color: "#555",
+    backgroundColor: "#f5f5f5",
+    border: "1px solid #e0e0e0",
+    padding: "6px 12px",
+    borderRadius: "20px",
+    textDecoration: "none",
+    fontWeight: "500",
+    maxWidth: "100%",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
   },
   cardBottomStrip: {
-    position: "absolute", bottom: 0, left: 0, width: "100%", height: "4px", backgroundColor: "#951B2E"
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    width: "100%",
+    height: "4px",
+    backgroundColor: "#951B2E",
   },
 
-  // 7. EMPTY STATE
   emptyState: {
     gridColumn: "1 / -1",
     textAlign: "center",
@@ -449,42 +529,92 @@ const styles: Record<string, CSSProperties> = {
     backgroundColor: "white",
     borderRadius: "16px",
     border: "2px dashed #ddd",
-    color: "#888"
+    color: "#888",
   },
 
-  // 8. MODAL (Clean Light Theme)
   modalOverlay: {
-    position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: "rgba(0,0,0,0.5)",
-    display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000,
-    backdropFilter: "blur(3px)"
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 1000,
+    backdropFilter: "blur(3px)",
   },
   modal: {
-    backgroundColor: "white", width: "500px", maxWidth: "90%",
-    borderRadius: "12px", boxShadow: "0 20px 50px rgba(0,0,0,0.2)", overflow: "hidden"
+    backgroundColor: "white",
+    width: "500px",
+    maxWidth: "90%",
+    borderRadius: "12px",
+    boxShadow: "0 20px 50px rgba(0,0,0,0.2)",
+    overflow: "hidden",
   },
   modalHeader: {
-    padding: "20px", backgroundColor: "#f9f9f9", borderBottom: "1px solid #eee",
-    display: "flex", justifyContent: "space-between", alignItems: "center"
+    padding: "20px",
+    backgroundColor: "#f9f9f9",
+    borderBottom: "1px solid #eee",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   closeBtn: { border: "none", background: "none", fontSize: "24px", cursor: "pointer", color: "#999" },
   modalBody: { padding: "24px" },
   formGroup: { marginBottom: "20px" },
   label: { display: "block", fontSize: "14px", fontWeight: "600", marginBottom: "8px", color: "#333" },
   input: {
-    width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid #ddd", fontSize: "14px", outline: "none"
+    width: "100%",
+    padding: "10px",
+    borderRadius: "6px",
+    border: "1px solid #ddd",
+    fontSize: "14px",
+    outline: "none",
+    boxSizing: "border-box",
   },
   textarea: {
-    width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid #ddd", fontSize: "14px", minHeight: "100px", outline: "none", fontFamily: "inherit"
+    width: "100%",
+    padding: "10px",
+    borderRadius: "6px",
+    border: "1px solid #ddd",
+    fontSize: "14px",
+    minHeight: "100px",
+    outline: "none",
+    fontFamily: "inherit",
+    boxSizing: "border-box",
   },
-  fileInput: { fontSize: "14px" },
+  fileInput: { 
+    fontSize: "14px",
+    width: "100%",
+    padding: "10px",
+    borderRadius: "6px",
+    border: "1px solid #ddd",
+    boxSizing: "border-box",
+  },
   modalFooter: {
-    padding: "20px", borderTop: "1px solid #eee", display: "flex", justifyContent: "flex-end", gap: "10px", backgroundColor: "#f9f9f9"
+    padding: "20px",
+    borderTop: "1px solid #eee",
+    display: "flex",
+    justifyContent: "flex-end",
+    gap: "10px",
+    backgroundColor: "#f9f9f9",
   },
   cancelBtn: {
-    padding: "10px 20px", borderRadius: "6px", border: "1px solid #ddd", background: "white", cursor: "pointer"
+    padding: "10px 20px",
+    borderRadius: "6px",
+    border: "1px solid #ddd",
+    background: "white",
+    cursor: "pointer",
   },
   saveBtn: {
-    padding: "10px 20px", borderRadius: "6px", border: "none", background: "#951B2E", color: "white", cursor: "pointer", fontWeight: "600"
-  }
+    padding: "10px 20px",
+    borderRadius: "6px",
+    border: "none",
+    background: "#951B2E",
+    color: "white",
+    cursor: "pointer",
+    fontWeight: "600",
+  },
 };

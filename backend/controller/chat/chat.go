@@ -21,52 +21,54 @@ import (
 	"github.com/sut68/team07/backend/entity"
 )
 
-// --- Constants ---
 const (
 	socketBroadcastBaseURL = "http://socket:3001"
 	ChatTypeText           = 1
 	ChatTypeFile           = 2
-	MaxFileSize            = 20 * 1024 * 1024 // 20MB
+	MaxFileSize            = 20 * 1024 * 1024
 	maxNameLen             = 120
 	ChatBucket             = "chat-uploads"
-	ProgressBucket         = "progress-reports"
 )
 
 var minioClient *minio.Client
 
-// --- Initialization: Handles Connection & Auto-Bucket Creation ---
 func init() {
 	endpoint := os.Getenv("MINIO_ENDPOINT")
-	if endpoint == "" { endpoint = "minio:9000" }
-	
+	if endpoint == "" {
+		endpoint = "minio:9000"
+	}
+
 	accessKey := os.Getenv("MINIO_ROOT_USER")
-	if accessKey == "" { accessKey = "admin" }
-	
+	if accessKey == "" {
+		accessKey = "admin"
+	}
+
 	secretKey := os.Getenv("MINIO_ROOT_PASSWORD")
-	if secretKey == "" { secretKey = "install123" }
+	if secretKey == "" {
+		secretKey = "install123"
+	}
 
 	client, err := minio.New(endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
 		Secure: false,
 	})
 	if err != nil {
-		fmt.Printf("[CRITICAL] MinIO Connection Failed: %v\n", err)
+		fmt.Printf("minio fail: %v\n", err)
 		return
 	}
 	minioClient = client
 
-	
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	buckets := []string{ChatBucket, ProgressBucket}
+	buckets := []string{ChatBucket}
 	for _, b := range buckets {
 		exists, err := minioClient.BucketExists(ctx, b)
 		if err == nil && !exists {
 			err = minioClient.MakeBucket(ctx, b, minio.MakeBucketOptions{})
 			if err == nil {
 				fmt.Printf("[INFO] Created bucket: %s\n", b)
-			
+
 				if b == ChatBucket {
 					policy := fmt.Sprintf(`{"Version":"2012-10-17","Statement":[{"Action":["s3:GetObject"],"Effect":"Allow","Principal":"*","Resource":["arn:aws:s3:::%s/*"]}]}`, b)
 					_ = minioClient.SetBucketPolicy(ctx, b, policy)
@@ -76,7 +78,6 @@ func init() {
 	}
 }
 
-// --- Logic Helpers ---
 
 type InsertChatBody struct {
 	GroupProjectID uint   `json:"group_project_id"`
@@ -109,7 +110,9 @@ func sanitizeFilename(name string) string {
 		}
 	}
 	out := b.String()
-	if len(out) > maxNameLen { out = out[:maxNameLen] }
+	if len(out) > maxNameLen {
+		out = out[:maxNameLen]
+	}
 	return out
 }
 
@@ -172,7 +175,6 @@ func GetFile(c *gin.Context) {
 	})
 }
 
-
 func GetAllChat(c *gin.Context) {
 	db := database.DB()
 	group, _ := strconv.ParseUint(c.Query("group_project_id"), 10, 64)
@@ -216,16 +218,16 @@ func InsertChat(c *gin.Context) {
 	}
 
 	broadcast("/broadcast/chat", gin.H{
-		"id":         chat.ID,
-		"room_id":    roomKey(chat.GroupProjectID, chat.ProcessID),
+		"id":               chat.ID,
+		"room_id":          roomKey(chat.GroupProjectID, chat.ProcessID),
 		"group_project_id": chat.GroupProjectID,
-		"process_id": chat.ProcessID,
-		"sender_id":  chat.SenderID,
-		"name":       chat.Name,
-		"message":    chat.Message,
-		"type":       chat.ChatType,
-		"created_at": chat.CreatedAt,
-		"updated_at": chat.UpdatedAt,
+		"process_id":       chat.ProcessID,
+		"sender_id":        chat.SenderID,
+		"name":             chat.Name,
+		"message":          chat.Message,
+		"type":             chat.ChatType,
+		"created_at":       chat.CreatedAt,
+		"updated_at":       chat.UpdatedAt,
 	})
 
 	log.InsertLog(c, 9)
@@ -239,7 +241,7 @@ func DeleteChat(c *gin.Context) {
 	var chat entity.Chat
 	if err := db.Where("id = ?", id).First(&chat).Error; err == nil {
 		if chat.ChatType == ChatTypeFile {
-		
+
 			parts := strings.Split(chat.Message, "/")
 			_ = minioClient.RemoveObject(context.Background(), ChatBucket, parts[len(parts)-1], minio.RemoveObjectOptions{})
 		}

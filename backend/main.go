@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -76,14 +77,18 @@ func main() {
 		log.Printf("Warning: MinIO init failed: %v", err)
 	}
 
-	r.GET("/storage/:bucket/:object", func(c *gin.Context) {
+	r.GET("/storage/:bucket/*object", func(c *gin.Context) {
 		if minioClient == nil {
 			c.Status(503)
 			return
 		}
 
 		bucket := c.Param("bucket")
-		objectName := c.Param("object")
+		objectName := strings.TrimPrefix(c.Param("object"), "/")
+		if objectName == "" {
+			c.Status(404)
+			return
+		}
 
 		ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
 		defer cancel()
@@ -223,7 +228,7 @@ func main() {
 			teacherGroup.GET("/criteria/:id", evaluation.GetCriteria)
 			teacherGroup.POST("/createCriteria", evaluation.CreateCriteria)
 			teacherGroup.PATCH("/updateCriteria/:id", evaluation.UpdateCriteria)
-			teacherGroup.DELETE("/deleteCriteria/:id", evaluation.DeleteCriteria)
+			teacherGroup.DELETE("/criteria/:id", evaluation.DeleteCriteria)
 			teacherGroup.POST("/createCriteriaLevel", evaluation.CreateCriteriaLevel)
 			teacherGroup.PATCH("/updateCriteriaLevel/:id", evaluation.UpdateCriteriaLevel)
 			teacherGroup.DELETE("/deleteCriteriaLevel/:id", evaluation.DeleteCriteriaLevel)
