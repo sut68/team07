@@ -48,7 +48,6 @@ const THEME_RED = "#8A011D";
 const THEME_RED_LIGHT = "#a81835";
 const BG_COLOR = "#f0f2f5";
 const BORDER_COLOR = "#e5e7eb";
-const API_URL = "http://localhost:8080";
 
 const STORAGE_DOMAIN =
   process.env.NEXT_PUBLIC_STORAGE_URL ?? "http://localhost:8080";
@@ -219,10 +218,7 @@ export default function ChatPage() {
       const rawData = Array.isArray(res) ? res : [];
       setChats(rawData.map(normalizeChat));
 
-      setTimeout(
-        () => bottomRef.current?.scrollIntoView({ behavior: "auto" }),
-        50
-      );
+      setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "auto" }), 50);
     } catch (error) {
       console.error("Error loading chats:", error);
       setChats([]);
@@ -246,9 +242,7 @@ export default function ChatPage() {
           .filter((p: any) => Number.isFinite(p.id) && p.id > 0);
 
         setProcesses(normalized);
-
-        if (normalized.length > 0) setActiveRoomId(normalized[0].id);
-        else setActiveRoomId(null);
+        setActiveRoomId(normalized.length > 0 ? normalized[0].id : null);
       } catch (e) {
         console.error("GetProgress failed:", e);
         setProcesses([]);
@@ -281,10 +275,7 @@ export default function ChatPage() {
         return [...otherMessages, cleanMsg];
       });
 
-      setTimeout(
-        () => bottomRef.current?.scrollIntoView({ behavior: "smooth" }),
-        50
-      );
+      setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
     };
 
     const handleDelete = (payload: any) => {
@@ -374,10 +365,10 @@ export default function ChatPage() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const isImage = (filename: string) => {
-    return /\.(jpg|jpeg|png|gif|webp)$/i.test(filename);
-  };
+  const isImage = (filename: string) => /\.(jpg|jpeg|png|gif|webp)$/i.test(filename);
 
+  // ✅ FIX: Only save (InsertChat). Do NOT socket.emit("send_message") here.
+  // Backend (or HTTP broadcast) should be the single broadcaster.
   const sendChat = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!roomJoined || !idsOk) return;
@@ -402,12 +393,6 @@ export default function ChatPage() {
       }
     }
 
-    const socket = socketRef.current;
-    if (!socket) {
-      alert("Socket not connected");
-      return;
-    }
-
     setUploading(true);
 
     try {
@@ -420,7 +405,6 @@ export default function ChatPage() {
         finalType = 2;
       }
 
-      const roomIdStr = `${groupProjectId}:${activeRoomId}`;
       const payload = {
         group_project_id: groupProjectId,
         process_id: Number(activeRoomId),
@@ -430,21 +414,10 @@ export default function ChatPage() {
         message: finalMessage,
       };
 
-      const savedMessage = (await InsertChat(payload)) as any;
-      const dbId = Number(savedMessage?.id || savedMessage?.ID || 0);
-      const uniqueId = dbId > 0 ? dbId : Date.now() + Math.random();
-
-      const socketPayload = {
-        ...payload,
-        ...(typeof savedMessage === "object" ? savedMessage : {}),
-        id: uniqueId,
-        room_id: roomIdStr,
-        name: savedMessage?.name || savedMessage?.Name || myUsername,
-      };
-
-      socket.emit("send_message", socketPayload);
+      await InsertChat(payload);
 
       setMessage("");
+      setSpamWarning(null);
       clearFile();
     } catch (err: any) {
       const serverErrorMessage = err?.response?.data?.error;
@@ -533,31 +506,10 @@ export default function ChatPage() {
           zIndex: 10,
         }}
       >
-        <div
-          style={{
-            padding: "24px 20px",
-            borderBottom: `1px solid ${BORDER_COLOR}`,
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              marginBottom: 8,
-            }}
-          >
-            <div
-              style={{ width: 4, height: 24, background: THEME_RED, borderRadius: 2 }}
-            />
-            <h1
-              style={{
-                fontSize: 20,
-                fontWeight: 700,
-                color: "#1f1f1f",
-                margin: 0,
-              }}
-            >
+        <div style={{ padding: "24px 20px", borderBottom: `1px solid ${BORDER_COLOR}` }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+            <div style={{ width: 4, height: 24, background: THEME_RED, borderRadius: 2 }} />
+            <h1 style={{ fontSize: 20, fontWeight: 700, color: "#1f1f1f", margin: 0 }}>
               ห้องสนทนา (อาจารย์)
             </h1>
           </div>
@@ -646,9 +598,7 @@ export default function ChatPage() {
             <div style={{ padding: 20, textAlign: "center", color: "#999" }}>
               <RocketOutlined style={{ fontSize: 24, marginBottom: 8 }} />
               <div>
-                {processes.length === 0
-                  ? "ยังไม่มีหัวข้อที่อนุมัติ"
-                  : "ไม่พบหัวข้อที่ค้นหา"}
+                {processes.length === 0 ? "ยังไม่มีหัวข้อที่อนุมัติ" : "ไม่พบหัวข้อที่ค้นหา"}
               </div>
             </div>
           ) : (
@@ -683,9 +633,7 @@ export default function ChatPage() {
                     size="small"
                     icon={<CommentOutlined />}
                     style={{
-                      backgroundColor: isActive
-                        ? "rgba(255,255,255,0.2)"
-                        : "#f0f0f0",
+                      backgroundColor: isActive ? "rgba(255,255,255,0.2)" : "#f0f0f0",
                       color: isActive ? "#fff" : "#666",
                     }}
                   />
@@ -701,22 +649,14 @@ export default function ChatPage() {
                       {(p as any).Name ?? (p as any).file ?? `Process ${p.id}`}
                     </div>
                   </div>
-                  {isActive && (
-                    <CheckCircleOutlined style={{ color: "rgba(255,255,255,0.8)" }} />
-                  )}
+                  {isActive && <CheckCircleOutlined style={{ color: "rgba(255,255,255,0.8)" }} />}
                 </div>
               );
             })
           )}
         </div>
 
-        <div
-          style={{
-            padding: 16,
-            borderTop: `1px solid ${BORDER_COLOR}`,
-            background: "#f8f9fa",
-          }}
-        >
+        <div style={{ padding: 16, borderTop: `1px solid ${BORDER_COLOR}`, background: "#f8f9fa" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <Avatar style={{ backgroundColor: THEME_RED }} icon={<UserOutlined />} />
             <div style={{ display: "flex", flexDirection: "column" }}>
@@ -753,7 +693,11 @@ export default function ChatPage() {
                 gap: 8,
               }}
             >
-              {locked ? "ยังไม่พร้อมใช้งาน" : currentRoom ? (currentRoom as any).Name : "เลือกหัวข้อ"}
+              {locked
+                ? "ยังไม่พร้อมใช้งาน"
+                : currentRoom
+                ? (currentRoom as any).Name
+                : "เลือกหัวข้อ"}
             </div>
             <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>
               {locked
@@ -797,20 +741,20 @@ export default function ChatPage() {
             </div>
           ) : !roomJoined ? (
             <div style={{ margin: "auto", textAlign: "center", color: "#9ca3af" }}>
-              <Empty
-                description="เลือกหัวข้อทางซ้ายเพื่อเริ่มแชท"
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-              />
-            </div>
-          ) : chats.length === 0 ? (
-            <div style={{ margin: "auto", textAlign: "center", color: "#9ca3af" }}>
-              <MessageOutlined style={{ fontSize: 48, marginBottom: 16, color: "#e5e7eb" }} />
-              <div style={{ fontWeight: 600, color: "#374151" }}>ยังไม่มีข้อความ</div>
-              <div style={{ fontSize: 13 }}>พิมพ์ข้อความแรกเพื่อเริ่มคุยกับนักศึกษา</div>
+              <Empty description="เลือกหัวข้อทางซ้ายเพื่อเริ่มแชท" image={Empty.PRESENTED_IMAGE_SIMPLE} />
             </div>
           ) : filteredChats.length === 0 ? (
+            // ✅ FIX: use filteredChats here (not chats)
             <div style={{ margin: "auto", textAlign: "center", color: "#9ca3af" }}>
-              <Empty description="ไม่พบข้อความที่ค้นหา" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+              {chats.length === 0 ? (
+                <>
+                  <MessageOutlined style={{ fontSize: 48, marginBottom: 16, color: "#e5e7eb" }} />
+                  <div style={{ fontWeight: 600, color: "#374151" }}>ยังไม่มีข้อความ</div>
+                  <div style={{ fontSize: 13 }}>พิมพ์ข้อความแรกเพื่อเริ่มคุยกับนักศึกษา</div>
+                </>
+              ) : (
+                <Empty description="ไม่พบข้อความที่ค้นหา" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+              )}
             </div>
           ) : (
             filteredChats.map((c, index) => {
@@ -828,11 +772,7 @@ export default function ChatPage() {
                   }}
                 >
                   {!isMe && (
-                    <Avatar
-                      size={32}
-                      style={{ backgroundColor: "#1890ff", marginBottom: 4 }}
-                      icon={<UserOutlined />}
-                    >
+                    <Avatar size={32} style={{ backgroundColor: "#1890ff", marginBottom: 4 }} icon={<UserOutlined />}>
                       {(c.name || "").charAt(0).toUpperCase()}
                     </Avatar>
                   )}
@@ -863,12 +803,7 @@ export default function ChatPage() {
                             <img
                               src={getFileUrl(c.message)}
                               alt="sent file"
-                              style={{
-                                maxWidth: "200px",
-                                borderRadius: "8px",
-                                display: "block",
-                                cursor: "pointer",
-                              }}
+                              style={{ maxWidth: "200px", borderRadius: "8px", display: "block", cursor: "pointer" }}
                               onClick={() => window.open(getFileUrl(c.message), "_blank")}
                             />
                           ) : (
@@ -878,10 +813,7 @@ export default function ChatPage() {
                                 href={getFileUrl(c.message)}
                                 target="_blank"
                                 rel="noreferrer"
-                                style={{
-                                  color: isMe ? "white" : "blue",
-                                  textDecoration: "underline",
-                                }}
+                                style={{ color: isMe ? "white" : "blue", textDecoration: "underline" }}
                               >
                                 {c.message.split("/").pop() || "Download File"}
                               </a>
@@ -1038,10 +970,8 @@ export default function ChatPage() {
               disabled={locked || !roomJoined || (!message.trim() && !selectedFile) || uploading || checkingSpam}
               icon={uploading || checkingSpam ? <LoadingOutlined /> : <SendOutlined style={{ marginLeft: 2 }} />}
               style={{
-                background:
-                  locked || !roomJoined || (!message.trim() && !selectedFile) ? undefined : THEME_RED,
-                borderColor:
-                  locked || !roomJoined || (!message.trim() && !selectedFile) ? undefined : THEME_RED,
+                background: locked || !roomJoined || (!message.trim() && !selectedFile) ? undefined : THEME_RED,
+                borderColor: locked || !roomJoined || (!message.trim() && !selectedFile) ? undefined : THEME_RED,
                 minWidth: 40,
               }}
             />

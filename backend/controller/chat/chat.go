@@ -193,7 +193,6 @@ func InsertChat(c *gin.Context) {
 	var body InsertChatBody
 	_ = c.ShouldBindJSON(&body)
 
-	
 	if body.GroupProjectID == 0 || body.SenderID == 0 || body.Message == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing data"})
 		return
@@ -217,10 +216,16 @@ func InsertChat(c *gin.Context) {
 	}
 
 	broadcast("/broadcast/chat", gin.H{
-		"room_id": roomKey(chat.GroupProjectID, chat.ProcessID),
-		"name":    chat.Name,
-		"message": chat.Message,
-		"type":    chat.ChatType,
+		"id":         chat.ID,
+		"room_id":    roomKey(chat.GroupProjectID, chat.ProcessID),
+		"group_project_id": chat.GroupProjectID,
+		"process_id": chat.ProcessID,
+		"sender_id":  chat.SenderID,
+		"name":       chat.Name,
+		"message":    chat.Message,
+		"type":       chat.ChatType,
+		"created_at": chat.CreatedAt,
+		"updated_at": chat.UpdatedAt,
 	})
 
 	log.InsertLog(c, 9)
