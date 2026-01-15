@@ -13,7 +13,7 @@ import {
 
 import { DropWholechat } from "@/app/services/chat";
 
-const web = process.env.NEXT_PUBLIC_BACKEND_URL;
+const web = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/team07api";
 
 export default function ProgressPage() {
   const [gpji, setgpji] = useState<number>(0);
@@ -44,7 +44,7 @@ export default function ProgressPage() {
     const p = String(path || "").trim();
     if (!p) return "";
     if (p.startsWith("http://") || p.startsWith("https://")) return p;
-    return `${process.env.NEXT_PUBLIC_BACKEND_URL}${p.startsWith("/") ? "" : "/"}${p}`;
+    return `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/team07api"}${p.startsWith("/") ? "" : "/"}${p}`;
   };
 
   const fileLabel = (path: string) => {
@@ -331,7 +331,7 @@ export default function ProgressPage() {
                 const path = item ? getFilePath(item) : "";
                 if (!path) return null;
 
-                const web = process.env.NEXT_PUBLIC_BACKEND_URL;
+                const web = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/team07api";
                 const href = path.startsWith("http")
                   ? path
                   : `${web}${path.startsWith("/") ? "" : "/"}${path}`;

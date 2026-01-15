@@ -353,7 +353,7 @@ export default function TopicSelectPage() {
                                     <div style={{ marginTop: 16 }}>
                                         <Title level={5}><PaperClipOutlined /> ไฟล์แนบ</Title>
                                         <a
-                                            href={`${process.env.NEXT_PUBLIC_API_URL}/uploads/topics/${myTopic.file_attachment}`}
+                                            href={`${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/team07api"}/uploads/topics/${myTopic.file_attachment}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                         >
@@ -459,7 +459,7 @@ export default function TopicSelectPage() {
                                 <div style={{ marginTop: 8 }}>
                                     <Text strong><PaperClipOutlined /> ไฟล์แนบ:</Text>
                                     <a
-                                        href={`${process.env.NEXT_PUBLIC_API_URL}/uploads/topics/${viewTopic.file_attachment}`}
+                                        href={`${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/team07api"}/uploads/topics/${viewTopic.file_attachment}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         style={{ marginLeft: 8 }}

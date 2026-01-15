@@ -760,7 +760,7 @@ export default function StudentTopicPage() {
                                                     const link = document.createElement('a');
                                                     const filePath = myProject.file_path.replace(/^\.\//, '');
                                                     const fullPath = filePath.startsWith('uploads') ? filePath : `uploads/projects/${filePath}`;
-                                                    link.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/${fullPath}`;
+                                                    link.href = `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/team07api"}/${fullPath}`;
                                                     link.download = myProject.file_path.split('/').pop() || 'document';
                                                     link.target = '_blank';
                                                     document.body.appendChild(link);

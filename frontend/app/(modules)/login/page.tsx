@@ -66,18 +66,28 @@ export default function LoginPage() {
       };
 
       const res = await SignIn(payload);
-      console.log("Login Successful", res.data);
+      console.log("Login Successful - Full Response:", res);
+      console.log("Login Successful - Data:", res.data);
 
       if (res.data) {
         localStorage.setItem("user_id", String(res.data.id));
-        localStorage.setItem("role", res.data.role);
+        // Check if role exists before accessing
+        if (res.data.role) {
+             localStorage.setItem("role", res.data.role);
+        } else {
+             console.warn("Role is missing in response data:", res.data);
+        }
         localStorage.setItem("username", res.data.username);
       }
 
       await fetchUser();
 
       const { role } = res.data;
-      redirectToDashboard(role);
+      if (role) {
+          redirectToDashboard(role);
+      } else {
+          setError("Account has no role assigned. Please contact admin.");
+      }
 
     } catch (err: any) {
       const errorMessage = err.response?.data?.error || "Login failed. Please check your credentials.";

@@ -2,9 +2,10 @@ import type { NextConfig } from "next";
 import path from "path";
 import { loadEnvConfig } from "@next/env";
 
-// Load environment variables from the root directory (../.env)
 const projectDir = process.cwd();
-loadEnvConfig(path.join(projectDir, ".."));
+const { combinedEnv } = loadEnvConfig(path.join(projectDir, ".."));
+
+const backendUrl = combinedEnv.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/team07api";
 
 const nextConfig: NextConfig = {
   experimental: {
@@ -17,7 +18,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/api/:path*',     
-        destination: `${process.env.NEXT_PUBLIC_BACKEND_URL}/:path*`, 
+        destination: `${backendUrl}/:path*`, 
       },
     ];
   },

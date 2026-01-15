@@ -316,7 +316,7 @@ export default function TeacherMyTopicPage() {
                             <div style={{ marginTop: 8 }}>
                                 <Text strong><PaperClipOutlined /> ไฟล์แนบ:</Text>
                                 <a
-                                    href={`${process.env.NEXT_PUBLIC_BACKEND_URL}/uploads/topics/${viewTopic.file_attachment}`}
+                                    href={`${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/team07api"}/uploads/topics/${viewTopic.file_attachment}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     style={{ marginLeft: 8 }}

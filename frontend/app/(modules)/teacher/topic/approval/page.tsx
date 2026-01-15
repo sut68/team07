@@ -290,7 +290,7 @@ export default function TeacherTopicApprovalPage() {
                             <div style={{ marginTop: 8 }}>
                                 <Text strong><PaperClipOutlined /> ไฟล์แนบ:</Text>
                                 <a
-                                    href={`${process.env.NEXT_PUBLIC_BACKEND_URL}/uploads/topics/${selectedProposal.file_attachment}`}
+                                    href={`${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/team07api"}/uploads/topics/${selectedProposal.file_attachment}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     style={{ marginLeft: 8 }}
