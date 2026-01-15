@@ -4,9 +4,8 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ResetPassword } from '../../../services/login';
 import { ResetPasswordInterface } from '../../../interfaces/Login';
-import '../../../style/resetpassword.css';
-
-const originalFont = 'zzzTH';
+import '../../../style/login.css'; // Updated to use shared modern styles
+import { EyeInvisibleOutlined, EyeOutlined } from '@ant-design/icons';
 
 const ResetPasswordComponent: React.FC = () => {
     const router = useRouter();
@@ -15,6 +14,8 @@ const ResetPasswordComponent: React.FC = () => {
     const [token, setToken] = useState<string | null>(null);
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -24,7 +25,7 @@ const ResetPasswordComponent: React.FC = () => {
             setToken(urlToken);
         } else {
             setMessage({
-                text: "Invalid link. Missing reset token. Please request a new password reset.",
+                text: "ลิงก์ไม่ถูกต้อง หรือพารามิเตอร์ไม่ครบถ้วน",
                 type: 'error'
             });
         }
@@ -36,7 +37,7 @@ const ResetPasswordComponent: React.FC = () => {
         setMessage(null);
 
         if (!token) {
-            setMessage({ text: "Error: Missing reset token.", type: 'error' });
+            setMessage({ text: "ไม่พบ Token สำหรับรีเซ็ต", type: 'error' });
             return;
         }
 
@@ -76,27 +77,26 @@ const ResetPasswordComponent: React.FC = () => {
             const res = await ResetPassword(data);
 
             setMessage({
-                text: res.data.message || "ตั้งรหัสผ่านใหม่สำเร็จ! ระบบกำลังนำกลับไปหน้า Login...",
+                text: res.data.message || "ตั้งรหัสผ่านใหม่สำเร็จ! กำลังกลับไปหน้า Login...",
                 type: 'success'
             });
 
             setTimeout(() => {
                 router.push('/login');
-            }, 5000);
+            }, 3000);
 
         } catch (err: any) {
             console.error("Reset Password Error:", err);
             const errorText = err.response?.data?.error || "ตั้งรหัสผ่านไม่สำเร็จ: ลิงก์อาจหมดอายุแล้ว";
-            
-            // กรณีที่ Backend แจ้งว่า Token ถูกใช้แล้ว แต่จริงๆ คือเปลี่ยนสำเร็จไปแล้ว (เผื่อ Backend check พลาด)
+
             if (errorText === "this reset link has already been used") {
-                 setMessage({
-                    text: "ตั้งรหัสผ่านใหม่สำเร็จ! (ลิงก์ถูกใช้งานแล้ว)",
+                setMessage({
+                    text: "ตั้งรหัสผ่านใหม่สำเร็จแล้ว (ลิงก์นี้ถูกใช้ไปแล้ว)",
                     type: 'success'
                 });
                 setTimeout(() => {
                     router.push('/login');
-                }, 5000);
+                }, 3000);
                 return;
             }
 
@@ -108,8 +108,8 @@ const ResetPasswordComponent: React.FC = () => {
 
     if (!token && !message) {
         return (
-            <div className="rp-fullscreen">
-                <p className="rp-loading" style={{ fontFamily: originalFont }}>กำลังโหลด...</p>
+            <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f5f5', fontFamily: "'Noto Sans Thai', sans-serif" }}>
+                <p style={{ color: '#666' }}>กำลังตรวจสอบลิงก์...</p>
             </div>
         );
     }
@@ -117,67 +117,180 @@ const ResetPasswordComponent: React.FC = () => {
     const isInitialError = message && message.type === 'error' && !token;
 
     return (
-        <div className="rp-fullscreen">
-            <div className="rp-card" role="main" aria-labelledby="rp-title">
-                <div className="rp-icon" aria-hidden="true">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="rp-icon-svg">
-                       <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <div style={{
+            minHeight: '100vh',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'linear-gradient(135deg, #730d15ff 0%, #c71919ff 100%)',
+            padding: '20px',
+            fontFamily: "'Noto Sans Thai', sans-serif"
+        }}>
+            {/* Background Decoration similar to Login */}
+            <div style={{
+                position: 'fixed',
+                top: '-10%',
+                right: '-10%',
+                width: '400px',
+                height: '400px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: '50%',
+                filter: 'blur(40px)',
+                zIndex: 0,
+                pointerEvents: 'none'
+            }} />
+            <div style={{
+                position: 'fixed',
+                bottom: '-10%',
+                left: '-10%',
+                width: '300px',
+                height: '300px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: '50%',
+                filter: 'blur(40px)',
+                zIndex: 0,
+                pointerEvents: 'none'
+            }} />
+
+            <div className="modern-card" style={{ zIndex: 1, textAlign: 'center' }}>
+                <div style={{ marginBottom: '20px', color: '#c71919', display: 'flex', justifyContent: 'center' }}>
+                    <svg width="60" height="60" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" strokeWidth="1.5">
+                        <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                 </div>
 
-                <h1 id="rp-title" className="rp-title" style={{ fontFamily: originalFont }}>รีเซ็ตรหัสผ่านใหม่</h1>
-                <p className="rp-desc">รหัสผ่านใหม่ของคุณต้องแตกต่างจากรหัสผ่านที่เคยใช้มาก่อน</p>
+                <h1 style={{
+                    fontSize: '1.8rem',
+                    fontWeight: 700,
+                    color: '#333',
+                    marginBottom: '10px'
+                }}>
+                    ตั้งค่ารหัสผ่านใหม่
+                </h1>
 
-                {/* เว้นพื้นที่สำหรับข้อความผลลัพธ์ไม่ให้ layout ขยับ */}
-                <div className="rp-message-area" aria-live="polite">
-                    {message && (
-                        <div className={`rp-message ${message.type === 'success' ? 'rp-success' : 'rp-error'}`} style={{ fontFamily: originalFont }}>
-                            {message.text}
-                        </div>
-                    )}
-                </div>
+                <p style={{ color: '#666', marginBottom: '30px', lineHeight: '1.6' }}>
+                    สร้างรหัสผ่านใหม่ที่คาดเดายากเพื่อความปลอดภัย<br />ของบัญชี Capstone Hub ของคุณ
+                </p>
+
+                {message && (
+                    <div style={{
+                        padding: '12px',
+                        borderRadius: '10px',
+                        background: message.type === 'success' ? 'rgba(46, 204, 113, 0.1)' : 'rgba(231, 76, 60, 0.1)',
+                        color: message.type === 'success' ? '#27ae60' : '#c0392b',
+                        fontSize: '0.95rem',
+                        marginBottom: '25px',
+                        fontWeight: 600,
+                        border: `1px solid ${message.type === 'success' ? 'rgba(46, 204, 113, 0.2)' : 'rgba(231, 76, 60, 0.2)'}`
+                    }}>
+                        {message.text}
+                    </div>
+                )}
 
                 {!isInitialError && (
-                    <form onSubmit={handleReset} className="rp-form" aria-describedby="rp-desc">
-                        <label className="rp-label" htmlFor="password">ตั้งรหัสผ่าน</label>
-                        <input
-                            id="password"
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="rp-input"
-                            required
-                            disabled={isLoading || message?.type === 'success'}
-                            aria-required="true"
-                        />
-                        <p className="rp-helper">ต้องมีความยาวอย่างน้อย 8 ตัวอักษร</p>
+                    <form onSubmit={handleReset} style={{ textAlign: 'left' }}>
+                        <div style={{ marginBottom: '20px' }}>
+                            <label htmlFor="password" style={{ display: 'block', marginBottom: '8px', fontWeight: 600, color: '#444' }}>รหัสผ่านใหม่</label>
+                            <div style={{ position: 'relative' }}>
+                                <input
+                                    id="password"
+                                    type={showPassword ? 'text' : 'password'}
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="modern-input-light"
+                                    placeholder="••••••••"
+                                    required
+                                    disabled={isLoading || message?.type === 'success'}
+                                    style={{ paddingRight: '45px' }}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    style={{
+                                        position: 'absolute',
+                                        right: '12px',
+                                        top: '50%',
+                                        transform: 'translateY(-50%)',
+                                        background: 'transparent',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        color: '#888',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        padding: '4px'
+                                    }}
+                                >
+                                    {showPassword ? <EyeOutlined /> : <EyeInvisibleOutlined />}
+                                </button>
+                            </div>
+                        </div>
 
-                        <label className="rp-label" htmlFor="confirmPassword">ยืนยันรหัสผ่าน</label>
-                        <input
-                            id="confirmPassword"
-                            type="password"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            className="rp-input"
-                            required
-                            disabled={isLoading || message?.type === 'success'}
-                        />
+                        <div style={{ marginBottom: '30px' }}>
+                            <label htmlFor="confirmPassword" style={{ display: 'block', marginBottom: '8px', fontWeight: 600, color: '#444' }}>ยืนยันรหัสผ่านใหม่</label>
+                            <div style={{ position: 'relative' }}>
+                                <input
+                                    id="confirmPassword"
+                                    type={showConfirmPassword ? 'text' : 'password'}
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    className="modern-input-light"
+                                    placeholder="••••••••"
+                                    required
+                                    disabled={isLoading || message?.type === 'success'}
+                                    style={{ paddingRight: '45px' }}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    style={{
+                                        position: 'absolute',
+                                        right: '12px',
+                                        top: '50%',
+                                        transform: 'translateY(-50%)',
+                                        background: 'transparent',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        color: '#888',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        padding: '4px'
+                                    }}
+                                >
+                                    {showConfirmPassword ? <EyeOutlined /> : <EyeInvisibleOutlined />}
+                                </button>
+                            </div>
+                        </div>
 
                         <button
                             type="submit"
-                            className={`rp-button ${isLoading || message?.type === 'success' ? 'rp-disabled' : ''}`}
+                            className="modern-red-btn"
                             disabled={isLoading || message?.type === 'success'}
-                            style={{ fontFamily: originalFont }}
                         >
-                            {isLoading ? 'กำลังดำเนินการ...' : 'รีเซ็ตรหัสผ่าน'}
+                            {isLoading ? 'กำลังบันทึก...' : 'เปลี่ยนรหัสผ่าน'}
                         </button>
                     </form>
                 )}
 
-                <button className="rp-back" onClick={() => router.push('/login')} aria-label="Back to log in">
-                    <svg className="rp-back-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M15 19l-7-7 7-7" /></svg>
-                    <span>กลับไปที่หน้าเข้าสู่ระบบ</span>
-                </button>
+                <div style={{ marginTop: '25px' }}>
+                    <button
+                        onClick={() => router.push('/login')}
+                        style={{
+                            background: 'none',
+                            border: 'none',
+                            color: '#888',
+                            fontSize: '0.9rem',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            transition: 'color 0.2s'
+                        }}
+                        className="hover:text-red-700"
+                    >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
+                        กลับไปหน้าเข้าสู่ระบบ
+                    </button>
+                </div>
             </div>
         </div>
     );

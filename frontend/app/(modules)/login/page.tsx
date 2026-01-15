@@ -7,17 +7,18 @@ import { SignInInterface, ForgotPasswordInterface } from '../../interfaces/Login
 import "../../style/login.css"
 import loginbg from "../../../public/image/Background.jpg"
 import { useAuth } from "../roleCheck/authContext";
+import { EyeInvisibleOutlined, EyeOutlined } from '@ant-design/icons';
 
 export default function LoginPage() {
   const router = useRouter();
   const { fetchUser } = useAuth();
-  
+
   // Login State
   const [inputInfo, setInputInfo] = useState<SignInInterface>({
     username: '',
     password: ''
   });
-  
+
 
   const [iscorrect, setiscorrect] = useState("");
 
@@ -63,7 +64,7 @@ export default function LoginPage() {
       // 1. set here to verified you are human
       const payload = {
         ...inputInfo,
-        ispeople: iscorrect, 
+        ispeople: iscorrect,
       };
 
       const res = await SignIn(payload);
@@ -114,8 +115,9 @@ export default function LoginPage() {
 
   return (
     <>
-      <div style={{ display: 'flex', minHeight: '100vh', fontFamily: "'Inter', sans-serif" }}>
-        {/* Left: background image */}
+      <div style={{ display: 'flex', minHeight: '100vh', fontFamily: "'Noto Sans Thai', sans-serif" }}>
+
+        {/* Left: Original Image */}
         <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
           <div style={{
             position: 'absolute',
@@ -124,33 +126,98 @@ export default function LoginPage() {
             backgroundSize: 'cover',
             backgroundPosition: 'center',
           }} />
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'linear-gradient(to right, rgba(240, 6, 6, 0) 0%, rgba(187, 25, 39, 0.33) 100%)' // Red tint overlay
+          }} />
         </div>
 
-        {/* Right: maroon panel */}
-        <div style={{ width: 800, background: 'rgba(154, 1, 32,1)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40 }}>
-          <div style={{ width: 450, height: 'auto', background: 'rgba(255,255,255,0.98)', borderRadius: 12, padding: 36, boxShadow: '0 8px 30px rgba(0,0,0,0.25)' }}>
-            <div style={{ textAlign: 'center', marginBottom: 12 }}>
-              <h1 style={{ margin: 0, marginTop: 20, fontSize: '1.9rem', color: '#3a3a3a', letterSpacing: '1px', fontFamily: "'Inter', sans-serif" }}>Capstone Hub</h1>
+        {/* Right: Red Branding + Form */}
+        <div style={{
+          flex: 1,
+          background: 'linear-gradient(135deg, #730d15ff 0%, #c71919ff 100%)', // Red gradient
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: '40px',
+          color: 'white',
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          {/* Spinning Asterisk Decoration */}
+          <div className="animate-spin-slow" style={{
+            position: 'absolute',
+            top: '-90px',
+            right: '-90px',
+            width: '300px',
+            height: '300px',
+            opacity: 0.50,
+            zIndex: 0,
+            pointerEvents: 'none'
+          }}>
+            <svg viewBox="0 0 100 100" fill="white" xmlns="http://www.w3.org/2000/svg">
+              <rect x="42" y="0" width="16" height="100" rx="8" />
+              <rect x="42" y="0" width="16" height="100" rx="8" transform="rotate(45 50 50)" />
+              <rect x="42" y="0" width="16" height="100" rx="8" transform="rotate(90 50 50)" />
+              <rect x="42" y="0" width="16" height="100" rx="8" transform="rotate(135 50 50)" />
+            </svg>
+          </div>
+          {/* Decorative Background Elements */}
+          <div style={{
+            position: 'absolute',
+            top: '-10%',
+            right: '-10%',
+            width: '400px',
+            height: '400px',
+            background: 'rgba(255, 255, 255, 0.15)', // Increased opacity
+            borderRadius: '50%',
+            filter: 'blur(30px)',
+            zIndex: 0
+          }} />
+          <div style={{
+            position: 'absolute',
+            bottom: '-10%',
+            left: '-10%',
+            width: '300px',
+            height: '300px',
+            background: 'rgba(255, 255, 255, 0.15)', // Increased opacity
+            borderRadius: '50%',
+            filter: 'blur(40px)',
+            zIndex: 0
+          }} />
+
+          <div style={{ width: '100%', maxWidth: '440px', zIndex: 1 }}>
+
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: '3.5rem', fontWeight: 800, lineHeight: 1.1, marginBottom: '16px' }}>
+                Hello <br />
+                Capstone Hub!
+              </div>
+              <p style={{ fontSize: '1.1rem', opacity: 0.9, lineHeight: 1.6, fontWeight: 300 }}>
+                Welcome back , Please enter your details .
+              </p>
             </div>
 
-            <p
-              role={error ? 'alert' : undefined}
-              aria-live="polite"
-              style={{
-                minHeight: 36,
-                marginBottom: 12,
-                color: error ? 'red' : 'transparent',
-                textAlign: 'center',
-                lineHeight: '18px',
-                fontWeight: error ? 'normal' : 'normal'
-              }}
-            >
-              {error || ' '}
-            </p>
+            <div>
+              <p
+                role={error ? 'alert' : undefined}
+                aria-live="polite"
+                style={{
+                  minHeight: '24px',
+                  marginBottom: '10px',
+                  color: '#ff6b6b',
+                  fontSize: '0.9rem',
+                  fontWeight: 500
+                }}
+              >
+                {error || ''}
+              </p>
 
-            <form onSubmit={handleLogin}>
-              
-              {/* --- i add this to jub pouk ea ei --- */}
+              <form onSubmit={handleLogin}>
+
+                {/* Hidden Security Check */}
                 <div style={{ opacity: 0, position: 'absolute', top: 0, left: 0, height: 0, width: 0, zIndex: -1, overflow: 'hidden' }}>
                   <label htmlFor="ispeople">Security Check (Please leave this blank)</label>
                   <input
@@ -164,174 +231,209 @@ export default function LoginPage() {
                   />
                 </div>
 
-
-              <div style={{ marginBottom: 12 }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', color: '#666', marginBottom: 6 }}>Username</label>
-                <input
-                  type="text"
-                  placeholder="Username"
-                  name="username"
-                  value={inputInfo.username}
-                  onChange={handleInputChange}
-                  className='login-info'
-                  style={{ width: '100%' }}
-                  required
-                />
-              </div>
-
-              <div style={{ marginBottom: 12 }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', color: '#666', marginBottom: 6 }}>Password</label>
-                <div style={{ position: 'relative' }}>
+                <div style={{ marginBottom: 20 }}>
+                  <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: 8, fontWeight: 500, opacity: 0.9 }}>Username</label>
                   <input
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="Password"
-                    name="password"
-                    value={inputInfo.password}
+                    type="text"
+                    placeholder="Enter your username"
+                    name="username"
+                    value={inputInfo.username}
                     onChange={handleInputChange}
-                    className='login-info'
-                    style={{ width: '100%', paddingRight: '68px' }}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      borderRadius: '5px',
+                      border: '1px solid rgba(255,255,255,0.2)',
+                      background: 'rgba(200, 61, 61, 0.1)',
+                      color: 'white',
+                      fontSize: '1rem',
+                      outline: 'none',
+                      transition: 'all 0.2s'
+                    }}
+                    className="login-input-field" // Using a class for focus styles if needed, but inline for now
                     required
                   />
+                </div>
+
+                <div style={{ marginBottom: 20 }}>
+                  <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: 8, fontWeight: 500, opacity: 0.9 }}>Password</label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Enter your password"
+                      name="password"
+                      value={inputInfo.password}
+                      onChange={handleInputChange}
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        paddingRight: '60px',
+                        borderRadius: '5px',
+                        border: '1px solid rgba(255,255,255,0.2)',
+                        background: 'rgba(200, 61, 61, 0.1)',
+                        color: 'white',
+                        fontSize: '1rem',
+                        outline: 'none'
+                      }}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(s => !s)}
+                      style={{
+                        position: 'absolute',
+                        right: 12,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'rgba(255,255,255,0.7)',
+                        cursor: 'pointer',
+                        fontSize: '0.85rem',
+                        fontWeight: 500
+                      }}
+                    >
+                      {showPassword ? <EyeOutlined /> : <EyeInvisibleOutlined />}
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 24 }}>
                   <button
                     type="button"
-                    onClick={() => setShowPassword(s => !s)}
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    onClick={() => {
+                      setIsForgotModalOpen(true);
+                      setError(null);
+                      setForgotMessage(null);
+                      setForgotInfo({ username: '', email: '' });
+                    }}
                     style={{
-                      position: 'absolute',
-                      right: 10,
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'transparent',
+                      background: 'none',
                       border: 'none',
-                      color: '#8a0f1a',
+                      color: 'rgba(255,255,255,0.8)',
+                      fontSize: '0.9rem',
                       cursor: 'pointer',
-                      fontFamily: "'Inter', sans-serif",
-                      padding: '6px 8px'
+                      textDecoration: 'underline'
                     }}
                   >
-                    {showPassword ? 'ซ่อน' : 'แสดง'}
+                    Forgot Password?
                   </button>
                 </div>
-              </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <div style={{ flex: 1 }} />
-                <div
-                  style={{ marginTop: 10, color: '#8a0f1a', textDecoration: 'underline', fontSize: '0.85em', cursor: 'pointer' }}
-                  onClick={() => {
-                    setIsForgotModalOpen(true);
-                    setError(null);
-                    setForgotMessage(null);
-                    setForgotInfo({ username: '', email: '' });
-                  }}
-                >
-                  ลืมรหัสผ่าน?
-                </div>
-              </div>
-
-              <div>
                 <button
                   type="submit"
-                  className="login-button"
                   disabled={isLoading}
-                  style={{ width: '100%', marginTop: '20px', padding: '12px 16px', backgroundColor: '#8b0f1a', color: 'white', border: 'none', borderRadius: 8, cursor: isLoading ? 'not-allowed' : 'pointer', fontSize: '1rem', boxShadow: '0 4px 12px rgba(139,15,26,0.3)' }}
+                  className="modern-login-btn"
                 >
-                  {isLoading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
+                  {isLoading ? 'Signing In...' : 'Login'}
                 </button>
-              </div>
-            </form>
+
+              </form>
+            </div>
+
+            <div style={{ marginTop: 40, opacity: 0.6, fontSize: '0.85rem' }}>
+              © 2026 Capstone Hub. All rights reserved.
+            </div>
           </div>
         </div>
+
       </div>
 
       {/* --- Forgot Password Modal --- */}
+      {/* --- Forgot Password Modal --- */}
       {isForgotModalOpen && (
         <>
-          <div className="modal-overlay" />
-          <div className="modal-content" style={{
-            maxWidth: '500px',
-            width: '90%',
-            backgroundColor: 'white',
-            padding: '40px',
-            borderRadius: '12px',
-            boxShadow: '0 6px 24px rgba(0, 0, 0, 0.3)',
-            position: 'fixed',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            zIndex: 1001
-          }}>
+          <div className="modern-modal-overlay" onClick={() => setIsForgotModalOpen(false)} />
+          <div className="modern-modal-content">
             <button
               type="button"
               onClick={() => {
                 setIsForgotModalOpen(false);
                 setForgotMessage(null);
               }}
+              className="modern-close-btn"
               aria-label="Close"
-              style={{
-                position: 'absolute',
-                top: 12,
-                right: 12,
-                background: 'transparent',
-                border: 'none',
-                padding: 6,
-                cursor: 'pointer',
-                color: '#374151'
-              }}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M18 6L6 18" />
                 <path d="M6 6l12 12" />
               </svg>
             </button>
 
-            <h2 style={{ marginBottom: '5px', textAlign: 'center', fontFamily: originalFont }}>ลืมรหัสผ่าน ?</h2>
-            <form onSubmit={handleForgotPassword}>
-              <p style={{ marginBottom: '30px', fontSize: '0.9em', color: '#666', textAlign: 'center', fontFamily: originalFont }}>
-                กรุณากรอกชื่อผู้ใช้และอีเมลเพื่อรับลิงก์ตั้งรหัสผ่านใหม่
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+              <h2 style={{
+                margin: '0 0 10px 0',
+                color: '#333',
+                fontSize: '1.8rem',
+                fontWeight: 700
+              }}>ลืมรหัสผ่าน ?</h2>
+              <p style={{
+                margin: 0,
+                color: '#666',
+                fontSize: '1rem',
+                lineHeight: '1.5'
+              }}>
+                กรุณากรอกชื่อผู้ใช้และอีเมล<br />เพื่อรับลิงก์สำหรับตั้งรหัสผ่านใหม่
               </p>
+            </div>
 
-              {forgotMessage && <p style={{ color: forgotMessage.includes("ส่งลิงก์รีเซ็ต") ? '#2ecc71' : '#e74c3c', textAlign: 'center', marginBottom: '15px', fontWeight: 'bold', }}>{forgotMessage}</p>}
+            <form onSubmit={handleForgotPassword}>
+              {forgotMessage && (
+                <div style={{
+                  padding: '12px',
+                  borderRadius: '8px',
+                  background: forgotMessage.includes("ส่งลิงก์รีเซ็ต") ? 'rgba(46, 204, 113, 0.1)' : 'rgba(231, 76, 60, 0.1)',
+                  color: forgotMessage.includes("ส่งลิงก์รีเซ็ต") ? '#27ae60' : '#c0392b',
+                  fontSize: '0.9rem',
+                  textAlign: 'center',
+                  marginBottom: '20px',
+                  fontWeight: 600
+                }}>
+                  {forgotMessage}
+                </div>
+              )}
 
-              <label htmlFor="username" style={{ display: 'block', fontSize: '0.9rem', color: '#666', marginBottom: '10px', fontFamily: originalFont }}>ชื่อผู้ใช้</label>
-              <input
-                type="text"
-                placeholder="กรอกชื่อผู้ใช้"
-                name="username"
-                value={forgotInfo.username}
-                onChange={(e) => {
-                  setForgotInfo({ ...forgotInfo, username: e.target.value });
-                  setForgotMessage(null);
-                }}
-                className='login-info'
-                style={{ width: '100%', marginBottom: '15px' }}
-                required
-              />
-
-              <label htmlFor="email" style={{ display: 'block', fontSize: '0.9rem', color: '#666', marginBottom: '10px', fontFamily: originalFont }}>อีเมล</label>
-              <input
-                type="email"
-                placeholder="กรอกอีเมลของคุณ"
-                name="email"
-                value={forgotInfo.email}
-                onChange={(e) => {
-                  setForgotInfo({ ...forgotInfo, email: e.target.value });
-                  setForgotMessage(null);
-                }}
-                className='login-info'
-                style={{ width: '100%', marginBottom: '20px' }}
-                required
-              />
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
-                <button
-                  type="submit"
-                  disabled={isForgotLoading}
-                  style={{ padding: '10px 20px', backgroundColor: '#3498db', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', flexGrow: 1 }}
-                >
-                  {isForgotLoading ? 'กำลังส่ง...' : 'ส่งลิงก์รีเซ็ต'}
-                </button>
+              <div style={{ marginBottom: '20px' }}>
+                <label htmlFor="username" style={{ display: 'block', fontSize: '0.95rem', fontWeight: 600, color: '#444', marginBottom: '8px', marginLeft: '4px' }}>ชื่อผู้ใช้</label>
+                <input
+                  type="text"
+                  placeholder="กรอกชื่อผู้ใช้"
+                  name="username"
+                  id="username"
+                  value={forgotInfo.username}
+                  onChange={(e) => {
+                    setForgotInfo({ ...forgotInfo, username: e.target.value });
+                    setForgotMessage(null);
+                  }}
+                  className="modern-input-light"
+                  required
+                />
               </div>
+
+              <div style={{ marginBottom: '30px' }}>
+                <label htmlFor="email" style={{ display: 'block', fontSize: '0.95rem', fontWeight: 600, color: '#444', marginBottom: '8px', marginLeft: '4px' }}>อีเมล</label>
+                <input
+                  type="email"
+                  placeholder="name@example.com"
+                  name="email"
+                  id="email"
+                  value={forgotInfo.email}
+                  onChange={(e) => {
+                    setForgotInfo({ ...forgotInfo, email: e.target.value });
+                    setForgotMessage(null);
+                  }}
+                  className="modern-input-light"
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isForgotLoading}
+                className="modern-red-btn"
+              >
+                {isForgotLoading ? 'กำลังดำเนินการ...' : 'ส่งลิงก์รีเซ็ต'}
+              </button>
             </form>
           </div>
         </>
