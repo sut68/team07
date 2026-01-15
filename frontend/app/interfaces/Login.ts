@@ -1,6 +1,7 @@
 export interface SignInInterface {
     username?: string;
     password?: string;
+    ispeople?: string;
 }
 
 export interface UserDataInterface {

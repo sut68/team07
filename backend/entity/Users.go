@@ -8,6 +8,7 @@ type User struct {
 	Password  string `gorm:"not null" json:"password" valid:"required~Password is required"`
 	Firstname string `json:"firstname" valid:"required~Firstname is required"`
 	Lastname  string `json:"lastname" valid:"required~Lastname is required"`
+
 	Email     string `json:"email"`
 	Phone     string `json:"phone"`
 	Pass      *bool  `json:"pass"`

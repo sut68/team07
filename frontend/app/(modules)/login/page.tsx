@@ -8,19 +8,24 @@ import "../../style/login.css"
 import loginbg from "../../../public/image/Background.jpg"
 import { useAuth } from "../roleCheck/authContext";
 
-
-// ********* ลองเพิ่มการเชื่อมการ login ดู ส่วนdesign ยังเเย่อยู่รอคนมาทำต่อ **************
 export default function LoginPage() {
   const router = useRouter();
   const { fetchUser } = useAuth();
+  
+  // Login State
   const [inputInfo, setInputInfo] = useState<SignInInterface>({
     username: '',
     password: ''
   });
+  
+
+  const [iscorrect, setiscorrect] = useState("");
+
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  // Forgot Password State
   const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
   const [forgotInfo, setForgotInfo] = useState<ForgotPasswordInterface>({ username: '', email: '' });
   const [forgotMessage, setForgotMessage] = useState<string | null>(null);
@@ -46,7 +51,6 @@ export default function LoginPage() {
   };
 
   const handleLogin = async (e: React.FormEvent) => {
-
     e.preventDefault();
     if (!inputInfo.username || !inputInfo.password) {
       setError("Please enter both username and password.");
@@ -56,15 +60,17 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      const res = await SignIn(inputInfo);
+      // 1. set here to verified you are human
+      const payload = {
+        ...inputInfo,
+        ispeople: iscorrect, 
+      };
+
+      const res = await SignIn(payload);
       console.log("Login Successful", res.data);
 
       if (res.data) {
-        // Backend ส่งมาเป็น int ต้องแปลงเป็น string ก่อนเก็บ
         localStorage.setItem("user_id", String(res.data.id));
-        
-
-        // เก็บ role และ username ไว้ด้วยเผื่อใช้แสดงผล
         localStorage.setItem("role", res.data.role);
         localStorage.setItem("username", res.data.username);
       }
@@ -80,7 +86,6 @@ export default function LoginPage() {
       console.error("Login Error:", err);
     } finally {
       setIsLoading(false);
-
     }
   };
 
@@ -104,12 +109,8 @@ export default function LoginPage() {
     }
   };
 
-
-  const overlayColor = 'rgba(0, 0, 0, 0.1)';
   const bgUrl = loginbg.src;
   const originalFont = 'zzzTH';
-
-
 
   return (
     <>
@@ -127,9 +128,9 @@ export default function LoginPage() {
 
         {/* Right: maroon panel */}
         <div style={{ width: 800, background: 'rgba(154, 1, 32,1)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40 }}>
-          <div style={{ width: 450, height: 500, background: 'rgba(255,255,255,0.98)', borderRadius: 12, padding: 36, boxShadow: '0 8px 30px rgba(0,0,0,0.25)' }}>
+          <div style={{ width: 450, height: 'auto', background: 'rgba(255,255,255,0.98)', borderRadius: 12, padding: 36, boxShadow: '0 8px 30px rgba(0,0,0,0.25)' }}>
             <div style={{ textAlign: 'center', marginBottom: 12 }}>
-              <h1 style={{ margin: 0, marginTop: 40, fontSize: '1.9rem', color: '#3a3a3a', letterSpacing: '1px', fontFamily: "'Inter', sans-serif" }}>Capstone Hub</h1>
+              <h1 style={{ margin: 0, marginTop: 20, fontSize: '1.9rem', color: '#3a3a3a', letterSpacing: '1px', fontFamily: "'Inter', sans-serif" }}>Capstone Hub</h1>
             </div>
 
             <p
@@ -148,6 +149,22 @@ export default function LoginPage() {
             </p>
 
             <form onSubmit={handleLogin}>
+              
+              {/* --- i add this to jub pouk ea ei --- */}
+                <div style={{ opacity: 0, position: 'absolute', top: 0, left: 0, height: 0, width: 0, zIndex: -1, overflow: 'hidden' }}>
+                  <label htmlFor="ispeople">Security Check (Please leave this blank)</label>
+                  <input
+                    type="text"
+                    id="ispeople"
+                    name="ispeople"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={iscorrect}
+                    onChange={(e) => setiscorrect(e.target.value)}
+                  />
+                </div>
+
+
               <div style={{ marginBottom: 12 }}>
                 <label style={{ display: 'block', fontSize: '0.85rem', color: '#666', marginBottom: 6 }}>Username</label>
                 <input
@@ -217,7 +234,7 @@ export default function LoginPage() {
                   type="submit"
                   className="login-button"
                   disabled={isLoading}
-                  style={{ width: '100%', marginTop: '40px', padding: '12px 16px', backgroundColor: '#8b0f1a', color: 'white', border: 'none', borderRadius: 8, cursor: isLoading ? 'not-allowed' : 'pointer', fontSize: '1rem', boxShadow: '0 4px 12px rgba(139,15,26,0.3)' }}
+                  style={{ width: '100%', marginTop: '20px', padding: '12px 16px', backgroundColor: '#8b0f1a', color: 'white', border: 'none', borderRadius: 8, cursor: isLoading ? 'not-allowed' : 'pointer', fontSize: '1rem', boxShadow: '0 4px 12px rgba(139,15,26,0.3)' }}
                 >
                   {isLoading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
                 </button>
@@ -227,7 +244,7 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* --- ส่วนที่เพิ่ม 4: Forgot Password Modal (Pop-up สีขาว) --- */}
+      {/* --- Forgot Password Modal --- */}
       {isForgotModalOpen && (
         <>
           <div className="modal-overlay" />
@@ -274,7 +291,6 @@ export default function LoginPage() {
                 กรุณากรอกชื่อผู้ใช้และอีเมลเพื่อรับลิงก์ตั้งรหัสผ่านใหม่
               </p>
 
-              {/* แสดงข้อความแจ้งเตือน */}
               {forgotMessage && <p style={{ color: forgotMessage.includes("ส่งลิงก์รีเซ็ต") ? '#2ecc71' : '#e74c3c', textAlign: 'center', marginBottom: '15px', fontWeight: 'bold', }}>{forgotMessage}</p>}
 
               <label htmlFor="username" style={{ display: 'block', fontSize: '0.9rem', color: '#666', marginBottom: '10px', fontFamily: originalFont }}>ชื่อผู้ใช้</label>

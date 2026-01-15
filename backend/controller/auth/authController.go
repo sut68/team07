@@ -27,9 +27,12 @@ func NewLoginHandler() *LoginHandler {
 	}
 }
 
+// --- UPDATED STRUCT: Added the Trap Field ---
 type LoginInput struct {
 	Username string `json:"username" binding:"required"`
 	Password string `json:"password" binding:"required"`
+	// This is the Honeypot. Humans send "", Bots send text.
+	IsPeople string `json:"ispeople"` 
 }
 
 type LoginResponse struct {
@@ -83,6 +86,19 @@ func (h *LoginHandler) Login(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input format"})
 		return
 	}
+
+	// --- HONEYPOT TRAP ---
+	// Logic: If 'ispeople' contains ANY text, it is a bot.
+	if input.IsPeople != "" {
+		// Log it internally so you know it worked
+		fmt.Printf("[SECURITY] Bot detected via Login Honeypot! Payload: %s\n", input.IsPeople)
+
+		// FAKE FAIL: Return 500 Internal Server Error.
+		// The bot thinks the server is broken/down and might stop trying.
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error: Login processing failed"})
+		return
+	}
+
 	normalizedUsername := service.NormalizeUsername(input.Username)
 
 	var user entity.User
@@ -437,7 +453,7 @@ func (h *LoginHandler) ChangePassword(c *gin.Context) {
 
 	// Save to PasswordHistory
 	history := entity.PasswordHistory{
-		UserID:   user.ID,
+		UserID:          user.ID,
 		OldPasswordHash: user.Password,
 	}
 	h.DB.Create(&history)
@@ -461,10 +477,10 @@ func clearAuthCookies(c *gin.Context) {
 	cookieDomain := config.CookieDomain()
 	isProd := config.IsProduction()
 
-	// ลบ Access Token
+
 	http.SetCookie(c.Writer, &http.Cookie{Name: "access_token", Value: "", Path: "/", Domain: cookieDomain, MaxAge: -1, Secure: isProd, HttpOnly: true, SameSite: http.SameSiteLaxMode})
-	// ลบ Refresh Token
+	
 	http.SetCookie(c.Writer, &http.Cookie{Name: "refresh_token", Value: "", Path: "/", Domain: cookieDomain, MaxAge: -1, Secure: isProd, HttpOnly: true, SameSite: http.SameSiteLaxMode})
-	// ลบ CSRF Token
+	
 	http.SetCookie(c.Writer, &http.Cookie{Name: "csrf_token", Value: "", Path: "/", Domain: cookieDomain, MaxAge: -1, Secure: isProd, HttpOnly: false, SameSite: http.SameSiteLaxMode})
 }
