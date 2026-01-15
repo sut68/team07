@@ -5,7 +5,7 @@ import type { CSSProperties } from "react";
 import { GetProgress, AddProgress, UpProgress, EraseProgress } from "../../../services/progress";
 import { DropWholechat, Getteachergroup } from "@/app/services/chat";
 
-const web = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+const web = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/team07api";
 
 export default function ProgressPage() {
   const [gpji, setgpji] = useState<number>(0);

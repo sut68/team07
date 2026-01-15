@@ -13,7 +13,7 @@ import {
 
 import { DropWholechat } from "@/app/services/chat";
 
-const web = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+const web = process.env.NEXT_PUBLIC_BACKEND_URL|| "http://localhost:8080/team07api";
 
 export default function ProgressPage() {
   const [gpji, setgpji] = useState<number>(0);
