@@ -15,9 +15,18 @@ FROM debian:bookworm-slim
 WORKDIR /app
 
 # ลง CA-Certificates เผื่อต้องยิง HTTPS ไปข้างนอก (SendGrid/Database)
-RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates locales \
+  && sed -i 's/^# *\(en_US.UTF-8 UTF-8\)/\1/' /etc/locale.gen \
+  && locale-gen \
+  && rm -rf /var/lib/apt/lists/*
+
+ENV LANG=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
 
 COPY --from=builder /goapp /app/goapp
+
+
 
 # Create necessary directories
 RUN mkdir -p /app/lib /app/controller/filter/data /app/uploads

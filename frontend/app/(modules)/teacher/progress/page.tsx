@@ -5,6 +5,8 @@ import type { CSSProperties } from "react";
 import { GetProgress, AddProgress, UpProgress, EraseProgress } from "../../../services/progress";
 import { DropWholechat, Getteachergroup } from "@/app/services/chat";
 
+const web = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+
 export default function ProgressPage() {
   const [gpji, setgpji] = useState<number>(0);
   const [teacherGroups, setTeacherGroups] = useState<any[]>([]);
@@ -30,9 +32,23 @@ export default function ProgressPage() {
       : d.toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "2-digit" });
   };
   const getGroupOptionLabel = (g: any) => {
-    const id = Number(g?.id ?? g?.ID ?? 0);
     const num = g?.group_number ?? g?.GroupNumber ?? "-";
     return `กลุ่ม ${num} ปีการศึกษา ${g.year}`;
+  };
+
+  const fileHref = (path: string) => {
+    const p = String(path || "").trim();
+    if (!p) return "";
+    if (p.startsWith("http://") || p.startsWith("https://")) return p;
+    return `${web}${p.startsWith("/") ? "" : "/"}${p}`;
+  };
+
+  const fileLabel = (path: string) => {
+    const p = String(path || "").trim();
+    if (!p) return "";
+    const noQuery = p.split("?")[0];
+    const parts = noQuery.split("/");
+    return parts[parts.length - 1] || noQuery;
   };
 
   useEffect(() => {
@@ -255,13 +271,8 @@ export default function ProgressPage() {
                     <p style={styles.cardDesc}>{getCommentText(item)}</p>
 
                     {getFilePath(item) && (
-                      <a
-                        href={`${process.env.NEXT_PUBLIC_API_URL}${getFilePath(item)}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        style={styles.fileChip}
-                      >
-                        📄 {getFilePath(item).split("/uploads/progress/")}
+                      <a href={fileHref(getFilePath(item))} target="_blank" rel="noreferrer" style={styles.fileChip}>
+                        📄 {fileLabel(getFilePath(item))}
                       </a>
                     )}
                   </div>
@@ -283,6 +294,7 @@ export default function ProgressPage() {
                 ×
               </button>
             </div>
+
             <div style={styles.modalBody}>
               <div style={styles.formGroup}>
                 <label style={styles.label}>หัวข้อ (Title)</label>
@@ -293,6 +305,7 @@ export default function ProgressPage() {
                   placeholder="เช่น บทที่ 1 เสร็จสมบูรณ์"
                 />
               </div>
+
               <div style={styles.formGroup}>
                 <label style={styles.label}>รายละเอียด (Details)</label>
                 <textarea
@@ -302,11 +315,31 @@ export default function ProgressPage() {
                   placeholder="รายละเอียดสิ่งที่ทำ..."
                 />
               </div>
+
+              {modalMode === "edit" && selectedId != null && (
+                (() => {
+                  const item = processlist.find((p) => getId(p) === selectedId);
+                  const path = item ? getFilePath(item) : "";
+                  if (!path) return null;
+                  return (
+                    <div style={{ marginBottom: "12px" }}>
+                      <a href={fileHref(path)} target="_blank" rel="noreferrer" style={styles.fileChip}>
+                        📎 Current file: {fileLabel(path)}
+                      </a>
+                    </div>
+                  );
+                })()
+              )}
+
               <div style={styles.formGroup}>
-                <label style={styles.label}>แนบไฟล์ (Attachment)</label>
+                <label style={styles.label}>
+                  แนบไฟล์ (Attachment)
+                  {modalMode === "edit" && " – เลือกใหม่เฉพาะกรณีต้องการเปลี่ยน"}
+                </label>
                 <input type="file" style={styles.fileInput} onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
               </div>
             </div>
+
             <div style={styles.modalFooter}>
               <button onClick={() => setIsModalOpen(false)} style={styles.cancelBtn}>
                 ยกเลิก
@@ -398,8 +431,9 @@ const styles: Record<string, CSSProperties> = {
   },
   watermarkNumber: {
     position: "absolute",
-    top: "-10px",
+    bottom: "-10px",
     right: "10px",
+    top: "auto",
     fontSize: "100px",
     fontWeight: "900",
     color: "#f3f3f3",
