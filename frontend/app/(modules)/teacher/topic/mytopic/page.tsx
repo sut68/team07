@@ -1,6 +1,6 @@
 "use client";
-import React, { useState, useEffect } from 'react';
-import { Card, Button, Typography, Row, Col, Modal, Form, Input, Tag, Space, Empty, message, Upload } from 'antd';
+import { useState, useEffect } from 'react';
+import { Card, Button, Typography, Row, Col, Modal, Form, Input, Tag, Space, Upload } from 'antd';
 import { PlusOutlined, DeleteOutlined, EditOutlined, ProjectOutlined, UploadOutlined, PaperClipOutlined } from '@ant-design/icons';
 import { Topic } from '@/app/interfaces/Topic';
 import { getTopics, createTopic, updateTopic, deleteTopic } from '@/app/services/topic';
@@ -221,8 +221,8 @@ export default function TeacherMyTopicPage() {
                                 hoverable
                                 onClick={() => handleViewTopic(topic)}
                                 actions={[
-                                    <EditOutlined key="edit" style={{ color: '#faad14' }} onClick={(e) => { e.stopPropagation(); handleOpenModal(topic); }} />,
-                                    <DeleteOutlined key="delete" style={{ color: '#ff4d4f' }} onClick={(e) => { e.stopPropagation(); handleDelete(topic.ID); }} />,
+                                    <EditOutlined key="edit" style={{ color: '#faad14' }} onClick={(e: React.MouseEvent) => { e.stopPropagation(); handleOpenModal(topic); }} />,
+                                    <DeleteOutlined key="delete" style={{ color: '#ff4d4f' }} onClick={(e: React.MouseEvent) => { e.stopPropagation(); handleDelete(topic.ID); }} />,
                                 ]}
                                 style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid #f0f0f0' }}
                                 bodyStyle={{ padding: 24 }}
@@ -316,7 +316,7 @@ export default function TeacherMyTopicPage() {
                             <div style={{ marginTop: 8 }}>
                                 <Text strong><PaperClipOutlined /> ไฟล์แนบ:</Text>
                                 <a
-                                    href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/uploads/topics/${viewTopic.file_attachment}`}
+                                    href={`${process.env.NEXT_PUBLIC_BACKEND_URL}/uploads/topics/${viewTopic.file_attachment}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     style={{ marginLeft: 8 }}

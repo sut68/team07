@@ -1,5 +1,4 @@
 "use client";
-import React from 'react';
 import { ConfigProvider, Tabs } from 'antd';
 import TeacherMyTopicPage from './mytopic/page';
 import TeacherTopicApprovalPage from './approval/page';

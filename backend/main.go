@@ -40,7 +40,6 @@ func main() {
 	database.SetUpDatabase()
 
 	if len(os.Args) > 1 && (os.Args[1] == "--seed" || os.Args[1] == "seed") {
-		fmt.Println("FOUND SEED COMMAND: Starting Seeding Process...")
 		Data := database.DB()
 		if Data == nil {
 			fmt.Println("ERROR: Database Connection is NIL")
@@ -77,10 +76,6 @@ func main() {
 	}
 
 	envSecurity := os.Getenv("ENV_SECURITY")
-	if envSecurity == "" {
-		envSecurity = "team07api"
-	}
-
 	apiGroup := r.Group("/" + envSecurity)
 
 	apiGroup.GET("/storage/:bucket/*object", func(c *gin.Context) {

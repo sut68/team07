@@ -26,7 +26,6 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Forgot Password State
   const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
   const [forgotInfo, setForgotInfo] = useState<ForgotPasswordInterface>({ username: '', email: '' });
   const [forgotMessage, setForgotMessage] = useState<string | null>(null);
@@ -61,7 +60,6 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      // 1. set here to verified you are human
       const payload = {
         ...inputInfo,
         ispeople: iscorrect,

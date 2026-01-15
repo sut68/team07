@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 import GroupManagementModal from "../../../components/group/GroupModal";
 import { GetEligibleStudentCount, GenerateGroups, GetGroupProjects } from "../../../services/group";

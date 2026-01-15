@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
 import { GetProgress, AddProgress, UpProgress, EraseProgress } from "../../../services/progress";
 import { DropWholechat, Getteachergroup } from "@/app/services/chat";
 
-const web = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/team07api";
+const web = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 export default function ProgressPage() {
   const [gpji, setgpji] = useState<number>(0);

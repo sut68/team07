@@ -1,10 +1,9 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, Button, Typography, Modal, Form, Input, Tag, Space, message, Upload, Tooltip, Row, Col } from 'antd';
 import { ProjectOutlined, SendOutlined, FileTextOutlined, CheckCircleOutlined, ExclamationCircleOutlined, ClockCircleOutlined, CloseCircleOutlined, UploadOutlined, PlusOutlined, BookOutlined } from '@ant-design/icons';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Topic, TopicApproval } from '@/app/interfaces/Topic';
+import { Topic } from '@/app/interfaces/Topic';
 import { getTopics, createTopic, updateTopic, selectTopic, cancelSelection, getStudentTopic } from '@/app/services/topic';
 import { GetMyGroup } from '@/app/services/group';
 import { GetMe } from '@/app/services/login';
@@ -761,7 +760,7 @@ export default function StudentTopicPage() {
                                                     const link = document.createElement('a');
                                                     const filePath = myProject.file_path.replace(/^\.\//, '');
                                                     const fullPath = filePath.startsWith('uploads') ? filePath : `uploads/projects/${filePath}`;
-                                                    link.href = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/${fullPath}`;
+                                                    link.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/${fullPath}`;
                                                     link.download = myProject.file_path.split('/').pop() || 'document';
                                                     link.target = '_blank';
                                                     document.body.appendChild(link);

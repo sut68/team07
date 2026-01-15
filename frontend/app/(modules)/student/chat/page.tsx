@@ -32,7 +32,7 @@ const THEME_RED_LIGHT = "#a81835";
 const BG_COLOR = "#f0f2f5";
 const BORDER_COLOR = "#e5e7eb";
 
-const STORAGE_DOMAIN = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8080/team07api";
+const STORAGE_DOMAIN = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 const getFileUrl = (path: string) => {
   if (!path) return "";
@@ -88,7 +88,7 @@ export default function ChatPage() {
     if (!mounted) return;
     if (socketRef.current) return;
 
-    const url = process.env.NEXT_PUBLIC_SOCKET_URL ?? "http://localhost:3001";
+    const url = process.env.NEXT_PUBLIC_SOCKET_URL;
 
     const s = io(url, {
       transports: ["websocket"],

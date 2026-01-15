@@ -4,7 +4,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ResetPassword } from '../../../services/login';
 import { ResetPasswordInterface } from '../../../interfaces/Login';
-import '../../../style/login.css'; // Updated to use shared modern styles
+import '../../../style/login.css';
 import { EyeInvisibleOutlined, EyeOutlined } from '@ant-design/icons';
 
 const ResetPasswordComponent: React.FC = () => {

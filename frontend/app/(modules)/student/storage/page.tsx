@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button, Empty, message, ConfigProvider, Select, Input, Tag, Row, Col } from 'antd';
 import { SearchOutlined, AppstoreOutlined, FilterOutlined } from '@ant-design/icons';
 import { ProjectStorage } from '@/app/interfaces/storage';
@@ -83,7 +83,7 @@ const StudentStoragePage = () => {
             const link = document.createElement('a');
             const filePath = selectedProject.file_path.replace(/^\.\//, '');
             const fullPath = filePath.startsWith('uploads') ? filePath : `uploads/projects/${filePath}`;
-            link.href = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/${fullPath}`;
+            link.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/${fullPath}`;
             link.download = selectedProject.file_path.split('/').pop() || 'document';
             link.target = '_blank';
             document.body.appendChild(link);
