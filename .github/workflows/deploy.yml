@@ -22,7 +22,7 @@ jobs:
             git fetch --all
             git reset --hard origin/main
             
-            mkdir -p backend/uploads/chats backend/uploads/news backend/uploads/progress backend/uploads/topics
+            mkdir -p backend/uploads/chats backend/uploads/news backend/uploads/progress backend/uploads/topics backend/uploads/projects
             chmod -R 777 backend/uploads
 
             # 3. สร้างไฟล์ .env

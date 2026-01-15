@@ -19,6 +19,7 @@ func ListEvaluationProjects(c *gin.Context) {
 		return
 	}
 	mode := c.Query("mode")
+	year := c.Query("year")
 
 	db := database.DB()
 	var projects []entity.GroupProject
@@ -33,9 +34,13 @@ func ListEvaluationProjects(c *gin.Context) {
 		Preload("Appointment.AppointmentType.Evaluation").
 		Preload("GroupMembers")
 
+	if year != "" {
+		query = query.Where("group_projects.year = ?", year)
+	}
+
 	if mode == "committee" {
-		query = query.Joins("JOIN appointments ON appointments.group_project_id = group_projects.id").
-			Joins("JOIN users ON users.id = appointments.teacher_id").
+		query = query.Joins("JOIN appointments ON appointments.group_project_id = group_projects.id AND appointments.deleted_at IS NULL").
+			Joins("JOIN users ON users.id = appointments.teacher_id AND users.deleted_at IS NULL").
 			Where("appointments.appointment_type_id = ?", 3).
 			Where("users.branch_id = ?", claims.BranchID).
 			Group("group_projects.id")
@@ -133,6 +138,7 @@ func ListEvaluationProjects(c *gin.Context) {
 
 		if totalCount > 0 {
 			var completedEvaluations []string
+			// 1. Check Group Scores (EvaResult)
 			db.Model(&entity.EvaResult{}).
 				Joins("JOIN criteria ON criteria.id = eva_results.criteria_id").
 				Joins("JOIN evaluations ON evaluations.id = criteria.evaluation_id").
@@ -141,14 +147,88 @@ func ListEvaluationProjects(c *gin.Context) {
 				Distinct("evaluations.name").
 				Pluck("evaluations.name", &completedEvaluations)
 
+			// 2. Check Individual Scores (IndividualScore) - For Ethics Test
+			var completedIndividualEvaluations []string
+			db.Model(&entity.IndividualScore{}).
+				Joins("JOIN criteria ON criteria.id = individual_scores.criteria_id").
+				Joins("JOIN evaluations ON evaluations.id = criteria.evaluation_id").
+				Joins("JOIN appointments ON appointments.id = individual_scores.appointment_id").
+				Where("appointments.group_project_id = ? AND individual_scores.teacher_id = ?", p.ID, claims.ID).
+				Distinct("evaluations.name").
+				Pluck("evaluations.name", &completedIndividualEvaluations)
+
+			completedEvaluations = append(completedEvaluations, completedIndividualEvaluations...)
+
+			// Use map to prevent double counting
+			countedMap := make(map[string]bool)
 			for _, completed := range completedEvaluations {
-				if availableEvaluationsMap[completed] {
+				if availableEvaluationsMap[completed] && !countedMap[completed] {
 					gradedCount++
+					countedMap[completed] = true
 				}
 			}
 		}
 
 		isGraded := (gradedCount == totalCount) && totalCount > 0
+
+		// Preserve status from active appointments
+		activeTotal := totalCount
+		activeIsGraded := isGraded
+
+		// Check for all 4 types to enable permanent Green status
+		var allHistoryEvaluations []string
+
+		// 1. Check All Group Scores (Global)
+		db.Model(&entity.EvaResult{}).
+			Joins("JOIN criteria ON criteria.id = eva_results.criteria_id").
+			Joins("JOIN evaluations ON evaluations.id = criteria.evaluation_id").
+			Joins("JOIN appointments ON appointments.id = eva_results.appointment_id").
+			Where("appointments.group_project_id = ?", p.ID).
+			Distinct("evaluations.name").
+			Pluck("evaluations.name", &allHistoryEvaluations)
+
+		// 2. Check All Individual Scores (Global)
+		var indHistoryEvaluations []string
+		db.Model(&entity.IndividualScore{}).
+			Joins("JOIN criteria ON criteria.id = individual_scores.criteria_id").
+			Joins("JOIN evaluations ON evaluations.id = criteria.evaluation_id").
+			Joins("JOIN appointments ON appointments.id = individual_scores.appointment_id").
+			Where("appointments.group_project_id = ?", p.ID).
+			Distinct("evaluations.name").
+			Pluck("evaluations.name", &indHistoryEvaluations)
+
+		allHistoryEvaluations = append(allHistoryEvaluations, indHistoryEvaluations...)
+
+		mapHistory := make(map[string]bool)
+		for _, h := range allHistoryEvaluations {
+			mapHistory[h] = true
+		}
+
+		// Check for 4 mandatory Final Defense evaluations
+		mandatoryEvaluations := []string{"Ethics Test", "Peer Assessment", "Advisor Evaluation", "Committee Evaluation"}
+		completedMandatoryCount := 0
+		for _, evalName := range mandatoryEvaluations {
+			if mapHistory[evalName] {
+				completedMandatoryCount++
+			}
+		}
+
+		if completedMandatoryCount > 0 {
+			gradedCount = completedMandatoryCount
+			totalCount = 4
+
+			// 4/4 -> Green Always
+			if completedMandatoryCount == 4 {
+				isGraded = true
+			} else {
+				if activeTotal > 0 {
+					isGraded = activeIsGraded
+				} else {
+					isGraded = false
+				}
+			}
+		}
+
 		statusText := "Pending"
 		if isGraded {
 			statusText = "Graded"
@@ -180,6 +260,37 @@ func ListEvaluationProjects(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+func GetEvaluationProjectYears(c *gin.Context) {
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	mode := c.Query("mode")
+
+	db := database.DB()
+	var years []int
+
+	query := db.Model(&entity.GroupProject{}).Distinct("year").Order("year DESC")
+
+	if mode == "committee" {
+		query = query.Joins("JOIN appointments ON appointments.group_project_id = group_projects.id").
+			Joins("JOIN users ON users.id = appointments.teacher_id").
+			Where("appointments.appointment_type_id = ?", 3).
+			Where("users.branch_id = ?", claims.BranchID)
+	} else {
+		// Only years for projects where this teacher is an advisor
+		query = query.Where("teacher_id = ?", claims.ID)
+	}
+
+	if err := query.Pluck("year", &years).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch years"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"years": years})
+}
+
 func GetEvaluationForm(c *gin.Context) {
 	appointmentID := c.Param("appointment_id")
 
@@ -197,6 +308,12 @@ func GetEvaluationForm(c *gin.Context) {
 		Preload("GroupProject.TopicSelections.Topic").
 		First(&appointment, appointmentID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Appointment not found"})
+		return
+	}
+
+	// 1. Check Project Status before allow evaluation form
+	if appointment.GroupProject.GroupStatus == "Completed" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "This project is already graduated/completed. No further evaluation allowed."})
 		return
 	}
 

@@ -10,7 +10,7 @@ import { Logout } from '../../services/login';
 import { useAuth } from "../../(modules)/roleCheck/authContext";
 import ReportIssueContent from '../issue/issueReport';
 import NotificationBell from '../notification/NotificationBell';
-import styles from './StudentLayout.module.css';
+import '../../style/StudentLayout.css';
 
 export default function StudentTopbar({ userRole, children }: { userRole: string; children?: React.ReactNode }) {
     const router = useRouter();
@@ -106,10 +106,10 @@ export default function StudentTopbar({ userRole, children }: { userRole: string
     };
 
     return (
-        <div className={styles.layoutContainer}>
+        <div className="layoutContainer">
             {/* Hamburger Toggle Button - Visible on screens <= 1400px */}
             <button
-                className={`${styles.hamburgerButton} ${!isSidebarCollapsed ? styles.hamburgerButtonHidden : ''}`}
+                className={`hamburgerButton ${!isSidebarCollapsed ? 'hamburgerButtonHidden' : ''}`}
                 onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
                 aria-label="Toggle sidebar"
             >
@@ -117,62 +117,62 @@ export default function StudentTopbar({ userRole, children }: { userRole: string
             </button>
 
             {/* Sidebar - Visible on screens <= 1400px */}
-            <aside className={`${styles.sidebar} ${isSidebarCollapsed ? styles.sidebarCollapsed : ''}`}>
+            <aside className={`${`sidebar`} ${isSidebarCollapsed ? 'sidebarCollapsed' : ''}`}>
                 {/* Close Button */}
                 <button
-                    className={styles.sidebarCloseButton}
+                    className="sidebarCloseButton"
                     onClick={() => setIsSidebarCollapsed(true)}
                     aria-label="Close sidebar"
                 >
                     ✕
                 </button>
 
-                <nav className={styles.sidebarNav}>
+                <nav className="sidebarNav">
                     <Link
                         href="/student/dashboard"
-                        className={`${styles.sidebarLink} ${isActive('/student/dashboard') ? styles.sidebarLinkActive : ''}`}
+                        className={`sidebarLink ${isActive('/student/dashboard') ? 'sidebarLinkActive' : ''}`}
                     >
                         หน้าหลัก
                     </Link>
                     <Link
                         href="/student/group"
-                        className={`${styles.sidebarLink} ${isActive('/student/group') ? styles.sidebarLinkActive : ''}`}
+                        className={`sidebarLink ${isActive('/student/group') ? 'sidebarLinkActive' : ''}`}
                     >
                         กลุ่มของฉัน
                     </Link>
                     <Link
                         href="/student/selectAdvisor"
-                        className={`${styles.sidebarLink} ${isActive('/student/selectAdvisor') ? styles.sidebarLinkActive : ''}`}
+                        className={`sidebarLink ${isActive('/student/selectAdvisor') ? 'sidebarLinkActive' : ''}`}
                     >
                         เลือกที่ปรึกษา
                     </Link>
                     <Link
                         href="/student/topic"
-                        className={`${styles.sidebarLink} ${isActive('/student/topic') ? styles.sidebarLinkActive : ''}`}
+                        className={`sidebarLink ${isActive('/student/topic') ? 'sidebarLinkActive' : ''}`}
                     >
                         หัวข้อโครงงาน
                     </Link>
                     <Link
                         href="/student/progress"
-                        className={`${styles.sidebarLink} ${isActive('/student/progress') ? styles.sidebarLinkActive : ''}`}
+                        className={`sidebarLink ${isActive('/student/progress') ? 'sidebarLinkActive' : ''}`}
                     >
                         ความคืบหน้า
                     </Link>
                     <Link
                         href="/student/chat"
-                        className={`${styles.sidebarLink} ${isActive('/student/chat') ? styles.sidebarLinkActive : ''}`}
+                        className={`sidebarLink ${isActive('/student/chat') ? 'sidebarLinkActive' : ''}`}
                     >
                         แชท
                     </Link>
                     <Link
                         href="/student/exam"
-                        className={`${styles.sidebarLink} ${isActive('/student/exam') ? styles.sidebarLinkActive : ''}`}
+                        className={`sidebarLink ${isActive('/student/exam') ? 'sidebarLinkActive' : ''}`}
                     >
                         เกี่ยวกับสอบ
                     </Link>
                     <Link
                         href="/student/storage"
-                        className={`${styles.sidebarLink} ${isActive('/student/storage') ? styles.sidebarLinkActive : ''}`}
+                        className={`sidebarLink ${isActive('/student/storage') ? 'sidebarLinkActive' : ''}`}
                     >
                         คลังโครงงาน
                     </Link>
@@ -180,9 +180,9 @@ export default function StudentTopbar({ userRole, children }: { userRole: string
             </aside>
 
             {/* Header - Layout changes based on screen size */}
-            <header className={`${styles.header} ${isSidebarCollapsed ? styles.headerCollapsed : ''}`} role="banner">
+            <header className={`${`header`} ${isSidebarCollapsed ? `styles.headerCollapsed` : ''}`} role="banner">
                 {/* Desktop Navigation - Left (visible > 1400px) */}
-                <nav className={styles.navLeft}>
+                <nav className={`navLeft`}>
                     <Link href="/student/dashboard" style={getNavStyle('/student/dashboard')}>หน้าหลัก</Link>
                     <Link href="/student/group" style={getNavStyle('/student/group')}>กลุ่มของฉัน</Link>
                     <Link href="/student/selectAdvisor" style={getNavStyle('/student/selectAdvisor')}>เลือกที่ปรึกษา</Link>
@@ -191,12 +191,12 @@ export default function StudentTopbar({ userRole, children }: { userRole: string
                 </nav>
 
                 {/* Logo - Centered */}
-                <Link href="/student/dashboard" aria-label="หน้าหลัก" className={styles.logoContainer}>
+                <Link href="/student/dashboard" aria-label="หน้าหลัก" className={`logoContainer`}>
                     <Image src="/image/logo1.png" alt="SUT" width={90} height={38} priority />
                 </Link>
 
                 {/* Desktop Navigation - Right (visible > 1400px) */}
-                <nav className={styles.navRight}>
+                <nav className={`navRight`}>
                     <Link href="/student/progress" style={getNavStyle('/student/progress')}>ความคืบหน้า</Link>
                     <Link href="/student/chat" style={getNavStyle('/student/chat')}>แชท</Link>
                     <Link href="/student/exam" style={getNavStyle('/student/exam')}>เกี่ยวกับสอบ</Link>
@@ -204,7 +204,7 @@ export default function StudentTopbar({ userRole, children }: { userRole: string
                 </nav>
 
                 {/* User Actions - Always visible */}
-                <div className={styles.userActions}>
+                <div className={`userActions`}>
                     <NotificationBell />
                     <Dropdown
                         menu={{ items: menuItems, onClick: onMenuClick }}
@@ -234,7 +234,7 @@ export default function StudentTopbar({ userRole, children }: { userRole: string
             </Modal>
 
             {/* Main Content */}
-            <main className={`${styles.mainContent} ${isSidebarCollapsed ? styles.mainContentCollapsed : ''}`}>
+            <main className={`${`mainContent`} ${isSidebarCollapsed ? `mainContentCollapsed` : ''}`}>
                 {children}
             </main>
         </div>

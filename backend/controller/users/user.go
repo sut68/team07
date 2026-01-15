@@ -174,7 +174,7 @@ func ImportUsersCSV(c *gin.Context) {
 
 	tx.Commit()
 	fmt.Println("[DEBUG] Import สำเร็จ!")
-	log.InsertLog(c, 28)
+	log.InsertLog(c, 47)
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Imported " + strconv.Itoa(len(users)) + " users successfully",
 	})
@@ -302,7 +302,7 @@ func CreateUser(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	log.InsertLog(c, 28)
+	log.InsertLog(c, 29)
 	c.JSON(http.StatusCreated, gin.H{"message": "User created successfully", "data": user})
 }
 
@@ -348,7 +348,7 @@ func UpdateUser(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user"})
 		return
 	}
-	log.InsertLog(c, 29)
+	log.InsertLog(c, 30)
 	c.JSON(http.StatusOK, gin.H{"message": "User updated successfully", "data": user})
 }
 
@@ -412,7 +412,7 @@ func UpdateUserProfile(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update profile"})
 		return
 	}
-	log.InsertLog(c, 29)
+	log.InsertLog(c, 30)
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Update profile successfully",
 		"data":    user,
@@ -435,7 +435,7 @@ func DeleteUser(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete user"})
 		return
 	}
-	log.InsertLog(c, 30)
+	log.InsertLog(c, 31)
 	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
 }
 

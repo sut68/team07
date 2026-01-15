@@ -11,7 +11,7 @@ import { useAuth } from "../../(modules)/roleCheck/authContext";
 import NewsModal from '../news/NewsModal';
 import ReportIssueContent from '../issue/issueReport';
 import NotificationBell from '../notification/NotificationBell';
-import styles from './TeacherLayout.module.css';
+import '../../style/TeacherLayout.css';
 
 export default function TeacherTopbar({ userRole, children }: { userRole: string; children?: React.ReactNode }) {
     const router = useRouter();
@@ -107,7 +107,7 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
     }, []);
 
     return (
-        <div className={styles.layoutContainer}>
+        <div className={`layoutContainer`}>
             <NewsModal
                 isOpen={isNewsModalOpen}
                 onClose={() => setIsNewsModalOpen(false)}
@@ -123,7 +123,7 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
 
             {/* Hamburger Toggle Button - Visible on screens <= 1400px */}
             <button
-                className={`${styles.hamburgerButton} ${!isSidebarCollapsed ? styles.hamburgerButtonHidden : ''}`}
+                className={`hamburgerButton ${!isSidebarCollapsed ? 'hamburgerButtonHidden' : ''}`}
                 onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
                 aria-label="Toggle sidebar"
             >
@@ -131,62 +131,62 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
             </button>
 
             {/* Sidebar - Visible on screens <= 1400px */}
-            <aside className={`${styles.sidebar} ${isSidebarCollapsed ? styles.sidebarCollapsed : ''}`}>
+            <aside className={`sidebar ${isSidebarCollapsed ? 'sidebarCollapsed' : ''}`}>
                 {/* Close Button */}
                 <button
-                    className={styles.sidebarCloseButton}
+                    className={`sidebarCloseButton`}
                     onClick={() => setIsSidebarCollapsed(true)}
                     aria-label="Close sidebar"
                 >
                     ✕
                 </button>
 
-                <nav className={styles.sidebarNav}>
+                <nav className={`sidebarNav`}>
                     <Link
                         href="/teacher/dashboard"
-                        className={`${styles.sidebarLink} ${isActive('/teacher/dashboard') ? styles.sidebarLinkActive : ''}`}
+                        className={`sidebarLink ${isActive('/teacher/dashboard') ? 'sidebarLinkActive' : ''}`}
                     >
                         หน้าหลัก
                     </Link>
                     <Link
                         href="/teacher/group"
-                        className={`${styles.sidebarLink} ${isActive('/teacher/group') ? styles.sidebarLinkActive : ''}`}
+                        className={`sidebarLink ${isActive('/teacher/group') ? 'sidebarLinkActive' : ''}`}
                     >
                         กลุ่มในที่ปรึกษา
                     </Link>
                     <Link
                         href="/teacher/topic"
-                        className={`${styles.sidebarLink} ${isActive('/teacher/topic') ? styles.sidebarLinkActive : ''}`}
+                        className={`sidebarLink ${isActive('/teacher/topic') ? 'sidebarLinkActive' : ''}`}
                     >
                         หัวข้อโครงงาน
                     </Link>
                     <Link
                         href="/teacher/progress"
-                        className={`${styles.sidebarLink} ${isActive('/teacher/progress') ? styles.sidebarLinkActive : ''}`}
+                        className={`sidebarLink ${isActive('/teacher/progress') ? 'sidebarLinkActive' : ''}`}
                     >
                         ความคืบหน้า
                     </Link>
                     <Link
                         href="/teacher/chat"
-                        className={`${styles.sidebarLink} ${isActive('/teacher/chat') ? styles.sidebarLinkActive : ''}`}
+                        className={`sidebarLink ${isActive('/teacher/chat') ? 'sidebarLinkActive' : ''}`}
                     >
                         แชท
                     </Link>
                     <Link
                         href="/teacher/appointment"
-                        className={`${styles.sidebarLink} ${isActive('/teacher/appointment') ? styles.sidebarLinkActive : ''}`}
+                        className={`sidebarLink ${isActive('/teacher/appointment') ? 'sidebarLinkActive' : ''}`}
                     >
                         การนัดหมาย
                     </Link>
                     <Link
                         href="/teacher/evaluation"
-                        className={`${styles.sidebarLink} ${isActive('/teacher/evaluation') ? styles.sidebarLinkActive : ''}`}
+                        className={`sidebarLink ${isActive('/teacher/evaluation') ? 'sidebarLinkActive' : ''}`}
                     >
                         การประเมิน
                     </Link>
                     <Link
                         href="/teacher/storage"
-                        className={`${styles.sidebarLink} ${isActive('/teacher/storage') ? styles.sidebarLinkActive : ''}`}
+                        className={`sidebarLink ${isActive('/teacher/storage') ? 'sidebarLinkActive' : ''}`}
                     >
                         คลังโครงงาน
                     </Link>
@@ -194,9 +194,9 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
             </aside>
 
             {/* Header - Layout changes based on screen size */}
-            <header className={`${styles.header} ${isSidebarCollapsed ? styles.headerCollapsed : ''}`}>
+            <header className={`${`header`} ${isSidebarCollapsed ? `headerCollapsed` : ''}`}>
                 {/* Desktop Navigation - Left (visible > 1400px) */}
-                <nav className={styles.navLeft}>
+                <nav className={`navLeft`}>
                     <Link href="/teacher/dashboard" style={getNavStyle('/teacher/dashboard')}>หน้าหลัก</Link>
                     <Link href="/teacher/group" style={getNavStyle('/teacher/group')}>กลุ่มในที่ปรึกษา</Link>
                     <Link href="/teacher/topic" style={getNavStyle('/teacher/topic')}>หัวข้อโครงงาน</Link>
@@ -204,12 +204,12 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
                 </nav>
 
                 {/* Logo - Centered */}
-                <Link href="/teacher/dashboard" className={styles.logoContainer}>
+                <Link href="/teacher/dashboard" className={`logoContainer`}>
                     <Image src="/image/logo1.png" alt="SUT" width={90} height={38} priority />
                 </Link>
 
                 {/* Desktop Navigation - Right (visible > 1400px) */}
-                <nav className={styles.navRight}>
+                <nav className={`navRight`}>
                     <Link href="/teacher/chat" style={getNavStyle('/teacher/chat')}>แชท</Link>
                     <Link href="/teacher/appointment" style={getNavStyle('/teacher/appointment')}>การนัดหมาย</Link>
                     <Link href="/teacher/evaluation" style={getNavStyle('/teacher/evaluation')}>การประเมิน</Link>
@@ -217,7 +217,7 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
                 </nav>
 
                 {/* User Actions - Always visible */}
-                <div className={styles.userActions}>
+                <div className={`userActions`}>
                     <NotificationBell />
                     <Dropdown
                         menu={{ items: menuItems, onClick: onMenuClick }}
@@ -238,7 +238,7 @@ export default function TeacherTopbar({ userRole, children }: { userRole: string
             </header>
 
             {/* Main Content */}
-            <main className={`${styles.mainContent} ${isSidebarCollapsed ? styles.mainContentCollapsed : ''}`}>
+            <main className={`${`mainContent`} ${isSidebarCollapsed ? `mainContentCollapsed` : ''}`}>
                 {children}
             </main>
         </div>

@@ -10,6 +10,7 @@ import (
 
 	"github.com/asaskevich/govalidator"
 	"github.com/gin-gonic/gin"
+	"github.com/sut68/team07/backend/controller/log"
 	"github.com/sut68/team07/backend/database"
 	"github.com/sut68/team07/backend/entity"
 	"github.com/sut68/team07/backend/middleware"
@@ -43,6 +44,12 @@ func CreateProject(c *gin.Context) {
 		Where("group_project_id = ? AND status = ?", groupID, "Active").
 		First(&selection).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "No active topic selection found for your group. Please select a topic first."})
+		return
+	}
+
+	// เพิ่มการตรวจสอบ: ต้องเป็น Completed เท่านั้นถึงจะกรอกข้อมูลได้
+	if selection.GroupProject.GroupStatus != "Completed" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "คุณสามารถกรอกข้อมูลโครงงานได้หลังจากที่กลุ่มมีสถานะ 'Completed' (ผ่านการประเมิน) แล้วเท่านั้น"})
 		return
 	}
 
@@ -92,7 +99,7 @@ func CreateProject(c *gin.Context) {
 		Abstract:    abstract,
 		Keywords:    keywords,
 		Year:        year,
-		Status:      "In Progress", // สถานะเริ่มต้น
+		Status:      "Pending", // เปลี่ยนสถานะเป็น Pending Publish เพื่อรออาจารย์อนุมัติลงคลัง
 		FilePath:    filePath,
 		SelectionID: selection.ID,
 	}
@@ -108,7 +115,7 @@ func CreateProject(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create project"})
 		return
 	}
-
+	log.InsertLog(c, 48)	
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Project created successfully",
 		"data":    project,
@@ -185,6 +192,18 @@ func UpdateProject(c *gin.Context) {
 		return
 	}
 
+	// เพิ่มการตรวจสอบ: ต้องเป็น Completed เท่านั้นถึงจะแก้ไขข้อมูลได้
+	var groupProject entity.GroupProject
+	if err := db.Select("group_status").First(&groupProject, member.GroupProjectID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Group information not found"})
+		return
+	}
+
+	if groupProject.GroupStatus != "Completed" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "คุณสามารถแก้ไขข้อมูลโครงงานได้เมื่อสถานะกลุ่มเป็น 'Completed' แล้วเท่านั้น"})
+		return
+	}
+
 	// ดึง Project และตรวจสอบสิทธิ์
 	var project entity.Project
 	if err := db.Preload("TopicSelection").
@@ -236,7 +255,7 @@ func UpdateProject(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update project"})
 		return
 	}
-
+	log.InsertLog(c, 49)	
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Project updated successfully",
 		"data":    project,

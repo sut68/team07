@@ -37,8 +37,8 @@ func ListAppointments(c *gin.Context) {
 		Preload("GroupProject", func(db *gorm.DB) *gorm.DB { return db.Select("id", "group_number", "group_status") }).
 		Preload("Teacher", func(db *gorm.DB) *gorm.DB { return db.Select("id", "username", "firstname", "lastname") }).
 		Preload("Evaluation", func(db *gorm.DB) *gorm.DB { return db.Select("id", "name") }).
-		Joins("JOIN users ON users.id = appointments.teacher_id").
-		Joins("JOIN group_projects ON group_projects.id = appointments.group_project_id").
+		Joins("JOIN users ON users.id = appointments.teacher_id AND users.deleted_at IS NULL").
+		Joins("JOIN group_projects ON group_projects.id = appointments.group_project_id AND group_projects.deleted_at IS NULL").
 		Joins("LEFT JOIN evaluations ON evaluations.id = appointments.evaluation_id").
 		Where("appointments.teacher_id = ?", claims.ID).
 		Or("appointments.appointment_type_id = ? AND (group_projects.teacher_id = ? OR (evaluations.name = 'Committee Evaluation' AND users.branch_id = ?))", 3, claims.ID, claims.BranchID).
@@ -62,11 +62,35 @@ func ListAppointments(c *gin.Context) {
 			"room_id":            apt.Room.ID,
 			"room_name":          apt.Room.Name,
 			"location":           apt.Room.Location,
-			"group_project_id":   apt.GroupProject.ID,
-			"group_number":       apt.GroupProject.GroupNumber,
-			"teacher_id":         apt.Teacher.ID,
-			"teacher_name":       apt.Teacher.Firstname + " " + apt.Teacher.Lastname,
-			"evaluation_id":      apt.EvaluationID,
+			"group_project_id": func() uint {
+				if apt.GroupProject != nil {
+					return apt.GroupProject.ID
+				} else {
+					return 0
+				}
+			}(),
+			"group_number": func() uint {
+				if apt.GroupProject != nil {
+					return apt.GroupProject.GroupNumber
+				} else {
+					return 0
+				}
+			}(),
+			"teacher_id": func() uint {
+				if apt.Teacher != nil {
+					return apt.Teacher.ID
+				} else {
+					return 0
+				}
+			}(),
+			"teacher_name": func() string {
+				if apt.Teacher != nil {
+					return apt.Teacher.Firstname + " " + apt.Teacher.Lastname
+				} else {
+					return ""
+				}
+			}(),
+			"evaluation_id": apt.EvaluationID,
 			"evaluation_name": func() string {
 				if apt.Evaluation != nil {
 					return apt.Evaluation.Name
@@ -134,14 +158,56 @@ func GetAppointment(c *gin.Context) {
 		"room_name": apt.Room.Name,
 		"location":  apt.Room.Location,
 
-		"group_project_id": apt.GroupProject.ID,
-		"group_number":     apt.GroupProject.GroupNumber,
-		"group_status":     apt.GroupProject.GroupStatus,
+		"group_project_id": func() uint {
+			if apt.GroupProject != nil {
+				return apt.GroupProject.ID
+			} else {
+				return 0
+			}
+		}(),
+		"group_number": func() uint {
+			if apt.GroupProject != nil {
+				return apt.GroupProject.GroupNumber
+			} else {
+				return 0
+			}
+		}(),
+		"group_status": func() string {
+			if apt.GroupProject != nil {
+				return apt.GroupProject.GroupStatus
+			} else {
+				return ""
+			}
+		}(),
 
-		"teacher_id":    apt.Teacher.ID,
-		"teacher_name":  apt.Teacher.Firstname + " " + apt.Teacher.Lastname,
-		"teacher_email": apt.Teacher.Email,
-		"teacher_phone": apt.Teacher.Phone,
+		"teacher_id": func() uint {
+			if apt.Teacher != nil {
+				return apt.Teacher.ID
+			} else {
+				return 0
+			}
+		}(),
+		"teacher_name": func() string {
+			if apt.Teacher != nil {
+				return apt.Teacher.Firstname + " " + apt.Teacher.Lastname
+			} else {
+				return ""
+			}
+		}(),
+		"teacher_email": func() string {
+			if apt.Teacher != nil {
+				return apt.Teacher.Email
+			} else {
+				return ""
+			}
+		}(),
+		"teacher_phone": func() string {
+			if apt.Teacher != nil {
+				return apt.Teacher.Phone
+			} else {
+				return ""
+			}
+		}(),
 		"evaluation_id": apt.EvaluationID,
 		"evaluation_name": func() string {
 			if apt.Evaluation != nil {

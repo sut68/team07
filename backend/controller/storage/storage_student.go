@@ -21,7 +21,7 @@ func ListProjectsStudent(c *gin.Context) {
 	
 	// 1. Query ProjectStorage (ALL projects, optionally filter by teacher)
 	var storageProjects []entity.ProjectStorage
-	query1 := db.Preload("Teacher")
+	query1 := db.Preload("Teacher").Where("status = ?", "Public")
 	
 	if teacherID != "" {
 		query1 = query1.Where("teacher_id = ?", teacherID)
@@ -66,16 +66,24 @@ func ListProjectsStudent(c *gin.Context) {
 	}
 
 	// 3. Merge results into common format
+	type TeacherResponse struct {
+		ID        uint   `json:"ID"`
+		FirstName string `json:"firstname"`
+		LastName  string `json:"lastname"`
+	}
+
 	type ProjectResponse struct {
-		ID        uint      `json:"id"`
-		Title     string    `json:"title"`
-		Abstract  string    `json:"abstract"`
-		Keywords  string    `json:"keywords"`
-		Year      int       `json:"year"`
-		FilePath  string    `json:"file_path"`
-		TeacherID uint      `json:"teacher_id"`
-		Source    string    `json:"source"`
-		CreatedAt time.Time `json:"created_at"`
+		ID        uint            `json:"ID"`
+		Title     string          `json:"title"`
+		Abstract  string          `json:"abstract"`
+		Keywords  string          `json:"keywords"`
+		Year      int             `json:"year"`
+		FilePath  string          `json:"file_path"`
+		Status    string          `json:"status"`
+		TeacherID uint            `json:"teacher_id"`
+		Teacher   TeacherResponse `json:"teacher"`
+		Source    string          `json:"source"`
+		CreatedAt time.Time       `json:"created_at"`
 	}
 
 	var results []ProjectResponse
@@ -89,7 +97,13 @@ func ListProjectsStudent(c *gin.Context) {
 			Keywords:  p.Keywords,
 			Year:      p.Year,
 			FilePath:  p.FilePath,
+			Status:    p.Status,
 			TeacherID: p.TeacherID,
+			Teacher: TeacherResponse{
+				ID:        p.Teacher.ID,
+				FirstName: p.Teacher.Firstname,
+				LastName:  p.Teacher.Lastname,
+			},
 			Source:    "manual",
 			CreatedAt: p.CreatedAt,
 		})
@@ -98,9 +112,19 @@ func ListProjectsStudent(c *gin.Context) {
 	// Add Project items
 	for _, p := range studentProjects {
 		var teacherID uint
-		if p.TopicSelection != nil && p.TopicSelection.GroupProject != nil && p.TopicSelection.GroupProject.TeacherID != nil {
-			teacherID = *p.TopicSelection.GroupProject.TeacherID
-		}
+		var teacherResp TeacherResponse
+		
+		if p.TopicSelection != nil && p.TopicSelection.GroupProject != nil && p.TopicSelection.GroupProject.Teacher != nil {
+			teacherID = p.TopicSelection.GroupProject.Teacher.ID
+			teacherResp = TeacherResponse{
+				ID:        p.TopicSelection.GroupProject.Teacher.ID,
+				FirstName: p.TopicSelection.GroupProject.Teacher.Firstname,
+				LastName:  p.TopicSelection.GroupProject.Teacher.Lastname,
+			}
+		} else if p.TopicSelection != nil && p.TopicSelection.GroupProject != nil && p.TopicSelection.GroupProject.TeacherID != nil {
+             // Fallback if Teacher object is nil but ID exists (shouldn't happen with correct Preload)
+             teacherID = *p.TopicSelection.GroupProject.TeacherID
+        }
 		
 		results = append(results, ProjectResponse{
 			ID:        p.ID,
@@ -109,7 +133,9 @@ func ListProjectsStudent(c *gin.Context) {
 			Keywords:  p.Keywords,
 			Year:      p.Year,
 			FilePath:  p.FilePath,
+			Status:    "Public",
 			TeacherID: teacherID,
+			Teacher:   teacherResp,
 			Source:    "student",
 			CreatedAt: p.CreatedAt,
 		})
@@ -139,5 +165,6 @@ func GetProjectStudent(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"data": project})
 }
+
 
 

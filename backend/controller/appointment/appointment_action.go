@@ -30,7 +30,7 @@ func SearchGroup(c *gin.Context) {
 		query = query.Where("teacher_id = ?", claims.ID)
 	}
 
-	query = query.Where("group_status IN ?", []string{"Pending", "In Process"})
+	query = query.Where("group_status IN ?", []string{"Pending", "In Process", "Approved"})
 
 	if keyword != "" {
 		query = query.Where("name_project LIKE ? OR CAST(group_number AS TEXT) LIKE ?", "%"+keyword+"%", "%"+keyword+"%")
@@ -173,18 +173,20 @@ func CreateAppointment(c *gin.Context) {
 		return
 	}
 
-	// 1. Check Room Conflict (Overlap)
-	var roomConflict int64
-	if err := db.Model(&entity.Appointment{}).
-		Where("room_id = ? AND appointment_status = 'scheduled'", appointment.RoomID).
-		Where("start_date_time < ? AND (start_date_time + (duration_min * interval '1 minute')) > ?", newEndTime, newStartTime).
-		Count(&roomConflict).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	if roomConflict > 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "ห้องนี้ถูกจองในช่วงเวลาดังกล่าวแล้ว"})
-		return
+	// 1. Check Room Conflict (Overlap) - ยกเว้น Final Defense/Committee Evaluation (TypeID = 3)
+	if appointment.AppointmentTypeID != 3 {
+		var roomConflict int64
+		if err := db.Model(&entity.Appointment{}).
+			Where("room_id = ? AND appointment_status = 'scheduled'", appointment.RoomID).
+			Where("start_date_time < ? AND (start_date_time + (duration_min * interval '1 minute')) > ?", newEndTime, newStartTime).
+			Count(&roomConflict).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		if roomConflict > 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "ห้องนี้ถูกจองในช่วงเวลาดังกล่าวแล้ว"})
+			return
+		}
 	}
 
 	// 2. Check Teacher Conflict (Overlap)
@@ -224,6 +226,11 @@ func UpdateAppointment(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if !payload.StartDateTime.IsZero() && payload.StartDateTime.Before(time.Now()) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ไม่สามารถแก้ไขนัดหมายเป็นเวลาย้อนหลังได้"})
 		return
 	}
 

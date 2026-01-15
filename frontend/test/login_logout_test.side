@@ -1,0 +1,134 @@
+{
+  "id": "58dbdc1b-dbc2-4ef5-bbef-2181744baa28",
+  "version": "2.0",
+  "name": "TEST",
+  "url": "https://capstonehub.me/login",
+  "tests": [{
+    "id": "4c11e7ca-73f2-4350-9058-5c7202378886",
+    "name": "LoginAndLogout",
+    "commands": [{
+      "id": "d42699f1-a4b2-4d64-974e-10f2a754bd68",
+      "comment": "",
+      "command": "open",
+      "target": "https://capstonehub.me/login",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "374fbd0a-618e-4792-8865-0db91923e155",
+      "comment": "",
+      "command": "setWindowSize",
+      "target": "1301x816",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "f03a598c-9f33-4c30-9b71-a34d3e5f650a",
+      "comment": "",
+      "command": "click",
+      "target": "name=username",
+      "targets": [
+        ["name=username", "name"],
+        ["css=.login-info:nth-child(2)", "css:finder"],
+        ["xpath=//input[@name='username']", "xpath:attributes"],
+        ["xpath=//input", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "e9516598-5eb9-496b-be62-24fe3015b390",
+      "comment": "",
+      "command": "type",
+      "target": "name=username",
+      "targets": [
+        ["name=username", "name"],
+        ["css=.login-info:nth-child(2)", "css:finder"],
+        ["xpath=//input[@name='username']", "xpath:attributes"],
+        ["xpath=//input", "xpath:position"]
+      ],
+      "value": "Teacher1"
+    }, {
+      "id": "7cfba7e2-dfe7-428d-ac0f-169c0203fa87",
+      "comment": "",
+      "command": "click",
+      "target": "name=password",
+      "targets": [
+        ["name=password", "name"],
+        ["css=.login-info:nth-child(1)", "css:finder"],
+        ["xpath=//input[@name='password']", "xpath:attributes"],
+        ["xpath=//div[2]/div/input", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "c7480c98-10c5-4c92-b339-dc21430a55c3",
+      "comment": "",
+      "command": "type",
+      "target": "name=password",
+      "targets": [
+        ["name=password", "name"],
+        ["css=.login-info:nth-child(1)", "css:finder"],
+        ["xpath=//input[@name='password']", "xpath:attributes"],
+        ["xpath=//div[2]/div/input", "xpath:position"]
+      ],
+      "value": "tch123"
+    }, {
+      "id": "68e3ba49-8d94-4638-811b-d02b93ca9d04",
+      "comment": "",
+      "command": "click",
+      "target": "css=.login-button",
+      "targets": [
+        ["css=.login-button", "css:finder"],
+        ["xpath=//button[@type='submit']", "xpath:attributes"],
+        ["xpath=//div[4]/button", "xpath:position"],
+        ["xpath=//button[contains(.,'เข้าสู่ระบบ')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "6649cef5-6116-4fa7-a66e-f69c17250a7e",
+      "comment": "",
+      "command": "click",
+      "target": "css=.anticon-down > svg",
+      "targets": [
+        ["css=.anticon-down > svg", "css:finder"]
+      ],
+      "value": ""
+    }, {
+      "id": "d96279e9-e101-48ee-8077-ffc152b79fd2",
+      "comment": "",
+      "command": "click",
+      "target": "css=.ant-dropdown-menu-item-active > .ant-dropdown-menu-title-content",
+      "targets": [
+        ["css=.ant-dropdown-menu-item-active > .ant-dropdown-menu-title-content", "css:finder"],
+        ["xpath=//li[4]/span[2]", "xpath:position"],
+        ["xpath=//span[contains(.,'ออกจากระบบ')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "963f9403-1c83-41e3-bdf4-44ecca51998c",
+      "comment": "",
+      "command": "click",
+      "target": "css=.ant-btn-primary > span",
+      "targets": [
+        ["css=.ant-btn-primary > span", "css:finder"],
+        ["xpath=//button[2]/span", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "a122feba-09f0-4a77-95a2-bae557c60c15",
+      "comment": "",
+      "command": "click",
+      "target": "css=.anticon-down path",
+      "targets": [
+        ["css=.anticon-down path", "css:finder"]
+      ],
+      "value": ""
+    }]
+  }],
+  "suites": [{
+    "id": "88fd67cd-4ac7-47db-9fc3-06f5dd43f9b3",
+    "name": "Default Suite",
+    "persistSession": false,
+    "parallel": false,
+    "timeout": 300,
+    "tests": ["4c11e7ca-73f2-4350-9058-5c7202378886"]
+  }],
+  "urls": ["https://capstonehub.me/login"],
+  "plugins": []
+}

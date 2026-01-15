@@ -1,27 +1,27 @@
 {
-  "id": "f4924686-e451-46db-9c14-4e4cfef0f3f5",
+  "id": "58dbdc1b-dbc2-4ef5-bbef-2181744baa28",
   "version": "2.0",
-  "name": "TEST07",
-  "url": "http://localhost:5173",
+  "name": "TEST",
+  "url": "https://capstonehub.me/login",
   "tests": [{
-    "id": "993ac5ed-5ade-4267-93d7-38750cbab787",
-    "name": "evaluation_fixed",
+    "id": "4c11e7ca-73f2-4350-9058-5c7202378886",
+    "name": "LoginAndLogout",
     "commands": [{
-      "id": "26ac3b3d-7306-4403-90a8-f23ca8a5435f",
+      "id": "d42699f1-a4b2-4d64-974e-10f2a754bd68",
       "comment": "",
       "command": "open",
-      "target": "/login",
+      "target": "https://capstonehub.me/login",
       "targets": [],
       "value": ""
     }, {
-      "id": "d1e88450-b0ef-4bbd-a21b-46e7ab190d9e",
+      "id": "374fbd0a-618e-4792-8865-0db91923e155",
       "comment": "",
       "command": "setWindowSize",
-      "target": "1283x804",
+      "target": "1301x816",
       "targets": [],
       "value": ""
     }, {
-      "id": "b6b0ea13-1070-4199-beef-979610ddf28c",
+      "id": "f03a598c-9f33-4c30-9b71-a34d3e5f650a",
       "comment": "",
       "command": "click",
       "target": "name=username",
@@ -33,7 +33,7 @@
       ],
       "value": ""
     }, {
-      "id": "2699559b-4e6a-48f6-9456-eaf81d34b56a",
+      "id": "e9516598-5eb9-496b-be62-24fe3015b390",
       "comment": "",
       "command": "type",
       "target": "name=username",
@@ -45,19 +45,7 @@
       ],
       "value": "Teacher1"
     }, {
-      "id": "2a1bf1b8-24d4-458d-8d5c-b9e571e18d6e",
-      "comment": "",
-      "command": "sendKeys",
-      "target": "name=username",
-      "targets": [
-        ["name=username", "name"],
-        ["css=.login-info:nth-child(2)", "css:finder"],
-        ["xpath=//input[@name='username']", "xpath:attributes"],
-        ["xpath=//input", "xpath:position"]
-      ],
-      "value": "${KEY_ENTER}"
-    }, {
-      "id": "6c12f692-426e-4de8-aec5-780fcf175023",
+      "id": "94527454-5997-45cb-bbb5-9cc1b8f813a6",
       "comment": "",
       "command": "type",
       "target": "name=password",
@@ -69,19 +57,7 @@
       ],
       "value": "tch123"
     }, {
-      "id": "949ff1cf-f643-4d70-952b-edbe6fbeb78d",
-      "comment": "",
-      "command": "sendKeys",
-      "target": "name=password",
-      "targets": [
-        ["name=password", "name"],
-        ["css=.login-info:nth-child(1)", "css:finder"],
-        ["xpath=//input[@name='password']", "xpath:attributes"],
-        ["xpath=//div[2]/div/input", "xpath:position"]
-      ],
-      "value": "${KEY_ENTER}"
-    }, {
-      "id": "7e7f2b06-5bee-4d26-a3dd-e2a62069ea82",
+      "id": "65ef0b94-0d76-4f8a-8990-9a4488c5f64c",
       "comment": "",
       "command": "click",
       "target": "css=.login-button",
@@ -91,56 +67,33 @@
         ["xpath=//div[4]/button", "xpath:position"],
         ["xpath=//button[contains(.,'เข้าสู่ระบบ')]", "xpath:innerText"]
       ],
-      "value": "1000"
+      "value": ""
     }, {
-      "id": "5a04bf19-ac30-468a-ae7e-c68a74063468",
+      "id": "a4e78858-a59d-43a9-b1ca-f8e6ff766b50",
       "comment": "",
       "command": "click",
       "target": "linkText=การประเมิน",
       "targets": [
-        ["linkText=การประเมิน", "linkText"],
-        ["css=div > a:nth-child(3)", "css:finder"],
-        ["xpath=//a[contains(text(),'การประเมิน')]", "xpath:link"],
-        ["xpath=//a[contains(@href, '/teacher/evaluation')]", "xpath:href"],
-        ["xpath=//div/a[3]", "xpath:position"],
-        ["xpath=//a[contains(.,'การประเมิน')]", "xpath:innerText"]
+        ["linkText=การนัดหมาย", "linkText"],
+        ["css=.navRight > a:nth-child(2)", "css:finder"],
+        ["xpath=(//a[contains(text(),'การนัดหมาย')])[2]", "xpath:link"],
+        ["xpath=(//a[contains(@href, '/teacher/appointment')])[2]", "xpath:href"],
+        ["xpath=//nav[2]/a[2]", "xpath:position"]
       ],
-      "value": "1000"
+      "value": ""
     }, {
-      "id": "1ea4a407-8176-4a55-aa74-598886ea6ce4",
+      "id": "df906329-31f4-4a6f-9ea9-6f8a5a888fa3",
       "comment": "",
       "command": "click",
-      "target": "css=.project-card:nth-child(1) .btn-card",
+      "target": "css=.btn-card",
       "targets": [
-        ["css=.project-card:nth-child(1) .btn-card", "css:finder"],
+        ["css=.btn-card", "css:finder"],
         ["xpath=//div[3]/button", "xpath:position"],
         ["xpath=//button[contains(.,'ประเมินผล')]", "xpath:innerText"]
       ],
-      "value": "1000"
+      "value": ""
     }, {
-      "id": "a1cda791-7c49-4cbc-b847-67fe7dd0ed5b",
-      "comment": "",
-      "command": "mouseOver",
-      "target": "css=.project-card:nth-child(1) .btn-card",
-      "targets": [
-        ["css=.project-card:nth-child(1) .btn-card", "css:finder"],
-        ["xpath=//div[3]/button", "xpath:position"],
-        ["xpath=//button[contains(.,'ประเมินผล')]", "xpath:innerText"]
-      ],
-      "value": "1000"
-    }, {
-      "id": "c938ead1-ebe3-4796-83c0-450cfd0db496",
-      "comment": "",
-      "command": "mouseOut",
-      "target": "css=.project-card:nth-child(1) .btn-card",
-      "targets": [
-        ["css=.project-card:nth-child(1) .btn-card", "css:finder"],
-        ["xpath=//div[3]/button", "xpath:position"],
-        ["xpath=//button[contains(.,'ประเมินผล')]", "xpath:innerText"]
-      ],
-      "value": "1000"
-    }, {
-      "id": "abf7538c-0f4f-4983-943f-f987d871c652",
+      "id": "20c98ccf-0343-4a9a-a7ae-65df469dcc69",
       "comment": "",
       "command": "click",
       "target": "css=.btn-primary",
@@ -149,9 +102,9 @@
         ["xpath=//div/div/div/div/div/div/button", "xpath:position"],
         ["xpath=//button[contains(.,'Advisor Evaluation (ที่ปรึกษา)')]", "xpath:innerText"]
       ],
-      "value": "1000"
+      "value": ""
     }, {
-      "id": "5202da05-b59c-43a3-a01b-0b7482e87624",
+      "id": "ce3f27c1-a1e0-46aa-a9e4-f638508e8844",
       "comment": "",
       "command": "click",
       "target": "css=.criteria-card:nth-child(1) .rubric-item:nth-child(1)",
@@ -159,40 +112,84 @@
         ["css=.criteria-card:nth-child(1) .rubric-item:nth-child(1)", "css:finder"],
         ["xpath=//div/div[2]/div", "xpath:position"]
       ],
-      "value": "2000"
+      "value": ""
     }, {
-      "id": "c179485e-4d5b-4e5a-9a7f-7a91e8f30b39",
+      "id": "2e94b6ff-805c-4ccf-9bb2-c3372a4d8a46",
       "comment": "",
       "command": "click",
-      "target": "css=.criteria-card:nth-child(2) .rubric-item:nth-child(2)",
+      "target": "css=.criteria-card:nth-child(2) .rubric-item:nth-child(1) > span:nth-child(1)",
       "targets": [
-        ["css=.criteria-card:nth-child(2) .rubric-item:nth-child(2)", "css:finder"],
-        ["xpath=//div[2]/div[2]/div[2]/div[2]", "xpath:position"]
+        ["css=.criteria-card:nth-child(2) .rubric-item:nth-child(1) > span:nth-child(1)", "css:finder"],
+        ["xpath=//div[2]/div[2]/div[2]/div/span", "xpath:position"],
+        ["xpath=//span[contains(.,'All Features Done (ครบทุกฟีเจอร์)')]", "xpath:innerText"]
       ],
-      "value": "2000"
+      "value": ""
     }, {
-      "id": "dd743b96-cc3b-4ef6-92d0-f6783ab166c9",
+      "id": "5f49d151-beff-490a-926b-34c9e060d8c5",
       "comment": "",
       "command": "click",
-      "target": "css=.criteria-card:nth-child(3) .rubric-item:nth-child(2)",
+      "target": "css=.criteria-card:nth-child(3) .rubric-item:nth-child(1) > span:nth-child(1)",
       "targets": [
-        ["css=.criteria-card:nth-child(3) .rubric-item:nth-child(2)", "css:finder"],
-        ["xpath=//div[3]/div[2]/div[2]", "xpath:position"]
+        ["css=.criteria-card:nth-child(3) .rubric-item:nth-child(1) > span:nth-child(1)", "css:finder"],
+        ["xpath=//div[3]/div[2]/div/span", "xpath:position"],
+        ["xpath=//span[contains(.,'Excellent (ดีเยี่ยม)')]", "xpath:innerText"]
       ],
-      "value": "2000"
+      "value": ""
     }, {
-      "id": "41f7a1da-7ee8-4756-8b1d-9c3b2a40914e",
+      "id": "093b7afc-fd7b-4ba4-b74e-046eddcfd2dd",
       "comment": "",
       "command": "click",
-      "target": "css=.criteria-card:nth-child(4) .rubric-item:nth-child(2) > span:nth-child(1)",
+      "target": "css=.criteria-card:nth-child(4) .rubric-item:nth-child(1)",
       "targets": [
-        ["css=.criteria-card:nth-child(4) .rubric-item:nth-child(2) > span:nth-child(1)", "css:finder"],
-        ["xpath=//div[4]/div[2]/div[2]/span", "xpath:position"],
-        ["xpath=//span[contains(.,'Standard (มาตรฐาน)')]", "xpath:innerText"]
+        ["css=.criteria-card:nth-child(4) .rubric-item:nth-child(1)", "css:finder"],
+        ["xpath=//div[4]/div[2]/div", "xpath:position"]
       ],
-      "value": "2000"
+      "value": ""
     }, {
-      "id": "4beccbaf-3a5c-4d03-b535-aed57902623f",
+      "id": "bfdae645-880e-4719-917a-2e8838dc8f16",
+      "comment": "",
+      "command": "click",
+      "target": "css=.criteria-card:nth-child(5) .rubric-item:nth-child(1) > span:nth-child(1)",
+      "targets": [
+        ["css=.criteria-card:nth-child(5) .rubric-item:nth-child(1) > span:nth-child(1)", "css:finder"],
+        ["xpath=//div[5]/div[2]/div/span", "xpath:position"],
+        ["xpath=//span[contains(.,'Very Consistent (สม่ำเสมอมาก)')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "76c1824a-13f2-4671-9629-dbd42d68500b",
+      "comment": "",
+      "command": "click",
+      "target": "css=.criteria-card:nth-child(6) .rubric-item:nth-child(1) > span:nth-child(1)",
+      "targets": [
+        ["css=.criteria-card:nth-child(6) .rubric-item:nth-child(1) > span:nth-child(1)", "css:finder"],
+        ["xpath=//div[6]/div[2]/div/span", "xpath:position"],
+        ["xpath=//span[contains(.,'High Dedication (ทุ่มเทมาก)')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "045ada64-1a9d-4ccc-93ce-ac84e3d3f60d",
+      "comment": "",
+      "command": "click",
+      "target": "css=.criteria-card:nth-child(7) .rubric-item:nth-child(1)",
+      "targets": [
+        ["css=.criteria-card:nth-child(7) .rubric-item:nth-child(1)", "css:finder"],
+        ["xpath=//div[7]/div[2]/div", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "b72abba4-9b74-41f2-9ab0-1e89b65fbd52",
+      "comment": "",
+      "command": "click",
+      "target": "css=.criteria-card:nth-child(8) .rubric-item:nth-child(1) > span:nth-child(1)",
+      "targets": [
+        ["css=.criteria-card:nth-child(8) .rubric-item:nth-child(1) > span:nth-child(1)", "css:finder"],
+        ["xpath=//div[8]/div[2]/div/span", "xpath:position"],
+        ["xpath=//span[contains(.,'Clean & Efficient (สะอาดและมีประสิทธิภาพ)')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "db034743-9cf5-4812-a2d0-f3618f79286d",
       "comment": "",
       "command": "click",
       "target": "css=.btn-primary",
@@ -201,24 +198,17 @@
         ["xpath=//header/button", "xpath:position"],
         ["xpath=//button[contains(.,'บันทึกผลการประเมิน')]", "xpath:innerText"]
       ],
-      "value": "3000"
-    }, {
-      "id": "5ceccbaf-3a5c-4d03-b535-aed579026240",
-      "comment": "",
-      "command": "pause",
-      "target": "5000",
-      "targets": [],
       "value": ""
     }]
   }],
   "suites": [{
-    "id": "7b9b9f82-c4e2-4caf-a0da-4407696d74fd",
+    "id": "88fd67cd-4ac7-47db-9fc3-06f5dd43f9b3",
     "name": "Default Suite",
     "persistSession": false,
     "parallel": false,
     "timeout": 300,
-    "tests": ["af22551b-6903-4775-bf96-47a36027faa2"]
+    "tests": ["4c11e7ca-73f2-4350-9058-5c7202378886"]
   }],
-  "urls": ["http://localhost:5173/"],
+  "urls": ["https://capstonehub.me/login"],
   "plugins": []
 }
