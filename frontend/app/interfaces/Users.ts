@@ -25,7 +25,8 @@ export interface UserProfileInterface {
     lastname?: string;
     email?: string;
     phone?: string; 
-    
+    pass?: boolean;
+
     gender_id?: number;
     gender?: GenderInterface; 
     
