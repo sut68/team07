@@ -1,4 +1,10 @@
 import type { NextConfig } from "next";
+import path from "path";
+import { loadEnvConfig } from "@next/env";
+
+// Load environment variables from the root directory (../.env)
+const projectDir = process.cwd();
+loadEnvConfig(path.join(projectDir, ".."));
 
 const nextConfig: NextConfig = {
   experimental: {

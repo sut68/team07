@@ -77,7 +77,14 @@ func main() {
 		log.Printf("Warning: MinIO init failed: %v", err)
 	}
 
-	r.GET("/storage/:bucket/*object", func(c *gin.Context) {
+	envSecurity := os.Getenv("ENV_SECURITY")
+	if envSecurity == "" {
+		envSecurity = "team07api"
+	}
+	
+	apiGroup := r.Group("/" + envSecurity)
+
+	apiGroup.GET("/storage/:bucket/*object", func(c *gin.Context) {
 		if minioClient == nil {
 			c.Status(503)
 			return
@@ -132,14 +139,14 @@ func main() {
 
 	authHandler := auth.NewLoginHandler()
 
-	r.POST("/login", authHandler.Login)
-	r.POST("/refresh", authHandler.Refresh)
-	r.POST("/forgot-password", authHandler.ForgotPassword)
-	r.POST("/reset-password", authHandler.ResetPassword)
+	apiGroup.POST("/login", authHandler.Login)
+	apiGroup.POST("/refresh", authHandler.Refresh)
+	apiGroup.POST("/forgot-password", authHandler.ForgotPassword)
+	apiGroup.POST("/reset-password", authHandler.ResetPassword)
 
 	r.Static("/chatsave", "./uploads/chats")
 
-	protected := r.Group("/")
+	protected := apiGroup.Group("/")
 	protected.Use(middleware.CSRFCheckMiddleware(), middleware.AuthMiddleware())
 	{
 

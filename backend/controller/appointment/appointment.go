@@ -265,8 +265,14 @@ func GetRandomGroup(c *gin.Context) {
 	var group entity.GroupProject
 	db := database.DB()
 
+	// Subquery to find groups that already have a scheduled appointment
+	subQuery := db.Model(&entity.Appointment{}).
+		Select("group_project_id").
+		Where("appointment_status = ?", "scheduled")
+
 	if err := db.Preload("Teacher").
 		Where("group_status IN ?", []string{"Pending", "In Process"}).
+		Where("id NOT IN (?)", subQuery). // Exclude groups with scheduled appointments
 		Order("RANDOM()").
 		First(&group).Error; err != nil {
 

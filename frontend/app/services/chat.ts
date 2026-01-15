@@ -46,7 +46,14 @@ async function UploadFile(file: File): Promise<string> {
   });
 
   const base = api.defaults.baseURL || "";
-  return res.data.url.startsWith("http") ? res.data.url : `${base}${res.data.url}`;
+  
+  // Storage API is now under the API Group (e.g. /team07api/storage/...)
+  // So we should concatenate base (which includes /team07api) with the relative url
+  // Note: res.data.url starts with /storage/...
+  // We need to ensure we don't end up with double slashes if base ends with /
+  const cleanBase = base.endsWith("/") ? base.slice(0, -1) : base;
+  
+  return res.data.url.startsWith("http") ? res.data.url : `${cleanBase}${res.data.url}`;
 }
 
 export { GetAllChat, InsertChat, DropChat ,DropWholechat, Getteachergroup, UploadFile };

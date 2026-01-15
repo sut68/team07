@@ -332,6 +332,14 @@ func AutoCreateAppointments(c *gin.Context) {
 
 		localTime := currentTime.In(loc)
 		startHour := localTime.Hour()
+
+		// ถ้าเวลาเริ่ม Slot มากกว่าหรือเท่ากับ 20:00 ให้ข้ามไปวันถัดไปเวลา 09:00
+		if startHour >= 20 {
+			nextDay := localTime.AddDate(0, 0, 1)
+			currentTime = time.Date(nextDay.Year(), nextDay.Month(), nextDay.Day(), 9, 0, 0, 0, loc)
+			continue
+		}
+
 		startMin := localTime.Minute()
 		slotStartMins := (startHour * 60) + startMin
 		slotEndMins := slotStartMins + req.DurationMin
