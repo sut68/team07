@@ -129,6 +129,14 @@ func UpdateGroupStatus(c *gin.Context) {
 		}
 	}
 
+	// 3. Delete Appointments related to this GroupProject
+	// This ensures that after completion, appointments are removed but scores (EvaResult) remain (if soft-deleted or not cascaded)
+	if err := tx.Where("group_project_id = ?", id).Delete(&entity.Appointment{}).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete appointments: " + err.Error()})
+		return
+	}
+
 	// Commit Transaction
 	if err := tx.Commit().Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to commit transaction: " + err.Error()})

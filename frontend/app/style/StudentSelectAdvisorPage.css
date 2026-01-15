@@ -184,3 +184,143 @@
         width: 100%;
     }
 }
+
+/* --- Current Advisor Card --- */
+.current-advisor-card {
+    background-color: white; 
+    border-radius: 8px;      
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08); 
+    overflow: hidden;
+    margin-bottom: 20px;     
+    /* border-left: 5px solid #8A011D; แถบสีแดงด้านซ้าย */
+    display: block;          /* บังคับให้แสดงผลเป็นบล็อก */
+    width: 100%;             /* ความกว้างเต็มพื้นที่ */
+}
+
+/* ส่วนหัวของกล่อง */
+.advisor-card-header {
+    padding: 15px 20px;
+    border-bottom: 3px solid #8A011D;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #8A011D; /* ย้ำพื้นหลังขาว */
+}
+
+.advisor-card-header h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #ffffff;
+    font-weight: 700;
+}
+
+/* Badge สถานะ (อนุมัติแล้ว / รอ) */
+.status-badge {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.status-badge.success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-badge.pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+/* พื้นที่เนื้อหาข้างใน */
+.advisor-card-content {
+    padding: 20px;
+    background-color: #fff;
+}
+
+/* --- Layout ข้อมูลอาจารย์ (เมื่อมีข้อมูล) --- */
+.advisor-info-container {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.advisor-avatar-wrapper {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, #8A011D 0%, #b91d3a 100%);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 22px;
+    font-weight: 600;
+    box-shadow: 0 4px 10px rgba(138, 1, 29, 0.2);
+    flex-shrink: 0;
+}
+
+.advisor-text-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.advisor-label {
+    font-size: 11px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+}
+
+.advisor-name {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: #2c3e50;
+    line-height: 1.4;
+}
+
+.advisor-faculty {
+    margin: 0;
+    font-size: 12px;
+    color: #9ca3af;
+}
+
+/* --- Layout ไม่มีข้อมูล (Empty State) --- */
+.no-advisor-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 0;
+    border: 2px dashed #e5e7eb; /* เส้นประ */
+    border-radius: 8px;
+    background-color: #f9fafb;
+    width: 100%;
+}
+
+.empty-icon-circle {
+    width: 40px;
+    height: 40px;
+    background-color: white;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.empty-text p {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #4b5563;
+    align-items: center;
+}
+
+.empty-text span {
+    font-size: 12px;
+    color: #9ca3af;
+}

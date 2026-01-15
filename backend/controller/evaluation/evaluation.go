@@ -39,8 +39,8 @@ func ListEvaluationProjects(c *gin.Context) {
 	}
 
 	if mode == "committee" {
-		query = query.Joins("JOIN appointments ON appointments.group_project_id = group_projects.id").
-			Joins("JOIN users ON users.id = appointments.teacher_id").
+		query = query.Joins("JOIN appointments ON appointments.group_project_id = group_projects.id AND appointments.deleted_at IS NULL").
+			Joins("JOIN users ON users.id = appointments.teacher_id AND users.deleted_at IS NULL").
 			Where("appointments.appointment_type_id = ?", 3).
 			Where("users.branch_id = ?", claims.BranchID).
 			Group("group_projects.id")
@@ -170,6 +170,65 @@ func ListEvaluationProjects(c *gin.Context) {
 		}
 
 		isGraded := (gradedCount == totalCount) && totalCount > 0
+
+		// Preserve status from active appointments
+		activeTotal := totalCount
+		activeIsGraded := isGraded
+
+		// Check for all 4 types to enable permanent Green status
+		var allHistoryEvaluations []string
+
+		// 1. Check All Group Scores (Global)
+		db.Model(&entity.EvaResult{}).
+			Joins("JOIN criteria ON criteria.id = eva_results.criteria_id").
+			Joins("JOIN evaluations ON evaluations.id = criteria.evaluation_id").
+			Joins("JOIN appointments ON appointments.id = eva_results.appointment_id").
+			Where("appointments.group_project_id = ?", p.ID).
+			Distinct("evaluations.name").
+			Pluck("evaluations.name", &allHistoryEvaluations)
+
+		// 2. Check All Individual Scores (Global)
+		var indHistoryEvaluations []string
+		db.Model(&entity.IndividualScore{}).
+			Joins("JOIN criteria ON criteria.id = individual_scores.criteria_id").
+			Joins("JOIN evaluations ON evaluations.id = criteria.evaluation_id").
+			Joins("JOIN appointments ON appointments.id = individual_scores.appointment_id").
+			Where("appointments.group_project_id = ?", p.ID).
+			Distinct("evaluations.name").
+			Pluck("evaluations.name", &indHistoryEvaluations)
+
+		allHistoryEvaluations = append(allHistoryEvaluations, indHistoryEvaluations...)
+
+		mapHistory := make(map[string]bool)
+		for _, h := range allHistoryEvaluations {
+			mapHistory[h] = true
+		}
+
+		// Check for 4 mandatory Final Defense evaluations
+		mandatoryEvaluations := []string{"Ethics Test", "Peer Assessment", "Advisor Evaluation", "Committee Evaluation"}
+		completedMandatoryCount := 0
+		for _, evalName := range mandatoryEvaluations {
+			if mapHistory[evalName] {
+				completedMandatoryCount++
+			}
+		}
+
+		if completedMandatoryCount > 0 {
+			gradedCount = completedMandatoryCount
+			totalCount = 4
+
+			// 4/4 -> Green Always
+			if completedMandatoryCount == 4 {
+				isGraded = true
+			} else {
+				if activeTotal > 0 {
+					isGraded = activeIsGraded
+				} else {
+					isGraded = false
+				}
+			}
+		}
+
 		statusText := "Pending"
 		if isGraded {
 			statusText = "Graded"

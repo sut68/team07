@@ -19,7 +19,7 @@ const AppointmentSlider: React.FC<AppointmentSliderProps> = ({ appointments, cat
     }
 
     const handleClick = (appt: IAppointment) => {
-        if (appt.type_name !== 'Final Defense') return;
+        if (appt.type_name === 'Peer Assessment' || appt.evaluation_name === 'Peer Assessment') return;
 
         let evalType = "Advisor Evaluation";
         if (category === 'committee' || appt.type_name === 'Final Defense') {
@@ -44,14 +44,14 @@ const AppointmentSlider: React.FC<AppointmentSliderProps> = ({ appointments, cat
             {appointments.map(appt => (
                 <Card 
                     key={appt.id}
-                    hoverable={appt.type_name === 'Final Defense'}
+                    hoverable={appt.type_name !== 'Peer Assessment' && appt.evaluation_name !== 'Peer Assessment'}
                     style={{ 
                         minWidth: 220, 
                         maxWidth: 220, 
                         flexShrink: 0,
                         borderRadius: '12px',
                         boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                        cursor: appt.type_name === 'Final Defense' ? 'pointer' : 'default'
+                        cursor: (appt.type_name !== 'Peer Assessment' && appt.evaluation_name !== 'Peer Assessment') ? 'pointer' : 'default'
                     }}
                     onClick={() => handleClick(appt)}
                 >

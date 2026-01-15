@@ -80,7 +80,7 @@ const AdvisorSelectionPage = () => {
             }
 
             // --- ดึงข้อมูลการเลือกเดิม (ถ้ามี) ---
-                if (groupID > 0) {
+            if (groupID > 0) {
                 try {
                     const resSelection = await GetAdvisorSelection(groupID);
                     const selectionData = (resSelection.data as any).data || resSelection.data;
@@ -88,8 +88,8 @@ const AdvisorSelectionPage = () => {
                     if (Array.isArray(selectionData) && selectionData.length > 0) {
                         setIsAlreadySelected(true);
                         selectionData.forEach((item: any) => {
-                            const itemNo = item.no || item.No ; 
-                            const itemTeacherID = item.teacher_id || item.TeacherID ;
+                            const itemNo = item.no || item.No;
+                            const itemTeacherID = item.teacher_id || item.TeacherID;
                             if (itemNo >= 1 && itemNo <= 10 && itemTeacherID) {
                                 finalSelections[itemNo - 1] = Number(itemTeacherID);
                             }
@@ -99,7 +99,7 @@ const AdvisorSelectionPage = () => {
                             setDescription(desc);
                         }
                     }
-                } catch (err) { 
+                } catch (err) {
                     console.log("No previous selection found");
                 }
             }
@@ -225,6 +225,14 @@ const AdvisorSelectionPage = () => {
         });
     };
 
+    const currentAdvisor = React.useMemo(() => {
+        if (!myGroup || !teachers.length) return null;
+        const teacherId = (myGroup as any).teacher_id || (myGroup as any).TeacherID;
+        if (!teacherId) return null;
+
+        return teachers.find((t: any) => (t.ID || t.id) === teacherId);
+    }, [myGroup, teachers]);
+
     if (loading) {
         return (
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column', gap: '10px', color: '#666' }}>
@@ -296,6 +304,40 @@ const AdvisorSelectionPage = () => {
                     </div>
 
                     <div className="right-column">
+                        <div className="current-advisor-card">
+                            <div className="advisor-card-header">
+                                <h3>อาจารย์ที่ปรึกษาโครงงาน</h3>
+                                {currentAdvisor ? (
+                                    <span className="status-badge success">อนุมัติแล้ว</span>
+                                ) : (
+                                    <span className="status-badge pending">รอการดำเนินการ</span>
+                                )}
+                            </div>
+
+                            <div className="advisor-card-content">
+                                {currentAdvisor ? (
+                                    <div className="advisor-info-container">
+                                        <div className="advisor-avatar-wrapper">
+                                            {currentAdvisor?.firstname?.charAt(0) || "?"}
+                                        </div>
+                                        <div className="advisor-text-content">
+                                            <span className="advisor-label">อาจารย์ที่ปรึกษา</span>
+                                            <h4 className="advisor-name">
+                                                {currentAdvisor?.firstname} {currentAdvisor?.lastname}
+                                            </h4>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="no-advisor-wrapper">
+                                        <div className="empty-text">
+                                            <p>ยังไม่มีที่อาจารย์ที่ปรึกษาประจำกลุ่มโครงงาน</p>
+                                            <span>กรุณาทำการเลือกลำดับอาจารย์ที่ปรึกษาและรอการตอบรับ</span>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
                         {myGroup ? (
                             <div style={{ marginBottom: '20px' }}>
                                 <GroupCard

@@ -1,6 +1,7 @@
 package progress
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -15,6 +16,8 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/gin-gonic/gin"
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/sut68/team07/backend/controller/log"
 	"github.com/sut68/team07/backend/database"
 	"github.com/sut68/team07/backend/entity"
@@ -23,12 +26,57 @@ import (
 const (
 	MaxFileSize int64 = 20 * 1024 * 1024 // 20MB
 	maxNameLen        = 120
+	progressbug       = "progress"
 )
 
+var minioClient *minio.Client
 
-func ensureDir(dir string) error {
-	return os.MkdirAll(dir, 0755)
+func init() {
+	endpoint := os.Getenv("MINIO_ENDPOINT")
+	if endpoint == "" {
+		endpoint = "minio:9000"
+	}
+
+	accessKey := os.Getenv("MINIO_ROOT_USER")
+	if accessKey == "" {
+		accessKey = "admin"
+	}
+
+	secretKey := os.Getenv("MINIO_ROOT_PASSWORD")
+	if secretKey == "" {
+		secretKey = "install123"
+	}
+
+	client, err := minio.New(endpoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
+		Secure: false,
+	})
+	if err != nil {
+		fmt.Printf("minio fail: %v\n", err)
+		return
+	}
+	minioClient = client
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	buckets := []string{progressbug}
+	for _, b := range buckets {
+		exists, err := minioClient.BucketExists(ctx, b)
+		if err == nil && !exists {
+			err = minioClient.MakeBucket(ctx, b, minio.MakeBucketOptions{})
+			if err == nil {
+				fmt.Printf("[INFO] Created bucket: %s\n", b)
+
+				if b == progressbug {
+					policy := fmt.Sprintf(`{"Version":"2012-10-17","Statement":[{"Action":["s3:GetObject"],"Effect":"Allow","Principal":"*","Resource":["arn:aws:s3:::%s/*"]}]}`, b)
+					_ = minioClient.SetBucketPolicy(ctx, b, policy)
+				}
+			}
+		}
+	}
 }
+
 
 func sanitizeFilename(name string) string {
 	name = strings.TrimSpace(name)
@@ -63,7 +111,7 @@ func sanitizeFilename(name string) string {
 }
 
 func allowedProgressContentType(ct string) bool {
-	
+
 	switch ct {
 	case "application/pdf",
 		"image/jpeg", "image/png", "image/gif", "image/webp":
@@ -99,13 +147,16 @@ func detectContentTypeFromHeader(fh *multipart.FileHeader) (string, error) {
 }
 
 func safeRemoveUploadedProgressPath(fileURL string) {
-	// only delete within our upload folder
-	if strings.HasPrefix(fileURL, "/uploads/progress/") {
-		_ = os.Remove("." + fileURL) // "/uploads/..." -> "./uploads/..."
+	if strings.HasPrefix(fileURL, "/storage/"+progressbug+"/") {
+		parts := strings.Split(fileURL, "/")
+		if len(parts) > 0 {
+			obj := parts[len(parts)-1]
+			if obj != "" {
+				_ = minioClient.RemoveObject(context.Background(), progressbug, obj, minio.RemoveObjectOptions{})
+			}
+		}
 	}
 }
-
-
 
 func GetProGressByID(c *gin.Context) {
 	db := database.DB()
@@ -116,8 +167,6 @@ func GetProGressByID(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid group_project_id"})
 		return
 	}
-
-
 
 	var groupProgress []entity.Progress
 	if err := db.Where("group_project_id = ? AND deleted_at IS NULL", uint(group64)).
@@ -143,8 +192,6 @@ func GetGroupProjectIDByStudentID(c *gin.Context) {
 		return
 	}
 	studentID := uint(studentID64)
-
-
 
 	db := database.DB()
 
@@ -172,14 +219,12 @@ func GetGroupProjectIDByStudentID(c *gin.Context) {
 func AssignProGress(c *gin.Context) {
 	db := database.DB()
 
-
 	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, MaxFileSize)
 	fh, err := c.FormFile("file")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "missing or invalid file upload"})
 		return
 	}
-
 
 	if fh.Size <= 0 || fh.Size > MaxFileSize {
 		c.JSON(http.StatusRequestEntityTooLarge, gin.H{"error": "file too large (max 20MB)"})
@@ -196,7 +241,6 @@ func AssignProGress(c *gin.Context) {
 
 	// TODO (SECURITY): verify caller can upload progress for this groupID
 
-	// Validate group exists
 	var gp entity.GroupProject
 	if err := db.Where("id = ?", groupID).First(&gp).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid project_id"})
@@ -205,7 +249,6 @@ func AssignProGress(c *gin.Context) {
 
 	name := strings.TrimSpace(c.PostForm("Name"))
 	comment := strings.TrimSpace(c.PostForm("comment"))
-
 
 	ct, err := detectContentTypeFromHeader(fh)
 	if err != nil {
@@ -217,12 +260,6 @@ func AssignProGress(c *gin.Context) {
 		return
 	}
 
-	uploadDir := "./uploads/progress"
-	if err := ensureDir(uploadDir); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "cannot create upload folder"})
-		return
-	}
-
 	orig := sanitizeFilename(fh.Filename)
 	ext := filepath.Ext(orig)
 	if !allowedProgressExt(ext) {
@@ -230,23 +267,37 @@ func AssignProGress(c *gin.Context) {
 		return
 	}
 
-	newName := fmt.Sprintf("%d%s", time.Now().UnixNano(), strings.ToLower(ext))
-	savePath := filepath.Join(uploadDir, newName)
+	objectName := fmt.Sprintf("%d_%s", time.Now().UnixNano(), orig)
 
-	if err := c.SaveUploadedFile(fh, savePath); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save file"})
+	f, err := fh.Open()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "cannot open uploaded file"})
+		return
+	}
+	defer f.Close()
+
+	_, err = minioClient.PutObject(
+		c.Request.Context(),
+		progressbug,
+		objectName,
+		f,
+		fh.Size,
+		minio.PutObjectOptions{ContentType: ct},
+	)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Cloud Storage Error"})
 		return
 	}
 
 	progress := entity.Progress{
 		GroupProjectID: groupID,
-		File:           "/uploads/progress/" + newName,
+		File:           "/storage/" + progressbug + "/" + objectName,
 		Name:           name,
 		Comment:        comment,
 	}
 
 	if err := db.Create(&progress).Error; err != nil {
-		_ = os.Remove(savePath)
+		_ = minioClient.RemoveObject(context.Background(), progressbug, objectName, minio.RemoveObjectOptions{})
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "database save failed"})
 		return
 	}
@@ -265,8 +316,6 @@ func UpdateProGress(c *gin.Context) {
 		return
 	}
 
-
-
 	var prog entity.Progress
 	if err := db.Where("id = ?", uint(proID64)).First(&prog).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
@@ -274,7 +323,6 @@ func UpdateProGress(c *gin.Context) {
 	}
 
 	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, MaxFileSize)
-
 
 	if fh, fileErr := c.FormFile("file"); fileErr == nil && fh != nil {
 		if fh.Size <= 0 || fh.Size > MaxFileSize {
@@ -292,12 +340,6 @@ func UpdateProGress(c *gin.Context) {
 			return
 		}
 
-		uploadDir := "./uploads/progress"
-		if err := ensureDir(uploadDir); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "cannot create upload folder"})
-			return
-		}
-
 		orig := sanitizeFilename(fh.Filename)
 		ext := filepath.Ext(orig)
 		if !allowedProgressExt(ext) {
@@ -305,17 +347,30 @@ func UpdateProGress(c *gin.Context) {
 			return
 		}
 
-		newName := fmt.Sprintf("%d%s", time.Now().UnixNano(), strings.ToLower(ext))
-		savePath := filepath.Join(uploadDir, newName)
+		objectName := fmt.Sprintf("%d_%s", time.Now().UnixNano(), orig)
 
-		if err := c.SaveUploadedFile(fh, savePath); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "cannot save file"})
+		f, err := fh.Open()
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "cannot open uploaded file"})
+			return
+		}
+		defer f.Close()
+
+		_, err = minioClient.PutObject(
+			c.Request.Context(),
+			progressbug,
+			objectName,
+			f,
+			fh.Size,
+			minio.PutObjectOptions{ContentType: ct},
+		)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Cloud Storage Error"})
 			return
 		}
 
-
 		old := prog.File
-		prog.File = "/uploads/progress/" + newName
+		prog.File = "/storage/" + progressbug + "/" + objectName
 		safeRemoveUploadedProgressPath(old)
 	}
 
@@ -344,8 +399,6 @@ func DeleteProgress(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
 	}
-
-
 
 	var prog entity.Progress
 	if err := db.Where("id = ?", uint(id64)).First(&prog).Error; err != nil {
