@@ -367,8 +367,6 @@ export default function ChatPage() {
 
   const isImage = (filename: string) => /\.(jpg|jpeg|png|gif|webp)$/i.test(filename);
 
-  // ✅ FIX: Only save (InsertChat). Do NOT socket.emit("send_message") here.
-  // Backend (or HTTP broadcast) should be the single broadcaster.
   const sendChat = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!roomJoined || !idsOk) return;
