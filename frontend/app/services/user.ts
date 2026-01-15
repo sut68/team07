@@ -18,9 +18,10 @@ async function ImportUsersCSV(file: File) {
     return await api.post("/admin/importUsersCSV", formData);
 }
 
-// GET: ดึงข้อมูล User ทั้งหมด 
-async function ListUsers() {
-    return await api.get("/admin/users");
+// GET: ดึงข้อมูล User ทั้งหมด หรือใช้ params สำหรับการค้นหา/กรอง
+// params example: { q?: string, gender_id?: number, branch_id?: number, role_id?: number, status_id?: number }
+async function ListUsers(params?: Record<string, any>) {
+    return await api.get("/admin/users", { params });
 }
 
 async function CreateUser(data: CreateUserInterface) {
