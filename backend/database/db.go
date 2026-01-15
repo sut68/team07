@@ -64,65 +64,91 @@ func ConnectDatabase() {
 func SetUpDatabase() {
 	// ผมเเยก AutoMigrate เพราะให้มันจัดลำดับการสร้างตารางได้ง่ายขึ้น
 	db.AutoMigrate(
-        &entity.Gender{},
-        &entity.UserRole{},
-        &entity.AccountStatus{},
-        &entity.Branch{},
-        &entity.IssueStatus{},
-        &entity.IssueType{},
-        &entity.ActionType{},
-        &entity.Room{},
-        &entity.AppointmentType{},
-		
-    )
+		&entity.Gender{},
+		&entity.UserRole{},
+		&entity.AccountStatus{},
+		&entity.Branch{},
+		&entity.IssueStatus{},
+		&entity.IssueType{},
+		&entity.ActionType{},
+		&entity.Room{},
+		&entity.AppointmentType{},
+	)
 
 	db.AutoMigrate(
-        &entity.User{},
-        &entity.RefreshToken{},
-        &entity.ResetPasswordToken{},
-        &entity.PasswordHistory{},
+		&entity.User{},
+		&entity.RefreshToken{},
+		&entity.ResetPasswordToken{},
+		&entity.PasswordHistory{},
 		&entity.Notification{},
-    )
+	)
 
 	db.AutoMigrate(
-        &entity.Project{},
-        &entity.GroupProject{},
-        &entity.Evaluation{},
-        &entity.Criteria{},
+		&entity.Project{},
+		&entity.GroupProject{},
+		&entity.Evaluation{},
+		&entity.Criteria{},
 		&entity.CriteriaLevel{},
-        &entity.Topic{},
-    )
+		&entity.Topic{},
+	)
 
 	db.AutoMigrate(
-        &entity.GroupMember{},
-        &entity.SelectAdvisor{},
+		&entity.GroupMember{},
+		&entity.SelectAdvisor{},
 		&entity.AdvisorStatus{},
-        &entity.TopicSelection{},
-        &entity.TopicApproval{},
-        &entity.Appointment{},
-        &entity.ProjectStorage{},
-        &entity.IssueReport{},
-        &entity.Chat{},
-        &entity.Log{},
+		&entity.TopicSelection{},
+		&entity.TopicApproval{},
+		&entity.Appointment{},
+		&entity.ProjectStorage{},
+		&entity.IssueReport{},
+		&entity.Chat{},
+		&entity.Log{},
 		&entity.News{},
-    )
+	)
 
 	db.AutoMigrate(
-        &entity.Progress{},
-        &entity.EvaResult{},
-        &entity.IndividualScore{},
-    )
+		&entity.Progress{},
+		&entity.EvaResult{},
+		&entity.IndividualScore{},
+	)
 }
 
 func CORSMiddleware() gin.HandlerFunc {
-	allowedOrigin := config.FrontendURL()
-
-	if allowedOrigin == "" {
-		allowedOrigin = "http://localhost:5173"
-	}
-
 	return func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", allowedOrigin)
+		allowedOrigins := []string{
+			"http://localhost:5173",
+			"http://localhost:3000",
+			"https://capstonehub.me",
+		}
+
+		origin := c.Request.Header.Get("Origin")
+		allow := false
+
+		// Check if origin is in our allowed list
+		for _, o := range allowedOrigins {
+			if o == origin {
+				allow = true
+				break
+			}
+		}
+
+		// Also check the configured FRONTEND_URL
+		configOrigin := config.FrontendURL()
+		if origin == configOrigin {
+			allow = true
+		}
+
+		// If no match found but we have a config, use the config
+		// If matched, use the request origin to satisfy the browser
+		finalOrigin := configOrigin
+		if allow {
+			finalOrigin = origin
+		} else if finalOrigin == "" {
+			// Fallback default if nothing configured and no match (dev mode convenience)
+			finalOrigin = "http://localhost:3000"
+		}
+
+		c.Writer.Header().Set("Access-Control-Allow-Origin", finalOrigin)
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE, PATCH")

@@ -54,7 +54,6 @@ func main() {
 	service.StartCleanupWorker(database.DB())
 	r := gin.Default()
 	r.Use(database.CORSMiddleware())
-	r.Static("/uploads", "./uploads")
 
 	endpoint := os.Getenv("MINIO_ENDPOINT")
 	if endpoint == "" {
@@ -144,7 +143,9 @@ func main() {
 	apiGroup.POST("/forgot-password", authHandler.ForgotPassword)
 	apiGroup.POST("/reset-password", authHandler.ResetPassword)
 
-	r.Static("/chatsave", "./uploads/chats")
+	// Move static files under the API prefix
+	apiGroup.Static("/uploads", "./uploads")
+	apiGroup.Static("/chatsave", "./uploads/chats")
 
 	protected := apiGroup.Group("/")
 	protected.Use(middleware.CSRFCheckMiddleware(), middleware.AuthMiddleware())
