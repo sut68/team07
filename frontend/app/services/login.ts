@@ -1,9 +1,17 @@
 import api from "./api";
-import type { ForgotPasswordInterface, SignInInterface,ResetPasswordInterface ,UserDataInterface, ChangePasswordInterface} from "../interfaces/Login";
+import type { 
+    ForgotPasswordInterface, 
+    SignInInterface, 
+    ResetPasswordInterface, 
+    UserDataInterface, 
+    ChangePasswordInterface 
+} from "../interfaces/Login";
 import { AxiosResponse } from 'axios';
 
 async function SignIn(data: SignInInterface) {
+    // data now includes { username, password, ispeople } automatically
     const res = await api.post("/login", data);
+    
     if (res.data.csrf_token) {
         localStorage.setItem("csrfToken", res.data.csrf_token); 
     }
@@ -31,4 +39,4 @@ async function ChangePassword(data: ChangePasswordInterface) {
     return await api.post("/change-password", data);
 }
 
-export { SignIn, Logout, GetMe , ForgotPassword ,ResetPassword, ChangePassword};
+export { SignIn, Logout, GetMe, ForgotPassword, ResetPassword, ChangePassword };
