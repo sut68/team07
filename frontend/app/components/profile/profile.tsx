@@ -127,6 +127,20 @@ export default function ProfilePage() {
               <div className="info-value">{user.branch?.branch_name || "-"}</div>
             </div>
 
+            {user.role?.role === 'Student' && (
+              <div className="info-item">
+                <span className="info-label">สถานะรายวิชา (Course Status)</span>
+                <div 
+                  className="info-value" 
+                  style={{ 
+                    color: user.pass ? 'green' : '#9a0120', // สีเขียวถ้าผ่าน, สีแดงถ้าไม่ผ่าน
+                  }}
+                >
+                  {user.pass ? "Pass" : "Fail"}
+                </div>
+              </div>
+            )}
+
             <div className="info-item">
               <span className="info-label">สถานะบัญชี (Status)</span>
               <div className="info-value" style={{ color: user.status?.status === 'Active' ? 'green' : 'gray' }}>
