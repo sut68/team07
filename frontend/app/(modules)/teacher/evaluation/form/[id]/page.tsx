@@ -121,7 +121,7 @@ export default function EvaluationFormPage() {
             newScores[key] = { score, levelId };
         });
         setIndScores(newScores);
-        Toast_success("ปรับคะแนนทุกคนเรียบร้อย");
+        Toast_success("ปรับคะแนนทุกคนสำเร็จ");
     };
 
     const handleSubmit = async () => {

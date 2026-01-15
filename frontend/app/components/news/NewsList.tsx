@@ -59,7 +59,7 @@ export default function NewsList({ currentUserId, role, onEditClick, refreshTrig
                 try {
                     await deleteNews(id);
                     setNewsList(prev => prev.filter(item => item.ID !== id));
-                    Toast_success("ลบข่าวสารเรียบร้อย");
+                    Toast_success("ลบข่าวสารสำเร็จ");
                 } catch (error: any) {
                     const errorMessage = error.response?.data?.error || "เกิดข้อผิดพลาดในการลบข่าวสาร";
                     Toast_fail(errorMessage);

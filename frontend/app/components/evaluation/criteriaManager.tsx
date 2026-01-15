@@ -195,7 +195,7 @@ export default function CriteriaManager({ visible, onClose }: Props) {
                                             
                                             setIsLevelModalOpen(true);
                                         }}/>
-                                        <Popconfirm title="ลบ?" onConfirm={() => handleDeleteLevel(lvl.id)}>
+                                        <Popconfirm title="ยืนยันการลบ?" onConfirm={() => handleDeleteLevel(lvl.id)}>
                                             <Button type="text" size="small" danger icon={<DeleteOutlined />} />
                                         </Popconfirm>
                                     </div>

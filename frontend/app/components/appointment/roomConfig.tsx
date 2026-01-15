@@ -19,7 +19,7 @@ export default function RoomConfig({ visible, onClose, onSuccess }: RoomConfigPr
         setLoading(true);
         try {
             await CreateRoom(values);
-            Toast_success("เพิ่มห้องสอบเรียบร้อย");
+            Toast_success("เพิ่มห้องสอบใหม่สำเร็จ");
             form.resetFields();
             onSuccess();
             onClose();

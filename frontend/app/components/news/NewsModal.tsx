@@ -61,10 +61,10 @@ export default function NewsModal({ isOpen, onClose, onSuccess, initialData }: N
         try {
           if (initialData) {
             await updateNews(initialData.ID, formData);
-            Toast_success("แก้ไขข่าวสารเรียบร้อย!");
+            Toast_success("แก้ไขข่าวสารสำเร็จ!");
           } else {
             await createNews(formData);
-            Toast_success("สร้างข่าวสารเรียบร้อย!");
+            Toast_success("สร้างข่าวสารสำเร็จ!");
           }
 
           if (typeof window !== 'undefined') {

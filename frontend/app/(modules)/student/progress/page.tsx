@@ -243,7 +243,7 @@ export default function ProgressPage() {
             </div>
           ) : processlist.length === 0 ? (
             <div style={styles.emptyState}>
-              <div style={{ fontSize: "40px", marginBottom: "10px" }}>📦</div>
+              <div style={{ fontSize: "40px", marginBottom: "10px" }}>📄</div>
               <h3>Start Building</h3>
               <p>กดปุ่มด้านบนเพื่อวางบล็อกแรกของคุณ</p>
             </div>

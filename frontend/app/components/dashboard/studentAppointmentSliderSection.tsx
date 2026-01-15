@@ -86,31 +86,37 @@ export default function StudentAppointmentSliderSection({
         >
             <Card
                 hoverable={Boolean(onCardClick)}
-                style={{ borderRadius: 12, boxShadow: '0 4px 14px rgba(15, 23, 42, 0.1)' }}
-                styles={{ body: { display: 'flex', flexDirection: 'column', gap: 12, padding: 16 } }}
+                style={{ borderRadius: 12, boxShadow: '0 4px 14px rgba(15, 23, 42, 0.1)', overflow: 'hidden' }}
+                styles={{ body: { display: 'flex', flexDirection: 'column', gap: 12, padding: 16, overflow: 'hidden' } }}
             >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div>
-                        <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 720, color: '#1f2937' }}>{item.type}</h3>
-                        <p style={{ margin: '2px 0 0 0', color: '#6b7280', fontSize: '0.8rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                        <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 720, color: '#1f2937', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={item.type}>
+                            {item.type}
+                        </h3>
+                        <p style={{ margin: '2px 0 0 0', color: '#6b7280', fontSize: '0.8rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={`กลุ่มที่ ${groupNumber} · ${projectName}`}>
                             กลุ่มที่ {groupNumber} · {projectName}
                         </p>
                     </div>
-                    <Tag color="red" style={{ margin: 0, fontSize: '0.7rem', padding: '2px 8px' }}>{item.evaluation_name || 'นัดหมายสอบ'}</Tag>
+                    <Tag color="red" style={{ margin: 0, fontSize: '0.7rem', padding: '2px 8px', flexShrink: 0, maxWidth: '80px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {item.evaluation_name || 'นัดหมายสอบ'}
+                    </Tag>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10, color: '#4b5563', fontSize: '0.85rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <CalendarOutlined style={{ color: '#9ca3af', fontSize: '0.9rem' }} />
+                        <CalendarOutlined style={{ color: '#9ca3af', fontSize: '0.9rem', flexShrink: 0 }} />
                         <span>{dayjs(item.date_time).locale('th').format('D MMM YYYY')}</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <ClockCircleOutlined style={{ color: '#9ca3af', fontSize: '0.9rem' }} />
+                        <ClockCircleOutlined style={{ color: '#9ca3af', fontSize: '0.9rem', flexShrink: 0 }} />
                         <span>{dayjs(item.date_time).format('HH:mm')} น.</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <EnvironmentOutlined style={{ color: '#9ca3af', fontSize: '0.9rem' }} />
-                        <span>{item.room} ({item.location})</span>
+                        <EnvironmentOutlined style={{ color: '#9ca3af', fontSize: '0.9rem', flexShrink: 0 }} />
+                        <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={`${item.room} (${item.location})`}>
+                            {item.room} ({item.location})
+                        </span>
                     </div>
                 </div>
             </Card>

@@ -160,10 +160,10 @@ export default function BookingModal({ visible, onClose, onSuccess, rooms, types
 
                         if (initialData) {
                             await UpdateAppointment(initialData.id, payload);
-                            Toast_success("แก้ไขเรียบร้อย");
+                            Toast_success("แก้ไขเสร็จสิ้น");
                         } else {
                             await CreateAppointment(payload);
-                            Toast_success("สร้างนัดหมายเรียบร้อย");
+                            Toast_success("สร้างนัดหมายเสร็จสิ้น");
                         }
                     } else {
                         // --- Auto ---
@@ -193,7 +193,7 @@ export default function BookingModal({ visible, onClose, onSuccess, rooms, types
     // ลบ
     const handleDelete = () => {
         Modal.confirm({
-            title: 'ยืนยันการยกเลิก',
+            title: 'ยืนยันการลบนัดหมาย',
             content: 'การลบนี้จะทำให้สถานะกลุ่มกลับเป็น Pending คุณแน่ใจหรือไม่?',
             okText: 'ลบเลย',
             okType: 'danger',
@@ -201,7 +201,7 @@ export default function BookingModal({ visible, onClose, onSuccess, rooms, types
             onOk: async () => {
                 try {
                     await DeleteAppointment(initialData.id);
-                    Toast_success("ลบเรียบร้อย");
+                    Toast_success("ลบสำเร็จ");
                     onSuccess();
                     onClose();
                 } catch (e) {

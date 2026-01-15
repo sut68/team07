@@ -80,7 +80,7 @@ func main() {
 	if envSecurity == "" {
 		envSecurity = "team07api"
 	}
-	
+
 	apiGroup := r.Group("/" + envSecurity)
 
 	apiGroup.GET("/storage/:bucket/*object", func(c *gin.Context) {
@@ -176,7 +176,7 @@ func main() {
 		protected.DELETE("/news/:id", news.DeleteNews)
 
 		protected.GET("/academicYears", group.GetAcademicYears)
-		r.GET("/group", group.GetGroupProject)
+		protected.GET("/group", group.GetGroupProject)
 		protected.GET("/notifications/my", notification.GetMyNotifications)
 		protected.PATCH("/notifications/:id/read", notification.MarkAsRead)
 
