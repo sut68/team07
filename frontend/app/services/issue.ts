@@ -33,11 +33,16 @@ async function UpdateIssue(id: number, data: CreateIssueInterface) {
     return await api.patch(`/issues/${id}`, data);
 }
 
+async function GetIssueTypes() {
+    return await api.get("/issues/types");
+}
+
 export {
     GetIssues,
     GetIssueById,
     CreateIssue,
     GetMyIssues,
     UpdateIssueStatus,
-    UpdateIssue
+    UpdateIssue,
+    GetIssueTypes
 };

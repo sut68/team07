@@ -27,10 +27,13 @@ export interface IssueReportInterface {
     user?: UserProfileInterface; 
 }
 
-
-
 export interface CreateIssueInterface {
     detail: string;
     type_id: number;
     user_id: number;
+}
+
+export interface IssueTypeInterface {
+    ID: number;
+    Type: string; 
 }

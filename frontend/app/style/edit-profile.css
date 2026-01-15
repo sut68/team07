@@ -95,7 +95,7 @@
 /* Action Buttons */
 .form-actions {
     display: flex;
-    justify-content: flex-end;
+    align-items: center;
     gap: 15px;
     margin-top: 20px;
     padding-top: 20px;
@@ -143,6 +143,37 @@
     box-shadow: none;
 }
 
+/* Change Password Button */
+.btn-change {
+    padding: 10px 18px;
+    background: linear-gradient(90deg, #fff 0%, #fff 100%);
+    color: #9a0120;
+    border: 1px solid #9a0120;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.18s, color 0.18s, transform 0.08s, box-shadow 0.18s;
+    box-shadow: 0 2px 6px rgba(154,1,32,0.08);
+}
+
+.btn-change:hover {
+    background: #9a0120;
+    color: #fff;
+    box-shadow: 0 6px 18px rgba(154,1,32,0.18);
+    transform: translateY(-1px);
+}
+
+.btn-change:active {
+    transform: scale(0.99);
+}
+
+/* Make change button sit with others on small screens */
+@media (max-width: 600px) {
+    .btn-change {
+        width: 100%;
+    }
+}
+
 /* Responsive */
 @media (max-width: 600px) {
     .form-grid {
@@ -153,8 +184,25 @@
     }
     .form-actions {
         flex-direction: column-reverse;
+        align-items: stretch;
+        gap: 12px;
     }
-    .btn-save, .btn-cancel {
+    .form-actions .left,
+    .form-actions .center,
+    .form-actions .right {
+        width: 100%;
+    }
+    .btn-save, .btn-cancel, .btn-change {
         width: 100%;
     }
 }
+
+/* Layout for left/center/right containers */
+.form-actions .left,
+.form-actions .center,
+.form-actions .right {
+    flex: 1;
+}
+.form-actions .left { display: flex; justify-content: flex-start; }
+.form-actions .center { display: flex; justify-content: center; }
+.form-actions .right { display: flex; justify-content: flex-end; }

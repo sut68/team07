@@ -306,6 +306,7 @@ func main() {
 			issueGroup.GET("/:id", issues.GetIssueReportByID)
 			issueGroup.GET("/my", issues.GetMyIssues)
 			issueGroup.PATCH("/:id", issues.UpdateIssueReport)
+			issueGroup.GET("/types", issues.GetIssueTypes)
 		}
 
 		protected.POST("/logout", authHandler.Logout)
