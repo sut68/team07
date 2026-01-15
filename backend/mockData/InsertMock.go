@@ -26,7 +26,12 @@ func InsertMock(db *gorm.DB) {
 	seed(tx, &MockIssueType)
 	seed(tx, &MockActionType)
 	seed(tx, &MockUser)
+	// seed(tx, &MockGroupProject)
+	// seed(tx, &MockGroupMember)
+
 	seed(tx, &MockRoom)
+	// seed(tx, &MockTopics)
+
 	seed(tx, &MockAppointmentType)
 	seed(tx, &MockEvaluation)
 	seed(tx, &MockCriteria)
