@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sut68/team07/backend/controller/log"
@@ -132,7 +133,7 @@ func ImportUsersCSV(c *gin.Context) {
 		}
 
 		// Firstname + Lastname
-		if err := db.Where("firstname = ? AND lastname = ?", firstname, lastname).First(&checkUser).Error; err == nil {
+		if err := db.Where("LOWER(firstname) = ? AND LOWER(lastname) = ?", strings.ToLower(firstname), strings.ToLower(lastname)).First(&checkUser).Error; err == nil {
 			tx.Rollback()
 			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Row %d: ชื่อ-นามสกุล '%s %s' ซ้ำกับ User: %s (ID: %d)",
 				i+1, firstname, lastname, checkUser.Username, checkUser.ID)})
@@ -183,11 +184,43 @@ func ImportUsersCSV(c *gin.Context) {
 func ListUsers(c *gin.Context) {
 	db := database.DB()
 	var users []entity.User
-	if err := db.Preload("Gender").
-		Preload("Branch").
-		Preload("Role").
-		Preload("Status").
-		Find(&users).Error; err != nil {
+	// Query params for server-side filtering
+	q := strings.TrimSpace(c.Query("q"))
+	genderID := c.Query("gender_id")
+	branchID := c.Query("branch_id")
+	roleID := c.Query("role_id")
+	statusID := c.Query("status_id")
+
+	query := db.Preload("Gender").Preload("Branch").Preload("Role").Preload("Status")
+
+	if q != "" {
+		like := "%" + strings.ToLower(q) + "%"
+		// Search username, firstname, lastname (case-insensitive)
+		query = query.Where("LOWER(username) LIKE ? OR LOWER(firstname) LIKE ? OR LOWER(lastname) LIKE ?", like, like, like)
+	}
+
+	if genderID != "" {
+		if id, err := strconv.Atoi(genderID); err == nil && id != 0 {
+			query = query.Where("gender_id = ?", id)
+		}
+	}
+	if branchID != "" {
+		if id, err := strconv.Atoi(branchID); err == nil && id != 0 {
+			query = query.Where("branch_id = ?", id)
+		}
+	}
+	if roleID != "" {
+		if id, err := strconv.Atoi(roleID); err == nil && id != 0 {
+			query = query.Where("role_id = ?", id)
+		}
+	}
+	if statusID != "" {
+		if id, err := strconv.Atoi(statusID); err == nil && id != 0 {
+			query = query.Where("status_id = ?", id)
+		}
+	}
+
+	if err := query.Find(&users).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -266,7 +299,7 @@ func CreateUser(c *gin.Context) {
 	}
 
 	// Firstname + Lastname
-	if err := db.Where("firstname = ? AND lastname = ?", input.Firstname, input.Lastname).First(&checkUser).Error; err == nil {
+	if err := db.Where("LOWER(firstname) = ? AND LOWER(lastname) = ?", strings.ToLower(input.Firstname), strings.ToLower(input.Lastname)).First(&checkUser).Error; err == nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "ชื่อและนามสกุลนี้มีอยู่ในระบบแล้ว"})
 		return
 	}

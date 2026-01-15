@@ -12,6 +12,11 @@ export default function UsersManagePage() {
     const [users, setUsers] = useState<UserProfileInterface[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
+    // --- State: Filters ---
+    const [selectedGender, setSelectedGender] = useState<number>(0);
+    const [selectedBranch, setSelectedBranch] = useState<number>(0);
+    const [selectedRole, setSelectedRole] = useState<number>(0);
+    const [selectedStatus, setSelectedStatus] = useState<number>(0);
 
     // --- State: Master Data for Dropdowns ---
     const [genders, setGenders] = useState<GenderInterface[]>([]);
@@ -37,12 +42,12 @@ export default function UsersManagePage() {
     const [showEdit, setShowEdit] = useState(false);
     const [editingUser, setEditingUser] = useState<{ id: number; firstname: string; lastname: string; status_id: number } | null>(null);
 
-    // Fetch All Data
-    const fetchAllData = async () => {
+    // Fetch data: master data + user list (user list can be fetched with filters)
+    const fetchAllData = async (userParams?: Record<string, any>) => {
         setLoading(true);
         try {
             const [usersRes, gendersRes, branchesRes, rolesRes, statusesRes] = await Promise.all([
-                ListUsers(),
+                ListUsers(userParams),
                 GetGenders(),
                 GetBranches(),
                 GetRoles(),
@@ -65,8 +70,25 @@ export default function UsersManagePage() {
     };
 
     useEffect(() => {
+        // initial load without filters
         fetchAllData();
     }, []);
+
+    // Debounced server-side search/filter
+    useEffect(() => {
+        const params: Record<string, any> = {};
+        if (searchTerm.trim() !== "") params.q = searchTerm.trim();
+        if (selectedGender !== 0) params.gender_id = selectedGender;
+        if (selectedBranch !== 0) params.branch_id = selectedBranch;
+        if (selectedRole !== 0) params.role_id = selectedRole;
+        if (selectedStatus !== 0) params.status_id = selectedStatus;
+
+        const t = setTimeout(() => {
+            fetchAllData(params);
+        }, 400);
+
+        return () => clearTimeout(t);
+    }, [searchTerm, selectedGender, selectedBranch, selectedRole, selectedStatus]);
 
     // Logic Import CSV
     const handleBoxClick = () => !isUploading && fileInputRef.current?.click();
@@ -352,11 +374,24 @@ export default function UsersManagePage() {
         }
     };
 
-    const filteredUsers = users.filter(user =>
-        user.firstname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.lastname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.username?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredUsers = users.filter(user => {
+        const term = searchTerm.trim().toLowerCase();
+
+        // Text search on username / firstname / lastname
+        const matchesText = !term || (
+            (user.firstname || '').toLowerCase().includes(term) ||
+            (user.lastname || '').toLowerCase().includes(term) ||
+            (user.username || '').toLowerCase().includes(term)
+        );
+
+        // Filters by selected IDs (0 = all)
+        const matchesGender = selectedGender === 0 || (user.gender && (user.gender.ID === selectedGender || user.gender_id === selectedGender));
+        const matchesBranch = selectedBranch === 0 || (user.branch && (user.branch.ID === selectedBranch || user.branch_id === selectedBranch));
+        const matchesRole = selectedRole === 0 || (user.role && (user.role.ID === selectedRole || user.role_id === selectedRole));
+        const matchesStatus = selectedStatus === 0 || (user.status && (user.status.ID === selectedStatus || user.status_id === selectedStatus));
+
+        return matchesText && matchesGender && matchesBranch && matchesRole && matchesStatus;
+    });
 
     return (
         <div className="dashboard-container">
@@ -376,9 +411,35 @@ export default function UsersManagePage() {
             </div>
 
             <div className="section-main" style={{ marginTop: '20px' }}>
-                <div style={{ marginBottom: '20px', position: 'relative', maxWidth: '300px' }}>
-                    <SearchOutlined style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#999' }} />
-                    <input type="text" placeholder="ค้นหาชื่อ หรือ รหัสนักศึกษา..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: '100%', padding: '10px 10px 10px 35px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '0.9rem' }} />
+                <div style={{ marginBottom: '20px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <div style={{ position: 'relative', minWidth: '280px', flex: '1 1 320px' }}>
+                        <SearchOutlined style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#999' }} />
+                        <input type="text" placeholder="ค้นหาชื่อ หรือ รหัสนักศึกษา..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: '100%', padding: '10px 10px 10px 35px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '0.9rem' }} />
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                        <select value={selectedRole} onChange={(e) => setSelectedRole(Number(e.target.value))} className="form-input" style={{ padding: '8px', borderRadius: '6px', border: '1px solid #ddd' }}>
+                            <option value={0}>บทบาท: ทั้งหมด</option>
+                            {roles.map(r => <option key={r.ID} value={r.ID}>{r.role}</option>)}
+                        </select>
+
+                        <select value={selectedBranch} onChange={(e) => setSelectedBranch(Number(e.target.value))} className="form-input" style={{ padding: '8px', borderRadius: '6px', border: '1px solid #ddd' }}>
+                            <option value={0}>สาขา: ทั้งหมด</option>
+                            {branches.map(b => <option key={b.ID} value={b.ID}>{b.branch_name}</option>)}
+                        </select>
+
+                        <select value={selectedGender} onChange={(e) => setSelectedGender(Number(e.target.value))} className="form-input" style={{ padding: '8px', borderRadius: '6px', border: '1px solid #ddd' }}>
+                            <option value={0}>เพศ: ทั้งหมด</option>
+                            {genders.map(g => <option key={g.ID} value={g.ID}>{g.name}</option>)}
+                        </select>
+
+                        <select value={selectedStatus} onChange={(e) => setSelectedStatus(Number(e.target.value))} className="form-input" style={{ padding: '8px', borderRadius: '6px', border: '1px solid #ddd' }}>
+                            <option value={0}>สถานะ: ทั้งหมด</option>
+                            {statuses.map(s => <option key={s.ID} value={s.ID}>{s.status}</option>)}
+                        </select>
+
+                        <button onClick={() => { setSearchTerm(''); setSelectedRole(0); setSelectedBranch(0); setSelectedGender(0); setSelectedStatus(0); }} style={{ padding: '8px 10px', borderRadius: '6px', border: '1px solid #ddd', background: 'white', cursor: 'pointer' }}>ล้าง</button>
+                    </div>
                 </div>
 
                 {loading ? (
