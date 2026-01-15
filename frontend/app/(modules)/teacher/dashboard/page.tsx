@@ -10,14 +10,12 @@ import { GetListAppointments } from '../../../services/appointment';
 import { IAppointment } from '../../../interfaces/Appointment';
 import AppointmentSlider from '../../../components/dashboard/appointmentSlider';
 import { Tabs } from 'antd';
-
-// Group Selection
 import DashboardPendingWidget from '../../../components/group/SelectGroupCard';
 import { GetAdvisorRequests } from '../../../services/advisor';
 import { SelectAdvisor } from '../../../interfaces/Advisor';
 
 import DashboardProgressWidget from '../../../components/progress/progress';
-import { GetProgress } from '../../../services/progress';
+// import { GetProgress } from '../../../services/progress';
 import { FullProgress } from '../../../interfaces/Progress'
 
 export default function TeacherDashboardPage() {

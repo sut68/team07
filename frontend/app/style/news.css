@@ -283,12 +283,12 @@ textarea.form-control {
 .modal-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
-  margin-top: 32px;
+  gap: 10px;
+  margin-top: 20px;
 }
 
 .btn {
-  padding: 10px 24px;
+  padding: 10px 10px;
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -298,7 +298,8 @@ textarea.form-control {
 }
 
 .modal-footer .btn {
-  flex: 1;
+  flex: 1; /* Makes buttons grow equally */
+  flex-basis: 0; /* Forces start width to 0, ensuring equal distribution regardless of text length */
   text-align: center;
 }
 
@@ -311,6 +312,7 @@ textarea.form-control {
 .btn-submit {
   background-color: #9a0120; /* SUT Theme Color */
   color: white;
+  
 }
 .btn-submit:hover { 
   background-color: #7f011a; 

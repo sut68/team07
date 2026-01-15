@@ -1,5 +1,5 @@
 "use client"
-import React, { ReactNode, useMemo, useState } from 'react';
+import { ReactNode, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Menu, Modal } from 'antd';
@@ -71,7 +71,6 @@ export default function AdminSidebar({ children }: SidebarProps) {
 
   return (
     <div className="app-container">
-      {/* Hamburger Menu Button (visible on mobile/tablet) - toggles sidebar */}
       <button
         className="hamburger-btn"
         onClick={() => setMobileOpen(!mobileOpen)}
@@ -80,13 +79,11 @@ export default function AdminSidebar({ children }: SidebarProps) {
         <MenuOutlined style={{ fontSize: '24px' }} />
       </button>
 
-      {/* Overlay (visible when mobile menu is open) */}
       <div
         className={`sidebar-overlay ${mobileOpen ? 'active' : ''}`}
         onClick={() => setMobileOpen(false)}
       />
 
-      {/* Fixed full-height sidebar (collapsible) */}
       <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
 
         <div className="sidebar-header">
@@ -108,7 +105,6 @@ export default function AdminSidebar({ children }: SidebarProps) {
 
       </aside>
 
-      {/* Collapse handle on dividing line */}
       <div
         role="button"
         tabIndex={0}
@@ -120,7 +116,6 @@ export default function AdminSidebar({ children }: SidebarProps) {
         {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
       </div>
 
-      {/* Main content shifted right to avoid the fixed sidebar yoyo*/}
       <main className={`main-content`} style={{ marginLeft: collapsed ? '80px' : '256px' }}>{children}</main>
     </div>
   );

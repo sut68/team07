@@ -26,14 +26,11 @@ export interface SelectAdvisor {
     teacher?: Teacher;     
 }
 
-// ----- Teacher -----
 
-// Payload เวลาจะกด Accept/Reject
 export interface AdvisorActionRequest {
   selection_id: number;
 }
 
-// Payload เวลาจะกด ปิด/เปิด รับสมัคร
 export interface AdvisorStatusRequest {
   is_open: boolean;
 }

@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { FileText, ArrowRight, TrendingUp, Users } from 'lucide-react';
+import { FileText, Users } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { GetAdvisorRequests } from '../../services/advisor';
 import { GetProgress } from '../../services/progress';
+import '../../style/dashboard.css';
 
 interface ProgressStats {
   totalGroups: number;
@@ -97,10 +98,10 @@ const DashboardProgressWidget: React.FC<DashboardProgressWidgetProps> = ({
         alignItems: 'center',
         justifyContent: 'center',
         padding: '2rem',
-        backgroundColor: '#f9fafb'
+        color: '#6b7280'
       }}>
-        <div style={{ textAlign: 'center', color: '#6b7280' }}>
-          <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>⏳</div>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>⏳</div>
           <div>กำลังโหลดข้อมูล...</div>
         </div>
       </div>
@@ -108,83 +109,92 @@ const DashboardProgressWidget: React.FC<DashboardProgressWidgetProps> = ({
   }
 
   return (
-    <div style={{
-      height: '100%',
-      display: 'flex',
-      flexDirection: 'column',
-      backgroundColor: '#ffffff',
-      borderRadius: '8px',
-      overflow: 'hidden',
-      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-    }}>
-      <div style={{
-        padding: '1rem 1.25rem',
-        background: 'linear-gradient(135deg, #9a0120 0%, #7d0019 100%)',
-        color: '#ffffff',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <TrendingUp size={20} />
-          <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: '600' }}>
-            ความคืบหน้า
-          </h3>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      
+      {/* Header Style matches SelectGroupCard */}
+      <div className="section-header-with-action" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+        <div style={{fontSize: '1.25rem', fontWeight: '800', color: '#333', display: 'flex', alignItems: 'center', gap: '8px'}}>
+            ความคืบหน้า (Progress)
         </div>
+
+        <button 
+            className="btn-view-all-theme"
+            onClick={handleNavigate}
+        >
+            ดูทั้งหมด <span>&rsaquo;</span>
+        </button>
       </div>
 
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        padding: '1.5rem'
-      }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
         <div style={{
           display: 'grid',
           gridTemplateColumns: '1fr 1fr',
-          gap: '1rem',
-          marginBottom: '1.5rem'
+          gap: '15px',
         }}>
+          {/* Total Groups Card */}
           <div style={{
-            backgroundColor: '#fef2f2',
-            padding: '1rem',
-            borderRadius: '8px',
-            border: '1px solid #fecaca'
+            backgroundColor: '#fff',
+            padding: '1.25rem',
+            borderRadius: '12px',
+            border: '1px solid #eee',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-start',
+            gap: '8px'
           }}>
             <div style={{
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem',
-              marginBottom: '0.5rem'
             }}>
-              <Users size={16} style={{ color: '#9a0120' }} />
-              <span style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: '500' }}>
-                กลุ่มทั้งหมด
+              <div style={{ 
+                backgroundColor: 'rgba(154, 1, 32, 0.1)', 
+                padding: '6px', 
+                borderRadius: '6px',
+                display: 'flex'
+              }}>
+                 <Users size={18} style={{ color: '#9a0120' }} />
+              </div>
+              <span style={{ fontSize: '0.85rem', color: '#666', fontWeight: '600' }}>
+                กลุ่มในที่ปรึกษา
               </span>
             </div>
-            <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#9a0120' }}>
+            <div style={{ fontSize: '1.75rem', fontWeight: '800', color: '#333', lineHeight: 1 }}>
               {stats.totalGroups}
             </div>
           </div>
 
+          {/* Submissions Card */}
           <div style={{
-            backgroundColor: '#fef2f2',
-            padding: '1rem',
-            borderRadius: '8px',
-            border: '1px solid #fecaca'
+            backgroundColor: '#fff',
+            padding: '1.25rem',
+            borderRadius: '12px',
+            border: '1px solid #eee',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-start',
+            gap: '8px'
           }}>
             <div style={{
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem',
-              marginBottom: '0.5rem'
             }}>
-              <FileText size={16} style={{ color: '#9a0120' }} />
-              <span style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: '500' }}>
+              <div style={{ 
+                backgroundColor: 'rgba(154, 1, 32, 0.1)', 
+                padding: '6px', 
+                borderRadius: '6px',
+                display: 'flex'
+              }}>
+                <FileText size={18} style={{ color: '#9a0120' }} />
+              </div>
+              <span style={{ fontSize: '0.85rem', color: '#666', fontWeight: '600' }}>
                 ส่งงานแล้ว
               </span>
             </div>
-            <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#9a0120' }}>
+            <div style={{ fontSize: '1.75rem', fontWeight: '800', color: '#333', lineHeight: 1 }}>
               {stats.totalSubmissions}
             </div>
           </div>
@@ -192,68 +202,48 @@ const DashboardProgressWidget: React.FC<DashboardProgressWidgetProps> = ({
 
         {stats.recentCount > 0 && (
           <div style={{
-            backgroundColor: '#fef9c3',
+            backgroundColor: '#fefce8',
             border: '1px solid #fde047',
-            borderRadius: '8px',
-            padding: '0.75rem 1rem',
-            marginBottom: '1.5rem',
+            borderRadius: '10px',
+            padding: '1rem',
             display: 'flex',
             alignItems: 'center',
-            gap: '0.5rem'
+            gap: '12px'
           }}>
-            <span style={{ fontSize: '1.25rem' }}>🔔</span>
-            <span style={{ fontSize: '0.875rem', color: '#854d0e', fontWeight: '500' }}>
-              มี {stats.recentCount} งานใหม่รอตรวจสอบ
-            </span>
+            <div style={{ 
+                backgroundColor: '#fef08a', 
+                padding: '6px', 
+                borderRadius: '50%',
+                display: 'flex',
+                fontSize: '1rem'
+            }}>
+                🔔
+            </div>
+            <div>
+                 <div style={{ fontSize: '0.9rem', color: '#854d0e', fontWeight: '700' }}>
+                 มี {stats.recentCount} งานใหม่
+                </div>
+                <div style={{ fontSize: '0.8rem', color: '#a16207' }}>
+                 รอการตรวจสอบจากคุณ
+                </div>
+            </div>
+           
           </div>
         )}
-
-        <div style={{ 
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          textAlign: 'center',
-          minHeight: '80px'
-        }}>
-
-
-          <button
-            onClick={handleNavigate}
-            style={{
-              backgroundColor: '#9a0120',
-              color: 'white',
-              border: 'none',
-              padding: '0 24px',
-              height: '40px',
-              borderRadius: '8px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              transition: 'all 0.2s',
-              boxShadow: '0 4px 6px rgba(154, 1, 32, 0.2)',
-              fontSize: '0.875rem',
-              fontFamily: 'Noto Sans Thai'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#7d0019';
-              e.currentTarget.style.transform = 'translateY(-1px)';
-              e.currentTarget.style.boxShadow = '0 6px 12px rgba(154, 1, 32, 0.3)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#9a0120';
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 4px 6px rgba(154, 1, 32, 0.2)';
-            }}
-          >
-            <span>ดูทั้งหมด</span>
-            <ArrowRight size={16} />
-          </button>
-        </div>
+        
+        {stats.totalGroups === 0 && !loading && (
+             <div style={{ 
+                textAlign: 'center', 
+                padding: '20px', 
+                color: '#9ca3af',
+                fontSize: '0.9rem',
+                backgroundColor: '#f9fafb',
+                borderRadius: '8px',
+                border: '1px dashed #e5e7eb'
+            }}>
+                ยังไม่มีกลุ่มโปรเจคในความดูแล
+            </div>
+        )}
       </div>
     </div>
   );

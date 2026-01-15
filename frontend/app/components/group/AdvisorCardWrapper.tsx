@@ -7,7 +7,7 @@ import '../../style/TeacherSelectPage.css';
 
 interface AdvisorCardWrapperProps {
     selectionData: SelectAdvisor; 
-    type: 'pending' | 'accepted'; // บอกสถานะเพื่อตัดสินใจว่าจะโชว์ปุ่ม Action ไหม
+    type: 'pending' | 'accepted';
     onAccept?: (selectionId: number) => void;
     onReject?: (selectionId: number) => void;
 }

@@ -61,11 +61,8 @@ func StartCleanupWorker(db *gorm.DB) {
 		for range ticker.C {
 			log.Println("--- Running Scheduled Token Cleanup ---")
 			CleanExpiredTokens(db)
-
-			// เช็ค Log Cleanup ใน Loop เดียวกัน (จะทำงานเฉพาะวันที่กำหนด)
 			CleanOldLogs(db)
 		}
 	}()
 }
 
-//finish

@@ -1,7 +1,7 @@
 import axios from "axios";
 
 
-const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/team07api";
+export const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 const api = axios.create({
     baseURL: BASE_URL,

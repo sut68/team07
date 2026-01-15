@@ -2,6 +2,7 @@
 
 import { EditOutlined, DeleteOutlined, PaperClipOutlined } from '@ant-design/icons';
 import { News } from '../../interfaces/News';
+import { BASE_URL } from '../../services/api'; 
 import '../../style/news.css';
 
 interface NewsCardProps {
@@ -15,14 +16,13 @@ interface NewsCardProps {
 export default function NewsCard({ data, role, currentUserId, onEdit, onDelete }: NewsCardProps) {
     
     const isOwner = role === "Teacher";
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
     
     const isGeneral = data.Category === "General";
     const categoryClass = isGeneral ? "badge-general" : "badge-advisor";
     const cardTypeClass = isGeneral ? "type-general" : "type-advisor"; // Class ใหม่สำหรับเส้นข้าง
     const categoryLabel = isGeneral ? "ข่าวทั่วไป" : "ข่าวที่ปรึกษา";
 
-    const cleanApiUrl = API_URL.replace(/\/$/, "");
+    const cleanApiUrl = BASE_URL.replace(/\/$/, "");
     const fileUrl = data.File ? `${cleanApiUrl}/${data.File.replace(/\\/g, '/')}`: null;
     const fileName = data.File ? data.File.replace(/\\/g, '/').split('/').pop() : "ดาวน์โหลดไฟล์แนบ";
 

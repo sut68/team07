@@ -1,13 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
-import { Card, Button, Table, Typography, Spin, Empty } from 'antd';
-import { BookOutlined, ArrowRightOutlined } from '@ant-design/icons';
+import { useEffect, useState } from 'react';
+import {  Table,Spin, Empty } from 'antd';
 import { useRouter } from 'next/navigation';
 import { getProjects } from '@/app/services/storage';
 import { ProjectStorage } from '@/app/interfaces/storage';
 
-const { Text } = Typography;
 
 export default function StudentStorage() {
     const router = useRouter();

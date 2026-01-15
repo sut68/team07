@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { CreateIssue, GetMyIssues, UpdateIssue, GetIssueTypes } from "../../services/issue";
 import { GetUserProfile } from "../../services/user";
-import { IssueReportInterface, CreateIssueInterface, IssueTypeInterface } from "../../interfaces/Issue";
+import { IssueReportInterface, IssueTypeInterface } from "../../interfaces/Issue";
 import { BugOutlined, FileTextOutlined, LoadingOutlined, EditOutlined } from "@ant-design/icons";
 import "../../style/issue-report.css";
 import Swal from "sweetalert2";

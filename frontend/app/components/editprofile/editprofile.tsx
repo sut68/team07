@@ -6,18 +6,14 @@ import { UserProfileInterface, UpdateUserProfileInterface } from '../../interfac
 import Swal from 'sweetalert2'; 
 import "../../style/edit-profile.css";
 
-// กำหนด Interface สำหรับ Props ที่จะรับมา
 interface EditProfileProps {
-    user: UserProfileInterface; // รับข้อมูล User เดิมมาเลย
-    onCancel: () => void;       // ฟังก์ชันสำหรับปุ่มยกเลิก
-    onSuccess: () => void;      // ฟังก์ชันสำหรับเมื่อบันทึกสำเร็จ
+    user: UserProfileInterface;
+    onCancel: () => void;
+    onSuccess: () => void;
 }
 
-// เปลี่ยน Function Component ให้รับ Props
 export default function EditProfilePage({ user, onCancel, onSuccess }: EditProfileProps) {
     
-    // State สำหรับฟอร์มแก้ไข (Email, Phone)
-    // ใช้ user จาก props มากำหนดค่าเริ่มต้นเลย
     const [formData, setFormData] = useState<UpdateUserProfileInterface>({
         email: user.email || '',
         phone: user.phone || ''
@@ -26,17 +22,14 @@ export default function EditProfilePage({ user, onCancel, onSuccess }: EditProfi
     const [isSaving, setIsSaving] = useState(false);
     const [isChangePassOpen, setIsChangePassOpen] = useState(false);
 
-    // จัดการเมื่อพิมพ์ข้อมูล
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    // บันทึกข้อมูล
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // ส่วนตรวจสอบข้อมูลว่าง (Validation)
         if (!formData.email || !formData.phone) {
             Swal.fire({
                 icon: 'warning',

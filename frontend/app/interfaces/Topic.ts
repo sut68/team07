@@ -12,7 +12,7 @@ export const statusMap: Record<TopicStatus, { color: string; text: string }> = {
 
 export interface Topic {
     ID: number;
-    id?: number; // Support for backend returning lowercase id
+    id?: number;
     title: string;
     objective: string;
     scope: string;

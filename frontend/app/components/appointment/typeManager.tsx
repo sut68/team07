@@ -1,6 +1,6 @@
 "use client";
 import { useState } from 'react';
-import { Modal, Form, Input, Button, Flex, Popconfirm, message } from 'antd';
+import { Modal, Form, Input, Button, Flex, Popconfirm } from 'antd';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { Toast_success, Toast_fail } from '../Webmessage';
 import { CreateAppointmentType, DeleteAppointmentType } from '../../services/appointment';

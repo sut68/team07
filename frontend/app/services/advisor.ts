@@ -8,7 +8,6 @@ import {
 } from "../interfaces/Advisor";
 
 
-// ส่วนของนักศึกษา (Student View)
 export const GetAllTeachers = async () => {
     return await api.get<{ data: Teacher[] }>("/student/teachers/search");
 };
@@ -26,7 +25,7 @@ export const GetAdvisorSelection = async (groupId: number) => {
 
 // 1. ดึงรายการคำขอที่เข้ามา (Incoming Requests)
 export const GetAdvisorRequests = async () => {
-  // ✅ แก้จาก AdvisorSelection -> SelectAdvisor ให้ตรงกับที่ import มา
+  // แก้จาก AdvisorSelection -> SelectAdvisor ให้ตรงกับที่ import มา
   return await api.get<{ data: SelectAdvisor[] }>("/teacher/requests");
 };
 

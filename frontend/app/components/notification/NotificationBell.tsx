@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Badge, Popover, Avatar, Typography, Modal, Button } from 'antd'; 
 import { BellOutlined, ExclamationCircleOutlined, FormOutlined } from '@ant-design/icons'; 
 import { GetMyNotifications, MarkNotificationAsRead } from '../../services/notification'; 

@@ -1,9 +1,7 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { Modal, Button, Collapse, Form, Input, InputNumber, Popconfirm, message, Empty } from 'antd';
-import { 
-    PlusOutlined, DeleteOutlined, EditOutlined, SettingOutlined, BarsOutlined 
-} from '@ant-design/icons';
+import { PlusOutlined, DeleteOutlined, EditOutlined, SettingOutlined } from '@ant-design/icons';
 import { Toast_success, Toast_fail } from '../Webmessage';
 import { 
     ListCriteria, GetCriteriaById, 

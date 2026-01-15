@@ -2,8 +2,6 @@ import api from "./api";
 import { Topic, TopicApproval } from "../interfaces/Topic";
 
 export const getTopics = async (params?: { teacher_id?: number; filter?: string; proposer_role?: string; group_id?: number }) => {
-    // Determine strict endpoint based on params if needed, but /groupProject/topics covers general cases
-    // However, for correct scoping, we use the shared endpoint that allows both roles
     const res = await api.get<{ data: Topic[] }>("/groupProject/topics", { params });
     return res.data;
 };

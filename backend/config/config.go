@@ -69,7 +69,6 @@ func RefreshCookieName() string {
 
 // สำคัญในการ Deploy จริง
 func CookieDomain() string {
-	// ใน Dev ใช้ localhost, ใน Prod ใช้ Domain จริง (e.g., your-api.com)
 	return getenv("COOKIE_DOMAIN", "localhost") 
 }
 

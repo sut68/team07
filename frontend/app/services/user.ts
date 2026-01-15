@@ -19,7 +19,6 @@ async function ImportUsersCSV(file: File) {
 }
 
 // GET: ดึงข้อมูล User ทั้งหมด หรือใช้ params สำหรับการค้นหา/กรอง
-// params example: { q?: string, gender_id?: number, branch_id?: number, role_id?: number, status_id?: number }
 async function ListUsers(params?: Record<string, any>) {
     return await api.get("/admin/users", { params });
 }
