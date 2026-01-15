@@ -1,5 +1,5 @@
 import api from "./api";
-import type { ForgotPasswordInterface, SignInInterface,ResetPasswordInterface ,UserDataInterface} from "../interfaces/Login";
+import type { ForgotPasswordInterface, SignInInterface,ResetPasswordInterface ,UserDataInterface, ChangePasswordInterface} from "../interfaces/Login";
 import { AxiosResponse } from 'axios';
 
 async function SignIn(data: SignInInterface) {
@@ -27,4 +27,8 @@ async function ResetPassword(data: ResetPasswordInterface) {
     return await api.post("/reset-password", data);
 }
 
-export { SignIn, Logout, GetMe , ForgotPassword ,ResetPassword};
+async function ChangePassword(data: ChangePasswordInterface) {
+    return await api.post("/change-password", data);
+}
+
+export { SignIn, Logout, GetMe , ForgotPassword ,ResetPassword, ChangePassword};

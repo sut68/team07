@@ -54,6 +54,12 @@ type ResetPasswordInput struct {
 	NewPassword string `json:"new_password" binding:"required,min=8"`
 }
 
+type ChangePasswordInput struct {
+	Email           string `json:"email" binding:"required,email"`
+	CurrentPassword string `json:"current_password" binding:"required"`
+	NewPassword     string `json:"new_password" binding:"required,min=8"`
+}
+
 func (h *LoginHandler) Me(c *gin.Context) {
 	claims, err := middleware.GetClaimsFromContext(c)
 	if err != nil {
@@ -381,6 +387,73 @@ func (h *LoginHandler) ResetPassword(c *gin.Context) {
 	go service.SendPasswordChangedNotification(user.Email, user.Username)
 	log.InsertLogByUserID(c, user.ID, 13)
 	c.JSON(http.StatusOK, gin.H{"message": "Password has been reset successfully. All old sessions have been revoked."})
+}
+
+// ChangePassword Handles POST /change-password
+func (h *LoginHandler) ChangePassword(c *gin.Context) {
+	// Get User ID from Context
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	var input ChangePasswordInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Fetch User
+	var user entity.User
+	if err := h.DB.First(&user, claims.ID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	// Check Email
+	if user.Email != input.Email {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email does not match our records"})
+		return
+	}
+
+	// Check Current Password
+	if !h.JwtService.CheckPasswordHash(input.CurrentPassword, user.Password) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Incorrect current password"})
+		return
+	}
+
+	// Validate New Password Strength
+	if strong, msg := service.IsStrongPassword(input.NewPassword); !strong {
+		c.JSON(http.StatusBadRequest, gin.H{"error": msg})
+		return
+	}
+
+	// Check if New Password is same as Old
+	if h.JwtService.CheckPasswordHash(input.NewPassword, user.Password) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "New password cannot be the same as the current password"})
+		return
+	}
+
+	// Save to PasswordHistory
+	history := entity.PasswordHistory{
+		UserID:   user.ID,
+		OldPasswordHash: user.Password,
+	}
+	h.DB.Create(&history)
+
+	// Update Password
+	hashedPassword := h.JwtService.HashPassword(input.NewPassword)
+	user.Password = hashedPassword
+	if err := h.DB.Save(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update password"})
+		return
+	}
+
+	// Send Email
+	go service.SendPasswordChangedNotification(user.Email, user.Username)
+
+	c.JSON(http.StatusOK, gin.H{"message": "Password changed successfully"})
 }
 
 // clearAuthCookies

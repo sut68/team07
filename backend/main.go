@@ -154,6 +154,7 @@ func main() {
 		protected.GET("/getUserProfile", users.GetUserProfile)
 		protected.PATCH("/updateUserProfile", users.UpdateUserProfile)
 		protected.GET("/me", authHandler.Me)
+		protected.POST("/change-password", authHandler.ChangePassword)
 
 		protected.GET("/getProcess", progress.GetProGressByID)
 		protected.GET("/getProjectbyuser", progress.GetGroupProjectIDByStudentID)

@@ -19,3 +19,9 @@ export interface ResetPasswordInterface {
     token: string;
     new_password: string;
 }
+
+export interface ChangePasswordInterface {
+    email: string;
+    current_password: string;
+    new_password: string;
+}
