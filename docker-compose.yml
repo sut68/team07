@@ -15,7 +15,6 @@ services:
       - app-network
     restart: always
 
-  # Local dev: you can keep it but DO NOT try to get public certs
   nginx-proxy-letsencrypt:
     image: nginxproxy/acme-companion
     container_name: nginx-proxy-letsencrypt
@@ -31,8 +30,6 @@ services:
     environment:
       DEFAULT_EMAIL: b6640583@g.sut.ac.th
       NGINX_PROXY_CONTAINER: nginx-proxy
-      # ✅ IMPORTANT: prevent acme from trying to validate domains on localhost
-      ACME_CA_URI: https://acme-staging-v02.api.letsencrypt.org/directory
     networks:
       - app-network
     restart: always
@@ -72,17 +69,11 @@ services:
     restart: always
     expose:
       - "3001"
-    ports:
-      - "3001:3001"
     environment:
-      # ✅ local frontend URL
-      FRONTEND_URL: http://localhost:5173
-
-      # (keep your existing fields; not used for localhost testing)
+      FRONTEND_URL: https://capstonehub.me
       VIRTUAL_HOST: socket.capstonehub.me
       VIRTUAL_PORT: 3001
-      # ✅ disable le host in local
-      LETSENCRYPT_HOST: ""
+      LETSENCRYPT_HOST: socket.capstonehub.me
     networks:
       - app-network
 
@@ -100,33 +91,25 @@ services:
       - ./backend/lib:/app/lib
     environment:
       DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}?sslmode=disable
-
-      # ✅ local frontend URL
-      FRONTEND_URL: http://localhost:5173
-
+      FRONTEND_URL: https://capstonehub.me
       SMTP_SENDER_EMAIL: ${SMTP_SENDER_EMAIL}
       SMTP_SENDER_NAME: ${SMTP_SENDER_NAME}
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
       SMTP_PASSWORD: ${SMTP_PASSWORD}
       SMTP_USERNAME: ${SMTP_USERNAME}
-
       SOCKET_SERVICE_URL: "http://socket:3001"
       GIN_MODE: release
       APP_ENV: production
-
-      # ✅ cookies must match localhost
-      COOKIE_DOMAIN: localhost
-
-      # (keep your existing fields; not used for localhost testing)
+      COOKIE_DOMAIN: capstonehub.me
       VIRTUAL_HOST: api.capstonehub.me
       VIRTUAL_PORT: 8080
-      # ✅ disable le host in local
-      LETSENCRYPT_HOST: ""
+      LETSENCRYPT_HOST: api.capstonehub.me
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     expose:
       - "8080"
-    ports:
-      - "8080:8080"
     networks:
       - app-network
 
@@ -134,27 +117,24 @@ services:
     build:
       context: ./frontend
       args:
-        # ✅ compile-time env for Next build
-        NEXT_PUBLIC_API_URL: http://localhost:8080
-        NEXT_PUBLIC_SOCKET_URL: http://localhost:3001
+        NEXT_PUBLIC_API_URL: https://api.capstonehub.me
+        NEXT_PUBLIC_SOCKET_URL: https://socket.capstonehub.me
+        NEXT_PUBLIC_STORAGE_URL: https://api.capstonehub.me/team07api/storage
+        NEXT_PUBLIC_BACKEND_URL: https://api.capstonehub.me/team07api
     container_name: se68_frontend
     restart: always
     expose:
       - "5173"
-    ports:
-      - "5173:5173"
     depends_on:
       - backend
       - socket
     environment:
-  
-      NEXT_PUBLIC_API_URL: http://localhost:8080
-      NEXT_PUBLIC_SOCKET_URL: http://localhost:3001
-
+      NEXT_PUBLIC_API_URL: https://api.capstonehub.me
+      NEXT_PUBLIC_SOCKET_URL: https://socket.capstonehub.me
+      NEXT_PUBLIC_STORAGE_URL: https://api.capstonehub.me/team07api/storage
       VIRTUAL_HOST: capstonehub.me,www.capstonehub.me
       VIRTUAL_PORT: 5173
-
-      LETSENCRYPT_HOST: ""
+      LETSENCRYPT_HOST: capstonehub.me,www.capstonehub.me
     networks:
       - app-network
 

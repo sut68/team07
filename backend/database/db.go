@@ -119,6 +119,7 @@ func CORSMiddleware() gin.HandlerFunc {
 			"http://localhost:5173",
 			"http://localhost:3000",
 			"https://capstonehub.me",
+			"https://www.capstonehub.me",
 		}
 
 		origin := c.Request.Header.Get("Origin")

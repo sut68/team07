@@ -35,6 +35,9 @@ RUN mkdir -p /app/lib /app/controller/filter/data /app/uploads
 COPY --from=builder /app/lib /app/lib
 COPY --from=builder /app/controller/filter/data /app/controller/filter/data
 
+# Ensure the app can find the dynamic libraries (libonnxruntime.so)
+ENV LD_LIBRARY_PATH=/app/lib:$LD_LIBRARY_PATH
+
 EXPOSE 8080
 
 CMD ["/app/goapp"]

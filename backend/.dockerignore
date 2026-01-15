@@ -1,1 +1,4 @@
 test/
+uploads/
+.env
+.git
