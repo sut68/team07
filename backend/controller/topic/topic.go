@@ -149,13 +149,51 @@ func ListTopics(c *gin.Context) {
 		}
 	}
 
-	// Filter out topics that are already selected (Active)
-	query = query.Where("id NOT IN (?)", db.Table("topic_selections").Select("topic_id").Where("status = ?", "Active"))
-
+    query = query.Order("id desc") 
 	if err := query.Find(&topics).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+    // Manual mapping for selection info (Runs for everyone)
+    if true {
+        // Fetch active selections for these topics
+        var topicIDs []uint
+        for _, t := range topics {
+            topicIDs = append(topicIDs, t.ID)
+        }
+        
+        var selections []entity.TopicSelection
+        if len(topicIDs) > 0 {
+            db.Preload("GroupProject").Where("topic_id IN ? AND status = ?", topicIDs, "Active").Find(&selections)
+        }
+        
+        type TopicWithSelection struct {
+            entity.Topic
+            SelectedByGroup *entity.GroupProject `json:"selected_by_group,omitempty"`
+        }
+        
+        var results []TopicWithSelection
+        
+        // Create map for quick lookup
+        selMap := make(map[uint]entity.GroupProject)
+        for _, s := range selections {
+            if s.GroupProject != nil {
+                selMap[s.TopicID] = *s.GroupProject
+            }
+        }
+        
+        for _, t := range topics {
+            res := TopicWithSelection{Topic: t}
+            if grp, ok := selMap[t.ID]; ok {
+                res.SelectedByGroup = &grp
+            }
+            results = append(results, res)
+        }
+        
+        c.JSON(http.StatusOK, gin.H{"data": results})
+        return
+    }
 
 	c.JSON(http.StatusOK, gin.H{"data": topics})
 }
@@ -301,13 +339,30 @@ func ApproveTopic(c *gin.Context) {
 	approval.ApprovalDate = time.Now()
 
 	if approval.TeacherID == 0 {
-
 	}
 
 	if err := db.Create(&approval).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	// === Auto-Select Topic if Approved and Student Proposed ===
+	if topic.ProposerRole == "Student" && topic.Status == "Approved" && topic.GroupProjectID != nil {
+		// Check if a selection already exists (to prevent duplicates)
+		var existingSelection entity.TopicSelection
+		if err := db.Where("topic_id = ? AND group_project_id = ?", topic.ID, *topic.GroupProjectID).First(&existingSelection).Error; err != nil {
+			selection := entity.TopicSelection{
+				TopicID:        topic.ID,
+				GroupProjectID: *topic.GroupProjectID,
+				Status:       "Active", 
+				DateSelected: time.Now(),
+			}
+			if err := db.Create(&selection).Error; err != nil {
+				fmt.Printf("Error auto-creating topic selection: %v\n", err)
+			}
+		}
+	}
+	// === End Auto-Select ===
 	log.InsertLog(c, 54)
 
 	c.JSON(http.StatusOK, gin.H{"data": topic, "approval": approval})

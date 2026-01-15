@@ -8,6 +8,7 @@ import { getProjects, createProject, updateProject, deleteProject, getPendingPro
 import type { ColumnsType } from 'antd/es/table';
 import '../../../style/evaluation.css';
 import '../../../style/storage.css';
+import Swal from 'sweetalert2';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -43,7 +44,13 @@ export default function TeacherStoragePage() {
             setFilteredProjects(res.data);
         } catch (error) {
             console.error("Failed to fetch projects", error);
-            message.error("ไม่สามารถโหลดข้อมูลได้");
+            Swal.fire({
+                title: 'ผิดพลาด',
+                text: 'ไม่สามารถโหลดข้อมูลได้',
+                icon: 'error',
+                confirmButtonText: 'ตกลง',
+                confirmButtonColor: '#8A011D'
+            });
         } finally {
             setLoading(false);
         }
@@ -56,7 +63,13 @@ export default function TeacherStoragePage() {
             setPendingProjects(res.data);
         } catch (error) {
             console.error("Failed to fetch pending projects", error);
-            message.error("ไม่สามารถโหลดข้อมูลคำขออนุมัติได้");
+            Swal.fire({
+                title: 'ผิดพลาด',
+                text: 'ไม่สามารถโหลดข้อมูลคำขออนุมัติได้',
+                icon: 'error',
+                confirmButtonText: 'ตกลง',
+                confirmButtonColor: '#8A011D'
+            });
         } finally {
             setLoading(false);
         }
@@ -82,11 +95,13 @@ export default function TeacherStoragePage() {
                 year: project.year,
             });
             if (project.file_path) {
+                const filePath = project.file_path.replace(/^\.\//, '');
+                const fullPath = filePath.startsWith('uploads') ? filePath : `uploads/projects/${filePath}`;
                 setFileList([{
                     uid: '-1',
                     name: project.file_path.split('/').pop() || 'file.pdf',
                     status: 'done',
-                    url: `http://localhost:8080/${project.file_path}`,
+                    url: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/${fullPath}`,
                 }]);
             } else {
                 setFileList([]);
@@ -110,7 +125,13 @@ export default function TeacherStoragePage() {
         try {
             // Validate file upload
             if (!editingProject && fileList.length === 0) {
-                message.error('กรุณาอัปโหลดไฟล์รายงาน');
+                Swal.fire({
+                    title: 'แจ้งเตือน',
+                    text: 'กรุณาอัปโหลดไฟล์รายงาน',
+                    icon: 'warning',
+                    confirmButtonText: 'ตกลง',
+                    confirmButtonColor: '#8A011D'
+                });
                 return;
             }
 
@@ -140,53 +161,104 @@ export default function TeacherStoragePage() {
                 const projectId = editingProject.ID || editingProject.id;
                 if (projectId) {
                     await updateProject(projectId, formData, 'Teacher');
-                    message.success('แก้ไขโครงงานเรียบร้อยแล้ว');
+                    Swal.fire({
+                        title: 'สำเร็จ',
+                        text: 'แก้ไขโครงงานเรียบร้อยแล้ว',
+                        icon: 'success',
+                        confirmButtonText: 'ตกลง',
+                        confirmButtonColor: '#8A011D'
+                    });
                 }
             } else {
                 await createProject(formData, 'Teacher');
-                message.success('เพิ่มโครงงานเรียบร้อยแล้ว');
+                Swal.fire({
+                    title: 'สำเร็จ',
+                    text: 'เพิ่มโครงงานเรียบร้อยแล้ว',
+                    icon: 'success',
+                    confirmButtonText: 'ตกลง',
+                    confirmButtonColor: '#8A011D'
+                });
             }
             handleCloseModal();
             fetchProjects();
         } catch (error) {
             console.error(error);
-            message.error('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+            Swal.fire({
+                title: 'เกิดข้อผิดพลาด',
+                text: 'เกิดข้อผิดพลาดในการบันทึกข้อมูล',
+                icon: 'error',
+                confirmButtonText: 'ตกลง',
+                confirmButtonColor: '#8A011D'
+            });
         }
     };
 
     const handleDelete = (id: number) => {
-        Modal.confirm({
+        Swal.fire({
             title: 'ยืนยันการลบ',
-            content: 'คุณแน่ใจหรือไม่ที่จะลบโครงงานนี้?',
-            okText: 'ลบ',
-            okType: 'danger',
-            cancelText: 'ยกเลิก',
-            onOk: async () => {
+            text: 'คุณแน่ใจหรือไม่ที่จะลบโครงงานนี้?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'ลบ',
+            cancelButtonText: 'ยกเลิก'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
                 try {
                     await deleteProject(id, 'Teacher');
-                    message.success('ลบโครงงานเรียบร้อยแล้ว');
+                    Swal.fire({
+                        title: 'สำเร็จ',
+                        text: 'ลบโครงงานเรียบร้อยแล้ว',
+                        icon: 'success',
+                        confirmButtonText: 'ตกลง',
+                        confirmButtonColor: '#8A011D'
+                    });
                     fetchProjects();
                 } catch (error) {
-                    message.error('ลบโครงงานไม่สำเร็จ');
+                    Swal.fire({
+                        title: 'เกิดข้อผิดพลาด',
+                        text: 'ลบโครงงานไม่สำเร็จ',
+                        icon: 'error',
+                        confirmButtonText: 'ตกลง',
+                        confirmButtonColor: '#8A011D'
+                    });
                 }
             }
         });
     };
 
     const handleApprove = (id: number) => {
-        Modal.confirm({
+        Swal.fire({
             title: 'อนุมัติเผยแพร่โครงงาน',
-            content: 'คุณต้องการอนุมัติโครงงานนี้เข้าสู่คลังโครงงานสาขาหรือไม่? (ข้อมูลจะถูกคัดลอกไปยังคลัง)',
-            okText: 'อนุมัติ',
-            cancelText: 'ยกเลิก',
-            onOk: async () => {
+            text: 'คุณต้องการอนุมัติโครงงานนี้เข้าสู่คลังโครงงานสาขาหรือไม่? (ข้อมูลจะถูกคัดลอกไปยังคลัง)',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#52c41a',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'อนุมัติ',
+            cancelButtonText: 'ยกเลิก'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
                 try {
                     await approveProject(id);
-                    message.success('อนุมัติโครงงานเรียบร้อยแล้ว');
+                    Swal.fire({
+                        title: 'สำเร็จ',
+                        text: 'อนุมัติโครงงานเรียบร้อยแล้ว',
+                        icon: 'success',
+                        confirmButtonText: 'ตกลง',
+                        confirmButtonColor: '#8A011D'
+                    });
                     fetchPending(); // Refresh pending list
                     fetchProjects(); // Refresh repository list
                 } catch (error) {
-                    message.error('เกิดข้อผิดพลาดในการอนุมัติ');
+                    Swal.fire({
+                        title: 'เกิดข้อผิดพลาด',
+                        text: 'เกิดข้อผิดพลาดในการอนุมัติ',
+                        icon: 'error',
+                        confirmButtonText: 'ตกลง',
+                        confirmButtonColor: '#8A011D'
+                    });
                 }
             }
         });
@@ -205,14 +277,15 @@ export default function TeacherStoragePage() {
         setSelectedYear(value);
     };
 
-    // Generate year options (2000-2025)
-    const yearOptions = Array.from({ length: 30 }, (_, i) => {
-        const year = 2543 + i;
-        return {
-            label: year.toString(),
-            value: year
-        };
-    }).reverse();
+    // Generate year options (Current Year + 1 down to 2543)
+    const currentYear = new Date().getFullYear() + 543;
+    const yearOptions = [];
+    for (let i = currentYear + 1; i >= 2543; i--) {
+        yearOptions.push({
+            label: i.toString(),
+            value: i
+        });
+    }
 
     // Table columns
     const columns: ColumnsType<ProjectStorage> = [
@@ -373,14 +446,21 @@ export default function TeacherStoragePage() {
             align: 'center',
             fixed: 'right',
             render: (_, record) => (
-                <Button
-                    type="primary"
-                    icon={<CheckCircleOutlined />}
-                    onClick={() => handleApprove(record.ID)}
-                    style={{ background: '#52c41a', borderColor: '#52c41a' }}
-                >
-                    อนุมัติ
-                </Button>
+                <Space size="small">
+                    <Button
+                        type="default"
+                        icon={<EyeOutlined />}
+                        onClick={() => handleViewDetail(record)}
+                    />
+                    <Button
+                        type="primary"
+                        icon={<CheckCircleOutlined />}
+                        onClick={() => handleApprove(record.ID)}
+                        style={{ background: '#52c41a', borderColor: '#52c41a' }}
+                    >
+                        อนุมัติ
+                    </Button>
+                </Space>
             ),
         }
     ];
@@ -403,8 +483,8 @@ export default function TeacherStoragePage() {
                                     enterButton={<SearchOutlined />}
                                     size="large"
                                     onSearch={handleSearch}
-                                    onChange={(e) => !e.target.value && setSearchKeyword('')}
-                                    style={{ flex: 1, minWidth: 300, maxWidth: 500 }}
+                                    onChange={(e) => setSearchKeyword(e.target.value)}
+                                    style={{ flex: 4, minWidth: 300, maxWidth: 500 }}
                                 />
                             </ConfigProvider>
                             <Select
@@ -500,8 +580,8 @@ export default function TeacherStoragePage() {
             <Modal
                 title={
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div style={{ background: '#e6f7ff', padding: 8, borderRadius: '50%', display: 'flex' }}>
-                            <BookOutlined style={{ color: '#1890ff', fontSize: 18 }} />
+                        <div style={{ background: '#fff7e6', padding: 8, borderRadius: '50%', display: 'flex' }}>
+                            <BookOutlined style={{ color: '#f76212', fontSize: 18 }} />
                         </div>
                         <span>{editingProject ? 'แก้ไขโครงงาน' : 'เพิ่มโครงงานใหม่'}</span>
                     </div>
@@ -586,12 +666,24 @@ export default function TeacherStoragePage() {
                             beforeUpload={(file) => {
                                 const isPDF = file.type === 'application/pdf';
                                 if (!isPDF) {
-                                    message.error('กรุณาอัปโหลดไฟล์ PDF เท่านั้น');
+                                    Swal.fire({
+                                        title: 'แจ้งเตือน',
+                                        text: 'กรุณาอัปโหลดไฟล์ PDF เท่านั้น',
+                                        icon: 'warning',
+                                        confirmButtonText: 'ตกลง',
+                                        confirmButtonColor: '#8A011D'
+                                    });
                                     return Upload.LIST_IGNORE;
                                 }
                                 const isLt10M = file.size / 1024 / 1024 < 10;
                                 if (!isLt10M) {
-                                    message.error('ไฟล์ต้องมีขนาดไม่เกิน 10MB');
+                                    Swal.fire({
+                                        title: 'แจ้งเตือน',
+                                        text: 'ไฟล์ต้องมีขนาดไม่เกิน 10MB',
+                                        icon: 'warning',
+                                        confirmButtonText: 'ตกลง',
+                                        confirmButtonColor: '#8A011D'
+                                    });
                                     return Upload.LIST_IGNORE;
                                 }
                                 return false; // Prevent auto upload
@@ -608,7 +700,7 @@ export default function TeacherStoragePage() {
                     <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
                         <Space>
                             <Button onClick={handleCloseModal} size="large">ยกเลิก</Button>
-                            <Button type="primary" htmlType="submit" size="large">
+                            <Button type="primary" htmlType="submit" size="large" style={{ background: '#8A011D', borderColor: '#8A011D' }}>
                                 {editingProject ? 'บันทึกการแก้ไข' : 'บันทึกข้อมูล'}
                             </Button>
                         </Space>
@@ -662,7 +754,7 @@ export default function TeacherStoragePage() {
                                     <Space>
                                         <FileTextOutlined />
                                         <a
-                                            href={`http://localhost:8080/${selectedProject.file_path}`}
+                                            href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/${selectedProject.file_path.replace(/^\.\//, '').startsWith('uploads') ? selectedProject.file_path.replace(/^\.\//, '') : `uploads/projects/${selectedProject.file_path.replace(/^\.\//, '')}`}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             style={{ color: '#1890ff' }}
@@ -675,7 +767,9 @@ export default function TeacherStoragePage() {
                                             icon={<DownloadOutlined />}
                                             onClick={() => {
                                                 const link = document.createElement('a');
-                                                link.href = `http://localhost:8080/${selectedProject.file_path}`;
+                                                const filePath = selectedProject.file_path.replace(/^\.\//, '');
+                                                const fullPath = filePath.startsWith('uploads') ? filePath : `uploads/projects/${filePath}`;
+                                                link.href = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/${fullPath}`;
                                                 link.download = selectedProject.file_path.split('/').pop() || 'document';
                                                 link.target = '_blank';
                                                 document.body.appendChild(link);

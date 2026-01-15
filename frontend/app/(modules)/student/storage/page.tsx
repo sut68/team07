@@ -81,7 +81,9 @@ const StudentStoragePage = () => {
     const handleDownload = () => {
         if (selectedProject?.file_path) {
             const link = document.createElement('a');
-            link.href = `http://localhost:8080/${selectedProject.file_path}`;
+            const filePath = selectedProject.file_path.replace(/^\.\//, '');
+            const fullPath = filePath.startsWith('uploads') ? filePath : `uploads/projects/${filePath}`;
+            link.href = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/${fullPath}`;
             link.download = selectedProject.file_path.split('/').pop() || 'document';
             link.target = '_blank';
             document.body.appendChild(link);
@@ -93,13 +95,15 @@ const StudentStoragePage = () => {
         }
     };
 
-    const yearOptions = Array.from({ length: 30 }, (_, i) => {
-        const year = 2543 + i;
-        return {
-            label: year.toString(),
-            value: year
-        };
-    }).reverse();
+    // Generate year options (Current Year + 1 down to 2543)
+    const currentYear = new Date().getFullYear() + 543;
+    const yearOptions = [];
+    for (let i = currentYear + 1; i >= 2543; i--) {
+        yearOptions.push({
+            label: i.toString(),
+            value: i
+        });
+    }
 
     return (
         <div className="storage-page">
@@ -117,7 +121,7 @@ const StudentStoragePage = () => {
                             enterButton={<SearchOutlined />}
                             size="large"
                             onSearch={handleSearch}
-                            onChange={(e) => !e.target.value && setSearchKeyword('')}
+                            onChange={(e) => setSearchKeyword(e.target.value)}
                             style={{ flex: 4, minWidth: 300 }}
                         />
                     </ConfigProvider>
