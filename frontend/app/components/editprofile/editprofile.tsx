@@ -1,6 +1,7 @@
 "use client";
 import { useState } from 'react';
 import { UpdateUserProfile } from '../../services/user'; 
+import ChangedPassword from '../ChangedPassword';
 import { UserProfileInterface, UpdateUserProfileInterface } from '../../interfaces/Users';
 import Swal from 'sweetalert2'; 
 import "../../style/edit-profile.css";
@@ -23,6 +24,7 @@ export default function EditProfilePage({ user, onCancel, onSuccess }: EditProfi
     });
 
     const [isSaving, setIsSaving] = useState(false);
+    const [isChangePassOpen, setIsChangePassOpen] = useState(false);
 
     // จัดการเมื่อพิมพ์ข้อมูล
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -187,25 +189,43 @@ export default function EditProfilePage({ user, onCancel, onSuccess }: EditProfi
                             />
                         </div>
 
-                        {/* Buttons */}
+                        {/* Buttons arranged: left = cancel, center = save, right = change password */}
                         <div className="form-actions">
-                            <button 
-                                type="button" 
-                                className="btn-cancel"
-                                onClick={onCancel} 
-                            >
-                                ยกเลิก
-                            </button>
-                            <button 
-                                type="submit" 
-                                className="btn-save"
-                                disabled={isSaving}
-                            >
-                                {isSaving ? 'กำลังบันทึก...' : 'บันทึกการเปลี่ยนแปลง'}
-                            </button>
+                            <div className="left">
+                                <button 
+                                    type="button" 
+                                    className="btn-cancel"
+                                    onClick={onCancel} 
+                                >
+                                    ยกเลิก
+                                </button>
+                            </div>
+
+                            <div className="center">
+                                <button 
+                                    type="submit" 
+                                    className="btn-save"
+                                    disabled={isSaving}
+                                >
+                                    {isSaving ? 'กำลังบันทึก...' : 'บันทึกการเปลี่ยนแปลง'}
+                                </button>
+                            </div>
+
+                            <div className="right">
+                                <button 
+                                    type="button" 
+                                    className="btn-change"
+                                    onClick={() => setIsChangePassOpen(true)}
+                                >
+                                    เปลี่ยนรหัสผ่าน
+                                </button>
+                            </div>
                         </div>
                     </form>
                 </div>
+                {isChangePassOpen && (
+                    <ChangedPassword isOpen={isChangePassOpen} onClose={() => setIsChangePassOpen(false)} />
+                )}
             </div>
         </div>
     );

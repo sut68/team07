@@ -1,9 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
-import { CreateIssue, GetMyIssues, UpdateIssue } from "../../services/issue";
+import { CreateIssue, GetMyIssues, UpdateIssue, GetIssueTypes } from "../../services/issue";
 import { GetUserProfile } from "../../services/user";
-import { IssueReportInterface, CreateIssueInterface } from "../../interfaces/Issue";
-import { BugOutlined, FileTextOutlined, LoadingOutlined, EditOutlined } from "@ant-design/icons"; 
+import { IssueReportInterface, CreateIssueInterface, IssueTypeInterface } from "../../interfaces/Issue";
+import { BugOutlined, FileTextOutlined, LoadingOutlined, EditOutlined } from "@ant-design/icons";
 import "../../style/issue-report.css";
 import Swal from "sweetalert2";
 
@@ -11,11 +11,12 @@ export default function ReportIssueContent() {
     const [issues, setIssues] = useState<IssueReportInterface[]>([]);
     const [loading, setLoading] = useState(true);
     const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+    const [issueTypes, setIssueTypes] = useState<IssueTypeInterface[]>([]);
 
     // Form State
     const [detail, setDetail] = useState("");
     const [typeID, setTypeID] = useState<number>(1);
-    
+
     // State สำหรับโหมดแก้ไข
     const [editMode, setEditMode] = useState(false);
     const [editIssueId, setEditIssueId] = useState<number | null>(null);
@@ -27,6 +28,10 @@ export default function ReportIssueContent() {
                 if (userRes.status === 200 && userRes.data) {
                     const userData = userRes.data.data || userRes.data;
                     setCurrentUserId(userData.ID);
+                }
+                const typesRes = await GetIssueTypes();
+                if (typesRes.status === 200) {
+                    setIssueTypes(typesRes.data);
                 }
                 await fetchIssues();
             } catch (error) {
@@ -57,7 +62,7 @@ export default function ReportIssueContent() {
         setEditIssueId(issue.ID!);
         setDetail(issue.detail || "");
         setTypeID(issue.type_id || 1);
-        
+
         // Scroll ขึ้นไปที่ฟอร์มด้านบน
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -91,7 +96,7 @@ export default function ReportIssueContent() {
             showCancelButton: true,
             confirmButtonText: 'บันทึกข้อมูล',
             cancelButtonText: 'ยกเลิก',
-            confirmButtonColor: 'green', 
+            confirmButtonColor: 'green',
             cancelButtonColor: '#9a0120',
             customClass: { container: 'swal-z-index-high' }
         });
@@ -99,7 +104,7 @@ export default function ReportIssueContent() {
         if (confirmResult.isConfirmed) {
             try {
                 Swal.fire({ title: 'กำลังบันทึก...', didOpen: () => Swal.showLoading() });
-                
+
                 let res;
                 if (editMode && editIssueId) {
                     // เรียก API อัปเดต
@@ -112,9 +117,9 @@ export default function ReportIssueContent() {
                 if (res.status === 200 || res.status === 201) {
                     Swal.close();
                     await Swal.fire({ icon: 'success', title: 'ส่งรายงานสำเร็จ!', timer: 1500, showConfirmButton: false });
-                    
+
                     // Reset Form
-                    handleCancelEdit(); 
+                    handleCancelEdit();
                     fetchIssues();
                 } else {
                     Swal.close();
@@ -134,7 +139,7 @@ export default function ReportIssueContent() {
                 <h4 style={{ marginTop: 0, color: editMode ? '#1890ff' : '#333' }}>
                     {editMode ? `✏️ กำลังแก้ไขรายการ` : "📝 แจ้งปัญหาใหม่"}
                 </h4>
-                
+
                 <div className="form-group">
                     <label>ประเภทปัญหา</label>
                     <select
@@ -143,9 +148,14 @@ export default function ReportIssueContent() {
                         onChange={(e) => setTypeID(Number(e.target.value))}
                         style={{ width: '100%', padding: '8px', marginBottom: '10px' }}
                     >
-                        <option value={1}>Bug (ข้อผิดพลาดของระบบ)</option>
-                        <option value={2}>Feature Request (ขอฟีเจอร์เพิ่ม)</option>
-                        <option value={3}>Security (ปัญหาด้านความปลอดภัย)</option>
+                        {/* ใส่ Option แรกเป็นค่าเริ่มต้น (ถ้าต้องการ) */}
+                        {/* <option value={0} disabled>เลือกประเภทปัญหา</option> */}
+
+                        {issueTypes.map((item) => (
+                            <option key={item.ID} value={item.ID}>
+                                {item.type}
+                            </option>
+                        ))}
                     </select>
                 </div>
                 <div className="form-group">
@@ -159,27 +169,27 @@ export default function ReportIssueContent() {
                         style={{ width: '100%', padding: '8px' }}
                     />
                 </div>
-                
+
                 <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
                     <button
                         type="submit"
                         className="btn-submit"
                         disabled={!currentUserId}
                         style={{
-                            flex: 1, padding: '10px', 
-                            backgroundColor: editMode ? '#1890ff' : '#8A011D', 
+                            flex: 1, padding: '10px',
+                            backgroundColor: editMode ? '#1890ff' : '#8A011D',
                             color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer'
                         }}
                     >
                         {editMode ? "บันทึกการแก้ไข" : "ส่งเรื่องแจ้งปัญหา"}
                     </button>
-                    
+
                     {editMode && (
                         <button
                             type="button"
                             onClick={handleCancelEdit}
                             style={{
-                                padding: '10px 20px', backgroundColor: '#f0f0f0', 
+                                padding: '10px 20px', backgroundColor: '#f0f0f0',
                                 color: '#333', border: 'none', borderRadius: '5px', cursor: 'pointer'
                             }}
                         >
@@ -213,16 +223,16 @@ export default function ReportIssueContent() {
                             <div style={{ flex: 1 }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px', alignItems: 'center' }}>
                                     <span style={{ fontWeight: 'bold', fontSize: '14px' }}>
-                                        {item.type?.type || "General"} <span style={{fontSize:'0.8em', color:'#999'}}></span>
+                                        {item.type?.type || "General"} <span style={{ fontSize: '0.8em', color: '#999' }}></span>
                                     </span>
-                                    
+
                                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                                         <span className={`issue-status status-${(item.status?.status || "Pending").toLowerCase().replace(" ", "-")}`}>
                                             {item.status?.status || "Pending"}
                                         </span>
                                         {item.status?.status === "Pending" && (
-                                            <EditOutlined 
-                                                onClick={() => handleEditClick(item)} 
+                                            <EditOutlined
+                                                onClick={() => handleEditClick(item)}
                                                 style={{ cursor: 'pointer', color: '#1890ff', fontSize: '16px' }}
                                                 title="แก้ไขรายละเอียด"
                                             />

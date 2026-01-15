@@ -90,7 +90,7 @@ func UpdateIssueReport(c *gin.Context) {
 		return
 	}
 
-	// เช็คสถานะ: ต้องเป็น "In Progress" เท่านั้นถึงจะแก้ได้
+	// เช็คสถานะ: ต้องเป็น "Pending" เท่านั้นถึงจะแก้ได้
 	if issue.StatusID != 3 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Can only edit issues that are Pending"})
 		return
@@ -242,4 +242,17 @@ func GetIssueStatus(c *gin.Context) {
 	db.Find(&issueStatus)
 
 	c.JSON(http.StatusOK, &issueStatus)
+}
+
+// GET: ดึงข้อมูลประเภทปัญหาทั้งหมด (Bug, Feature Request, etc.)
+func GetIssueTypes(c *gin.Context) {
+    db := database.DB()
+    var issueTypes []entity.IssueType
+    
+    if err := db.Find(&issueTypes).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    c.JSON(http.StatusOK, issueTypes)
 }

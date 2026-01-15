@@ -34,6 +34,7 @@ var MockIssueType = []entity.IssueType{
 	{Type: "Bug"},
 	{Type: "Feature Request"},
 	{Type: "Security"},
+	{Type: "Other"},
 }
 
 var MockActionType = []entity.ActionType{
