@@ -1,12 +1,13 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Typography, Row, Col, Modal, Form, Input, Tag, Space, Empty, message, ConfigProvider, Tabs, Upload } from 'antd';
-import { ProjectOutlined, SendOutlined, TeamOutlined, FileTextOutlined, CheckCircleOutlined, ExclamationCircleOutlined, ClockCircleOutlined, CloseCircleOutlined, UploadOutlined, PlusOutlined, ArrowLeftOutlined } from '@ant-design/icons';
-import { useRouter } from 'next/navigation';
+import { Card, Button, Typography, Row, Col, Modal, Form, Input, Tag, Space, Empty, message, ConfigProvider, Tabs, Upload, Spin } from 'antd';
+import { ProjectOutlined, SendOutlined, TeamOutlined, FileTextOutlined, CheckCircleOutlined, ExclamationCircleOutlined, ClockCircleOutlined, CloseCircleOutlined, UploadOutlined, PlusOutlined, ArrowLeftOutlined, PaperClipOutlined } from '@ant-design/icons';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Topic, TopicApproval } from '@/app/interfaces/Topic';
 import { getTopics, createTopic, updateTopic, selectTopic, cancelSelection, getStudentTopic } from '@/app/services/topic';
 import { GetMyGroup } from '@/app/services/group';
 import { GetMe } from '@/app/services/login';
+import CustomEmptyState from '@/app/components/topic/CustomEmptyState';
 import '../../../../style/evaluation.css';
 // check
 const { Title, Text, Paragraph } = Typography;
@@ -14,12 +15,17 @@ const { TextArea } = Input;
 
 export default function TopicSelectPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [form] = Form.useForm();
-    const [activeTab, setActiveTab] = useState('1');
-    const [loading, setLoading] = useState(false);
+    const [activeTab, setActiveTab] = useState(() => {
+        const tab = searchParams?.get('tab');
+        return tab === 'status' ? '2' : '1';
+    });
+    const [loading, setLoading] = useState(true);
     const [studentID, setStudentID] = useState<number | null>(null);
     const [groupID, setGroupID] = useState<number | null>(null);
     const [advisorID, setAdvisorID] = useState<number | null>(null);
+    const [isLeader, setIsLeader] = useState(false);
 
     // Data States
     const [availableTopics, setAvailableTopics] = useState<Topic[]>([]);
@@ -52,6 +58,12 @@ export default function TopicSelectPage() {
                     if (groupData.teacher_id) {
                         setAdvisorID(groupData.teacher_id);
                         currentAdvisorID = groupData.teacher_id;
+                    }
+
+                    // Check if current user is leader
+                    if (groupData.group_members) {
+                        const me = groupData.group_members.find((m: any) => m.student_id === currentStudentID);
+                        setIsLeader(me?.leader || false);
                     }
                 }
             } catch (err) {
@@ -209,14 +221,20 @@ export default function TopicSelectPage() {
         }
     };
 
+
+
     const items = [
         {
             key: '1',
-            label: 'เลือกหัวข้อจากอาจารย์',
+            label: <span style={{ fontWeight: 500, fontSize: '16px' }}>หัวข้อจากอาจารย์</span>,
             children: (
                 <div>
                     {availableTopics.length === 0 ? (
-                        <Empty description="ไม่มีหัวข้อที่เปิดรับสมัครในขณะนี้" />
+                        <CustomEmptyState
+                            title="ยังไม่มีหัวข้อที่เปิดรับสมัคร"
+                            description={<span>อาจารย์ที่ปรึกษายังไม่ได้ประกาศหัวข้อโครงงานในขณะนี้หรือหัวข้อทั้งหมดถูกเลือกเต็มแล้ว <br />กรุณาติดตามประกาศอีกครั้ง</span>}
+                            icon={<ProjectOutlined />}
+                        />
                     ) : (
                         <Row gutter={[24, 24]}>
                             {availableTopics.map(topic => (
@@ -245,7 +263,11 @@ export default function TopicSelectPage() {
                                         }}
                                     >
                                         <div style={{ marginBottom: 12 }}>
-                                            <Tag color="blue">อาจารย์เสนอ</Tag>
+                                            {(topic as any).selected_by_group ? (
+                                                <Tag color="red">ถูกเลือกแล้ว</Tag>
+                                            ) : (
+                                                <Tag color="green">เปิดรับสมัคร</Tag>
+                                            )}
                                         </div>
 
                                         <Title level={4} style={{ margin: '0 0 12px 0' }} ellipsis={{ rows: 2 }}>
@@ -281,7 +303,7 @@ export default function TopicSelectPage() {
         },
         {
             key: '2',
-            label: 'สถานะของฉัน',
+            label: <span style={{ fontWeight: 500, fontSize: '16px' }}>สถานะของฉัน</span>,
             children: (
                 <div style={{ maxWidth: 800, margin: '0 auto' }}>
                     {myTopic ? (
@@ -326,17 +348,31 @@ export default function TopicSelectPage() {
                                     <Title level={5}>รายละเอียดเพิ่มเติม</Title>
                                     <Paragraph>{myTopic.description || '-'}</Paragraph>
                                 </div>
+
+                                {myTopic.file_attachment && (
+                                    <div style={{ marginTop: 16 }}>
+                                        <Title level={5}><PaperClipOutlined /> ไฟล์แนบ</Title>
+                                        <a
+                                            href={`${process.env.NEXT_PUBLIC_API_URL}/uploads/topics/${myTopic.file_attachment}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            {myTopic.file_attachment}
+                                        </a>
+                                    </div>
+                                )}
                             </Card>
                         </div>
                     ) : (
-                        <Empty
-                            image={Empty.PRESENTED_IMAGE_SIMPLE}
+                        <CustomEmptyState
+                            title="ยังไม่มีหัวข้อโครงงาน"
                             description={
                                 <span>
                                     คุณยังไม่ได้เลือกหรือเสนอหัวข้อโครงงาน <br />
-                                    เลือกหัวข้อจากอาจารย์ในแถบแรก หรือกดปุ่มด้านล่างเพื่อเสนอหัวข้อเอง
+                                    เริ่มต้นโดยการเลือกหัวข้อจากอาจารย์ในแถบแรก หรือกดปุ่มเสนอหัวข้อโครงงานที่มุมขวาล่าง
                                 </span>
                             }
+                            icon={<FileTextOutlined />}
                         />
                     )}
                 </div>
@@ -348,7 +384,7 @@ export default function TopicSelectPage() {
         <ConfigProvider
             theme={{
                 token: {
-                    colorPrimary: '#F06522',
+                    colorPrimary: '#9b0321ff',
                     fontFamily: "'Noto Sans Thai', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
                 },
             }}
@@ -365,7 +401,13 @@ export default function TopicSelectPage() {
                     </div>
                 </div>
 
-                <Tabs defaultActiveKey="1" items={items} activeKey={activeTab} onChange={setActiveTab} />
+                {loading ? (
+                    <div style={{ textAlign: 'center', padding: '50px 0' }}>
+                        <Spin size="large" tip="กำลังโหลดข้อมูล..." />
+                    </div>
+                ) : (
+                    <Tabs defaultActiveKey="1" items={items} activeKey={activeTab} onChange={setActiveTab} />
+                )}
 
                 {/* View Details Modal */}
                 <Modal
@@ -381,8 +423,9 @@ export default function TopicSelectPage() {
                             type="primary"
                             icon={<ProjectOutlined />}
                             onClick={() => viewTopic && handleSelectTopic(viewTopic)}
-                            disabled={!!myTopic}
-                            style={{ background: '#8A011D', borderColor: '#8A011D' }}
+                            disabled={!!myTopic || !isLeader || !!(viewTopic as any)?.selected_by_group}
+                            style={{ background: '#8A011D', borderColor: '#8A011D', opacity: (!!myTopic || !isLeader || !!(viewTopic as any)?.selected_by_group) ? 0.5 : 1 }}
+                            title={(viewTopic as any)?.selected_by_group ? "หัวข้อนี้ถูกเลือกแล้ว" : (!isLeader ? "เฉพาะหัวหน้ากลุ่มเท่านั้นที่สามารถเลือกหัวข้อได้" : "")}
                         >
                             เลือกหัวข้อนี้
                         </Button>
@@ -411,35 +454,52 @@ export default function TopicSelectPage() {
                                 <Text strong>รายละเอียดเพิ่มเติม:</Text>
                                 <Paragraph style={{ marginTop: 4 }}>{viewTopic.description || '-'}</Paragraph>
                             </div>
+
+                            {viewTopic.file_attachment && (
+                                <div style={{ marginTop: 8 }}>
+                                    <Text strong><PaperClipOutlined /> ไฟล์แนบ:</Text>
+                                    <a
+                                        href={`${process.env.NEXT_PUBLIC_API_URL}/uploads/topics/${viewTopic.file_attachment}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{ marginLeft: 8 }}
+                                    >
+                                        {viewTopic.file_attachment}
+                                    </a>
+                                </div>
+                            )}
                         </div>
                     )}
                 </Modal>
 
                 {/* Propose Modal */}
                 <Modal
-                    title="เสนอหัวข้อโครงงานใหม่"
+                    title={
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <div style={{ background: '#fff0e6ff', padding: 8, borderRadius: '50%', display: 'flex' }}>
+                                <ProjectOutlined style={{ color: '#f76212ff', fontSize: 18 }} />
+                            </div>
+                            <span>เสนอหัวข้อโครงงานใหม่</span>
+                        </div>
+                    }
                     open={isProposeModalOpen}
                     onCancel={() => setIsProposeModalOpen(false)}
                     footer={null}
                     centered
-                    width={800}
+                    width={600}
                 >
-                    <div style={{ textAlign: 'center', marginBottom: 24 }}>
-                        <Text type="secondary">กรอกรายละเอียดหัวข้อโครงงานที่คุณต้องการเสนอให้อาจารย์ที่ปรึกษาพิจารณา</Text>
-                    </div>
-
                     <Form
                         form={form}
                         layout="vertical"
                         onFinish={handleProposeSubmit}
-                        size="large"
+                        style={{ marginTop: 24 }}
                     >
                         <Form.Item
                             name="title"
                             label="ชื่อหัวข้อโครงงาน"
                             rules={[{ required: true, message: 'กรุณากรอกชื่อหัวข้อ' }]}
                         >
-                            <Input placeholder="เช่น ระบบบริหารจัดการ..." />
+                            <Input placeholder="เช่น ระบบบริหารจัดการ..." size="large" />
                         </Form.Item>
 
                         <Form.Item
@@ -447,7 +507,7 @@ export default function TopicSelectPage() {
                             label="วัตถุประสงค์"
                             rules={[{ required: true, message: 'กรุณากรอกวัตถุประสงค์' }]}
                         >
-                            <TextArea rows={4} placeholder="ระบุสิ่งที่ต้องการทำให้สำเร็จ" />
+                            <TextArea rows={3} placeholder="ระบุสิ่งที่ต้องการทำให้สำเร็จ" />
                         </Form.Item>
 
                         <Form.Item
@@ -455,7 +515,7 @@ export default function TopicSelectPage() {
                             label="ขอบเขตของงาน"
                             rules={[{ required: true, message: 'กรุณากรอกขอบเขตของงาน' }]}
                         >
-                            <TextArea rows={4} placeholder="ระบุขอบเขต ฟีเจอร์ หรือเทคโนโลยีที่จะใช้" />
+                            <TextArea rows={3} placeholder="ระบุขอบเขต ฟีเจอร์ หรือเทคโนโลยีที่จะใช้" />
                         </Form.Item>
 
                         <Form.Item
@@ -463,7 +523,7 @@ export default function TopicSelectPage() {
                             label="รายละเอียดเพิ่มเติม / เหตุผลที่สนใจ"
                             help="ระบุเหตุผลประกอบการเลือกหัวข้อ หรือรายละเอียดอื่นๆ ที่เป็นประโยชน์"
                         >
-                            <TextArea rows={4} placeholder="อธิบายเพิ่มเติม..." />
+                            <TextArea rows={3} placeholder="อธิบายเพิ่มเติม..." />
                         </Form.Item>
 
                         <Form.Item
@@ -475,17 +535,20 @@ export default function TopicSelectPage() {
                             </Upload>
                         </Form.Item>
 
-                        <Form.Item>
-                            <Button type="primary" htmlType="submit" block icon={<SendOutlined />} size="large"
-                                style={{ background: '#8A011D', borderColor: '#8A011D' }}>
-                                ส่งข้อเสนอโครงงาน
-                            </Button>
+                        <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
+                            <Space>
+                                <Button onClick={() => setIsProposeModalOpen(false)} size="large">ยกเลิก</Button>
+                                <Button type="primary" htmlType="submit" size="large"
+                                    style={{ background: '#8A011D', borderColor: '#8A011D' }}>
+                                    ส่งข้อเสนอโครงงาน
+                                </Button>
+                            </Space>
                         </Form.Item>
                     </Form>
                 </Modal>
 
                 {/* Floating Propose Button */}
-                {!myTopic && (
+                {!myTopic && isLeader && (
                     <Button
                         type="primary"
                         icon={<PlusOutlined />}

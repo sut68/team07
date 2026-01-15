@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Typography, Modal, Form, Input, Tag, Space, message, Upload, Tooltip, Row, Col } from 'antd';
-import { ProjectOutlined, SendOutlined, FileTextOutlined, CheckCircleOutlined, ExclamationCircleOutlined, ClockCircleOutlined, CloseCircleOutlined, UploadOutlined, PlusOutlined, BookOutlined, EditOutlined } from '@ant-design/icons';
+import { ProjectOutlined, SendOutlined, FileTextOutlined, CheckCircleOutlined, ExclamationCircleOutlined, ClockCircleOutlined, CloseCircleOutlined, UploadOutlined, PlusOutlined, BookOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Topic, TopicApproval } from '@/app/interfaces/Topic';
@@ -30,6 +30,7 @@ export default function StudentTopicPage() {
     const [myTopic, setMyTopic] = useState<Topic | null>(null);
     const [myProject, setMyProject] = useState<any>(null);
     const [groupStatus, setGroupStatus] = useState<string>('');
+    const [isLeader, setIsLeader] = useState(false);
 
     // Modal States
     const [isSelectModalOpen, setIsSelectModalOpen] = useState(false);
@@ -73,6 +74,12 @@ export default function StudentTopicPage() {
                     }
                     if (groupData.group_status) {
                         setGroupStatus(groupData.group_status);
+                    }
+
+                    // Check if current user is leader
+                    if (groupData.group_members) {
+                        const me = groupData.group_members.find((m: any) => m.student_id === currentStudentID);
+                        setIsLeader(me?.leader || false);
                     }
                 }
             } catch (err) {
@@ -268,15 +275,19 @@ export default function StudentTopicPage() {
             <div className="student-container animate-fade-in">
 
                 <div className="page-title-box">
-                    <h1>โครงงานของฉัน (My Project)</h1>
-                    <p>ระบบจัดการหัวข้อและข้อมูลโครงงาน</p>
+                    <h1>โครงงานของฉัน</h1>
+                    <p>การจัดการหัวข้อและข้อมูลโครงงาน</p>
                 </div>
 
                 <div className="hub-grid">
 
                     {/* Card 1: หัวข้อโครงงาน */}
                     <div className="menu-card" onClick={() => {
-                        router.push('/student/topic/select');
+                        if (myTopic) {
+                            router.push('/student/topic/select?tab=status');
+                        } else {
+                            router.push('/student/topic/select');
+                        }
                     }}>
                         <div className="menu-icon" style={{ background: myTopic ? '#f0f9ff' : '#fff1f2', color: myTopic ? '#0284c7' : '#9a0120' }}>
                             <BookOutlined />
@@ -303,23 +314,26 @@ export default function StudentTopicPage() {
                     <Tooltip title={
                         myTopic?.status !== 'Approved'
                             ? 'กรุณารอหัวข้อได้รับการอนุมัติก่อน'
-                            : (groupStatus !== 'Completed' ? 'กรอกข้อมูลโครงงานที่สมบูรณ์หลังจากผ่านการประเมิน' : '')
+                            : (groupStatus !== 'Completed'
+                                ? 'กรอกข้อมูลโครงงานที่สมบูรณ์หลังจากผ่านการประเมิน'
+                                : (!isLeader && !myProject ? 'เฉพาะหัวหน้ากลุ่มเท่านั้นที่สามารถส่งข้อมูลโครงงานได้' : '')
+                            )
                     }>
                         <div
-                            className={`menu-card ${!(myTopic?.status === 'Approved' && groupStatus === 'Completed') ? 'disabled' : ''}`}
+                            className={`menu-card ${!(myTopic?.status === 'Approved' && groupStatus === 'Completed' && (isLeader || myProject)) ? 'disabled' : ''}`}
                             onClick={() => {
                                 if (myTopic?.status === 'Approved' && groupStatus === 'Completed') {
                                     if (myProject) {
                                         setIsProjectDetailModalOpen(true);
-                                    } else {
+                                    } else if (isLeader) {
                                         setIsProjectInfoModalOpen(true);
                                         setSelectedKeywords([]);
                                     }
                                 }
                             }}
                             style={{
-                                opacity: !(myTopic?.status === 'Approved' && groupStatus === 'Completed') ? 0.6 : 1,
-                                cursor: !(myTopic?.status === 'Approved' && groupStatus === 'Completed') ? 'not-allowed' : 'pointer'
+                                opacity: !(myTopic?.status === 'Approved' && groupStatus === 'Completed' && (isLeader || myProject)) ? 0.6 : 1,
+                                cursor: !(myTopic?.status === 'Approved' && groupStatus === 'Completed' && (isLeader || myProject)) ? 'not-allowed' : 'pointer'
                             }}
                         >
                             <div className="menu-icon" style={{ background: myProject ? '#f0fdf4' : '#fff7ed', color: myProject ? '#16a34a' : '#ea580c' }}>
@@ -331,12 +345,12 @@ export default function StudentTopicPage() {
                             <p className="menu-desc">
                                 {myProject ? (
                                     <>
-                                        คลิกเพื่อดูรายละเอียดหรือแก้ไข
+                                        คลิกเพื่อดูรายละเอียด
                                         <br />
                                         <Tag color="success" style={{ marginTop: 8 }}>บันทึกแล้ว</Tag>
                                     </>
                                 ) : (
-                                    'บันทึกบทคัดย่อ เครื่องมือที่ใช้ และเอกสารโครงงาน'
+                                    'บันทึกข้อมูลโครงงานที่เสร็จสมบูรณ์หลังจากผ่านการประเมิน'
                                 )}
                             </p>
                         </div>
@@ -528,7 +542,7 @@ export default function StudentTopicPage() {
                         </Form.Item>
 
                         <Form.Item>
-                            <Button type="primary" htmlType="submit" block icon={<SendOutlined />} size="large"
+                            <Button type="primary" htmlType="submit" block icon={<SendOutlined />}
                                 style={{ background: '#8A011D', borderColor: '#8A011D' }}>
                                 ส่งข้อเสนอโครงงาน
                             </Button>
@@ -590,7 +604,7 @@ export default function StudentTopicPage() {
                                 }
                             });
                         }}
-                        size="large"
+
                     >
                         <div style={{ marginBottom: 24, padding: 16, background: '#f0f5ff', borderRadius: 8, border: '1px solid #d6e4ff' }}>
                             <Row gutter={16}>
@@ -687,37 +701,6 @@ export default function StudentTopicPage() {
                     footer={[
                         <Button key="close" onClick={() => setIsProjectDetailModalOpen(false)}>
                             ปิด
-                        </Button>,
-                        <Button
-                            key="edit"
-                            type="primary"
-                            icon={<EditOutlined />}
-                            onClick={() => {
-                                setIsProjectDetailModalOpen(false);
-                                setIsProjectInfoModalOpen(true);
-                                // Pre-fill form with existing data
-                                if (myProject) {
-                                    projectForm.setFieldsValue({
-                                        abstract_th: myProject.abstract,
-                                        keywords: myProject.keywords,
-                                        project_document: myProject.file_path ? [{
-                                            uid: '-1',
-                                            name: myProject.file_path.split('/').pop() || 'document.pdf',
-                                            status: 'done',
-                                            url: `http://localhost:8080/${myProject.file_path}`,
-                                        }] : [],
-                                    });
-                                    if (myProject.keywords) {
-                                        const keywords = myProject.keywords.split(',').map((k: string) => k.trim()).filter((k: string) => k);
-                                        setSelectedKeywords(keywords);
-                                    } else {
-                                        setSelectedKeywords([]);
-                                    }
-                                }
-                            }}
-                            style={{ background: '#16a34a', borderColor: '#16a34a' }}
-                        >
-                            แก้ไขข้อมูล
                         </Button>
                     ]}
                     width={800}
@@ -776,7 +759,9 @@ export default function StudentTopicPage() {
                                                 onClick={() => {
                                                     // Download file
                                                     const link = document.createElement('a');
-                                                    link.href = `http://localhost:8080/${myProject.file_path}`;
+                                                    const filePath = myProject.file_path.replace(/^\.\//, '');
+                                                    const fullPath = filePath.startsWith('uploads') ? filePath : `uploads/projects/${filePath}`;
+                                                    link.href = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/${fullPath}`;
                                                     link.download = myProject.file_path.split('/').pop() || 'document';
                                                     link.target = '_blank';
                                                     document.body.appendChild(link);
