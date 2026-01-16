@@ -782,9 +782,13 @@ export default function StudentTopicPage() {
                                                 onClick={() => {
                                                     // Download file
                                                     const link = document.createElement('a');
-                                                    const filePath = myProject.file_path.replace(/^\.\//, '');
-                                                    const fullPath = filePath.startsWith('uploads') ? filePath : `uploads/projects/${filePath}`;
-                                                    link.href = `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/team07api"}/${fullPath}`;
+                                                    if (myProject.file_path.startsWith("http://") || myProject.file_path.startsWith("https://")) {
+                                                        link.href = myProject.file_path;
+                                                    } else {
+                                                        const filePath = myProject.file_path.replace(/^\.\//, '');
+                                                        const fullPath = filePath.startsWith('uploads') ? filePath : `uploads/projects/${filePath}`;
+                                                        link.href = `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/team07api"}/${fullPath}`;
+                                                    }
                                                     link.download = myProject.file_path.split('/').pop() || 'document';
                                                     link.target = '_blank';
                                                     document.body.appendChild(link);

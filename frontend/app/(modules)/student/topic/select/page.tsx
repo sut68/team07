@@ -411,7 +411,9 @@ export default function TopicSelectPage() {
                                     <div style={{ marginTop: 16 }}>
                                         <Title level={5}><PaperClipOutlined /> ไฟล์แนบ</Title>
                                         <a
-                                            href={`${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/team07api"}/uploads/topics/${myTopic.file_attachment}`}
+                                            href={(myTopic.file_attachment.startsWith("http") || myTopic.file_attachment.startsWith("https")) 
+                                                ? myTopic.file_attachment 
+                                                : `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/team07api"}/uploads/topics/${myTopic.file_attachment}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                         >
@@ -525,7 +527,9 @@ export default function TopicSelectPage() {
                                 <div style={{ marginTop: 8 }}>
                                     <Text strong><PaperClipOutlined /> ไฟล์แนบ:</Text>
                                     <a
-                                        href={`${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/team07api"}/uploads/topics/${viewTopic.file_attachment}`}
+                                        href={(viewTopic.file_attachment.startsWith("http") || viewTopic.file_attachment.startsWith("https")) 
+                                            ? viewTopic.file_attachment 
+                                            : `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/team07api"}/uploads/topics/${viewTopic.file_attachment}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         style={{ marginLeft: 8 }}

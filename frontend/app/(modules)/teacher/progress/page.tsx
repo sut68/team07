@@ -5,6 +5,7 @@ import type { CSSProperties } from "react";
 import { useAuth } from "../../roleCheck/authContext";
 import { GetProgress, AddProgress, UpProgress, EraseProgress } from "../../../services/progress";
 import { DropWholechat, Getteachergroup } from "@/app/services/chat";
+import { Toast_fail, Toast_success } from "../../../components/Webmessage";
 
 const web = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/team07api";
 
@@ -70,7 +71,7 @@ const web = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/team07
         const gp = Number((preferred as any)?.id ?? (preferred as any)?.ID ?? 0);
         setgpji(Number.isFinite(gp) && gp > 0 ? gp : 0);
       } catch (err) {
-        console.error("load groups fail", err);
+        Toast_fail("Load groups failed: " + String(err));
         setTeacherGroups([]);
       }
     })();
@@ -136,8 +137,9 @@ const web = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/team07
       setFile(null);
       setComment("");
       setProgressTitle("");
+      Toast_success("บันทึกข้อมูลสำเร็จ");
     } catch (err: any) {
-      alert(err?.message || "Operation failed");
+      Toast_fail(err?.message || "Operation failed");
     } finally {
       setIsLoading(false);
     }
@@ -150,8 +152,9 @@ const web = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/team07
       await EraseProgress({ id });
       await DropWholechat({ process_id: id, group_project_id: gpji, name: "" });
       await refresh();
+      Toast_success("ลบข้อมูลสำเร็จ");
     } catch (err) {
-      console.error(err);
+      Toast_fail(String(err));
     } finally {
       setIsLoading(false);
     }

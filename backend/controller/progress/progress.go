@@ -1,17 +1,13 @@
 package progress
 
 import (
-	"context"
 	"errors"
-	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
 
 	"gorm.io/gorm"
 
@@ -230,7 +226,7 @@ func UpdateProGress(c *gin.Context) {
 
 	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, MaxFileSize)
 
-	if fh, fileErr := c.Request.FormFile("file"); fileErr == nil && fh != nil {
+	if fh, fileErr := c.FormFile("file"); fileErr == nil && fh != nil {
 		if fh.Size <= 0 || fh.Size > MaxFileSize {
 			c.JSON(http.StatusRequestEntityTooLarge, gin.H{"error": "file too large (max 20MB)"})
 			return
@@ -296,7 +292,7 @@ func DeleteProgress(c *gin.Context) {
 		return
 	}
 
-	safeRemoveUploadedProgressPath(prog.File)
+	// safeRemoveUploadedProgressPath(prog.File)
 
 	log.InsertLog(c, 7)
 	c.JSON(http.StatusOK, gin.H{"message": "successfully deleted"})

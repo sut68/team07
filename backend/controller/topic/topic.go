@@ -3,8 +3,6 @@ package topic
 import (
 	"fmt"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strconv"
 	"time"
 

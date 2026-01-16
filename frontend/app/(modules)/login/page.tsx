@@ -8,6 +8,7 @@ import "../../style/login.css"
 import loginbg from "../../../public/image/Background.jpg"
 import { useAuth } from "../roleCheck/authContext";
 import { EyeInvisibleOutlined, EyeOutlined } from '@ant-design/icons';
+import { Toast_fail, Toast_success } from '../../components/Webmessage';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -66,8 +67,9 @@ export default function LoginPage() {
       };
 
       const res = await SignIn(payload);
-      console.log("Login Successful - Full Response:", res);
-      console.log("Login Successful - Data:", res.data);
+      // console.log("Login Successful - Full Response:", res);
+      // console.log("Login Successful - Data:", res.data);
+      Toast_success("เข้าสู่ระบบสำเร็จ");
 
       // NOTE: We rely on AuthContext and HttpOnly Cookies for session management.
       // No need to manually store sensitive info in localStorage.
@@ -85,7 +87,7 @@ export default function LoginPage() {
     } catch (err: any) {
       const errorMessage = err.response?.data?.error || "Login failed. Please check your credentials.";
       setError(errorMessage);
-      console.error("Login Error:", err);
+      Toast_fail("เข้าสู่ระบบไม่สำเร็จ: " + errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -105,7 +107,7 @@ export default function LoginPage() {
       setForgotMessage("ระบบได้ส่งลิงก์รีเซ็ตไปแล้ว หากบัญชีมีอยู่จริง โปรดตรวจสอบอีเมลของคุณ");
     } catch (err: any) {
       setForgotMessage("ระบบได้ส่งลิงก์รีเซ็ตไปแล้ว หากบัญชีมีอยู่จริง โปรดตรวจสอบอีเมลของคุณ");
-      console.error("Forgot Password Error:", err);
+      Toast_fail("เกิดข้อผิดพลาด: " + String(err));
     } finally {
       setIsLoadingForgot(false);
     }

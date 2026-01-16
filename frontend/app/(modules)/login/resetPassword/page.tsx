@@ -6,6 +6,7 @@ import { ResetPassword } from '../../../services/login';
 import { ResetPasswordInterface } from '../../../interfaces/Login';
 import '../../../style/login.css';
 import { EyeInvisibleOutlined, EyeOutlined } from '@ant-design/icons';
+import { Toast_fail } from '../../../components/Webmessage';
 
 const ResetPasswordComponent: React.FC = () => {
     const router = useRouter();
@@ -86,7 +87,7 @@ const ResetPasswordComponent: React.FC = () => {
             }, 3000);
 
         } catch (err: any) {
-            console.error("Reset Password Error:", err);
+            Toast_fail("Reset Password Error: " + String(err));
             const errorText = err.response?.data?.error || "ตั้งรหัสผ่านไม่สำเร็จ: ลิงก์อาจหมดอายุแล้ว";
 
             if (errorText === "this reset link has already been used") {

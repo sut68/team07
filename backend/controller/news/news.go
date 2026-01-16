@@ -1,11 +1,9 @@
 package news
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sut68/team07/backend/controller/log"

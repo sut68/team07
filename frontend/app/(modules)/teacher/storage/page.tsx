@@ -754,7 +754,9 @@ export default function TeacherStoragePage() {
                                     <Space>
                                         <FileTextOutlined />
                                         <a
-                                            href={`${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/team07api"}/${selectedProject.file_path.replace(/^\.\//, '').startsWith('uploads') ? selectedProject.file_path.replace(/^\.\//, '') : `uploads/projects/${selectedProject.file_path.replace(/^\.\//, '')}`}`}
+                                            href={(selectedProject.file_path.startsWith("http") || selectedProject.file_path.startsWith("https"))
+                                                ? selectedProject.file_path
+                                                : `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/team07api"}/${selectedProject.file_path.replace(/^\.\//, '').startsWith('uploads') ? selectedProject.file_path.replace(/^\.\//, '') : `uploads/projects/${selectedProject.file_path.replace(/^\.\//, '')}`}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             style={{ color: '#1890ff' }}
