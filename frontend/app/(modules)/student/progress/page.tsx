@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
+import { useAuth } from "../../roleCheck/authContext";
 
 import {
   GetProgress,
@@ -16,6 +17,7 @@ import { DropWholechat } from "@/app/services/chat";
 const web = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/team07api";
 
 export default function ProgressPage() {
+  const { user } = useAuth();
   const [gpji, setgpji] = useState<number>(0);
   const [userid, setuserid] = useState<number>(0);
   const [processlist, setprocesslist] = useState<any[]>([]);
@@ -58,7 +60,7 @@ export default function ProgressPage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const uid = Number(window.localStorage.getItem("user_id") ?? 0);
+    const uid = user?.id || 0;
     const cleanUid = Number.isFinite(uid) && uid > 0 ? uid : 0;
     setuserid(cleanUid);
 

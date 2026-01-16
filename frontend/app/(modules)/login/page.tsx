@@ -69,18 +69,11 @@ export default function LoginPage() {
       console.log("Login Successful - Full Response:", res);
       console.log("Login Successful - Data:", res.data);
 
-      if (res.data) {
-        localStorage.setItem("user_id", String(res.data.id));
-        // Check if role exists before accessing
-        if (res.data.role) {
-             localStorage.setItem("role", res.data.role);
-        } else {
-             console.warn("Role is missing in response data:", res.data);
-        }
-        localStorage.setItem("username", res.data.username);
-      }
+      // NOTE: We rely on AuthContext and HttpOnly Cookies for session management.
+      // No need to manually store sensitive info in localStorage.
+      
+      await fetchUser(); // Updates AuthContext state from server
 
-      await fetchUser();
 
       const { role } = res.data;
       if (role) {

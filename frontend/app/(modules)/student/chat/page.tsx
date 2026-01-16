@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useAuth } from "../../roleCheck/authContext";
 import { io, Socket } from "socket.io-client";
 import { GetAllChat, InsertChat, DropChat, UploadFile } from "../../../services/chat";
 import { GetProgress, GetGroupProjectIDByUser } from "../../../services/progress";
@@ -42,6 +43,7 @@ const getFileUrl = (path: string) => {
 };
 
 export default function ChatPage() {
+  const { user } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [myUsername, setMyUsername] = useState<string>("");
@@ -79,10 +81,10 @@ export default function ChatPage() {
 
   useEffect(() => {
     if (!mounted) return;
-    if (!userId) {
-      setUserId(localStorage.getItem("user_id"));
+    if (user && user.id) {
+       setUserId(String(user.id));
     }
-  }, [mounted, userId]);
+  }, [mounted, user]);
 
   useEffect(() => {
     if (!mounted) return;
