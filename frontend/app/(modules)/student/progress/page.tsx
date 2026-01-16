@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
 import { useAuth } from "../../roleCheck/authContext";
+import { Toast_fail, Toast_success } from "../../../components/Webmessage";
 
 import {
   GetProgress,
@@ -149,8 +150,9 @@ export default function ProgressPage() {
       setFile(null);
       setComment("");
       setProgressTitle("");
+      Toast_success("บันทึกข้อมูลสำเร็จ");
     } catch (err: any) {
-      alert(err?.message || "Operation failed");
+      Toast_fail(err?.message || "Operation failed");
     } finally {
       setIsLoading(false);
     }
@@ -169,8 +171,9 @@ export default function ProgressPage() {
         name: "",
       });
       await refresh();
+      Toast_success("ลบข้อมูลสำเร็จ");
     } catch (err) {
-      console.error(err);
+      Toast_fail(String(err));
     } finally {
       setIsLoading(false);
     }
@@ -277,7 +280,9 @@ export default function ProgressPage() {
 
                     {getFilePath(item) && (
                       <a
-                        href={`${web}${getFilePath(item).startsWith("/") ? "" : "/"}${getFilePath(item)}`}
+                        href={(getFilePath(item).startsWith("http") || getFilePath(item).startsWith("https")) 
+                            ? getFilePath(item) 
+                            : `${web}${getFilePath(item).startsWith("/") ? "" : "/"}${getFilePath(item)}`}
                         target="_blank"
                         rel="noreferrer"
                         style={styles.fileChip}

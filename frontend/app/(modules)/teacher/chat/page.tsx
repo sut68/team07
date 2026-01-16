@@ -36,6 +36,7 @@ import {
 } from "@ant-design/icons";
 
 import { Avatar, Tooltip, Badge, Input, Button, Empty, Select } from "antd";
+import { Toast_fail, Toast_success } from "../../../components/Webmessage";
 
 export interface GroupProject {
   id: number;
@@ -97,7 +98,7 @@ export default function ChatPage() {
           setMyUsername(me.username || "");
         }
       } catch (e) {
-        console.error(e);
+        Toast_fail(String(e));
       }
     })();
     setMounted(true);
@@ -124,8 +125,8 @@ export default function ChatPage() {
 
     socketRef.current = s;
 
-    s.on("connect", () => console.log("socket connected:", s.id));
-    s.on("connect_error", (e) => console.error("socket connect_error:", e));
+    s.on("connect", () => Toast_success("socket connected: " + s.id));
+    s.on("connect_error", (e) => Toast_fail("socket connect_error: " + String(e)));
 
     return () => {
       try {
@@ -193,7 +194,7 @@ export default function ChatPage() {
 
         setGroupProjectId(preferred?.id ?? 0);
       } catch (e) {
-        console.error("Getteachergroup failed:", e);
+        Toast_fail("Getteachergroup failed: " + String(e));
         setTeacherGroups([]);
         setGroupProjectId(0);
       }
@@ -224,7 +225,7 @@ export default function ChatPage() {
 
       setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "auto" }), 50);
     } catch (error) {
-      console.error("Error loading chats:", error);
+      Toast_fail("Error loading chats: " + String(error));
       setChats([]);
     }
   };
@@ -248,7 +249,7 @@ export default function ChatPage() {
         setProcesses(normalized);
         setActiveRoomId(normalized.length > 0 ? normalized[0].id : null);
       } catch (e) {
-        console.error("GetProgress failed:", e);
+        Toast_fail("GetProgress failed: " + String(e));
         setProcesses([]);
         setActiveRoomId(null);
       }
@@ -332,7 +333,7 @@ export default function ChatPage() {
     setSpamWarning(null);
 
     if (file.size > 20 * 1024 * 1024) {
-      alert("ไฟล์นี้ใหญ่เกินไป (เกิน 20MB) ระบบจะไม่ทำการอัปโหลด");
+      Toast_fail("ไฟล์นี้ใหญ่เกินไป (เกิน 20MB) ระบบจะไม่ทำการอัปโหลด");
       e.target.value = "";
       setSelectedFile(null);
       return;
@@ -354,7 +355,7 @@ export default function ChatPage() {
         setSpamWarning(null);
 
         if (file.size > 20 * 1024 * 1024) {
-          alert("ไฟล์นี้ใหญ่เกินไป (เกิน 20MB) ระบบจะไม่ทำการอัปโหลด");
+          Toast_fail("ไฟล์นี้ใหญ่เกินไป (เกิน 20MB) ระบบจะไม่ทำการอัปโหลด");
           return;
         }
 
@@ -389,7 +390,7 @@ export default function ChatPage() {
           return;
         }
       } catch (err) {
-        console.error("Spam check failed:", err);
+        Toast_fail("Spam check failed: " + String(err));
       } finally {
         setCheckingSpam(false);
       }
@@ -425,14 +426,14 @@ export default function ChatPage() {
       const serverErrorMessage = err?.response?.data?.error;
       const statusCode = err?.response?.status;
 
-      console.error(`Backend Error (${statusCode}):`, serverErrorMessage);
+      // console.error(`Backend Error (${statusCode}):`, serverErrorMessage);
 
       if (statusCode === 413) {
-        alert(`ไฟล์ใหญ่เกินไป: ${serverErrorMessage || "จำกัดที่ 20MB"}`);
+        Toast_fail(`ไฟล์ใหญ่เกินไป: ${serverErrorMessage || "จำกัดที่ 20MB"}`);
       } else if (serverErrorMessage) {
-        alert(`ข้อผิดพลาดจากระบบ: ${serverErrorMessage}`);
+        Toast_fail(`ข้อผิดพลาดจากระบบ: ${serverErrorMessage}`);
       } else {
-        alert("เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์");
+        Toast_fail("เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์");
       }
     } finally {
       setUploading(false);
@@ -441,7 +442,7 @@ export default function ChatPage() {
 
   const deleteMessage = async (id: number) => {
     if (!id || isNaN(id)) {
-      alert("Error: Invalid Chat ID. Please refresh.");
+      Toast_fail("Error: Invalid Chat ID. Please refresh.");
       return;
     }
 

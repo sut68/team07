@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUserRole(userData.role);
       }
     } catch (error) {
-      console.log("Not logged in or Guest");
+      // console.log("Not logged in or Guest");
       setUser(null);
       setUserRole(null);
     } finally {

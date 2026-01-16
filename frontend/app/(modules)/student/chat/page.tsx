@@ -8,6 +8,7 @@ import type { FullChat } from "../../../interfaces/Chat";
 import { FullProgress } from "../../../interfaces/Progress";
 import { GetMe } from "@/app/services/login";
 import { CheckSpam } from "../../../services/spam";
+import { Toast_fail ,Toast_success} from "../../../components/Webmessage";
 import {
   SendOutlined,
   DeleteOutlined,
@@ -27,6 +28,7 @@ import {
   SafetyOutlined,
 } from "@ant-design/icons";
 import { Avatar, Tooltip, Badge, Input, Button, Empty } from "antd";
+// import { Toast_fail } from "@/app/components/Webmessage";
 
 const THEME_RED = "#8A011D";
 const THEME_RED_LIGHT = "#a81835";
@@ -73,7 +75,7 @@ export default function ChatPage() {
           setMyUsername(me.username || "");
         }
       } catch (e) {
-        console.error(e);
+        Toast_fail(String(e));
       }
     })();
     setMounted(true);
@@ -101,11 +103,11 @@ export default function ChatPage() {
     socketRef.current = s;
 
     s.on("connect", () => {
-      console.log("socket connected:", s.id);
+      Toast_success("เชื่อมต่อ Socket สำเร็จ");
     });
 
     s.on("connect_error", (e) => {
-      console.error("socket connect_error:", e);
+      Toast_fail("socket connect_error: " + String(e));
     });
 
     return () => {
@@ -181,7 +183,7 @@ export default function ChatPage() {
       setChats(rawData.map(normalizeChat));
       setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "auto" }), 50);
     } catch (error) {
-      console.error("Error loading chats:", error);
+      Toast_fail("Error loading chats: " + String(error));
       setChats([]);
     }
   };
@@ -218,7 +220,7 @@ export default function ChatPage() {
     void loadChats(activeRoomId as number);
 
     const roomIdStr = `${groupProjectId}:${activeRoomId}`;
-    console.log("JOIN ROOM:", roomIdStr);
+    Toast_success("เข้าสู่ห้องสนทนา");
     socket.emit("join_room", roomIdStr);
 
     const handleReceive = (data: any) => {
@@ -242,7 +244,7 @@ export default function ChatPage() {
     socket.on("delete_message", handleDelete);
 
     return () => {
-      console.log("LEAVE ROOM:", roomIdStr);
+      // console.log("LEAVE ROOM:", roomIdStr);
       socket.emit("leave_room", roomIdStr);
       socket.off("receive_message", handleReceive);
       socket.off("delete_message", handleDelete);
@@ -316,7 +318,7 @@ export default function ChatPage() {
           return;
         }
       } catch (err) {
-        console.error("Spam check failed:", err);
+        Toast_fail("Spam check failed: " + String(err));
       } finally {
         setCheckingSpam(false);
       }
@@ -358,14 +360,14 @@ export default function ChatPage() {
       const serverErrorMessage = err?.response?.data?.error;
       const statusCode = err?.response?.status;
 
-      console.error(`Backend Error (${statusCode}):`, serverErrorMessage);
+      // console.error(`Backend Error (${statusCode}):`, serverErrorMessage);
 
       if (statusCode === 413) {
-        alert(`ไฟล์ใหญ่เกินไป: ${serverErrorMessage || "จำกัดที่ 20MB"}`);
+        Toast_fail(`ไฟล์ใหญ่เกินไป: ${serverErrorMessage || "จำกัดที่ 20MB"}`);
       } else if (serverErrorMessage) {
-        alert(`ข้อผิดพลาดจากระบบ: ${serverErrorMessage}`);
+        Toast_fail(`ข้อผิดพลาดจากระบบ: ${serverErrorMessage}`);
       } else {
-        alert("เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์");
+        Toast_fail("เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์");
       }
     } finally {
       setUploading(false);
@@ -395,8 +397,7 @@ export default function ChatPage() {
       const socket = socketRef.current;
       if (socket) socket.emit("delete_message", { id, room_id: roomIdStr });
     } catch (error) {
-      console.error(error);
-      alert("Failed to delete.");
+      Toast_fail(String(error) || "Failed to delete.");
     }
   };
 

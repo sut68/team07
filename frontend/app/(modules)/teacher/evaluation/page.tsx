@@ -13,6 +13,7 @@ import CriteriaManager from '../../../components/evaluation/criteriaManager';
 import AdvisorProjectCard from '../../../components/evaluation/AdvisorProjectCard';
 import CommitteeProjectCard from '../../../components/evaluation/CommitteeProjectCard';
 import '../../../style/evaluation.css';
+import { Toast_fail } from '../../../components/Webmessage';
 
 const LABEL_MAP: Record<string, string> = {
   "Advisor Evaluation": "Advisor Evaluation (ที่ปรึกษา)",
@@ -51,7 +52,7 @@ export default function TeacherEvaluationDashboard() {
                // setSelectedYear(res.data.years[0]); // Optional: Auto select latest
             }
         } catch (error) {
-            console.error("Failed to fetch years", error);
+            Toast_fail("Failed to fetch years: " + String(error));
         }
     };
 
@@ -64,7 +65,7 @@ export default function TeacherEvaluationDashboard() {
             );
             setProjects(uniqueProjects);
         } catch (error) {
-            console.error(error);
+            Toast_fail("เกิดข้อผิดพลาดในการโหลดข้อมูล: " + String(error));
         } finally {
             setLoading(false);
         }
