@@ -99,12 +99,36 @@ func GetEvaluationSummary(c *gin.Context) {
 
 	var groupResults []entity.EvaResult
 	if err := db.Preload("Criteria.Evaluation").
+		Preload("Appointment").
 		Joins("JOIN appointments ON appointments.id = eva_results.appointment_id").
 		Where("appointments.group_project_id = ?", projectID).
 		Find(&groupResults).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch group results"})
 		return
 	}
+
+	// Filter Logic: Keep only latest appointment (by ID) per Evaluation Name
+	// This prevents duplicate scoring if multiple appointments (e.g. Retake) exist for the same evaluation.
+	latestGroupApps := make(map[string]uint)
+	for _, res := range groupResults {
+		if res.Criteria != nil && res.Criteria.Evaluation != nil {
+			evalName := res.Criteria.Evaluation.Name
+			if res.AppointmentID > latestGroupApps[evalName] {
+				latestGroupApps[evalName] = res.AppointmentID
+			}
+		}
+	}
+
+	filteredGroupResults := []entity.EvaResult{}
+	for _, res := range groupResults {
+		if res.Criteria != nil && res.Criteria.Evaluation != nil {
+			evalName := res.Criteria.Evaluation.Name
+			if res.AppointmentID == latestGroupApps[evalName] {
+				filteredGroupResults = append(filteredGroupResults, res)
+			}
+		}
+	}
+	groupResults = filteredGroupResults
 
 	groupScoresMap := make(map[string]map[uint]float64)
 	maxScoreMap := make(map[string]float64)
@@ -146,11 +170,36 @@ func GetEvaluationSummary(c *gin.Context) {
 
 	var indResults []entity.IndividualScore
 	if err := db.Preload("Criteria.Evaluation").
+		Preload("Appointment").
 		Preload("Student").
 		Joins("JOIN appointments ON appointments.id = individual_scores.appointment_id").
 		Where("appointments.group_project_id = ?", projectID).
 		Find(&indResults).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch individual results"})
+		return
 	}
+
+	// Filter Logic: Keep only latest appointment per Evaluation Name for Individual Scores
+	latestIndApps := make(map[string]uint)
+	for _, res := range indResults {
+		if res.Criteria != nil && res.Criteria.Evaluation != nil && res.AppointmentID != nil {
+			evalName := res.Criteria.Evaluation.Name
+			if *res.AppointmentID > latestIndApps[evalName] {
+				latestIndApps[evalName] = *res.AppointmentID
+			}
+		}
+	}
+
+	filteredIndResults := []entity.IndividualScore{}
+	for _, res := range indResults {
+		if res.Criteria != nil && res.Criteria.Evaluation != nil && res.AppointmentID != nil {
+			evalName := res.Criteria.Evaluation.Name
+			if *res.AppointmentID == latestIndApps[evalName] {
+				filteredIndResults = append(filteredIndResults, res)
+			}
+		}
+	}
+	indResults = filteredIndResults
 
 	studentScores := make(map[uint]map[string]map[uint]float64)
 	studentDetails := make(map[uint]string)
@@ -258,6 +307,28 @@ func GetStudentEvaluationResult(c *gin.Context) {
 		return
 	}
 
+	// Filter Logic: Keep only latest appointment (by ID) per Evaluation Name
+	latestGroupApps := make(map[string]uint)
+	for _, res := range groupResults {
+		if res.Criteria != nil && res.Criteria.Evaluation != nil {
+			evalName := res.Criteria.Evaluation.Name
+			if res.AppointmentID > latestGroupApps[evalName] {
+				latestGroupApps[evalName] = res.AppointmentID
+			}
+		}
+	}
+
+	filteredGroupResults := []entity.EvaResult{}
+	for _, res := range groupResults {
+		if res.Criteria != nil && res.Criteria.Evaluation != nil {
+			evalName := res.Criteria.Evaluation.Name
+			if res.AppointmentID == latestGroupApps[evalName] {
+				filteredGroupResults = append(filteredGroupResults, res)
+			}
+		}
+	}
+	groupResults = filteredGroupResults
+
 	groupScoresMap := make(map[string]map[uint]float64)
 	var comments []gin.H
 
@@ -304,11 +375,35 @@ func GetStudentEvaluationResult(c *gin.Context) {
 
 	var indResults []entity.IndividualScore
 	if err := db.Preload("Criteria.Evaluation").
-		Where("student_id = ?", studentID).
+		Preload("Appointment").
+		Joins("JOIN appointments ON appointments.id = individual_scores.appointment_id").
+		Where("individual_scores.student_id = ? AND appointments.group_project_id = ?", studentID, projectID).
 		Find(&indResults).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch individual scores"})
 		return
 	}
+
+	// Filter Logic: Keep only latest appointment per Evaluation Name for Individual Scores
+	latestIndApps := make(map[string]uint)
+	for _, res := range indResults {
+		if res.Criteria != nil && res.Criteria.Evaluation != nil && res.AppointmentID != nil {
+			evalName := res.Criteria.Evaluation.Name
+			if *res.AppointmentID > latestIndApps[evalName] {
+				latestIndApps[evalName] = *res.AppointmentID
+			}
+		}
+	}
+
+	filteredIndResults := []entity.IndividualScore{}
+	for _, res := range indResults {
+		if res.Criteria != nil && res.Criteria.Evaluation != nil && res.AppointmentID != nil {
+			evalName := res.Criteria.Evaluation.Name
+			if *res.AppointmentID == latestIndApps[evalName] {
+				filteredIndResults = append(filteredIndResults, res)
+			}
+		}
+	}
+	indResults = filteredIndResults
 
 	// evalName -> teacherID -> scoreSum
 	studentScores := make(map[string]map[uint]float64)

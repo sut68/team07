@@ -429,12 +429,14 @@ func (h *LoginHandler) ChangePassword(c *gin.Context) {
 
 	// Check Email
 	if user.Email != input.Email {
+		logSys.Printf("SECURITY: Email mismatch for user %d during password change", user.ID)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Email does not match our records"})
 		return
 	}
 
-	// Check Current Password
+	// Check Current Password (MUST match specifically)
 	if !h.JwtService.CheckPasswordHash(input.CurrentPassword, user.Password) {
+		logSys.Printf("SECURITY: Incorrect old password for user %d", user.ID)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Incorrect current password"})
 		return
 	}

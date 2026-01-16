@@ -133,7 +133,7 @@ export default function EditProfilePage({ user, onCancel, onSuccess }: EditProfi
                                 />
                             </div>
                             <div className="form-group">
-                                <label className="form-label">รหัสนักศึกษา (ID)</label>
+                                <label className="form-label">ชื่อผู้ใช้งาน (Username)</label>
                                 <input 
                                     type="text" 
                                     className="form-input" 

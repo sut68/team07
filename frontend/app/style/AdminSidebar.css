@@ -28,23 +28,54 @@
 }
 
 /* Override Ant Menu Colors */
+/* Override Ant Menu Colors */
 .sidebar .ant-menu {
   background: transparent;
   color: var(--sidebar-text);
+  padding: 0 12px;
+  /* Add padding to the menu container */
 }
 
 .sidebar .ant-menu-item {
-  color: var(--sidebar-text) !important;
-  font-weight: 600 !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  /* Muted text for inactive */
+  font-weight: 500 !important;
+  border-radius: 12px !important;
+  /* Rounded corners like the reference */
+  margin-bottom: 8px !important;
+  /* Spacing between items */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  height: 48px !important;
+  /* Taller items */
+  display: flex !important;
+  align-items: center !important;
+  width: auto !important;
+  /* Allow side margins to work */
 }
 
 .sidebar .ant-menu-item-selected {
-  background-color: rgba(255, 255, 255, 0.2) !important;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%) !important;
+  /* Glassy gradient */
   color: #fff !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  /* Subtle shadow */
+  backdrop-filter: blur(4px);
 }
 
 .sidebar .ant-menu-item:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
   color: #fff !important;
+  transform: translateX(4px);
+  /* Subtle movement on hover */
+}
+
+.sidebar.collapsed .ant-menu {
+  padding: 0 8px;
+}
+
+.sidebar.collapsed .ant-menu-item:hover {
+  transform: none;
+  /* No movement in collapsed state */
 }
 
 .sidebar.collapsed {
@@ -52,27 +83,64 @@
 }
 
 .sidebar-header {
-  padding: 24px 16px;
-  border-bottom: 1px solid var(--sidebar-border);
+  margin: 10px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 80px;
+  position: relative;
+}
+
+.logo-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: #fff;
+}
+
+.logo-icon {
+  font-size: 24px;
+  color: #fff;
+}
+
+.logo-text {
+  font-size: 18px;
+  font-weight: 700;
+  white-space: nowrap; /* Prevent text wrapping */
+}
+
+/* Hide entire logo (icon + text) in collapsed mode */
+.sidebar.collapsed .logo-link {
+  display: none;
+}
+
+/* New internal collapse button style */
+.collapse-btn {
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.logo-link {
-  display: block;
+.collapse-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
 }
 
-.logo {
-  width: 128px;
-  height: 128px;
-  object-fit: contain;
-  transition: width 200ms ease, height 200ms ease;
+.sidebar.collapsed .sidebar-header {
+  justify-content: center;
+  padding: 20px 0;
 }
 
-.sidebar.collapsed .logo {
-  width: 64px;
-  height: 64px;
+.sidebar.collapsed .collapse-btn {
+  /* Center the toggle when collapsed */
+  margin: 0;
 }
 
 .menu-wrapper {
@@ -80,86 +148,24 @@
   overflow-y: auto;
   overflow-x: hidden;
   height: auto;
+  padding-top: 20px;
 }
 
-.toggle-area {
-  margin-top: auto;
-  padding: 12px 0;
-  display: flex;
-  justify-content: center;
-}
+/* Remove old handle styles */
 
-.toggle-btn {
-  padding: 6px;
-  border-radius: 6px;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-}
-
-.toggle-btn:hover {
-  background: #f3f4f6;
-}
-
-
-/* แก้ไขส่วนนี้ */
+/* Main Content Area */
 .main-content {
-  /* เพิ่มบรรทัดนี้: ดันเนื้อหาออกมาเท่ากับความกว้าง Sidebar */
   margin-left: var(--sidebar-width);
   transition: margin-left 200ms ease;
   min-height: 100vh;
-  /* ควรใส่เพื่อให้สีพื้นหลังเต็มจอ */
+  /* background: #fdfdfd; Optional: Light background for content area */
 }
 
-.logout-area {
-  padding: 12px 16px;
-  border-top: 1px solid var(--sidebar-border);
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.sidebar.collapsed+.main-content {
+  margin-left: var(--sidebar-collapsed-width);
 }
 
-.logout-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 8px 12px;
-  width: 100%;
-  text-align: left;
-}
-
-.logout-btn:hover {
-  background: #f8fafc;
-}
-
-/* Collapse handle positioned on the dividing line between sidebar and content */
-.collapse-handle {
-  position: fixed;
-  /* shift a bit left so the handle sits slightly on top of the sidebar */
-  left: calc(var(--sidebar-width) - 18px);
-  top: 50%;
-  transform: translateY(-50%);
-  width: 36px;
-  height: 36px;
-  border-radius: 9999px;
-  background: #ffffff;
-  border: 1px solid var(--sidebar-border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 30;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-}
-
-.collapse-handle.collapsed {
-  left: calc(var(--sidebar-collapsed-width) - 18px);
-}
-
-/* small tweak when sidebar collapsed to center icon inside smaller area */
+/* Hide extra elements in collapsed mode */
 .sidebar.collapsed .logout-btn span.label {
   display: none;
 }
@@ -170,17 +176,21 @@
 }
 
 /* Center icons when sidebar is collapsed */
-.sidebar.collapsed .menu-wrapper .ant-menu-inline .ant-menu-item {
+.sidebar.collapsed .ant-menu-item {
   justify-content: center !important;
-  padding-left: 0 !important;
-  padding-right: 0 !important;
+  padding: 0 !important;
+  /* Remove side padding */
 }
 
-.sidebar.collapsed .menu-wrapper .ant-menu-item .anticon {
+.sidebar.collapsed .ant-menu-item .anticon {
   margin: 0 !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
+  flex-shrink: 0;
+  /* Prevent icon shrinking */
+  font-size: 16px !important;
+  /* Ensure consistent size */
 }
 
 /* Hide menu title content when collapsed (extra safety) */
@@ -191,96 +201,9 @@
 /* ========== Responsive Styles ========== */
 
 /* Hamburger Menu Button */
-.hamburger-btn {
-  position: fixed;
-  top: 16px;
-  left: 16px;
-  z-index: 50;
-  width: 48px;
-  height: 48px;
-  border-radius: 8px;
-  border: none;
-  color: rgb(0, 0, 0);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.hamburger-btn:hover {
-  background: #ffffff;
-  transform: scale(1.05);
-}
-
-.hamburger-btn:active {
-  transform: scale(0.95);
-}
-
-/* Overlay for mobile sidebar */
-.sidebar-overlay {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 15;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.sidebar-overlay.active {
-  opacity: 1;
-}
-
 /* Tablet and below (1024px and below) */
-@media (max-width: 1024px) {
+/* Tablet and below (1024px and below) */
 
-  /* Hide desktop collapse handle */
-  .collapse-handle {
-    display: none !important;
-  }
-
-  /* Show hamburger button */
-  .hamburger-btn {
-    display: flex;
-  }
-
-  /* Sidebar becomes overlay on mobile */
-  .sidebar {
-    transform: translateX(-100%);
-    transition: transform 0.3s ease;
-    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
-  }
-
-  .sidebar.mobile-open {
-    transform: translateX(0);
-  }
-
-  /* Show close button when sidebar is open */
-  .sidebar.mobile-open .close-btn {
-    display: flex;
-  }
-
-  /* Show overlay when sidebar is open */
-  .sidebar-overlay {
-    display: block;
-  }
-
-  /* Main content takes full width */
-  .main-content {
-    margin-left: 0 !important;
-    padding-top: 80px;
-    /* Add space for hamburger button */
-  }
-
-  /* Adjust sidebar header padding for mobile */
-  .sidebar-header {
-    padding: 60px 16px 24px 16px;
-  }
-}
 
 /* Mobile phones (768px and below) */
 @media (max-width: 768px) {
@@ -296,13 +219,7 @@
     height: 64px;
   }
 
-  /* Adjust hamburger button position */
-  .hamburger-btn {
-    top: 12px;
-    left: 12px;
-    width: 44px;
-    height: 44px;
-  }
+
 
   /* Adjust sidebar width for mobile */
   .sidebar {

@@ -117,7 +117,7 @@ export default function AdminIssuePage() {
     return (
         <div className="dashboard-container">
             <div className="dashboard-header">
-                <h1>รายการแจ้งปัญหา (Issues)</h1>
+                <h1>รายการแจ้งปัญหา</h1>
                 <p>จัดการปัญหาและข้อร้องเรียนจากผู้ใช้งาน</p>
             </div>
 

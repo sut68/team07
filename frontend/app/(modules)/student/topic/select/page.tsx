@@ -1,9 +1,10 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Typography, Row, Col, Modal, Form, Input, Tag, Space, Empty, message, ConfigProvider, Tabs, Upload, Spin } from 'antd';
+import { Card, Button, Typography, Row, Col, Modal, Form, Input, Tag, Space, Empty, message, ConfigProvider, Tabs, Upload, Spin, Tooltip } from 'antd';
 import { ProjectOutlined, SendOutlined, TeamOutlined, FileTextOutlined, CheckCircleOutlined, ExclamationCircleOutlined, ClockCircleOutlined, CloseCircleOutlined, UploadOutlined, PlusOutlined, ArrowLeftOutlined, PaperClipOutlined } from '@ant-design/icons';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Topic, TopicApproval } from '@/app/interfaces/Topic';
+import Swal from 'sweetalert2';
 import { getTopics, createTopic, updateTopic, selectTopic, cancelSelection, getStudentTopic } from '@/app/services/topic';
 import { GetMyGroup } from '@/app/services/group';
 import { GetMe } from '@/app/services/login';
@@ -108,25 +109,49 @@ export default function TopicSelectPage() {
 
     const handleSelectTopic = (topic: Topic) => {
         setIsViewModalOpen(false);
-        Modal.confirm({
+        setIsViewModalOpen(false);
+        Swal.fire({
             title: 'ยืนยันการเลือกหัวข้อ',
-            content: `คุณต้องการเลือกหัวข้อ "${topic.title}" ใช่หรือไม่?`,
-            okText: 'ยืนยัน',
-            cancelText: 'ยกเลิก',
-            onOk: async () => {
+            text: `คุณต้องการเลือกหัวข้อ "${topic.title}" ใช่หรือไม่?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#8A011D',
+            cancelButtonColor: '#d33',
+            cancelButtonText: 'ยกเลิก',
+            confirmButtonText: 'ยืนยัน'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
                 setLoading(true);
                 try {
                     if (groupID) {
                         await selectTopic(topic.ID, { group_project_id: groupID });
-                        message.success('ส่งคำขอเลือกหัวข้อเรียบร้อยแล้ว');
+                        Swal.fire({
+                            title: 'สำเร็จ!',
+                            text: 'ส่งคำขอเลือกหัวข้อเรียบร้อยแล้ว',
+                            icon: 'success',
+                            confirmButtonColor: '#8A011D',
+                            confirmButtonText: 'ตกลง'
+                        });
                         router.push('/student/topic');
                     } else {
-                        message.error('ไม่พบข้อมูลกลุ่มโครงงาน');
+                        Swal.fire({
+                            title: 'เกิดข้อผิดพลาด!',
+                            text: 'ไม่พบข้อมูลกลุ่มโครงงาน',
+                            icon: 'error',
+                            confirmButtonColor: '#8A011D',
+                            confirmButtonText: 'ตกลง'
+                        });
                     }
                 } catch (error: any) {
                     console.error(error);
                     const errMsg = error?.response?.data?.error || 'เกิดข้อผิดพลาดในการเลือกหัวข้อ';
-                    message.error(errMsg);
+                    Swal.fire({
+                        title: 'เกิดข้อผิดพลาด!',
+                        text: errMsg,
+                        icon: 'error',
+                        confirmButtonColor: '#8A011D',
+                        confirmButtonText: 'ตกลง'
+                    });
                 } finally {
                     setLoading(false);
                 }
@@ -135,12 +160,17 @@ export default function TopicSelectPage() {
     };
 
     const handleProposeSubmit = async (values: any) => {
-        Modal.confirm({
+        Swal.fire({
             title: 'ยืนยันการเสนอหัวข้อ',
-            content: 'คุณตรวจสอบรายละเอียดครบถ้วนแล้วใช่หรือไม่?',
-            okText: 'ยืนยัน',
-            cancelText: 'ตรวจสอบอีกครั้ง',
-            onOk: async () => {
+            text: 'คุณตรวจสอบรายละเอียดครบถ้วนแล้วใช่หรือไม่?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#8A011D',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'ยืนยัน',
+            cancelButtonText: 'ตรวจสอบอีกครั้ง'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
                 setLoading(true);
                 try {
                     const formData = new FormData();
@@ -162,11 +192,23 @@ export default function TopicSelectPage() {
                     }
 
                     await createTopic(formData);
-                    message.success('เสนอหัวข้อโครงงานเรียบร้อยแล้ว');
+                    Swal.fire({
+                        title: 'สำเร็จ!',
+                        text: 'เสนอหัวข้อโครงงานเรียบร้อยแล้ว',
+                        icon: 'success',
+                        confirmButtonColor: '#8A011D',
+                        confirmButtonText: 'ตกลง'
+                    });
                     router.push('/student/topic');
                 } catch (error) {
                     console.error(error);
-                    message.error('เกิดข้อผิดพลาดในการเสนอหัวข้อ');
+                    Swal.fire({
+                        title: 'เกิดข้อผิดพลาด!',
+                        text: 'เกิดข้อผิดพลาดในการเสนอหัวข้อ',
+                        icon: 'error',
+                        confirmButtonColor: '#8A011D',
+                        confirmButtonText: 'ตกลง'
+                    });
                 } finally {
                     setLoading(false);
                 }
@@ -175,13 +217,17 @@ export default function TopicSelectPage() {
     };
 
     const handleCancelProposal = () => {
-        Modal.confirm({
+        Swal.fire({
             title: 'ยกเลิกคำขอ/หัวข้อ',
-            content: 'คุณแน่ใจหรือไม่ที่จะยกเลิกหัวข้อนี้? การกระทำนี้ไม่สามารถย้อนกลับได้',
-            okText: 'ยกเลิกหัวข้อ',
-            okType: 'danger',
-            cancelText: 'ปิด',
-            onOk: async () => {
+            text: 'คุณแน่ใจหรือไม่ที่จะยกเลิกหัวข้อนี้? การกระทำนี้ไม่สามารถย้อนกลับได้',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'ยกเลิกหัวข้อ',
+            cancelButtonText: 'ปิด'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
                 if (myTopic) {
                     try {
                         if (myTopic.proposer_role === 'Teacher' && groupID) {
@@ -197,10 +243,22 @@ export default function TopicSelectPage() {
                             await updateTopic(myTopic.ID, formData);
                         }
 
-                        message.success('ยกเลิกหัวข้อเรียบร้อยแล้ว');
+                        Swal.fire({
+                            title: 'สำเร็จ!',
+                            text: 'ยกเลิกหัวข้อเรียบร้อยแล้ว',
+                            icon: 'success',
+                            confirmButtonColor: '#8A011D',
+                            confirmButtonText: 'ตกลง'
+                        });
                         router.push('/student/topic');
                     } catch (error) {
-                        message.error('ไม่สามารถยกเลิกหัวข้อได้');
+                        Swal.fire({
+                            title: 'เกิดข้อผิดพลาด!',
+                            text: 'ไม่สามารถยกเลิกหัวข้อได้',
+                            icon: 'error',
+                            confirmButtonColor: '#8A011D',
+                            confirmButtonText: 'ตกลง'
+                        });
                     }
                 }
                 form.resetFields();
@@ -308,7 +366,7 @@ export default function TopicSelectPage() {
                 <div style={{ maxWidth: 800, margin: '0 auto' }}>
                     {myTopic ? (
                         <div>
-                            <Card style={{ marginBottom: 24, borderLeft: `5px solid ${getStatusInfo(myTopic.status).color}` }}>
+                            <Card style={{ marginBottom: 24, borderLeft: `5px solid ${getStatusInfo(myTopic.status).color}`,boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                                         <div style={{ fontSize: 24, color: getStatusInfo(myTopic.status).color }}>
@@ -331,7 +389,7 @@ export default function TopicSelectPage() {
                                 )}
                             </Card>
 
-                            <Card title="รายละเอียดหัวข้อโครงงาน" extra={<Button danger onClick={handleCancelProposal}>ยกเลิก/สละสิทธิ์</Button>}>
+                            <Card style={{boxShadow: '0 2px 8px rgba(0,0,0,0.1)'}} title="รายละเอียดหัวข้อโครงงาน" extra={<Button danger onClick={handleCancelProposal}>ยกเลิก/สละสิทธิ์</Button>}>
                                 <Title level={4}>{myTopic.title}</Title>
 
                                 <div style={{ marginTop: 24 }}>
@@ -418,17 +476,25 @@ export default function TopicSelectPage() {
                         <Button key="close" onClick={() => setIsViewModalOpen(false)}>
                             ปิด
                         </Button>,
-                        <Button
-                            key="select"
-                            type="primary"
-                            icon={<ProjectOutlined />}
-                            onClick={() => viewTopic && handleSelectTopic(viewTopic)}
-                            disabled={!!myTopic || !isLeader || !!(viewTopic as any)?.selected_by_group}
-                            style={{ background: '#8A011D', borderColor: '#8A011D', opacity: (!!myTopic || !isLeader || !!(viewTopic as any)?.selected_by_group) ? 0.5 : 1 }}
-                            title={(viewTopic as any)?.selected_by_group ? "หัวข้อนี้ถูกเลือกแล้ว" : (!isLeader ? "เฉพาะหัวหน้ากลุ่มเท่านั้นที่สามารถเลือกหัวข้อได้" : "")}
-                        >
-                            เลือกหัวข้อนี้
-                        </Button>
+                        <Tooltip key="select-tooltip" title={!!(viewTopic as any)?.selected_by_group ? "หัวข้อนี้ถูกเลือกแล้ว" : (!isLeader ? "เฉพาะหัวหน้ากลุ่มเท่านั้นที่สามารถเลือกหัวข้อได้" : (!!myTopic ? "กลุ่มของคุณมีหัวข้อแล้ว" : ""))}>
+                            <span>
+                                <Button
+                                    key="select"
+                                    type="primary"
+                                    icon={<ProjectOutlined />}
+                                    onClick={() => viewTopic && handleSelectTopic(viewTopic)}
+                                    disabled={!!myTopic || !isLeader || !!(viewTopic as any)?.selected_by_group}
+                                    style={{
+                                        background: '#8A011D',
+                                        borderColor: '#8A011D',
+                                        opacity: (!!myTopic || !isLeader || !!(viewTopic as any)?.selected_by_group) ? 0.9 : 1,
+                                        marginLeft: 10
+                                    }}
+                                >
+                                    เลือกหัวข้อนี้
+                                </Button>
+                            </span>
+                        </Tooltip>
                     ]}
                     centered
                     width={700}

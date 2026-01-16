@@ -249,3 +249,23 @@
   color: #c71919;
   transform: rotate(90deg);
 }
+
+/* Autofill Fix for Dark Login Inputs - Forces Transparency via Transition Delay */
+.login-input-field:-webkit-autofill,
+.login-input-field:-webkit-autofill:hover,
+.login-input-field:-webkit-autofill:focus,
+.login-input-field:-webkit-autofill:active {
+  -webkit-text-fill-color: white !important;
+  caret-color: white !important;
+  transition: background-color 9999s ease-in-out 0s !important;
+}
+
+/* Autofill Fix for Light Modal Inputs */
+.modern-input-light:-webkit-autofill,
+.modern-input-light:-webkit-autofill:hover,
+.modern-input-light:-webkit-autofill:focus,
+.modern-input-light:-webkit-autofill:active {
+  -webkit-text-fill-color: #333 !important;
+  caret-color: #333 !important;
+  transition: background-color 9999s ease-in-out 0s !important;
+}

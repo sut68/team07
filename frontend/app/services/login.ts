@@ -12,9 +12,7 @@ async function SignIn(data: SignInInterface) {
     // data now includes { username, password, ispeople } automatically
     const res = await api.post("/login", data);
     
-    if (res.data.csrf_token) {
-        localStorage.setItem("csrfToken", res.data.csrf_token); 
-    }
+    // Cookie is handled automatically by the browser/server
     return res;
 }
 

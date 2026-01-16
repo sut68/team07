@@ -1,7 +1,8 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { Button, Empty, message, ConfigProvider, Select, Input, Tag, Row, Col } from 'antd';
-import { SearchOutlined, AppstoreOutlined, FilterOutlined } from '@ant-design/icons';
+import CustomEmptyState from '@/app/components/topic/CustomEmptyState';
+import { SearchOutlined, AppstoreOutlined, FilterOutlined, FolderOpenOutlined } from '@ant-design/icons';
 import { ProjectStorage } from '@/app/interfaces/storage';
 import { getProjects } from '@/app/services/storage';
 import '../../../style/storage.css';
@@ -106,15 +107,22 @@ const StudentStoragePage = () => {
     }
 
     return (
-        <div className="storage-page">
-            <div className="storage-container animate-fade-in">
-                <div className="page-title-box">
-                    <h1>คลังโครงงาน</h1>
-                    <p>ค้นหาและศึกษาโครงงานที่ผ่านมาเพื่อใช้เป็นแนวทางในการทำโครงงาน</p>
-                </div>
+        <ConfigProvider
+            theme={{
+                token: {
+                    colorPrimary: '#9a0120',
+                    fontFamily: "'Noto Sans Thai', sans-serif",
+                },
+            }}
+        >
+            <div className="storage-page" style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}>
+                <div className="storage-container animate-fade-in">
+                    <div className="page-title-box">
+                        <h1>คลังโครงงาน</h1>
+                        <p>ค้นหาและศึกษาโครงงานที่ผ่านมาเพื่อใช้เป็นแนวทางในการทำโครงงาน</p>
+                    </div>
 
-                <div style={{ marginBottom: 24, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-                    <ConfigProvider theme={{ token: { colorPrimary: '#9a0120', } }}>
+                    <div style={{ marginBottom: 24, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
                         <Search
                             placeholder="ค้นหาโครงงาน ชื่ออาจารย์ที่ปรึกษา"
                             allowClear
@@ -124,82 +132,85 @@ const StudentStoragePage = () => {
                             onChange={(e) => setSearchKeyword(e.target.value)}
                             style={{ flex: 4, minWidth: 300 }}
                         />
-                    </ConfigProvider>
-                    <Select
-                        placeholder="ปีการศึกษา"
-                        allowClear
-                        size="large"
-                        style={{ flex: 1, minWidth: 150 }}
-                        options={[{ label: 'ทั้งหมด', value: 0 }, ...yearOptions]}
-                        onChange={handleYearChange}
-                        value={selectedYear}
-                    />
-                    <Button
-                        type="default"
-                        size="large"
-                        icon={<AppstoreOutlined />}
-                        onClick={() => setIsCategoryModalOpen(true)}
-                        style={{ flex: 1, minWidth: 150, textAlign: 'left', color: '#666', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-                    >
-                        <span>เลือกหมวดหมู่ ({selectedTags.length})</span>
-                    </Button>
-                </div>
-
-                {selectedTags.length > 0 && (
-                    <div style={{ marginBottom: 24, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                        <span style={{ display: 'flex', alignItems: 'center', marginRight: 8, color: '#666' }}>
-                            <FilterOutlined style={{ marginRight: 4 }} /> ที่เลือกไว้:
-                        </span>
-                        {selectedTags.map(tag => (
-                            <Tag
-                                key={tag}
-                                closable
-                                onClose={() => handleTagToggle(tag)}
-                                color="blue"
-                                style={{ fontSize: 14, padding: '4px 10px' }}
-                            >
-                                {tag}
-                            </Tag>
-                        ))}
-                        <Button type="link" size="small" onClick={() => setSelectedTags([])} style={{ color: '#999' }}>
-                            ล้างทั้งหมด
+                        <Select
+                            placeholder="ปีการศึกษา"
+                            allowClear
+                            size="large"
+                            style={{ flex: 1, minWidth: 150 }}
+                            options={[{ label: 'ทั้งหมด', value: 0 }, ...yearOptions]}
+                            onChange={handleYearChange}
+                            value={selectedYear}
+                        />
+                        <Button
+                            type="default"
+                            size="large"
+                            icon={<AppstoreOutlined />}
+                            onClick={() => setIsCategoryModalOpen(true)}
+                            style={{ flex: 1, minWidth: 150, textAlign: 'left', color: '#666', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                        >
+                            <span>เลือกหมวดหมู่ ({selectedTags.length})</span>
                         </Button>
                     </div>
-                )}
 
-                {filteredProjects.length === 0 && !loading ? (
-                    <Empty
-                        image={Empty.PRESENTED_IMAGE_SIMPLE}
-                        description="ไม่พบโครงงานที่ตรงกับเงื่อนไขการค้นหา"
-                    />
-                ) : (
-                    <Row gutter={[24, 24]}>
-                        {filteredProjects.map(project => (
-                            <ProjectCard
-                                key={project.ID}
-                                project={project}
-                                onClick={handleViewDetail}
+                    {selectedTags.length > 0 && (
+                        <div style={{ marginBottom: 24, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                            <span style={{ display: 'flex', alignItems: 'center', marginRight: 8, color: '#666' }}>
+                                <FilterOutlined style={{ marginRight: 4 }} /> ที่เลือกไว้:
+                            </span>
+                            {selectedTags.map(tag => (
+                                <Tag
+                                    key={tag}
+                                    closable
+                                    onClose={() => handleTagToggle(tag)}
+                                    color="blue"
+                                    style={{ fontSize: 14, padding: '4px 10px' }}
+                                >
+                                    {tag}
+                                </Tag>
+                            ))}
+                            <Button type="link" size="small" onClick={() => setSelectedTags([])} style={{ color: '#999' }}>
+                                ล้างทั้งหมด
+                            </Button>
+                        </div>
+                    )}
+
+                    {filteredProjects.length === 0 && !loading ? (
+                        <div style={{ marginTop: 40 }}>
+                            <CustomEmptyState
+                                title="ไม่พบโครงงาน"
+                                description="ไม่พบโครงงานที่ตรงกับเงื่อนไขการค้นหา ลองปรับเปลี่ยนคำค้นหาหรือตัวกรอง"
+                                icon={<FolderOpenOutlined />}
                             />
-                        ))}
-                    </Row>
-                )}
+                        </div>
+                    ) : (
+                        <Row gutter={[24, 24]}>
+                            {filteredProjects.map(project => (
+                                <ProjectCard
+                                    key={project.ID}
+                                    project={project}
+                                    onClick={handleViewDetail}
+                                />
+                            ))}
+                        </Row>
+                    )}
 
-                <CategoryModal
-                    open={isCategoryModalOpen}
-                    onCancel={() => setIsCategoryModalOpen(false)}
-                    selectedTags={selectedTags}
-                    onTagToggle={handleTagToggle}
-                    projectCount={filteredProjects.length}
-                />
+                    <CategoryModal
+                        open={isCategoryModalOpen}
+                        onCancel={() => setIsCategoryModalOpen(false)}
+                        selectedTags={selectedTags}
+                        onTagToggle={handleTagToggle}
+                        projectCount={filteredProjects.length}
+                    />
 
-                <ProjectDetailModal
-                    open={isDetailModalOpen}
-                    onCancel={() => setIsDetailModalOpen(false)}
-                    project={selectedProject}
-                    onDownload={handleDownload}
-                />
+                    <ProjectDetailModal
+                        open={isDetailModalOpen}
+                        onCancel={() => setIsDetailModalOpen(false)}
+                        project={selectedProject}
+                        onDownload={handleDownload}
+                    />
+                </div>
             </div>
-        </div>
+        </ConfigProvider>
     );
 };
 
