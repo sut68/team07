@@ -90,7 +90,7 @@ const AdvisorSelectionPage = () => {
                         selectionData.forEach((item: any) => {
                             const itemNo = item.no || item.No;
                             const itemTeacherID = item.teacher_id || item.TeacherID;
-                            if (itemNo >= 1 && itemNo <= 10 && itemTeacherID) {
+                            if (itemNo >= 1 && itemNo <= 99 && itemTeacherID) {
                                 finalSelections[itemNo - 1] = Number(itemTeacherID);
                             }
                         });
@@ -378,7 +378,7 @@ const AdvisorSelectionPage = () => {
                                             return (
                                                 <div key={index} style={{ marginBottom: '10px', fontSize: '14px', borderBottom: '1px solid #eee', paddingBottom: '5px' }}>
                                                     <span style={{ fontWeight: 'bold', marginRight: '10px', color: '#8A011D' }}>{index + 1}.</span>
-                                                    {teacher ? `อ.${teacher.firstname} ${teacher.lastname}` : '-'}
+                                                    {teacher ? `${teacher.firstname} ${teacher.lastname}` : '-'}
                                                 </div>
                                             );
                                         })}

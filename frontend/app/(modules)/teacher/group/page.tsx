@@ -21,6 +21,9 @@ const TeacherSelectPage = () => {
     const [isAccepting, setIsAccepting] = useState(true); 
     const [academicYears, setAcademicYears] = useState<number[]>([]);
     const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear() + 543);
+    const [confirm,setConfirm] = useState(true)
+    const [oldconfirm,setoldConfirm] = useState(false)
+
 
     const initData = useCallback(async () => {
         setLoading(true);
@@ -92,18 +95,48 @@ const TeacherSelectPage = () => {
             confirmButtonText: `ยืนยัน${actionText}`,
             cancelButtonText: 'ยกเลิก'
         });
+            if (result.isConfirmed === true){
+                console.log("pass")
 
-        if (result.isConfirmed) {
-            try {
-                await ToggleAdvisorStatus({ is_open: !isAccepting });
-                setIsAccepting(!isAccepting);
-                
-                await Swal.fire("สำเร็จ", `ท่านได้ทำการ${actionText}เรียบร้อยแล้ว`, "success");
-                initData(); 
-            } catch (error) {
-                Swal.fire("ผิดพลาด", "ไม่สามารถเปลี่ยนสถานะได้", "error");
+                if (confirm === true) {
+                    setConfirm(false)
+                }
+                else{
+                    setConfirm(true)
+                }
+
+
+                if (confirm === oldconfirm && isAccepting != confirm){
+                    console.error("dupew")
+                }
+                else
+                    
+                {    
+                    if (confirm == true){
+
+                        await ToggleAdvisorStatus({ is_open: !isAccepting });
+                        setIsAccepting(!false);
+
+                        await Swal.fire("สำเร็จ", `ท่านได้ทำการ${actionText}เรียบร้อยแล้ว`, "success");
+                    
+                        setoldConfirm(true)
+
+                    }
+                    else if (confirm == false) {
+
+                        await ToggleAdvisorStatus({ is_open: !isAccepting });
+                        setIsAccepting(!false);
+
+                        await Swal.fire("สำเร็จ", `ท่านได้ทำการ${actionText}เรียบร้อยแล้ว`, "success");
+                    
+                        setoldConfirm(false)
+                    }
+                }
             }
-        }
+            else{
+                 console.log("fail")   
+            }
+                initData();
     };
 
     const handleAccept = async (selectionId: number) => {
