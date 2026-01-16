@@ -4,23 +4,28 @@ import React, { useState, useEffect, useCallback } from 'react';
 import AdvisorCardWrapper from '../../../components/group/AdvisorCardWrapper';
 import { SelectAdvisor } from '../../../interfaces/Advisor';
 import { GetAcademicYears } from '../../../services/group';
-import { 
-    GetAdvisorRequests, 
-    AcceptRequest, 
+import {
+    GetAdvisorRequests,
+    AcceptRequest,
     RejectRequest,
     ToggleAdvisorStatus
 } from '../../../services/advisor';
 
 import Swal from 'sweetalert2';
 import "../../../style/TeacherSelectPage.css";
+import ProfilePage from '../../../components/profile/profile'; // ✅ Import Profile
+import { Modal } from 'antd'; // ✅ ใช้ Modal ของ Ant Design (ถ้ามี)
 
 const TeacherSelectPage = () => {
     const [pendingRequests, setPendingRequests] = useState<SelectAdvisor[]>([]);
     const [myAdvisees, setMyAdvisees] = useState<SelectAdvisor[]>([]);
     const [loading, setLoading] = useState(true);
-    const [isAccepting, setIsAccepting] = useState(true); 
+    const [isAccepting, setIsAccepting] = useState(true);
     const [academicYears, setAcademicYears] = useState<number[]>([]);
     const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear() + 543);
+
+    const [selectedStudent, setSelectedStudent] = useState<any>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const initData = useCallback(async () => {
         setLoading(true);
@@ -30,10 +35,10 @@ const TeacherSelectPage = () => {
             if (resYear.data && resYear.data.length > 0) {
                 setAcademicYears(resYear.data);
                 yearToUse = resYear.data[0];
-                setSelectedYear(yearToUse); 
+                setSelectedYear(yearToUse);
             }
             const resRequests = await GetAdvisorRequests();
-            
+
             if (resRequests.data) {
                 const allRequests = resRequests.data.data || [];
                 const pending = allRequests.filter(req => req.status === 'pending');
@@ -43,7 +48,7 @@ const TeacherSelectPage = () => {
                 setMyAdvisees(accepted);
 
                 const serverIsOpen = (resRequests.data as any).is_open;
-                
+
                 if (typeof serverIsOpen === 'boolean') {
                     // console.log("Sync Status form Server:", serverIsOpen); // Debug ดูค่า
                     setIsAccepting(serverIsOpen);
@@ -59,7 +64,7 @@ const TeacherSelectPage = () => {
                 console.warn("Server sent weird status, defaulting to TRUE");
                 setIsAccepting(true);
             }
-            
+
         } catch (error) {
             console.error("Error fetching data:", error);
         } finally {
@@ -83,8 +88,8 @@ const TeacherSelectPage = () => {
 
         const result = await Swal.fire({
             title: `ยืนยันการ${actionText}?`,
-            text: isAccepting 
-                ? "หากปิดรับ คำขอที่ค้างอยู่ทั้งหมดจะถูกปฏิเสธทันที!" 
+            text: isAccepting
+                ? "หากปิดรับ คำขอที่ค้างอยู่ทั้งหมดจะถูกปฏิเสธทันที!"
                 : "นักศึกษาจะสามารถส่งคำขอเข้ามาหาท่านได้อีกครั้ง",
             icon: 'warning',
             showCancelButton: true,
@@ -97,9 +102,9 @@ const TeacherSelectPage = () => {
             try {
                 await ToggleAdvisorStatus({ is_open: !isAccepting });
                 setIsAccepting(!isAccepting);
-                
+
                 await Swal.fire("สำเร็จ", `ท่านได้ทำการ${actionText}เรียบร้อยแล้ว`, "success");
-                initData(); 
+                initData();
             } catch (error) {
                 Swal.fire("ผิดพลาด", "ไม่สามารถเปลี่ยนสถานะได้", "error");
             }
@@ -163,22 +168,28 @@ const TeacherSelectPage = () => {
         return String(groupYear) === String(selectedYear);
     });
 
+    // ✅ ฟังก์ชันเปิด Modal Profile
+    const handleViewProfile = (student: any) => {
+        setSelectedStudent(student);
+        setIsModalOpen(true);
+    };
+
     if (loading && pendingRequests.length === 0 && myAdvisees.length === 0) {
-        return <div style={{padding: 50, textAlign: 'center'}}>กำลังโหลดข้อมูล...</div>;
+        return <div style={{ padding: 50, textAlign: 'center' }}>กำลังโหลดข้อมูล...</div>;
     }
 
     return (
         <div className="teacher-dashboard-container">
             <div className="dashboard-content-wrapper">
-                
-              {/* Header หน้าหลัก */}
-              <div className="header-left">
-                <div className="thick-red-bar"></div>
-                <div className="header-text-content">
-                  <h1 className="page-title">เลือกกลุ่มโครงงานที่ต้องการเป็นที่ปรึกษา</h1>
-                  <p className="page-subtitle">โปรดเลือกกลุ่มโครงงานตามลำดับที่ท่านถูกเลือก</p>
+
+                {/* Header หน้าหลัก */}
+                <div className="header-left">
+                    <div className="thick-red-bar"></div>
+                    <div className="header-text-content">
+                        <h1 className="page-title">เลือกกลุ่มโครงงานที่ต้องการเป็นที่ปรึกษา</h1>
+                        <p className="page-subtitle">โปรดเลือกกลุ่มโครงงานตามลำดับที่ท่านถูกเลือก</p>
+                    </div>
                 </div>
-              </div>
 
                 {/* --- Section 1: กลุ่มในที่ปรึกษา --- */}
                 <div className="dashboard-section">
@@ -186,7 +197,7 @@ const TeacherSelectPage = () => {
                         <div className="section-title my-group">
                             กลุ่มในที่ปรึกษาของท่าน {/*({filteredMyAdvisees.length}) */}
                         </div>
-                        
+
                         {/* Dropdown เลือกปี */}
                         <div className="year-selector-wrapper">
                             <span className="year-label">ปีการศึกษา:</span>
@@ -211,10 +222,11 @@ const TeacherSelectPage = () => {
                             </div>
                         ) : (
                             filteredMyAdvisees.map(group => (
-                                <AdvisorCardWrapper 
+                                <AdvisorCardWrapper
                                     key={group.group_project?.ID}
                                     selectionData={group}
                                     type="accepted"
+                                    onViewProfile={handleViewProfile}
                                 />
                             ))
                         )}
@@ -222,7 +234,7 @@ const TeacherSelectPage = () => {
                 </div>
 
                 {/* --- Section 2: คำขอที่รอการพิจารณา --- */}
-                  <div className="dashboard-section">
+                <div className="dashboard-section">
                     <div className="section-header-with-action">
                         <div className="section-title pending">
                             คำขอที่รอการพิจารณา
@@ -231,7 +243,7 @@ const TeacherSelectPage = () => {
                             )}
                         </div>
 
-                        <button 
+                        <button
                             className={`status-toggle-btn ${isAccepting ? 'is-open' : 'is-closed'}`}
                             onClick={handleToggleStatus}
                         >
@@ -246,7 +258,7 @@ const TeacherSelectPage = () => {
                             )}
                         </button>
                     </div>
-                    
+
                     <div className="cards-grid-container">
                         {filteredPendingRequests.length === 0 ? (
                             <div className="empty-state-card">
@@ -254,12 +266,13 @@ const TeacherSelectPage = () => {
                             </div>
                         ) : (
                             filteredPendingRequests.map(request => (
-                                <AdvisorCardWrapper 
+                                <AdvisorCardWrapper
                                     key={request.ID}
                                     selectionData={request}
                                     type="pending"
                                     onAccept={handleAccept}
                                     onReject={handleReject}
+                                    onViewProfile={handleViewProfile}
                                 />
                             ))
                         )}
@@ -267,6 +280,22 @@ const TeacherSelectPage = () => {
                 </div>
 
             </div>
+            {/* ✅ Modal แสดง Profile */}
+            <Modal
+                title="ข้อมูลนักศึกษา"
+                open={isModalOpen}
+                onCancel={() => setIsModalOpen(false)}
+                footer={null}
+                width={700}
+                centered
+            >
+                {selectedStudent && (
+                    <ProfilePage
+                        initialUser={selectedStudent}
+                        isReadOnly={true}
+                    />
+                )}
+            </Modal>
         </div>
     );
 };

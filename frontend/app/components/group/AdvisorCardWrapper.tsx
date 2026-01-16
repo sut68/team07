@@ -5,18 +5,21 @@ import GroupCard from './GroupCard';
 import { SelectAdvisor } from '../../interfaces/Advisor'; 
 import '../../style/TeacherSelectPage.css';
 
+
 interface AdvisorCardWrapperProps {
     selectionData: SelectAdvisor; 
     type: 'pending' | 'accepted';
     onAccept?: (selectionId: number) => void;
     onReject?: (selectionId: number) => void;
+    onViewProfile?: (student: any) => void;
 }
 
 const AdvisorCardWrapper: React.FC<AdvisorCardWrapperProps> = ({ 
     selectionData, 
     type,
     onAccept,
-    onReject
+    onReject,
+    onViewProfile
 }) => {
     const [showDetails, setShowDetails] = useState(false);
     const { group_project, description, no, ID } = selectionData;
@@ -31,6 +34,7 @@ const AdvisorCardWrapper: React.FC<AdvisorCardWrapperProps> = ({
                 currentUserId={0} // ไฮไลท์ตัวเองในกลุ่ม
                 globalUserHasGroup={false}
                 hideAction={true} // ซ่อนปุ่ม Join ของนักศึกษาออกไป
+                onViewProfile={onViewProfile}
             />
 
             {/* ส่วนขยายด้านล่าง (Teacher's UI Only) */}

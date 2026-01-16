@@ -6,9 +6,14 @@ import { UserProfileInterface } from '../../interfaces/Users';
 import "../../style/profile.css";
 import EditProfilePage from '../editprofile/editprofile';
 
-export default function ProfilePage() {
+interface ProfilePageProps {
+  initialUser?: UserProfileInterface; // รับข้อมูล User ถ้ามี
+  isReadOnly?: boolean; // เปิดโหมดอ่านอย่างเดียว
+}
+
+export default function ProfilePage({ initialUser, isReadOnly = false }: ProfilePageProps) {
   const router = useRouter();
-  const [user, setUser] = useState<UserProfileInterface | null>(null);
+  const [user, setUser] = useState<UserProfileInterface | null>(initialUser || null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -17,6 +22,8 @@ export default function ProfilePage() {
 
   // แยกฟังก์ชัน fetch ออกมาเพื่อให้เรียกซ้ำได้ง่าย
   const fetchProfile = async () => {
+    if (initialUser) return;
+
     try {
       const res = await GetUserProfile();
       if (res.status === 200 && res.data) {
@@ -34,8 +41,14 @@ export default function ProfilePage() {
   };
 
   useEffect(() => {
-    fetchProfile();
-  }, []);
+    // ถ้า initialUser เปลี่ยน ให้ update state ตาม
+    if (initialUser) {
+      setUser(initialUser);
+      setIsLoading(false);
+    } else {
+      fetchProfile();
+    }
+  }, [initialUser]);
 
   const getInitials = (firstname?: string) => {
     return firstname ? firstname.charAt(0).toUpperCase() : "?";
@@ -75,8 +88,8 @@ export default function ProfilePage() {
 
   // ส่วนแสดงผลหน้า Profile ปกติ
   return (
-    <div className="profile-container">
-      <div className="profile-card">
+    <div className="profile-container" style={isReadOnly ? { padding: 0, minHeight: 'auto' } : {}}>
+      <div className="profile-card" style={isReadOnly ? { boxShadow: 'none', width: '100%', maxWidth: '100%' } : {}}>
 
         {/* Header Section */}
         <div className="profile-header">
@@ -149,21 +162,24 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <button
-            onClick={() => setIsEditing(true)}
-            style={{
-              marginTop: '20px',
-              padding: '10px 20px',
-              background: 'white',
-              border: '1px solid #9a0120',
-              color: '#9a0120',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontWeight: 'bold'
-            }}
-          >
-            แก้ไขข้อมูลติดต่อ
-          </button>
+          {/* ✅ ซ่อนปุ่มแก้ไข ถ้าเป็นโหมด ReadOnly */}
+          {!isReadOnly && (
+            <button
+                onClick={() => setIsEditing(true)}
+                style={{
+                marginTop: '20px',
+                padding: '10px 20px',
+                background: 'white',
+                border: '1px solid #9a0120',
+                color: '#9a0120',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: 'bold'
+                }}
+            >
+                แก้ไขข้อมูลติดต่อ
+            </button>
+          )}
 
         </div>
       </div>

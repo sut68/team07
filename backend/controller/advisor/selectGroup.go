@@ -25,6 +25,10 @@ func GetAdvisorRequests(c *gin.Context) {
 	if err := db.
 		Preload("GroupMembers").
 		Preload("GroupMembers.Student").
+		Preload("GroupMembers.Student.Branch"). // ✅ เพิ่ม: ดึงสาขา
+		Preload("GroupMembers.Student.Role").   // ✅ เพิ่ม: ดึง Role
+		Preload("GroupMembers.Student.Status"). // ✅ เพิ่ม: ดึงสถานะ
+		Preload("GroupMembers.Student.Gender"). // ✅ เพิ่ม: ดึงเพศ
 		Where("teacher_id = ?", teacherID).
 		Find(&myGroups).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -75,6 +79,10 @@ func GetAdvisorRequests(c *gin.Context) {
 		Preload("GroupProject").
 		Preload("GroupProject.GroupMembers").
 		Preload("GroupProject.GroupMembers.Student").
+		Preload("GroupProject.GroupMembers.Student.Branch"). // ✅ เพิ่ม
+		Preload("GroupProject.GroupMembers.Student.Role").   // ✅ เพิ่ม
+		Preload("GroupProject.GroupMembers.Student.Status"). // ✅ เพิ่ม
+		Preload("GroupProject.GroupMembers.Student.Gender"). // ✅ เพิ่ม
 		Where("teacher_id = ? AND status = ?", teacherID, "pending").
 		Order("no asc").
 		Find(&candidates).Error; err != nil {

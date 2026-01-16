@@ -1,6 +1,7 @@
 import React from "react";
 import { GroupProject } from "../../interfaces/Group";
 import "../../style/StudentGroupCard.css";
+import { UserOutlined } from "@ant-design/icons";
 
 interface GroupCardProps {
   group: GroupProject;
@@ -8,25 +9,27 @@ interface GroupCardProps {
   globalUserHasGroup: boolean;
   onJoin?: (groupId: number) => void;
   hideAction?: boolean;
+  onViewProfile?: (student: any) => void;
 }
 
-const GroupCard: React.FC<GroupCardProps> = ({ 
-  group, 
-  currentUserId, 
-  globalUserHasGroup, 
+const GroupCard: React.FC<GroupCardProps> = ({
+  group,
+  currentUserId,
+  globalUserHasGroup,
   onJoin,
-  hideAction
+  hideAction,
+  onViewProfile
 }) => {
   const rawMembers = group.group_members || [];
-  
+
 
   const members = [...rawMembers].sort((a, b) => {
     if (a.leader && !b.leader) return -1;
     if (!a.leader && b.leader) return 1;
-    return 0; 
+    return 0;
   });
 
-  const totalSlots = group.membership; 
+  const totalSlots = group.membership;
   const filledCount = members.length;
   const isFull = filledCount >= totalSlots;
   const rowsToRender = Math.max(totalSlots, filledCount);
@@ -34,7 +37,7 @@ const GroupCard: React.FC<GroupCardProps> = ({
 
   return (
     <div className="group-card">
-      
+
       {/* --- ส่วนหัว (Header) --- */}
       <div className="card-header">
         <div className="header-content">
@@ -51,17 +54,17 @@ const GroupCard: React.FC<GroupCardProps> = ({
 
         {/* --- ปุ่ม Action --- */}
         {!hideAction && (
-            isMyGroup ? (
-                <span className="badge-my-group">กลุ่มของคุณ</span>
-            ) : (
-                <button
-                    onClick={() => onJoin && onJoin(group.ID)}
-                    disabled={globalUserHasGroup || isFull}
-                    className="btn-join"
-                >
-                    {isFull ? "เต็ม" : "เข้าร่วม"}
-                </button>
-            )
+          isMyGroup ? (
+            <span className="badge-my-group">กลุ่มของคุณ</span>
+          ) : (
+            <button
+              onClick={() => onJoin && onJoin(group.ID)}
+              disabled={globalUserHasGroup || isFull}
+              className="btn-join"
+            >
+              {isFull ? "เต็ม" : "เข้าร่วม"}
+            </button>
+          )
         )}
       </div>
 
@@ -76,19 +79,32 @@ const GroupCard: React.FC<GroupCardProps> = ({
                 <div className="member-info">
                   {/* รหัสนักศึกษา */}
                   <span className="student-id-badge">
-                      {member.student?.username?.split('@')[0] || "Unknown"} 
+                    {member.student?.username?.split('@')[0] || "Unknown"}
                   </span>
-                  
+
                   {/* ชื่อนักศึกษา */}
                   <span className="student-name" title={`${member.student?.firstname} ${member.student?.lastname}`}>
-                     {member.student?.firstname} {member.student?.lastname}
+                    {member.student?.firstname} {member.student?.lastname}
                   </span>
-                  
+
                   {/* หัวหน้ากลุ่ม */}
                   {member.leader && (
                     <span className="badge-leader">
-                      👑 หัวหน้า 
+                      👑 หัวหน้า
                     </span>
+                  )}
+
+                  {onViewProfile && member.student && (
+                    <UserOutlined
+                      style={{
+                        marginLeft: '8px',
+                        cursor: 'pointer',
+                        color: '#1890ff',
+                        fontSize: '16px'
+                      }}
+                      onClick={() => onViewProfile(member.student)}
+                      title="ดูข้อมูลนักศึกษา"
+                    />
                   )}
                 </div>
               ) : (
