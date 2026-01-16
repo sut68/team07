@@ -61,6 +61,18 @@ const getFileUrl = (path: string) => {
   return `${STORAGE_DOMAIN}${clean}`;
 };
 
+const getDisplayName = (path: string) => {
+  if (!path) return "Download File";
+  const filename = path.split("/").pop() || "Download File";
+  
+  // Pattern: UUID (36 chars) + "_" + name
+  const uuidPattern = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}_/;
+  if (uuidPattern.test(filename)) {
+     return filename.replace(uuidPattern, "");
+  }
+  return filename;
+};
+
 export default function ChatPage() {
   const { user } = useAuth();
   const [mounted, setMounted] = useState(false);
@@ -95,7 +107,7 @@ export default function ChatPage() {
         const me = await GetMe();
         if (me?.id) {
           setUserId(String(me.id));
-          setMyUsername(me.username || "");
+          setMyUsername(me.firstname || me.username || "");
         }
       } catch (e) {
         Toast_fail(String(e));
@@ -188,6 +200,7 @@ export default function ChatPage() {
 
         const preferred =
           clean.find((g) => g.group_status === "In Process") ??
+          clean.find((g) => g.group_status === "Approved") ??
           clean.find((g) => g.group_status === "Pending") ??
           clean[0] ??
           null;
@@ -818,7 +831,7 @@ export default function ChatPage() {
                                 rel="noreferrer"
                                 style={{ color: isMe ? "white" : "blue", textDecoration: "underline" }}
                               >
-                                {c.message.split("/").pop() || "Download File"}
+                                {getDisplayName(c.message)}
                               </a>
                             </div>
                           )}

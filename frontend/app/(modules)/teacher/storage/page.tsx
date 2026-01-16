@@ -14,6 +14,18 @@ const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
 const { Search } = Input;
 
+const getDisplayName = (path: string) => {
+    if (!path) return "file.pdf";
+    const filename = path.split("/").pop() || "file.pdf";
+    
+    // Pattern: UUID (36 chars) + "_" + name
+    const uuidPattern = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}_/;
+    if (uuidPattern.test(filename)) {
+       return filename.replace(uuidPattern, "");
+    }
+    return filename;
+};
+
 export default function TeacherStoragePage() {
     const [activeTab, setActiveTab] = useState<'repository' | 'requests'>('repository');
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -95,13 +107,20 @@ export default function TeacherStoragePage() {
                 year: project.year,
             });
             if (project.file_path) {
-                const filePath = project.file_path.replace(/^\.\//, '');
-                const fullPath = filePath.startsWith('uploads') ? filePath : `uploads/projects/${filePath}`;
+                let fileUrl = '';
+                if (project.file_path.startsWith("http://") || project.file_path.startsWith("https://")) {
+                    fileUrl = project.file_path;
+                } else {
+                    const filePath = project.file_path.replace(/^\.\//, '');
+                    const fullPath = filePath.startsWith('uploads') ? filePath : `uploads/projects/${filePath}`;
+                    fileUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/team07api"}/${fullPath}`;
+                }
+
                 setFileList([{
                     uid: '-1',
-                    name: project.file_path.split('/').pop() || 'file.pdf',
+                    name: getDisplayName(project.file_path),
                     status: 'done',
-                    url: `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/team07api"}/${fullPath}`,
+                    url: fileUrl,
                 }]);
             } else {
                 setFileList([]);

@@ -72,7 +72,7 @@ func CreateProject(c *gin.Context) {
 	if err == nil {
 		defer file.Close()
 		// อัปโหลดขึ้น Azure
-		pdfURL, err := utils.UploadToAzure(file, fileHeader.Filename, "projects")
+		pdfURL, err := utils.UploadToAzure(file, fileHeader.Filename, "projects", fileHeader.Header.Get("Content-Type"))
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload file to Azure: " + err.Error()})
 			return
@@ -225,7 +225,7 @@ func UpdateProject(c *gin.Context) {
 	if err == nil {
 		defer file.Close()
 		// อัปโหลดขึ้น Azure
-		pdfURL, err := utils.UploadToAzure(file, fileHeader.Filename, "projects")
+		pdfURL, err := utils.UploadToAzure(file, fileHeader.Filename, "projects", fileHeader.Header.Get("Content-Type"))
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload file to Azure: " + err.Error()})
 			return

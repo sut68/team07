@@ -39,7 +39,7 @@ func CreateNews(c *gin.Context) {
 	if err == nil {
 		defer file.Close()
 		// อัปโหลดขึ้น Azure ("news")
-		azureURL, err := utils.UploadToAzure(file, fileHeader.Filename, "news")
+		azureURL, err := utils.UploadToAzure(file, fileHeader.Filename, "news", fileHeader.Header.Get("Content-Type"))
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload file to Azure: " + err.Error()})
 			return
@@ -102,7 +102,7 @@ func UpdateNews(c *gin.Context) {
 		defer file.Close()
 		
 		// อัปโหลดขึ้น Azure ("news")
-		azureURL, err := utils.UploadToAzure(file, fileHeader.Filename, "news")
+		azureURL, err := utils.UploadToAzure(file, fileHeader.Filename, "news", fileHeader.Header.Get("Content-Type"))
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload file to Azure: " + err.Error()})
 			return

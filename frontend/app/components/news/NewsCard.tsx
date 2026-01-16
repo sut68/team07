@@ -27,7 +27,16 @@ export default function NewsCard({ data, role, currentUserId, onEdit, onDelete }
     const fileUrl = data.File 
         ? (isExternalLink ? data.File : `${cleanApiUrl}/${data.File.replace(/\\/g, '/')}`)
         : null;
-    const fileName = data.File ? data.File.replace(/\\/g, '/').split('/').pop() : "ดาวน์โหลดไฟล์แนบ";
+    const fileName = data.File 
+        ? (() => {
+            const rawName = data.File.replace(/\\/g, '/').split('/').pop() || "ดาวน์โหลดไฟล์แนบ";
+            const uuidPattern = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}_/;
+            if (uuidPattern.test(rawName)) {
+                return rawName.replace(uuidPattern, "");
+            }
+            return rawName;
+        })()
+        : "ดาวน์โหลดไฟล์แนบ";
 
     return (
         <div className={`news-card ${cardTypeClass}`}>

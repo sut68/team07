@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
@@ -16,7 +17,7 @@ import (
 // file: ไฟล์ที่รับมาจาก User (io.Reader)
 // originalFilename: ชื่อไฟล์เดิม (เพื่อเอานามสกุล .pdf, .jpg)
 // folder: ชื่อหมวดหมู่ (เช่น "projects", "chats", "news") -> จะไปสร้างเป็น Virtual Folder บน Azure
-func UploadToAzure(file io.Reader, originalFilename string, folder string) (string, error) {
+func UploadToAzure(file io.Reader, originalFilename string, folder string, contentType string) (string, error) {
 	connStr := os.Getenv("AZURE_STORAGE_CONNECTION_STRING")
 	containerName := os.Getenv("AZURE_CONTAINER_NAME")
 
@@ -26,8 +27,20 @@ func UploadToAzure(file io.Reader, originalFilename string, folder string) (stri
 
 	// 2. ตั้งชื่อไฟล์ใหม่ด้วย UUID (ปลอดภัย + ไม่ซ้ำ)
 	ext := filepath.Ext(originalFilename)           // ดึงนามสกุลไฟล์ (.pdf, .png)
-	newFileName := uuid.New().String() + ext        // เช่น "a1b2-c3d4-....pdf"
-	blobPath := fmt.Sprintf("%s/%s", folder, newFileName) // เช่น "projects/a1b2....pdf"
+	
+	// Clean original filename part
+	nameWithoutExt := strings.TrimSuffix(filepath.Base(originalFilename), ext)
+	reg := regexp.MustCompile("[^a-zA-Z0-9-_]") // Allow letters, numbers, -, _
+	cleanName := reg.ReplaceAllString(nameWithoutExt, "_")
+	
+	// Truncate if too long (optional, to keep URL reasonable)
+	if len(cleanName) > 50 {
+		cleanName = cleanName[:50]
+	}
+
+	// UUID_cleanName.ext
+	newFileName := fmt.Sprintf("%s_%s%s", uuid.New().String(), cleanName, ext)
+	blobPath := fmt.Sprintf("%s/%s", folder, newFileName) // เช่น "projects/a1b2_Report.pdf"
 
 	// 3. เชื่อมต่อ Azure
 	client, err := azblob.NewClientFromConnectionString(connStr, nil)
@@ -35,12 +48,19 @@ func UploadToAzure(file io.Reader, originalFilename string, folder string) (stri
 		return "", err
 	}
 
+	contentDisposition := fmt.Sprintf("inline; filename=\"%s\"", originalFilename)
+
 	// 4. อัปโหลด
 	_, err = client.UploadStream(context.TODO(),
 		containerName,
 		blobPath,
 		file,
-		&azblob.UploadStreamOptions{},
+		&azblob.UploadStreamOptions{
+			HTTPHeaders: &azblob.BlobHTTPHeaders{
+				BlobContentType:        &contentType,
+				BlobContentDisposition: &contentDisposition,
+			},
+		},
 	)
 
 	if err != nil {

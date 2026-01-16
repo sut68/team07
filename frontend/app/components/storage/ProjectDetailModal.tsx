@@ -5,6 +5,18 @@ import { ProjectStorage } from '@/app/interfaces/storage';
 
 const { Title, Paragraph, Text } = Typography;
 
+const getDisplayName = (path: string) => {
+    if (!path) return "Download File";
+    const filename = path.split("/").pop() || "Download File";
+    
+    // Pattern: UUID (36 chars) + "_" + name
+    const uuidPattern = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}_/;
+    if (uuidPattern.test(filename)) {
+       return filename.replace(uuidPattern, "");
+    }
+    return filename;
+};
+
 interface ProjectDetailModalProps {
     open: boolean;
     onCancel: () => void;
@@ -70,15 +82,20 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ open, onCancel,
                         <Descriptions.Item label="ไฟล์รายงาน">
                             <Space>
                                 <FileTextOutlined style={{ color: '#52c41a' }} />
-                                <Text>{project.file_path}</Text>
-                                <Button
-                                    type="link"
-                                    size="small"
-                                    icon={<DownloadOutlined />}
-                                    onClick={onDownload}
+                                <Text>{getDisplayName(project.file_path)}</Text>
+                                <a
+                                    href={(project.file_path.startsWith("http://") || project.file_path.startsWith("https://")) 
+                                        ? project.file_path 
+                                        : `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/team07api"}/${project.file_path.replace(/^\.\//, '').startsWith('uploads') ? project.file_path.replace(/^\.\//, '') : `uploads/projects/${project.file_path.replace(/^\.\//, '')}`}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{ color: '#1890ff', marginLeft: 8 }}
                                 >
-                                    ดาวน์โหลด
-                                </Button>
+                                    <Space>
+                                        <DownloadOutlined />
+                                        <span>ดาวน์โหลด</span>
+                                    </Space>
+                                </a>
                             </Space>
                         </Descriptions.Item>
                     </Descriptions>

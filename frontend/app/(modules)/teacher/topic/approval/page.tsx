@@ -11,6 +11,18 @@ import Swal from 'sweetalert2';
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
 
+const getDisplayName = (path: string) => {
+    if (!path) return "Download File";
+    const filename = path.split("/").pop() || "Download File";
+    
+    // Pattern: UUID (36 chars) + "_" + name
+    const uuidPattern = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}_/;
+    if (uuidPattern.test(filename)) {
+       return filename.replace(uuidPattern, "");
+    }
+    return filename;
+};
+
 export default function TeacherTopicApprovalPage() {
     const [teacherID, setTeacherID] = useState<number | null>(null);
     const [selectedProposal, setSelectedProposal] = useState<Topic | null>(null);
@@ -297,7 +309,7 @@ export default function TeacherTopicApprovalPage() {
                                     rel="noopener noreferrer"
                                     style={{ marginLeft: 8 }}
                                 >
-                                    {selectedProposal.file_attachment}
+                                    {getDisplayName(selectedProposal.file_attachment)}
                                 </a>
                             </div>
                         )}

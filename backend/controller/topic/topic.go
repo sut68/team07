@@ -79,7 +79,7 @@ func CreateTopic(c *gin.Context) {
 			defer file.Close()
 
 			// Upload to Azure ("topics")
-			azureURL, err := utils.UploadToAzure(file, fileHeader.Filename, "topics")
+			azureURL, err := utils.UploadToAzure(file, fileHeader.Filename, "topics", fileHeader.Header.Get("Content-Type"))
 			if err != nil {
 				// Handle error or continue? 
 				// For now let's just complain if it fails or continue 
@@ -254,7 +254,7 @@ func UpdateTopic(c *gin.Context) {
 				defer file.Close()
 
 				// Upload to Azure ("topics")
-				azureURL, err := utils.UploadToAzure(file, fileHeader.Filename, "topics")
+				azureURL, err := utils.UploadToAzure(file, fileHeader.Filename, "topics", fileHeader.Header.Get("Content-Type"))
 				if err == nil {
 					finalFileList = append(finalFileList, azureURL)
 				}

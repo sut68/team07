@@ -103,7 +103,7 @@ func GetFile(c *gin.Context) {
 	combinedBody := io.MultiReader(bytes.NewReader(header[:n]), c.Request.Body)
 
 	// อัปโหลดไป Azure ("chats")
-	azureURL, err := utils.UploadToAzure(combinedBody, originalName, "chats")
+	azureURL, err := utils.UploadToAzure(combinedBody, originalName, "chats", contentType)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Cloud Storage Error: " + err.Error()})
 		return
@@ -122,9 +122,15 @@ func GetAllChat(c *gin.Context) {
 	pro, _ := strconv.ParseUint(c.Query("process_id"), 10, 64)
 
 	var chats []entity.Chat
-	if err := db.Where("group_project_id = ? AND process_id = ?", group, pro).Order("id ASC").Find(&chats).Error; err != nil {
+	if err := db.Preload("Sender").Where("group_project_id = ? AND process_id = ?", group, pro).Order("id ASC").Find(&chats).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "DB Error"})
 		return
+	}
+
+	for i := range chats {
+		if chats[i].Sender != nil {
+			chats[i].Name = chats[i].Sender.Firstname
+		}
 	}
 
 	log.InsertLog(c, 8)
@@ -142,7 +148,7 @@ func InsertChat(c *gin.Context) {
 	}
 
 	var sender entity.User
-	db.Select("username").Where("id = ?", body.SenderID).First(&sender)
+	db.Select("firstname").Where("id = ?", body.SenderID).First(&sender)
 
 	chat := entity.Chat{
 		GroupProjectID: body.GroupProjectID,
@@ -150,7 +156,7 @@ func InsertChat(c *gin.Context) {
 		SenderID:       body.SenderID,
 		ChatType:       body.ChatType,
 		Message:        body.Message,
-		Name:           sender.Username,
+		Name:           sender.Firstname,
 	}
 
 	if err := db.Create(&chat).Error; err != nil {

@@ -14,6 +14,18 @@ import '../../../style/topic.css';
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
 
+const getDisplayName = (path: string) => {
+    if (!path) return "Download File";
+    const filename = path.split("/").pop() || "Download File";
+    
+    // Pattern: UUID (36 chars) + "_" + name
+    const uuidPattern = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}_/;
+    if (uuidPattern.test(filename)) {
+       return filename.replace(uuidPattern, "");
+    }
+    return filename;
+};
+
 export default function StudentTopicPage() {
     const [form] = Form.useForm();
     const [projectForm] = Form.useForm();
@@ -773,28 +785,18 @@ export default function StudentTopicPage() {
                                         <Space direction="vertical" style={{ width: '100%' }}>
                                             <Space>
                                                 <FileTextOutlined style={{ color: '#16a34a', fontSize: 18 }} />
-                                                <Text strong>{myProject.file_path.split('/').pop() || 'เอกสารโครงงาน'}</Text>
+                                                <Text strong>{getDisplayName(myProject.file_path)}</Text>
                                             </Space>
                                             <Button
                                                 type="primary"
                                                 icon={<UploadOutlined />}
                                                 size="small"
                                                 onClick={() => {
-                                                    // Download file
-                                                    const link = document.createElement('a');
-                                                    if (myProject.file_path.startsWith("http://") || myProject.file_path.startsWith("https://")) {
-                                                        link.href = myProject.file_path;
-                                                    } else {
-                                                        const filePath = myProject.file_path.replace(/^\.\//, '');
-                                                        const fullPath = filePath.startsWith('uploads') ? filePath : `uploads/projects/${filePath}`;
-                                                        link.href = `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/team07api"}/${fullPath}`;
-                                                    }
-                                                    link.download = myProject.file_path.split('/').pop() || 'document';
-                                                    link.target = '_blank';
-                                                    document.body.appendChild(link);
-                                                    link.click();
-                                                    document.body.removeChild(link);
-                                                    message.success('กำลังดาวน์โหลดไฟล์...');
+                                                     const url = (myProject.file_path.startsWith("http://") || myProject.file_path.startsWith("https://")) 
+                                                        ? myProject.file_path
+                                                        : `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/team07api"}/${myProject.file_path.replace(/^\.\//, '').startsWith('uploads') ? myProject.file_path.replace(/^\.\//, '') : `uploads/projects/${myProject.file_path.replace(/^\.\//, '')}`}`;
+                                                     
+                                                     window.open(url, '_blank');
                                                 }}
                                                 style={{ background: '#16a34a', borderColor: '#16a34a' }}
                                             >

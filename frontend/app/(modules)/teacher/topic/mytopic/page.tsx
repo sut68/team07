@@ -11,6 +11,18 @@ import Swal from 'sweetalert2';
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
 
+const getDisplayName = (path: string) => {
+    if (!path) return "Download File";
+    const filename = path.split("/").pop() || "Download File";
+    
+    // Pattern: UUID (36 chars) + "_" + name
+    const uuidPattern = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}_/;
+    if (uuidPattern.test(filename)) {
+       return filename.replace(uuidPattern, "");
+    }
+    return filename;
+};
+
 export default function TeacherMyTopicPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingTopic, setEditingTopic] = useState<Topic | null>(null);
@@ -66,7 +78,7 @@ export default function TeacherMyTopicPage() {
                 attachment: topic.file_attachment ? [
                     {
                         uid: '-1',
-                        name: topic.file_attachment,
+                        name: getDisplayName(topic.file_attachment),
                         status: 'done',
                         url: '',
                     }
@@ -323,7 +335,7 @@ export default function TeacherMyTopicPage() {
                                     rel="noopener noreferrer"
                                     style={{ marginLeft: 8 }}
                                 >
-                                    {viewTopic.file_attachment}
+                                    {getDisplayName(viewTopic.file_attachment)}
                                 </a>
                             </div>
                         )}

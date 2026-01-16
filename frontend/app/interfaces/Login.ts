@@ -7,6 +7,8 @@ export interface SignInInterface {
 export interface UserDataInterface {
     id: number;
     username: string;
+    firstname: string;
+    lastname: string;
     role: string;
     message: string;
 }

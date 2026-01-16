@@ -36,10 +36,12 @@ type LoginInput struct {
 }
 
 type LoginResponse struct {
-	ID       uint   `json:"id"`
-	Username string `json:"username"`
-	Role     string `json:"role"`
-	Message  string `json:"message"`
+	ID        uint   `json:"id"`
+	Username  string `json:"username"`
+	Firstname string `json:"firstname"`
+	Lastname  string `json:"lastname"`
+	Role      string `json:"role"`
+	Message   string `json:"message"`
 }
 
 type RefreshResponse struct {
@@ -69,13 +71,21 @@ func (h *LoginHandler) Me(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization failed: Claims missing"})
 		return
 	}
+	var user entity.User
+	// Query ครั้งเดียว เลือกทั้ง firstname และ lastname
+	if err := h.DB.Select("firstname", "lastname").First(&user, claims.ID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "User data retrieval failed"})
+		return
+	}
 
 	//Response ข้อมูลผู้ใช้
 	c.JSON(http.StatusOK, gin.H{
-		"id":       claims.ID,
-		"username": claims.Username,
-		"role":     claims.Role,
-		"message":  "User data retrieved successfully",
+		"id":        claims.ID,
+		"username":  claims.Username,
+		"firstname": user.Firstname,
+		"lastname":  user.Lastname,
+		"role":      claims.Role,
+		"message":   "User data retrieved successfully",
 	})
 }
 

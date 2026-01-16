@@ -186,7 +186,7 @@ func AssignProGress(c *gin.Context) {
 	comment := strings.TrimSpace(c.PostForm("comment"))
 
 	// 2. อัปโหลดไป Azure ("progress")
-	azureURL, err := utils.UploadToAzure(file, fileHeader.Filename, "progress")
+	azureURL, err := utils.UploadToAzure(file, fileHeader.Filename, "progress", fileHeader.Header.Get("Content-Type"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Cloud Storage Error: " + err.Error()})
 		return
@@ -240,7 +240,7 @@ func UpdateProGress(c *gin.Context) {
 		defer f.Close()
 
 		// Azure Upload
-		azureURL, err := utils.UploadToAzure(f, fh.Filename, "progress")
+		azureURL, err := utils.UploadToAzure(f, fh.Filename, "progress", fh.Header.Get("Content-Type"))
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Cloud Storage Error: " + err.Error()})
 			return
