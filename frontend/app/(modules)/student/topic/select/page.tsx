@@ -612,7 +612,7 @@ export default function TopicSelectPage() {
                             name="attachment"
                             label="แนบไฟล์เอกสารเพิ่มเติม (ถ้ามี)"
                         >
-                            <Upload maxCount={1} beforeUpload={() => false}>
+                            <Upload maxCount={1} beforeUpload={() => false} accept=".pdf,.docx,.doc">
                                 <Button icon={<UploadOutlined />}>คลิกเพื่อแนบไฟล์</Button>
                             </Upload>
                         </Form.Item>

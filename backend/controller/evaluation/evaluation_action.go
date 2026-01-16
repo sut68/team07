@@ -56,10 +56,14 @@ func SaveEvaluation(c *gin.Context) {
 	}
 
 	// CHECK DATE: Cannot save evaluation before the appointment date
-	currentYear, currentMonth, currentDay := time.Now().Date()
-	apptYear, apptMonth, apptDay := appointment.StartDateTime.Date()
-	today := time.Date(currentYear, currentMonth, currentDay, 0, 0, 0, 0, time.UTC)
-	apptDate := time.Date(apptYear, apptMonth, apptDay, 0, 0, 0, 0, time.UTC)
+	// Convert to Thai timezone (UTC+7) to ensure "same day" logic check works 
+	// even if the server is in UTC and it's early morning in Thailand.
+	loc := time.FixedZone("Asia/Bangkok", 7*60*60)
+	currentYear, currentMonth, currentDay := time.Now().In(loc).Date()
+	apptYear, apptMonth, apptDay := appointment.StartDateTime.In(loc).Date()
+
+	today := time.Date(currentYear, currentMonth, currentDay, 0, 0, 0, 0, loc)
+	apptDate := time.Date(apptYear, apptMonth, apptDay, 0, 0, 0, 0, loc)
 
 	if today.Before(apptDate) {
 		tx.Rollback()

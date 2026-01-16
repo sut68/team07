@@ -574,7 +574,7 @@ export default function StudentTopicPage() {
                             name="attachment"
                             label="แนบไฟล์เอกสารเพิ่มเติม (ถ้ามี)"
                         >
-                            <Upload maxCount={1} beforeUpload={() => false}>
+                            <Upload maxCount={1} beforeUpload={() => false} accept=".pdf,.docx,.doc">
                                 <Button icon={<UploadOutlined />}>คลิกเพื่อแนบไฟล์</Button>
                             </Upload>
                         </Form.Item>
@@ -606,7 +606,7 @@ export default function StudentTopicPage() {
                         onFinish={(values) => {
                             Modal.confirm({
                                 title: myProject ? 'ยืนยันการแก้ไขข้อมูล' : 'ยืนยันการบันทึกข้อมูล',
-                                content: myProject ? 'คุณต้องการแก้ไขข้อมูลโครงงานนี้ใช่หรือไม่?' : 'คุณต้องการบันทึกข้อมูลโครงงานนี้ใช่หรือไม่?',
+                                content: myProject ? 'คุณต้องการแก้ไขข้อมูลโครงงานนี้ใช่หรือไม่?' : 'กรุณาตรวจสอบข้อมูลโครงงานให้ครบถ้วนก่อนยืนยันการบันทึกข้อมูลโครงงานเพราะคุณจะไม่สามารถแก้ไขข้อมูลนี้ได้อีก',
                                 okText: 'ยืนยัน',
                                 cancelText: 'ยกเลิก',
                                 onOk: async () => {
@@ -703,7 +703,7 @@ export default function StudentTopicPage() {
                             }}
                             rules={[{ required: true, message: 'กรุณาอัพโหลดเอกสารโครงงาน' }]}
                         >
-                            <Upload maxCount={1} beforeUpload={() => false}>
+                            <Upload maxCount={1} beforeUpload={() => false} accept=".pdf,.docx,.doc">
                                 <Button icon={<UploadOutlined />}>คลิกเพื่ออัพโหลดเอกสาร</Button>
                             </Upload>
                         </Form.Item>

@@ -30,6 +30,8 @@ func InsertMock(db *gorm.DB) {
 	seed(tx, &MockAppointmentType)
 	seed(tx, &MockEvaluation)
 	seed(tx, &MockCriteria)
+	seed(tx, &MockGroup_member)
+	seed(tx, &MockGroup_project)
 
 	if tx.Error != nil {
 		log.Println("Seeding failed, rolling back...")
