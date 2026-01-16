@@ -14,6 +14,7 @@ import (
 	"github.com/sut68/team07/backend/database"
 	"github.com/sut68/team07/backend/entity"
 	"github.com/sut68/team07/backend/middleware"
+	"github.com/sut68/team07/backend/utils"
 )
 
 // POST /storage/projects
@@ -45,29 +46,16 @@ func CreateProject(c *gin.Context) {
 	project.TeacherID = claims.ID
 
 	// Handle file upload
-	file, err := c.FormFile("file")
+	file, fileHeader, err := c.Request.FormFile("file")
 	if err == nil {
-		// Create upload directory if not exists
-		uploadPath := "uploads/projects"
-		if _, err := os.Stat(uploadPath); os.IsNotExist(err) {
-			os.MkdirAll(uploadPath, 0755)
-		}
-
-		// Generate unique filename
-		filename := fmt.Sprintf(
-			"%d_%s",
-			time.Now().UnixNano(),
-			filepath.Base(file.Filename),
-		)
-		filePath := filepath.Join(uploadPath, filename)
-
-		// Save file
-		if err := c.SaveUploadedFile(file, filePath); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to save file"})
+		defer file.Close()
+		// Upload to Azure ("projects")
+		azureURL, err := utils.UploadToAzure(file, fileHeader.Filename, "projects")
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to upload file to Azure: " + err.Error()})
 			return
 		}
-
-		project.FilePath = filename
+		project.FilePath = azureURL
 	}
 
 	// Save to database

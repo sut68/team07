@@ -16,11 +16,10 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/gin-gonic/gin"
-	"github.com/minio/minio-go/v7"
-	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/sut68/team07/backend/controller/log"
 	"github.com/sut68/team07/backend/database"
 	"github.com/sut68/team07/backend/entity"
+	"github.com/sut68/team07/backend/utils"
 )
 
 const (
@@ -28,55 +27,6 @@ const (
 	maxNameLen        = 120
 	progressbug       = "progress"
 )
-
-var minioClient *minio.Client
-
-func init() {
-	endpoint := os.Getenv("MINIO_ENDPOINT")
-	if endpoint == "" {
-		endpoint = "minio:9000"
-	}
-
-	accessKey := os.Getenv("MINIO_ROOT_USER")
-	if accessKey == "" {
-		accessKey = "admin"
-	}
-
-	secretKey := os.Getenv("MINIO_ROOT_PASSWORD")
-	if secretKey == "" {
-		secretKey = "install123"
-	}
-
-	client, err := minio.New(endpoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
-		Secure: false,
-	})
-	if err != nil {
-		fmt.Printf("minio fail: %v\n", err)
-		return
-	}
-	minioClient = client
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	buckets := []string{progressbug}
-	for _, b := range buckets {
-		exists, err := minioClient.BucketExists(ctx, b)
-		if err == nil && !exists {
-			err = minioClient.MakeBucket(ctx, b, minio.MakeBucketOptions{})
-			if err == nil {
-				fmt.Printf("[INFO] Created bucket: %s\n", b)
-
-				if b == progressbug {
-					policy := fmt.Sprintf(`{"Version":"2012-10-17","Statement":[{"Action":["s3:GetObject"],"Effect":"Allow","Principal":"*","Resource":["arn:aws:s3:::%s/*"]}]}`, b)
-					_ = minioClient.SetBucketPolicy(ctx, b, policy)
-				}
-			}
-		}
-	}
-}
-
 
 func sanitizeFilename(name string) string {
 	name = strings.TrimSpace(name)
@@ -146,18 +96,6 @@ func detectContentTypeFromHeader(fh *multipart.FileHeader) (string, error) {
 	return http.DetectContentType(buf[:n]), nil
 }
 
-func safeRemoveUploadedProgressPath(fileURL string) {
-	if strings.HasPrefix(fileURL, "/storage/"+progressbug+"/") {
-		parts := strings.Split(fileURL, "/")
-		if len(parts) > 0 {
-			obj := parts[len(parts)-1]
-			if obj != "" {
-				_ = minioClient.RemoveObject(context.Background(), progressbug, obj, minio.RemoveObjectOptions{})
-			}
-		}
-	}
-}
-
 func GetProGressByID(c *gin.Context) {
 	db := database.DB()
 
@@ -219,14 +157,15 @@ func GetGroupProjectIDByStudentID(c *gin.Context) {
 func AssignProGress(c *gin.Context) {
 	db := database.DB()
 
-	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, MaxFileSize)
-	fh, err := c.FormFile("file")
+	// 1. รับไฟล์
+	file, fileHeader, err := c.Request.FormFile("file")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "missing or invalid file upload"})
 		return
 	}
+	defer file.Close()
 
-	if fh.Size <= 0 || fh.Size > MaxFileSize {
+	if fileHeader.Size <= 0 || fileHeader.Size > MaxFileSize {
 		c.JSON(http.StatusRequestEntityTooLarge, gin.H{"error": "file too large (max 20MB)"})
 		return
 	}
@@ -250,54 +189,21 @@ func AssignProGress(c *gin.Context) {
 	name := strings.TrimSpace(c.PostForm("Name"))
 	comment := strings.TrimSpace(c.PostForm("comment"))
 
-	ct, err := detectContentTypeFromHeader(fh)
+	// 2. อัปโหลดไป Azure ("progress")
+	azureURL, err := utils.UploadToAzure(file, fileHeader.Filename, "progress")
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "cannot read uploaded file"})
-		return
-	}
-	if !allowedProgressContentType(ct) {
-		c.JSON(http.StatusForbidden, gin.H{"error": "file type not allowed"})
-		return
-	}
-
-	orig := sanitizeFilename(fh.Filename)
-	ext := filepath.Ext(orig)
-	if !allowedProgressExt(ext) {
-		c.JSON(http.StatusForbidden, gin.H{"error": "file extension not allowed"})
-		return
-	}
-
-	objectName := fmt.Sprintf("%d_%s", time.Now().UnixNano(), orig)
-
-	f, err := fh.Open()
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "cannot open uploaded file"})
-		return
-	}
-	defer f.Close()
-
-	_, err = minioClient.PutObject(
-		c.Request.Context(),
-		progressbug,
-		objectName,
-		f,
-		fh.Size,
-		minio.PutObjectOptions{ContentType: ct},
-	)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Cloud Storage Error"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Cloud Storage Error: " + err.Error()})
 		return
 	}
 
 	progress := entity.Progress{
 		GroupProjectID: groupID,
-		File:           "/storage/" + progressbug + "/" + objectName,
+		File:           azureURL,
 		Name:           name,
 		Comment:        comment,
 	}
 
 	if err := db.Create(&progress).Error; err != nil {
-		_ = minioClient.RemoveObject(context.Background(), progressbug, objectName, minio.RemoveObjectOptions{})
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "database save failed"})
 		return
 	}
@@ -324,30 +230,11 @@ func UpdateProGress(c *gin.Context) {
 
 	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, MaxFileSize)
 
-	if fh, fileErr := c.FormFile("file"); fileErr == nil && fh != nil {
+	if fh, fileErr := c.Request.FormFile("file"); fileErr == nil && fh != nil {
 		if fh.Size <= 0 || fh.Size > MaxFileSize {
 			c.JSON(http.StatusRequestEntityTooLarge, gin.H{"error": "file too large (max 20MB)"})
 			return
 		}
-
-		ct, err := detectContentTypeFromHeader(fh)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "cannot read uploaded file"})
-			return
-		}
-		if !allowedProgressContentType(ct) {
-			c.JSON(http.StatusForbidden, gin.H{"error": "file type not allowed"})
-			return
-		}
-
-		orig := sanitizeFilename(fh.Filename)
-		ext := filepath.Ext(orig)
-		if !allowedProgressExt(ext) {
-			c.JSON(http.StatusForbidden, gin.H{"error": "file extension not allowed"})
-			return
-		}
-
-		objectName := fmt.Sprintf("%d_%s", time.Now().UnixNano(), orig)
 
 		f, err := fh.Open()
 		if err != nil {
@@ -356,22 +243,16 @@ func UpdateProGress(c *gin.Context) {
 		}
 		defer f.Close()
 
-		_, err = minioClient.PutObject(
-			c.Request.Context(),
-			progressbug,
-			objectName,
-			f,
-			fh.Size,
-			minio.PutObjectOptions{ContentType: ct},
-		)
+		// Azure Upload
+		azureURL, err := utils.UploadToAzure(f, fh.Filename, "progress")
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Cloud Storage Error"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Cloud Storage Error: " + err.Error()})
 			return
 		}
 
-		old := prog.File
-		prog.File = "/storage/" + progressbug + "/" + objectName
-		safeRemoveUploadedProgressPath(old)
+		// old := prog.File 
+		// safeRemoveUploadedProgressPath(old) // Azure doesn't need explicit delete unless we want to save space
+		prog.File = azureURL
 	}
 
 	if name := strings.TrimSpace(c.PostForm("Name")); name != "" {

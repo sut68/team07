@@ -13,6 +13,7 @@ import (
 	"github.com/sut68/team07/backend/database"
 	"github.com/sut68/team07/backend/entity"
 	"github.com/sut68/team07/backend/middleware"
+	"github.com/sut68/team07/backend/utils"
 )
 
 // POST /topics
@@ -72,27 +73,26 @@ func CreateTopic(c *gin.Context) {
 		files := form.File["file_attachment"]
 		var fileList []string
 
-		uploadPath := "uploads/topics"
-		if _, err := os.Stat(uploadPath); os.IsNotExist(err) {
-			os.MkdirAll(uploadPath, 0755)
-		}
-
-		for _, file := range files {
-			filename := fmt.Sprintf(
-				"%d_%s",
-				time.Now().UnixNano(),
-				filepath.Base(file.Filename),
-			)
-			filePath := filepath.Join(uploadPath, filename)
-
-			if err := c.SaveUploadedFile(file, filePath); err != nil {
-				continue // Or handle error, but trying to save as many as possible
+		for _, fileHeader := range files {
+			file, err := fileHeader.Open()
+			if err != nil {
+				continue
 			}
-			fileList = append(fileList, filename)
+			defer file.Close()
+
+			// Upload to Azure ("topics")
+			azureURL, err := utils.UploadToAzure(file, fileHeader.Filename, "topics")
+			if err != nil {
+				// Handle error or continue? 
+				// For now let's just complain if it fails or continue 
+				// (original code continued on error)
+				continue 
+			}
+			fileList = append(fileList, azureURL)
 		}
 
 		if len(fileList) > 0 {
-			topic.FileAttachment = fileList[0] // เก็บแค่ชื่อไฟล์แรก "170000_file.pdf"
+			topic.FileAttachment = fileList[0] // เก็บแค่ URL ไฟล์แรก
 		}
 	}
 
@@ -247,17 +247,18 @@ func UpdateTopic(c *gin.Context) {
 	// 2. Handle New Files
 	if err == nil {
 		files := form.File["file_attachment"]
-		uploadPath := "uploads/topics"
 		if len(files) > 0 {
-			if _, err := os.Stat(uploadPath); os.IsNotExist(err) {
-				os.MkdirAll(uploadPath, 0755)
-			}
+			for _, fileHeader := range files {
+				file, err := fileHeader.Open()
+				if err != nil {
+					continue
+				}
+				defer file.Close()
 
-			for _, file := range files {
-				filename := fmt.Sprintf("%d_%s", time.Now().UnixNano(), file.Filename)
-				filePath := filepath.Join(uploadPath, filename)
-				if err := c.SaveUploadedFile(file, filePath); err == nil {
-					finalFileList = append(finalFileList, filename)
+				// Upload to Azure ("topics")
+				azureURL, err := utils.UploadToAzure(file, fileHeader.Filename, "topics")
+				if err == nil {
+					finalFileList = append(finalFileList, azureURL)
 				}
 			}
 		}

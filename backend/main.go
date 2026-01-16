@@ -1,18 +1,13 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 	"runtime"
-	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/minio/minio-go/v7"
-	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/sut68/team07/backend/controller/advisor"
 	"github.com/sut68/team07/backend/controller/appointment"
 	"github.com/sut68/team07/backend/controller/auth"
@@ -54,66 +49,8 @@ func main() {
 	r := gin.Default()
 	r.Use(database.CORSMiddleware())
 
-	endpoint := os.Getenv("MINIO_ENDPOINT")
-	if endpoint == "" {
-		endpoint = "minio:9000"
-	}
-	accessKey := os.Getenv("MINIO_ROOT_USER")
-	if accessKey == "" {
-		accessKey = "admin"
-	}
-	secretKey := os.Getenv("MINIO_ROOT_PASSWORD")
-	if secretKey == "" {
-		secretKey = "install123"
-	}
-
-	minioClient, err := minio.New(endpoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
-		Secure: false,
-	})
-	if err != nil {
-		log.Printf("Warning: MinIO init failed: %v", err)
-	}
-
 	envSecurity := os.Getenv("ENV_SECURITY")
 	apiGroup := r.Group("/" + envSecurity)
-
-	apiGroup.GET("/storage/:bucket/*object", func(c *gin.Context) {
-		if minioClient == nil {
-			c.Status(503)
-			return
-		}
-
-		bucket := c.Param("bucket")
-		objectName := strings.TrimPrefix(c.Param("object"), "/")
-		if objectName == "" {
-			c.Status(404)
-			return
-		}
-
-		ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
-		defer cancel()
-
-		obj, err := minioClient.GetObject(ctx, bucket, objectName, minio.GetObjectOptions{})
-		if err != nil {
-			c.Status(404)
-			return
-		}
-		defer obj.Close()
-
-		st, err := obj.Stat()
-		if err != nil {
-			c.Status(404)
-			return
-		}
-
-		ct := st.ContentType
-		if ct == "" {
-			ct = "application/octet-stream"
-		}
-
-		c.DataFromReader(200, st.Size, ct, obj, nil)
-	})
 
 	cwd, _ := os.Getwd()
 

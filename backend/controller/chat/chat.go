@@ -14,11 +14,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/minio/minio-go/v7"
-	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/sut68/team07/backend/controller/log"
 	"github.com/sut68/team07/backend/database"
 	"github.com/sut68/team07/backend/entity"
+	"github.com/sut68/team07/backend/utils"
 )
 
 const (
@@ -29,54 +28,6 @@ const (
 	maxNameLen             = 120
 	ChatBucket             = "chat-uploads"
 )
-
-var minioClient *minio.Client
-
-func init() {
-	endpoint := os.Getenv("MINIO_ENDPOINT")
-	if endpoint == "" {
-		endpoint = "minio:9000"
-	}
-
-	accessKey := os.Getenv("MINIO_ROOT_USER")
-	if accessKey == "" {
-		accessKey = "admin"
-	}
-
-	secretKey := os.Getenv("MINIO_ROOT_PASSWORD")
-	if secretKey == "" {
-		secretKey = "install123"
-	}
-
-	client, err := minio.New(endpoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
-		Secure: false,
-	})
-	if err != nil {
-		fmt.Printf("minio fail: %v\n", err)
-		return
-	}
-	minioClient = client
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	buckets := []string{ChatBucket}
-	for _, b := range buckets {
-		exists, err := minioClient.BucketExists(ctx, b)
-		if err == nil && !exists {
-			err = minioClient.MakeBucket(ctx, b, minio.MakeBucketOptions{})
-			if err == nil {
-				fmt.Printf("[INFO] Created bucket: %s\n", b)
-
-				if b == ChatBucket {
-					policy := fmt.Sprintf(`{"Version":"2012-10-17","Statement":[{"Action":["s3:GetObject"],"Effect":"Allow","Principal":"*","Resource":["arn:aws:s3:::%s/*"]}]}`, b)
-					_ = minioClient.SetBucketPolicy(ctx, b, policy)
-				}
-			}
-		}
-	}
-}
 
 
 type InsertChatBody struct {
@@ -152,25 +103,18 @@ func GetFile(c *gin.Context) {
 		return
 	}
 
-	objectName := fmt.Sprintf("%d_%s", time.Now().Unix(), originalName)
 	combinedBody := io.MultiReader(bytes.NewReader(header[:n]), c.Request.Body)
 
-	_, err = minioClient.PutObject(
-		c.Request.Context(),
-		ChatBucket,
-		objectName,
-		combinedBody,
-		-1,
-		minio.PutObjectOptions{ContentType: contentType},
-	)
+	// อัปโหลดไป Azure ("chats")
+	azureURL, err := utils.UploadToAzure(combinedBody, originalName, "chats")
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Cloud Storage Error"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Cloud Storage Error: " + err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"status":       "ok",
-		"url":          "/storage/" + ChatBucket + "/" + objectName,
+		"url":          azureURL,
 		"content_type": contentType,
 	})
 }
@@ -240,11 +184,6 @@ func DeleteChat(c *gin.Context) {
 
 	var chat entity.Chat
 	if err := db.Where("id = ?", id).First(&chat).Error; err == nil {
-		if chat.ChatType == ChatTypeFile {
-
-			parts := strings.Split(chat.Message, "/")
-			_ = minioClient.RemoveObject(context.Background(), ChatBucket, parts[len(parts)-1], minio.RemoveObjectOptions{})
-		}
 		db.Delete(&chat)
 	}
 

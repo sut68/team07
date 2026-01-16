@@ -47,22 +47,6 @@ services:
     networks:
       - app-network
 
-  minio:
-    image: minio/minio:latest
-    container_name: se68_minio
-    restart: always
-    command: server /data --console-address ":9001"
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-    volumes:
-      - minio-data:/data
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    networks:
-      - app-network
-
   socket:
     build: ./frontend/socket-server
     container_name: se68_socket
@@ -85,7 +69,6 @@ services:
     restart: always
     depends_on:
       - db
-      - minio
     volumes:
       - ./backend/uploads:/app/uploads
       - ./backend/lib:/app/lib
@@ -105,9 +88,6 @@ services:
       VIRTUAL_HOST: api.capstonehub.me
       VIRTUAL_PORT: 8080
       LETSENCRYPT_HOST: api.capstonehub.me
-      MINIO_ENDPOINT: minio:9000
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     expose:
       - "8080"
     networks:
@@ -140,7 +120,6 @@ services:
 
 volumes:
   pgdata:
-  minio-data:
   certs:
   vhost:
   html:

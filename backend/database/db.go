@@ -42,6 +42,10 @@ func ConnectDatabase() {
 			log.Fatal("Critical: One or more database configuration variables (DB_HOST, DB_USER, DB_NAME) is missing in .env. Cannot connect.")
 		}
 
+		if dbSSLMode == "" {
+			dbSSLMode = "disable"
+		}
+
 		dsn = fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
 			dbHost,
 			dbUser,

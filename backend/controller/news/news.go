@@ -12,6 +12,7 @@ import (
 	"github.com/sut68/team07/backend/database"
 	"github.com/sut68/team07/backend/entity"
 	"github.com/sut68/team07/backend/middleware"
+	"github.com/sut68/team07/backend/utils"
 )
 
 func CreateNews(c *gin.Context) {
@@ -36,31 +37,23 @@ func CreateNews(c *gin.Context) {
 	}
 
 	var filePath string
-	file, err := c.FormFile("file")
+	file, fileHeader, err := c.Request.FormFile("file")
 	if err == nil {
-		uploadDir := "./uploads/news"
-		// Create a unique directory for the file
-		subDir := fmt.Sprintf("%d", time.Now().UnixNano())
-		targetDir := filepath.Join(uploadDir, subDir)
-
-		if _, err := os.Stat(targetDir); os.IsNotExist(err) {
-			os.MkdirAll(targetDir, 0755)
-		}
-
-		// Use the original filename
-		filePath = filepath.Join(targetDir, file.Filename)
-
-		if err := c.SaveUploadedFile(file, filePath); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
+		defer file.Close()
+		// อัปโหลดขึ้น Azure ("news")
+		azureURL, err := utils.UploadToAzure(file, fileHeader.Filename, "news")
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload file to Azure: " + err.Error()})
 			return
 		}
+		filePath = azureURL
 	}
-	dbFilePath := filepath.ToSlash(filePath)
+	// ไม่ต้องแปลง path เป็น filepath.ToSlash แล้ว เพราะ URL เป็น string ปกติ
 	news := entity.News{
 		Title:       title,
 		Description: description,
 		Category:    category,
-		File:        dbFilePath,
+		File:        filePath,
 		TeacherID:   claims.ID,
 	}
 
@@ -106,32 +99,17 @@ func UpdateNews(c *gin.Context) {
 		news.Category = category
 	}
 
-	file, err := c.FormFile("file")
+	file, fileHeader, err := c.Request.FormFile("file")
 	if err == nil {
-		if news.File != "" {
-			os.Remove(news.File)
-			// Try to remove the directory if it's empty
-			dir := filepath.Dir(news.File)
-			os.Remove(dir)
-		}
-
-		uploadDir := "./uploads/news"
-		// Create a unique directory for the file
-		subDir := fmt.Sprintf("%d", time.Now().UnixNano())
-		targetDir := filepath.Join(uploadDir, subDir)
-
-		if _, err := os.Stat(targetDir); os.IsNotExist(err) {
-			os.MkdirAll(targetDir, 0755)
-		}
-
-		// Use the original filename
-		filePath := filepath.Join(targetDir, file.Filename)
-
-		if err := c.SaveUploadedFile(file, filePath); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
+		defer file.Close()
+		
+		// อัปโหลดขึ้น Azure ("news")
+		azureURL, err := utils.UploadToAzure(file, fileHeader.Filename, "news")
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload file to Azure: " + err.Error()})
 			return
 		}
-		news.File = filepath.ToSlash(filePath)
+		news.File = azureURL
 	}
 
 	if err := database.DB().Save(&news).Error; err != nil {

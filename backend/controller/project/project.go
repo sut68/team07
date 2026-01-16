@@ -14,6 +14,7 @@ import (
 	"github.com/sut68/team07/backend/database"
 	"github.com/sut68/team07/backend/entity"
 	"github.com/sut68/team07/backend/middleware"
+	"github.com/sut68/team07/backend/utils"
 )
 
 // CreateProject - สร้างข้อมูลโครงงาน (นักศึกษากรอกข้อมูล)
@@ -70,24 +71,16 @@ func CreateProject(c *gin.Context) {
 
 	// จัดการไฟล์อัปโหลด
 	var filePath string
-	file, err := c.FormFile("project_document")
+	file, fileHeader, err := c.Request.FormFile("project_document")
 	if err == nil {
-		// มีไฟล์อัปโหลด
-		// สร้างโฟลเดอร์ถ้ายังไม่มี
-		if err := os.MkdirAll("./uploads/projects", 0755); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create upload directory"})
+		defer file.Close()
+		// อัปโหลดขึ้น Azure
+		pdfURL, err := utils.UploadToAzure(file, fileHeader.Filename, "projects")
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload file to Azure: " + err.Error()})
 			return
 		}
-		
-		timestamp := time.Now().Unix()
-		filename := fmt.Sprintf("%d_%s", timestamp, filepath.Base(file.Filename))
-		uploadPath := fmt.Sprintf("./uploads/projects/%s", filename)
-		
-		if err := c.SaveUploadedFile(file, uploadPath); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
-			return
-		}
-		filePath = uploadPath
+		filePath = pdfURL
 	} else {
 		// ไม่มีไฟล์ - ใช้ค่าว่าง
 		filePath = ""
@@ -231,17 +224,16 @@ func UpdateProject(c *gin.Context) {
 	}
 
 	// จัดการไฟล์อัปโหลดใหม่
-	file, err := c.FormFile("project_document")
+	file, fileHeader, err := c.Request.FormFile("project_document")
 	if err == nil {
-		timestamp := time.Now().Unix()
-		filename := fmt.Sprintf("%d_%s", timestamp, filepath.Base(file.Filename))
-		uploadPath := fmt.Sprintf("./uploads/projects/%s", filename)
-		
-		if err := c.SaveUploadedFile(file, uploadPath); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
+		defer file.Close()
+		// อัปโหลดขึ้น Azure
+		pdfURL, err := utils.UploadToAzure(file, fileHeader.Filename, "projects")
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload file to Azure: " + err.Error()})
 			return
 		}
-		project.FilePath = uploadPath
+		project.FilePath = pdfURL
 	}
 
 	// Validate
