@@ -89,11 +89,11 @@ func DeleteAppointment(c *gin.Context) {
 		return
 	}
 
-	// ถ้าสถานะเป็น Completed แล้ว ไม่ต้องเปลี่ยนกลับเป็น Pending
+	// ถ้าสถานะเป็น Completed แล้ว ไม่ต้องเปลี่ยนกลับเป็น Approved
 	if currentGroup.GroupStatus != "Completed" {
 		if err := tx.Model(&entity.GroupProject{}).
 			Where("id = ?", apt.GroupProjectID).
-			Update("group_status", "Pending").Error; err != nil {
+			Update("group_status", "Approved").Error; err != nil {
 
 			tx.Rollback()
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to revert group status"})
@@ -130,7 +130,7 @@ func CreateAppointment(c *gin.Context) {
 		return
 	}
 
-	if groupProject.GroupStatus != "Pending" && groupProject.GroupStatus != "In Process" {
+	if groupProject.GroupStatus != "Pending" && groupProject.GroupStatus != "In Process"&& groupProject.GroupStatus != "Approved" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "ไม่สามารถสร้างนัดหมายสำหรับกลุ่มที่จบการศึกษาแล้วได้"})
 		return
 	}
@@ -372,7 +372,7 @@ func AutoCreateAppointments(c *gin.Context) {
 		Where("appointment_status = ? AND appointment_type_id = ?", "scheduled", req.AppointmentTypeID)
 
 	var groups []entity.GroupProject
-	if err := db.Where("group_status IN ?", []string{"Pending", "In Process"}).
+	if err := db.Where("group_status IN ?", []string{"Pending", "In Process","Approved"}).
 		Where("id NOT IN (?)", subQuery).
 		Order("RANDOM()").
 		Limit(len(validSlots)).

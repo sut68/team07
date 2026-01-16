@@ -103,7 +103,7 @@ export default function ChatPage() {
     socketRef.current = s;
 
     s.on("connect", () => {
-      Toast_success("เชื่อมต่อ Socket สำเร็จ");
+      console.log("เชื่อมต่อ Socket สำเร็จ");
     });
 
     s.on("connect_error", (e) => {
@@ -220,7 +220,7 @@ export default function ChatPage() {
     void loadChats(activeRoomId as number);
 
     const roomIdStr = `${groupProjectId}:${activeRoomId}`;
-    Toast_success("เข้าสู่ห้องสนทนา");
+    console.log("เข้าสู่ห้องสนทนา");
     socket.emit("join_room", roomIdStr);
 
     const handleReceive = (data: any) => {

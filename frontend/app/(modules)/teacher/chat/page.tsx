@@ -125,8 +125,8 @@ export default function ChatPage() {
 
     socketRef.current = s;
 
-    s.on("connect", () => Toast_success("socket connected: " + s.id));
-    s.on("connect_error", (e) => Toast_fail("socket connect_error: " + String(e)));
+    s.on("connect", () => console.log("socket connected: " + s.id));
+    s.on("connect_error", (e) => console.log("socket connect_error: " + String(e)));
 
     return () => {
       try {

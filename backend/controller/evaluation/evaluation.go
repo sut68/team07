@@ -229,7 +229,7 @@ func ListEvaluationProjects(c *gin.Context) {
 			}
 		}
 
-		statusText := "Pending"
+		statusText := "Approved"
 		if isGraded {
 			statusText = "Graded"
 		}
