@@ -271,7 +271,7 @@ func GetRandomGroup(c *gin.Context) {
 		Where("appointment_status = ?", "scheduled")
 
 	if err := db.Preload("Teacher").
-		Where("group_status IN ?", []string{"Pending", "In Process"}).
+		Where("group_status IN ?", []string{"Pending", "In Process","Approved"}).
 		Where("id NOT IN (?)", subQuery). // Exclude groups with scheduled appointments
 		Order("RANDOM()").
 		First(&group).Error; err != nil {
