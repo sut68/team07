@@ -4,7 +4,7 @@ import { ListUsers, ImportUsersCSV, CreateUser, GetGenders, GetBranches, GetRole
 import { UserProfileInterface, GenderInterface, BranchInterface, RoleInterface, StatusInterface, CreateUserInterface } from '../../../interfaces/Users';
 import "../../../style/import-user.css";
 import "../../../style/admin-dashboard.css";
-import { CloudUploadOutlined, DownloadOutlined, TeamOutlined, SearchOutlined, PlusOutlined, SaveOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
+import { CloudUploadOutlined, DownloadOutlined, TeamOutlined, SearchOutlined, PlusOutlined, SaveOutlined, DeleteOutlined, EditOutlined, CheckSquareOutlined } from '@ant-design/icons';
 import Swal from 'sweetalert2';
 
 export default function UsersManagePage() {
@@ -12,11 +12,15 @@ export default function UsersManagePage() {
     const [users, setUsers] = useState<UserProfileInterface[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
+
     // --- State: Filters ---
     const [selectedGender, setSelectedGender] = useState<number>(0);
     const [selectedBranch, setSelectedBranch] = useState<number>(0);
     const [selectedRole, setSelectedRole] = useState<number>(0);
     const [selectedStatus, setSelectedStatus] = useState<number>(0);
+
+    // --- State: Bulk Delete ---
+    const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
     // --- State: Master Data for Dropdowns ---
     const [genders, setGenders] = useState<GenderInterface[]>([]);
@@ -42,7 +46,7 @@ export default function UsersManagePage() {
     const [showEdit, setShowEdit] = useState(false);
     const [editingUser, setEditingUser] = useState<{ id: number; firstname: string; lastname: string; status_id: number } | null>(null);
 
-    // Fetch data: master data + user list (user list can be fetched with filters)
+    // Fetch data
     const fetchAllData = async (userParams?: Record<string, any>) => {
         setLoading(true);
         try {
@@ -70,11 +74,10 @@ export default function UsersManagePage() {
     };
 
     useEffect(() => {
-        // initial load without filters
         fetchAllData();
     }, []);
 
-    // Debounced server-side search/filter
+    // Debounced Search
     useEffect(() => {
         const params: Record<string, any> = {};
         if (searchTerm.trim() !== "") params.q = searchTerm.trim();
@@ -90,18 +93,95 @@ export default function UsersManagePage() {
         return () => clearTimeout(t);
     }, [searchTerm, selectedGender, selectedBranch, selectedRole, selectedStatus]);
 
-    // Logic Import CSV
+    // --- Filter Logic ---
+    const filteredUsers = users.filter(user => {
+        const term = searchTerm.trim().toLowerCase();
+        const matchesText = !term || (
+            (user.firstname || '').toLowerCase().includes(term) ||
+            (user.lastname || '').toLowerCase().includes(term) ||
+            (user.username || '').toLowerCase().includes(term)
+        );
+        const matchesGender = selectedGender === 0 || (user.gender && (user.gender.ID === selectedGender || user.gender_id === selectedGender));
+        const matchesBranch = selectedBranch === 0 || (user.branch && (user.branch.ID === selectedBranch || user.branch_id === selectedBranch));
+        const matchesRole = selectedRole === 0 || (user.role && (user.role.ID === selectedRole || user.role_id === selectedRole));
+        const matchesStatus = selectedStatus === 0 || (user.status && (user.status.ID === selectedStatus || user.status_id === selectedStatus));
+        return matchesText && matchesGender && matchesBranch && matchesRole && matchesStatus;
+    });
+
+    // --- Bulk Delete Logic ---
+    const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.checked) {
+            // เลือกเฉพาะ user ที่แสดงผลอยู่ และไม่ใช่ Admin
+            const allIds = filteredUsers
+                .filter(u => u.role?.role !== 'Admin' && u.ID)
+                .map(u => u.ID!);
+            setSelectedIds(allIds);
+        } else {
+            setSelectedIds([]);
+        }
+    };
+
+    const handleSelectOne = (id: number) => {
+        if (selectedIds.includes(id)) {
+            setSelectedIds(selectedIds.filter(prevId => prevId !== id));
+        } else {
+            setSelectedIds([...selectedIds, id]);
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedIds.length === 0) return;
+
+        const result = await Swal.fire({
+            title: `ลบผู้ใช้งาน ${selectedIds.length} คน?`,
+            text: "การกระทำนี้ไม่สามารถย้อนกลับได้",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#9a0120',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'ยืนยันการลบ',
+            cancelButtonText: 'ยกเลิก'
+        });
+
+        if (result.isConfirmed) {
+            Swal.fire({
+                title: 'กำลังลบ...',
+                html: 'กรุณารอสักครู่',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            try {
+                // วนลูปลบทีละ ID (Promise.all เพื่อทำพร้อมกัน)
+                await Promise.all(selectedIds.map(id => DeleteUser(id)));
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'ลบสำเร็จ',
+                    text: `ลบผู้ใช้งาน ${selectedIds.length} รายการเรียบร้อยแล้ว`,
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+
+                setSelectedIds([]); // เคลียร์รายการที่เลือก
+                fetchAllData(); // โหลดข้อมูลใหม่
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: 'บางรายการอาจลบไม่สำเร็จ'
+                });
+            }
+        }
+    };
+
+    // --- Import Logic ---
     const handleBoxClick = () => !isUploading && fileInputRef.current?.click();
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
             const selectedFile = e.target.files[0];
             if (!selectedFile.name.endsWith(".csv")) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'ไฟล์ไม่ถูกต้อง',
-                    text: 'กรุณาเลือกไฟล์นามสกุล .csv เท่านั้น',
-                    timer: 2000
-                });
+                Swal.fire({ icon: 'warning', title: 'ไฟล์ไม่ถูกต้อง', text: 'เลือกไฟล์ .csv เท่านั้น', timer: 2000 });
                 return;
             }
             setFile(selectedFile);
@@ -110,8 +190,7 @@ export default function UsersManagePage() {
     const handleDownloadTemplate = () => {
         const csvHeader = "username,password,firstname,lastname,email,phone,gender_id,branch_id,role_id,status_id";
         const csvExample = "B6600001,123456,Somchai,Rakdee,somchai@email.com,0811111111,1,1,2,1";
-        const csvContent = "data:text/csv;charset=utf-8," + csvHeader + "\n" + csvExample;
-        const encodedUri = encodeURI(csvContent);
+        const encodedUri = encodeURI("data:text/csv;charset=utf-8," + csvHeader + "\n" + csvExample);
         const link = document.createElement("a");
         link.setAttribute("href", encodedUri);
         link.setAttribute("download", "users_template.csv");
@@ -119,63 +198,33 @@ export default function UsersManagePage() {
         link.click();
         document.body.removeChild(link);
     };
-
     const handleUpload = async () => {
-        if (!file) {
-            Swal.fire({ icon: 'warning', title: 'กรุณาเลือกไฟล์ก่อน', timer: 1500 });
-            return;
-        }
-
+        if (!file) return Swal.fire({ icon: 'warning', title: 'กรุณาเลือกไฟล์ก่อน', timer: 1500 });
         const confirmResult = await Swal.fire({
-            title: `ยืนยันการนำเข้าไฟล์ "${file.name}"?`,
-            text: "ข้อมูลผู้ใช้งานจะถูกเพิ่มเข้าสู่ระบบ",
+            title: `นำเข้าไฟล์ "${file.name}"?`,
             icon: 'question',
             showCancelButton: true,
             confirmButtonText: 'ยืนยัน',
-            cancelButtonText: 'ยกเลิก',
-            confirmButtonColor: '#1f4d2b',
-            cancelButtonColor: '#9a0120',
-            customClass: { container: 'swal-z-index-high' }
+            confirmButtonColor: '#1f4d2b'
         });
-
         if (confirmResult.isConfirmed) {
             setIsUploading(true);
             try {
                 Swal.fire({ title: 'กำลังอัปโหลด...', didOpen: () => Swal.showLoading() });
-
                 const res = await ImportUsersCSV(file);
-
                 if (res.status === 200) {
-                    Swal.close();
-                    await Swal.fire({
-                        icon: 'success',
-                        title: 'นำเข้าสำเร็จ!',
-                        text: res.data.message || "",
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-                    setFile(null);
-                    setShowImport(false);
-                    fetchAllData();
+                    Swal.fire({ icon: 'success', title: 'สำเร็จ!', text: res.data.message, timer: 1500, showConfirmButton: false });
+                    setFile(null); setShowImport(false); fetchAllData();
                 } else {
-                    Swal.close();
-                    Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: res.data.error });
+                    Swal.fire({ icon: 'error', title: 'ข้อผิดพลาด', text: res.data.error });
                 }
             } catch (error: any) {
-                console.error("Upload Error:", error);
-                Swal.close();
-                const errMsg = error.response && error.response.data && error.response.data.error
-                    ? error.response.data.error
-                    : "เชื่อมต่อ Server ไม่ได้ หรือเกิดข้อผิดพลาดที่ไม่ระบุ";
-
-                Swal.fire({ icon: 'error', title: 'นำเข้าไม่สำเร็จ', text: errMsg });
-            } finally {
-                setIsUploading(false);
-            }
+                Swal.fire({ icon: 'error', title: 'นำเข้าไม่สำเร็จ', text: error.response?.data?.error || "Error" });
+            } finally { setIsUploading(false); }
         }
     };
 
-    // Logic Create User
+    // --- Create User Logic ---
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         if (name === "phone") {
@@ -184,214 +233,64 @@ export default function UsersManagePage() {
             setNewUser({ ...newUser, [name]: numericValue });
             return;
         }
-        setNewUser({
-            ...newUser,
-            [name]: name.includes("id") ? Number(value) : value
-        });
+        setNewUser({ ...newUser, [name]: name.includes("id") ? Number(value) : value });
     };
-
     const handleCreateSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newUser.username || !newUser.password || !newUser.firstname) {
-            Swal.fire({ icon: 'warning', title: 'ข้อมูลไม่ครบ', text: 'กรุณากรอกข้อมูลสำคัญให้ครบถ้วน' });
-            return;
-        }
+        if (!newUser.username || !newUser.password || !newUser.firstname) return Swal.fire({ icon: 'warning', title: 'ข้อมูลไม่ครบ' });
+        if (newUser.phone && !/^\d{10}$/.test(newUser.phone)) return Swal.fire({ icon: 'warning', title: 'เบอร์โทรไม่ถูกต้อง' });
 
-        const phoneRegex = /^\d{10}$/;
-        if (newUser.phone && !phoneRegex.test(newUser.phone)) {
-            Swal.fire({ icon: 'warning', title: 'เบอร์โทรไม่ถูกต้อง', text: 'เบอร์โทรต้องมี 10 หลัก' });
-            return;
-        }
-
-        const result = await Swal.fire({
-            title: 'ยืนยันการเพิ่มผู้ใช้งาน?',
-            text: `คุณต้องการเพิ่มผู้ใช้งาน "${newUser.username}" ใช่หรือไม่?`,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#1f4d2b',
-            cancelButtonColor: '#9a0120',
-            confirmButtonText: 'ใช่, เพิ่มเลย!',
-            cancelButtonText: 'ยกเลิก',
-            reverseButtons: true
-        });
-
+        const result = await Swal.fire({ title: 'ยืนยันการเพิ่ม?', showCancelButton: true, confirmButtonText: 'เพิ่มเลย', confirmButtonColor: '#1f4d2b' });
         if (result.isConfirmed) {
             try {
-                // แสดง Loading
-                Swal.fire({
-                    title: 'กำลังบันทึก...',
-                    allowOutsideClick: false,
-                    didOpen: () => Swal.showLoading()
-                });
-
                 const res = await CreateUser(newUser);
-
                 if (res.status === 201) {
-                    Swal.close();
-                    await Swal.fire({
-                        icon: 'success',
-                        title: 'เพิ่มผู้ใช้งานสำเร็จ!',
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-
-                    setShowCreate(false);
-                    // Reset Form
-                    setNewUser({
-                        username: "", password: "", firstname: "", lastname: "",
-                        email: "", phone: "", gender_id: 1, branch_id: 1, role_id: 3, status_id: 1
-                    });
-                    fetchAllData();
+                    Swal.fire({ icon: 'success', title: 'สำเร็จ', timer: 1500, showConfirmButton: false });
+                    setShowCreate(false); fetchAllData();
+                    setNewUser({ username: "", password: "", firstname: "", lastname: "", email: "", phone: "", gender_id: 1, branch_id: 1, role_id: 3, status_id: 1 });
                 } else {
-                    Swal.close();
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'เกิดข้อผิดพลาด',
-                        text: res.data.error
-                    });
+                    Swal.fire({ icon: 'error', title: 'Error', text: res.data.error });
                 }
             } catch (error: any) {
-                Swal.close();
-                Swal.fire({
-                    icon: 'error',
-                    title: 'เกิดข้อผิดพลาด',
-                    text: error.response?.data?.error || error.message
-                });
+                Swal.fire({ icon: 'error', title: 'Error', text: error.response?.data?.error });
             }
         }
     };
 
-    // Logic Delete User
+    // --- Delete Single User Logic ---
     const handleDelete = async (id: number) => {
-        const result = await Swal.fire({
-            title: 'คุณแน่ใจหรือไม่?',
-            text: "การลบผู้ใช้งานนี้จะไม่สามารถกู้คืนได้!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#9a0120',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'ใช่, ลบเลย!',
-            cancelButtonText: 'ยกเลิก',
-            reverseButtons: true
-        });
-
+        const result = await Swal.fire({ title: 'แน่ใจหรือไม่?', text: "ลบแล้วกู้คืนไม่ได้!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#9a0120', confirmButtonText: 'ลบเลย' });
         if (result.isConfirmed) {
             try {
-                Swal.fire({
-                    title: 'กำลังลบ...',
-                    allowOutsideClick: false,
-                    didOpen: () => Swal.showLoading()
-                });
-
                 const res = await DeleteUser(id);
-
                 if (res.status === 200) {
-                    Swal.close();
-                    await Swal.fire({ icon: 'success', title: 'ลบผู้ใช้งานสำเร็จ', timer: 1500, showConfirmButton: false });
+                    Swal.fire({ icon: 'success', title: 'ลบสำเร็จ', timer: 1500, showConfirmButton: false });
                     fetchAllData();
-                } else {
-                    Swal.close();
-                    Swal.fire({ icon: 'error', title: 'ลบไม่สำเร็จ', text: res.data.error });
-                }
-            } catch (error: any) {
-                Swal.close();
-                Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: error.response?.data?.error || error.message });
-            }
+                } else { Swal.fire({ icon: 'error', title: 'ลบไม่สำเร็จ', text: res.data.error }); }
+            } catch (error: any) { Swal.fire({ icon: 'error', title: 'Error', text: error.response?.data?.error }); }
         }
     };
 
-    // Logic Edit User
+    // --- Edit User Logic ---
     const handleEditClick = (user: UserProfileInterface) => {
         if (!user.ID) return;
-        setEditingUser({
-            id: user.ID,
-            firstname: user.firstname || "",
-            lastname: user.lastname || "",
-            status_id: user.status_id || 1
-        });
+        setEditingUser({ id: user.ID, firstname: user.firstname || "", lastname: user.lastname || "", status_id: user.status_id || 1 });
         setShowEdit(true);
     };
-
     const handleEditSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!editingUser) return;
-
-        const result = await Swal.fire({
-            title: 'ยืนยันการแก้ไขข้อมูล?',
-            // แสดงชื่อคนที่จะแก้ด้วย เพื่อความชัดเจน
-            text: `คุณต้องการบันทึกการเปลี่ยนแปลงของ "${editingUser.firstname} ${editingUser.lastname}" ใช่หรือไม่?`,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#1f4d2b', 
-            cancelButtonColor: '#9a0120',
-            confirmButtonText: 'ใช่, บันทึกเลย',
-            cancelButtonText: 'ยกเลิก',
-            reverseButtons: true
-        });
-
+        const result = await Swal.fire({ title: 'ยืนยันการแก้ไข?', showCancelButton: true, confirmButtonText: 'บันทึก', confirmButtonColor: '#1f4d2b' });
         if (result.isConfirmed) {
             try {
-                Swal.fire({
-                    title: 'กำลังบันทึก...',
-                    allowOutsideClick: false,
-                    didOpen: () => Swal.showLoading()
-                });
-
-                const res = await UpdateUser(editingUser.id, {
-                    firstname: editingUser.firstname,
-                    lastname: editingUser.lastname,
-                    status_id: editingUser.status_id
-                });
-
+                const res = await UpdateUser(editingUser.id, { firstname: editingUser.firstname, lastname: editingUser.lastname, status_id: editingUser.status_id });
                 if (res.status === 200) {
-                    Swal.close();
-                    await Swal.fire({
-                        icon: 'success',
-                        title: 'แก้ไขข้อมูลสำเร็จ',
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-
-                    setShowEdit(false);
-                    setEditingUser(null);
-                    fetchAllData();
-                } else {
-                    Swal.close();
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'แก้ไขไม่สำเร็จ',
-                        text: res.data.error
-                    });
-                }
-            } catch (error: any) {
-                Swal.close();
-                Swal.fire({
-                    icon: 'error',
-                    title: 'เกิดข้อผิดพลาด',
-                    text: error.response?.data?.error || error.message
-                });
-            }
+                    Swal.fire({ icon: 'success', title: 'แก้ไขสำเร็จ', timer: 1500, showConfirmButton: false });
+                    setShowEdit(false); setEditingUser(null); fetchAllData();
+                } else { Swal.fire({ icon: 'error', title: 'Error', text: res.data.error }); }
+            } catch (error: any) { Swal.fire({ icon: 'error', title: 'Error', text: error.response?.data?.error }); }
         }
     };
-
-    const filteredUsers = users.filter(user => {
-        const term = searchTerm.trim().toLowerCase();
-
-        // Text search on username / firstname / lastname
-        const matchesText = !term || (
-            (user.firstname || '').toLowerCase().includes(term) ||
-            (user.lastname || '').toLowerCase().includes(term) ||
-            (user.username || '').toLowerCase().includes(term)
-        );
-
-        // Filters by selected IDs (0 = all)
-        const matchesGender = selectedGender === 0 || (user.gender && (user.gender.ID === selectedGender || user.gender_id === selectedGender));
-        const matchesBranch = selectedBranch === 0 || (user.branch && (user.branch.ID === selectedBranch || user.branch_id === selectedBranch));
-        const matchesRole = selectedRole === 0 || (user.role && (user.role.ID === selectedRole || user.role_id === selectedRole));
-        const matchesStatus = selectedStatus === 0 || (user.status && (user.status.ID === selectedStatus || user.status_id === selectedStatus));
-
-        return matchesText && matchesGender && matchesBranch && matchesRole && matchesStatus;
-    });
 
     return (
         <div className="dashboard-container">
@@ -411,36 +310,45 @@ export default function UsersManagePage() {
             </div>
 
             <div className="section-main" style={{ marginTop: '20px' }}>
+                {/* Filters */}
                 <div style={{ marginBottom: '20px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
                     <div style={{ position: 'relative', minWidth: '280px', flex: '1 1 320px' }}>
                         <SearchOutlined style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#999' }} />
                         <input type="text" placeholder="ค้นหาชื่อ หรือ รหัสนักศึกษา..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: '100%', padding: '10px 10px 10px 35px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '0.9rem' }} />
                     </div>
-
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                         <select value={selectedRole} onChange={(e) => setSelectedRole(Number(e.target.value))} className="form-input" style={{ padding: '8px', borderRadius: '6px', border: '1px solid #ddd' }}>
                             <option value={0}>บทบาท: ทั้งหมด</option>
                             {roles.map(r => <option key={r.ID} value={r.ID}>{r.role}</option>)}
                         </select>
-
                         <select value={selectedBranch} onChange={(e) => setSelectedBranch(Number(e.target.value))} className="form-input" style={{ padding: '8px', borderRadius: '6px', border: '1px solid #ddd' }}>
                             <option value={0}>สาขา: ทั้งหมด</option>
                             {branches.map(b => <option key={b.ID} value={b.ID}>{b.branch_name}</option>)}
                         </select>
-
                         <select value={selectedGender} onChange={(e) => setSelectedGender(Number(e.target.value))} className="form-input" style={{ padding: '8px', borderRadius: '6px', border: '1px solid #ddd' }}>
                             <option value={0}>เพศ: ทั้งหมด</option>
                             {genders.map(g => <option key={g.ID} value={g.ID}>{g.name}</option>)}
                         </select>
-
                         <select value={selectedStatus} onChange={(e) => setSelectedStatus(Number(e.target.value))} className="form-input" style={{ padding: '8px', borderRadius: '6px', border: '1px solid #ddd' }}>
                             <option value={0}>สถานะ: ทั้งหมด</option>
                             {statuses.map(s => <option key={s.ID} value={s.ID}>{s.status}</option>)}
                         </select>
-
                         <button onClick={() => { setSearchTerm(''); setSelectedRole(0); setSelectedBranch(0); setSelectedGender(0); setSelectedStatus(0); }} style={{ padding: '8px 10px', borderRadius: '6px', border: '1px solid #ddd', background: 'white', cursor: 'pointer' }}>ล้าง</button>
                     </div>
                 </div>
+
+                {/* Bulk Action Bar */}
+                {selectedIds.length > 0 && (
+                    <div style={{ marginBottom: '15px', padding: '10px', backgroundColor: '#fff1f0', border: '1px solid #ab0224', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        <span style={{ color: '#9a0120', fontWeight: 'bold' }}>เลือก {selectedIds.length} รายการ</span>
+                        <button
+                            onClick={handleBulkDelete}
+                            style={{ backgroundColor: '#9a0120', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
+                        >
+                            <DeleteOutlined /> ลบรายการที่เลือก
+                        </button>
+                    </div>
+                )}
 
                 {loading ? (
                     <p style={{ textAlign: 'center', padding: '40px', color: '#666' }}>กำลังโหลดข้อมูล...</p>
@@ -449,21 +357,43 @@ export default function UsersManagePage() {
                         <table className="admin-table">
                             <thead>
                                 <tr>
-                                    <th style={{ width: '80px', textAlign: 'center' }}>ID</th>
+                                    {/* Checkbox หัวตาราง */}
+                                    <th style={{ width: '40px', textAlign: 'center' }}>
+                                        <input
+                                            type="checkbox"
+                                            onChange={handleSelectAll}
+                                            checked={filteredUsers.length > 0 && selectedIds.length === filteredUsers.filter(u => u.role?.role !== 'Admin').length}
+                                            disabled={filteredUsers.length === 0}
+                                            style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                                        />
+                                    </th>
+                                    <th style={{ width: '60px', textAlign: 'center' }}>ID</th>
                                     <th>ชื่อผู้ใช้งาน</th>
                                     <th>ชื่อ - นามสกุล</th>
                                     <th>บทบาท</th>
                                     <th>สาขา</th>
-                                    <th>สถานะ</th>
+                                    <th>ผ่านรายวิชา</th>
+                                    <th>สถานะบัญชี</th>
                                     <th style={{ textAlign: 'center' }}>จัดการ</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {filteredUsers.length === 0 ? (
-                                    <tr><td colSpan={7} style={{ textAlign: 'center', padding: '30px', color: '#999' }}>ไม่พบข้อมูลผู้ใช้งาน</td></tr>
+                                    <tr><td colSpan={9} style={{ textAlign: 'center', padding: '30px', color: '#999' }}>ไม่พบข้อมูลผู้ใช้งาน</td></tr>
                                 ) : (
                                     filteredUsers.map((user) => (
-                                        <tr key={user.ID}>
+                                        <tr key={user.ID} style={selectedIds.includes(user.ID!) ? { backgroundColor: '#fff1f0' } : {}}>
+                                            {/* Checkbox ในแถว */}
+                                            <td style={{ textAlign: 'center' }}>
+                                                {user.role?.role !== 'Admin' && (
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedIds.includes(user.ID!)}
+                                                        onChange={() => user.ID && handleSelectOne(user.ID)}
+                                                        style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                                                    />
+                                                )}
+                                            </td>
                                             <td style={{ fontWeight: 'bold', color: '#9a0120', textAlign: 'center' }}>{user.ID}</td>
                                             <td>{user.username}</td>
                                             <td>
@@ -480,6 +410,20 @@ export default function UsersManagePage() {
                                                 </span>
                                             </td>
                                             <td>{user.branch?.branch_name || "-"}</td>
+
+                                            <td>
+                                                {user.role?.role === 'Student' ? (
+                                                    <span style={{
+                                                        color: user.pass ? 'green' : 'red',
+                                                        fontWeight: 500
+                                                    }}>
+                                                        {user.pass ? "Pass" : "Fail"}
+                                                    </span>
+                                                ) : (
+                                                    <span style={{ color: '#ccc' }}>-</span>
+                                                )}
+                                            </td>
+
                                             <td><span style={{ color: user.status?.status === 'Active' ? 'green' : 'red', fontWeight: 500 }}>{user.status?.status || "-"}</span></td>
                                             <td style={{ textAlign: 'center' }}>
                                                 {user.role?.role !== 'Admin' ? (
@@ -502,7 +446,7 @@ export default function UsersManagePage() {
                 )}
             </div>
 
-            {/* Modal Import */}
+            {/* Modal Import (คงเดิม) */}
             {showImport && (
                 <div className="modal-overlay" style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
                     <div className="import-card" style={{ width: '90%', maxWidth: '600px', backgroundColor: 'white', padding: '20px', borderRadius: '10px' }}>
@@ -529,7 +473,7 @@ export default function UsersManagePage() {
                 </div>
             )}
 
-            {/* Modal Create */}
+            {/* Modal Create (คงเดิม) */}
             {showCreate && (
                 <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
                     <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '12px', width: '90%', maxWidth: '700px', maxHeight: '90vh', overflowY: 'auto' }}>
@@ -554,7 +498,7 @@ export default function UsersManagePage() {
                 </div>
             )}
 
-            {/* Modal Edit User */}
+            {/* Modal Edit (คงเดิม) */}
             {showEdit && editingUser && (
                 <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
                     <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '12px', width: '90%', maxWidth: '500px', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
@@ -565,41 +509,18 @@ export default function UsersManagePage() {
                         <form onSubmit={handleEditSubmit}>
                             <div style={{ marginBottom: '15px' }}>
                                 <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>ชื่อจริง (Firstname)</label>
-                                <input
-                                    className="form-input"
-                                    value={editingUser.firstname}
-                                    onChange={(e) => setEditingUser({ ...editingUser, firstname: e.target.value })}
-                                    required
-                                    style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
-                                />
+                                <input className="form-input" value={editingUser.firstname} onChange={(e) => setEditingUser({ ...editingUser, firstname: e.target.value })} required style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }} />
                             </div>
                             <div style={{ marginBottom: '15px' }}>
                                 <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>นามสกุล (Lastname)</label>
-                                <input
-                                    className="form-input"
-                                    value={editingUser.lastname}
-                                    onChange={(e) => setEditingUser({ ...editingUser, lastname: e.target.value })}
-                                    required
-                                    style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
-                                />
+                                <input className="form-input" value={editingUser.lastname} onChange={(e) => setEditingUser({ ...editingUser, lastname: e.target.value })} required style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }} />
                             </div>
-                            {/* Dropdown Status */}
                             <div style={{ marginBottom: '15px' }}>
                                 <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>สถานะ (Status)</label>
-                                <select
-                                    className="form-input"
-                                    value={editingUser.status_id}
-                                    onChange={(e) => setEditingUser({ ...editingUser, status_id: Number(e.target.value) })}
-                                    style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
-                                >
-                                    {statuses.map((s) => (
-                                        <option key={s.ID} value={s.ID}>
-                                            {s.status}
-                                        </option>
-                                    ))}
+                                <select className="form-input" value={editingUser.status_id} onChange={(e) => setEditingUser({ ...editingUser, status_id: Number(e.target.value) })} style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}>
+                                    {statuses.map((s) => (<option key={s.ID} value={s.ID}>{s.status}</option>))}
                                 </select>
                             </div>
-
                             <div style={{ textAlign: 'right', marginTop: '20px' }}>
                                 <button type="button" onClick={() => setShowEdit(false)} style={{ marginRight: '10px', padding: '8px 16px', border: '1px solid #ddd', background: 'white', borderRadius: '4px', cursor: 'pointer' }}>ยกเลิก</button>
                                 <button type="submit" style={{ padding: '8px 16px', border: 'none', background: '#0958d9', color: 'white', borderRadius: '4px', cursor: 'pointer' }}>บันทึกการแก้ไข</button>
