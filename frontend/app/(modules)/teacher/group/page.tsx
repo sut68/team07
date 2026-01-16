@@ -100,15 +100,17 @@ const TeacherSelectPage = () => {
             cancelButtonText: 'ยกเลิก'
         });
 
-        if (!result.isConfirmed) return;
-
-        try {
-            await ToggleAdvisorStatus({ is_open: !isAccepting });
-            setIsAccepting(!isAccepting);
-            await Swal.fire("สำเร็จ", `ท่านได้ทำการ${actionText}เรียบร้อยแล้ว`, "success");
-            initData();
-        } catch (error) {
-            Swal.fire("ผิดพลาด", "ไม่สามารถเปลี่ยนสถานะได้", "error");
+        if (result.isConfirmed) {
+            try {
+                const newStatus = !isAccepting;
+                await ToggleAdvisorStatus({ is_open: newStatus });
+                setIsAccepting(newStatus);
+                await Swal.fire("สำเร็จ", `ท่านได้ทำการ${actionText}เรียบร้อยแล้ว`, "success");
+                initData();
+            } catch (error) {
+                console.error("Toggle error:", error);
+                Swal.fire("เกิดข้อผิดพลาด", "ไม่สามารถเปลี่ยนสถานะได้", "error");
+            }
         }
     };
 

@@ -107,14 +107,22 @@ func GetEvaluationSummary(c *gin.Context) {
 		return
 	}
 
-	// Filter Logic: Keep only latest appointment (by ID) per Evaluation Name
-	// This prevents duplicate scoring if multiple appointments (e.g. Retake) exist for the same evaluation.
-	latestGroupApps := make(map[string]uint)
+	// Filter Logic: Keep only latest appointment (by ID) per Evaluation Name of EACH Teacher.
+	// This helps in Committee Evaluation where multiple teachers can evaluate in same or different appointments.
+	// We want the latest scoring session from each teacher.
+	latestTeacherApps := make(map[string]map[uint]uint) // EvalName -> TeacherID -> AppID
+
 	for _, res := range groupResults {
 		if res.Criteria != nil && res.Criteria.Evaluation != nil {
 			evalName := res.Criteria.Evaluation.Name
-			if res.AppointmentID > latestGroupApps[evalName] {
-				latestGroupApps[evalName] = res.AppointmentID
+			teacherID := res.TeacherID
+			
+			if latestTeacherApps[evalName] == nil {
+				latestTeacherApps[evalName] = make(map[uint]uint)
+			}
+			
+			if res.AppointmentID > latestTeacherApps[evalName][teacherID] {
+				latestTeacherApps[evalName][teacherID] = res.AppointmentID
 			}
 		}
 	}
@@ -123,7 +131,10 @@ func GetEvaluationSummary(c *gin.Context) {
 	for _, res := range groupResults {
 		if res.Criteria != nil && res.Criteria.Evaluation != nil {
 			evalName := res.Criteria.Evaluation.Name
-			if res.AppointmentID == latestGroupApps[evalName] {
+			teacherID := res.TeacherID
+			
+			// Only keep if this result belongs to the latest appointment for this teacher & evaluation
+			if res.AppointmentID == latestTeacherApps[evalName][teacherID] {
 				filteredGroupResults = append(filteredGroupResults, res)
 			}
 		}
@@ -132,8 +143,16 @@ func GetEvaluationSummary(c *gin.Context) {
 
 	groupScoresMap := make(map[string]map[uint]float64)
 	maxScoreMap := make(map[string]float64)
+	seenGroupCriteria := make(map[string]bool)
 
 	for _, res := range groupResults {
+		// Deduplicate: key = "CriteriaID_TeacherID"
+		key := fmt.Sprintf("%d_%d", res.CriteriaID, res.TeacherID)
+		if seenGroupCriteria[key] {
+			continue
+		}
+		seenGroupCriteria[key] = true
+
 		evalName := res.Criteria.Evaluation.Name
 		teacherID := res.TeacherID
 
@@ -179,13 +198,23 @@ func GetEvaluationSummary(c *gin.Context) {
 		return
 	}
 
-	// Filter Logic: Keep only latest appointment per Evaluation Name for Individual Scores
-	latestIndApps := make(map[string]uint)
+	// Filter Logic: Keep only latest appointment per Evaluation Name for EACH Teacher (for Individual Scores too)
+	latestIndApps := make(map[string]map[uint]uint) // EvalName -> TeacherID -> AppID
+	
 	for _, res := range indResults {
 		if res.Criteria != nil && res.Criteria.Evaluation != nil && res.AppointmentID != nil {
 			evalName := res.Criteria.Evaluation.Name
-			if *res.AppointmentID > latestIndApps[evalName] {
-				latestIndApps[evalName] = *res.AppointmentID
+			teacherID := uint(0)
+			if res.TeacherID != nil {
+				teacherID = *res.TeacherID
+			}
+
+			if latestIndApps[evalName] == nil {
+				latestIndApps[evalName] = make(map[uint]uint)
+			}
+
+			if *res.AppointmentID > latestIndApps[evalName][teacherID] {
+				latestIndApps[evalName][teacherID] = *res.AppointmentID
 			}
 		}
 	}
@@ -194,7 +223,12 @@ func GetEvaluationSummary(c *gin.Context) {
 	for _, res := range indResults {
 		if res.Criteria != nil && res.Criteria.Evaluation != nil && res.AppointmentID != nil {
 			evalName := res.Criteria.Evaluation.Name
-			if *res.AppointmentID == latestIndApps[evalName] {
+			teacherID := uint(0)
+			if res.TeacherID != nil {
+				teacherID = *res.TeacherID
+			}
+
+			if *res.AppointmentID == latestIndApps[evalName][teacherID] {
 				filteredIndResults = append(filteredIndResults, res)
 			}
 		}
@@ -203,14 +237,22 @@ func GetEvaluationSummary(c *gin.Context) {
 
 	studentScores := make(map[uint]map[string]map[uint]float64)
 	studentDetails := make(map[uint]string)
+	seenIndCriteria := make(map[string]bool)
 
 	for _, res := range indResults {
-		sID := res.StudentID
-		evalName := res.Criteria.Evaluation.Name
 		teacherID := uint(0)
 		if res.TeacherID != nil {
 			teacherID = *res.TeacherID
 		}
+
+		key := fmt.Sprintf("%d_%d_%d", res.CriteriaID, teacherID, res.StudentID)
+		if seenIndCriteria[key] {
+			continue
+		}
+		seenIndCriteria[key] = true
+
+		sID := res.StudentID
+		evalName := res.Criteria.Evaluation.Name
 
 		if studentScores[sID] == nil {
 			studentScores[sID] = make(map[string]map[uint]float64)
@@ -307,13 +349,20 @@ func GetStudentEvaluationResult(c *gin.Context) {
 		return
 	}
 
-	// Filter Logic: Keep only latest appointment (by ID) per Evaluation Name
-	latestGroupApps := make(map[string]uint)
+	// Filter Logic: Keep only latest appointment (by ID) per Evaluation Name of EACH Teacher.
+	latestGroupApps := make(map[string]map[uint]uint) // EvalName -> TeacherID -> AppID
+
 	for _, res := range groupResults {
 		if res.Criteria != nil && res.Criteria.Evaluation != nil {
 			evalName := res.Criteria.Evaluation.Name
-			if res.AppointmentID > latestGroupApps[evalName] {
-				latestGroupApps[evalName] = res.AppointmentID
+			teacherID := res.TeacherID
+			
+			if latestGroupApps[evalName] == nil {
+				latestGroupApps[evalName] = make(map[uint]uint)
+			}
+			
+			if res.AppointmentID > latestGroupApps[evalName][teacherID] {
+				latestGroupApps[evalName][teacherID] = res.AppointmentID
 			}
 		}
 	}
@@ -322,7 +371,10 @@ func GetStudentEvaluationResult(c *gin.Context) {
 	for _, res := range groupResults {
 		if res.Criteria != nil && res.Criteria.Evaluation != nil {
 			evalName := res.Criteria.Evaluation.Name
-			if res.AppointmentID == latestGroupApps[evalName] {
+			teacherID := res.TeacherID
+			
+			// Only keep if this result belongs to the latest appointment for this teacher & evaluation
+			if res.AppointmentID == latestGroupApps[evalName][teacherID] {
 				filteredGroupResults = append(filteredGroupResults, res)
 			}
 		}
@@ -331,8 +383,15 @@ func GetStudentEvaluationResult(c *gin.Context) {
 
 	groupScoresMap := make(map[string]map[uint]float64)
 	var comments []gin.H
+	seenGroupCriteria := make(map[string]bool)
 
 	for _, res := range groupResults {
+		key := fmt.Sprintf("%d_%d", res.CriteriaID, res.TeacherID)
+		if seenGroupCriteria[key] {
+			continue
+		}
+		seenGroupCriteria[key] = true
+
 		evalName := res.Criteria.Evaluation.Name
 		teacherID := res.TeacherID
 
@@ -383,13 +442,23 @@ func GetStudentEvaluationResult(c *gin.Context) {
 		return
 	}
 
-	// Filter Logic: Keep only latest appointment per Evaluation Name for Individual Scores
-	latestIndApps := make(map[string]uint)
+	// Filter Logic: Keep only latest appointment per Evaluation Name for EACH Teacher (for Individual Scores too)
+	latestIndApps := make(map[string]map[uint]uint) // EvalName -> TeacherID -> AppID
+	
 	for _, res := range indResults {
 		if res.Criteria != nil && res.Criteria.Evaluation != nil && res.AppointmentID != nil {
 			evalName := res.Criteria.Evaluation.Name
-			if *res.AppointmentID > latestIndApps[evalName] {
-				latestIndApps[evalName] = *res.AppointmentID
+			teacherID := uint(0)
+			if res.TeacherID != nil {
+				teacherID = *res.TeacherID
+			}
+
+			if latestIndApps[evalName] == nil {
+				latestIndApps[evalName] = make(map[uint]uint)
+			}
+
+			if *res.AppointmentID > latestIndApps[evalName][teacherID] {
+				latestIndApps[evalName][teacherID] = *res.AppointmentID
 			}
 		}
 	}
@@ -398,7 +467,12 @@ func GetStudentEvaluationResult(c *gin.Context) {
 	for _, res := range indResults {
 		if res.Criteria != nil && res.Criteria.Evaluation != nil && res.AppointmentID != nil {
 			evalName := res.Criteria.Evaluation.Name
-			if *res.AppointmentID == latestIndApps[evalName] {
+			teacherID := uint(0)
+			if res.TeacherID != nil {
+				teacherID = *res.TeacherID
+			}
+
+			if *res.AppointmentID == latestIndApps[evalName][teacherID] {
 				filteredIndResults = append(filteredIndResults, res)
 			}
 		}
@@ -407,12 +481,20 @@ func GetStudentEvaluationResult(c *gin.Context) {
 
 	// evalName -> teacherID -> scoreSum
 	studentScores := make(map[string]map[uint]float64)
+	seenIndCriteria := make(map[string]bool)
 	for _, res := range indResults {
-		evalName := res.Criteria.Evaluation.Name
 		teacherID := uint(0)
 		if res.TeacherID != nil {
 			teacherID = *res.TeacherID
 		}
+
+		key := fmt.Sprintf("%d_%d", res.CriteriaID, teacherID)
+		if seenIndCriteria[key] {
+			continue
+		}
+		seenIndCriteria[key] = true
+
+		evalName := res.Criteria.Evaluation.Name
 
 		if studentScores[evalName] == nil {
 			studentScores[evalName] = make(map[uint]float64)

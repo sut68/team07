@@ -10,6 +10,7 @@ import { GetMe } from '@/app/services/login';
 import { CreateProject, GetMyProject, UpdateProject } from '@/app/services/project';
 import CategoryModal from '@/app/components/storage/CategoryModal';
 import '../../../style/topic.css';
+import { Toast_fail, Toast_success } from '@/app/components/Webmessage';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -166,7 +167,7 @@ export default function StudentTopicPage() {
                 try {
                     if (groupID) {
                         await selectTopic(topic.ID, { group_project_id: groupID });
-                        message.success('ส่งคำขอเลือกหัวข้อเรียบร้อยแล้ว');
+                        Toast_success('ส่งคำขอเลือกหัวข้อเรียบร้อยแล้ว');
                         fetchData();
                         setIsSelectModalOpen(false);
                     } else {
@@ -211,13 +212,13 @@ export default function StudentTopicPage() {
                     }
 
                     await createTopic(formData);
-                    message.success('เสนอหัวข้อโครงงานเรียบร้อยแล้ว');
+                    Toast_success('เสนอหัวข้อโครงงานเรียบร้อยแล้ว');
                     fetchData();
                     setIsProposeModalOpen(false);
                     form.resetFields();
                 } catch (error) {
                     console.error(error);
-                    message.error('เกิดข้อผิดพลาดในการเสนอหัวข้อ');
+                    Toast_fail('เกิดข้อผิดพลาดในการเสนอหัวข้อ');
                 } finally {
                     setLoading(false);
                 }
@@ -248,11 +249,11 @@ export default function StudentTopicPage() {
                             await updateTopic(myTopic.ID, formData);
                         }
 
-                        message.success('ยกเลิกหัวข้อเรียบร้อยแล้ว');
+                        Toast_success('ยกเลิกหัวข้อเรียบร้อยแล้ว');
                         setMyTopic(null);
                         fetchData();
                     } catch (error) {
-                        message.error('ไม่สามารถยกเลิกหัวข้อได้');
+                        Toast_fail('ไม่สามารถยกเลิกหัวข้อได้');
                     }
                 }
                 form.resetFields();
@@ -463,9 +464,11 @@ export default function StudentTopicPage() {
                     open={isTopicDetailModalOpen}
                     onCancel={() => setIsTopicDetailModalOpen(false)}
                     footer={[
-                        <Button key="cancel" danger onClick={handleCancelProposal}>
-                            ยกเลิก/สละสิทธิ์
-                        </Button>,
+                        (groupStatus !== 'Completed') && ( // Hide button if group status is Completed
+                            <Button key="cancel" danger onClick={handleCancelProposal}>
+                                ยกเลิก/สละสิทธิ์
+                            </Button>
+                        ),
                         <Button key="close" type="primary" onClick={() => setIsTopicDetailModalOpen(false)}>
                             ปิด
                         </Button>

@@ -1,9 +1,9 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Typography, Row, Col, Modal, Form, Input, Tag, Space, Empty, message, ConfigProvider, Tabs, Upload, Spin, Tooltip } from 'antd';
-import { ProjectOutlined, SendOutlined, TeamOutlined, FileTextOutlined, CheckCircleOutlined, ExclamationCircleOutlined, ClockCircleOutlined, CloseCircleOutlined, UploadOutlined, PlusOutlined, ArrowLeftOutlined, PaperClipOutlined } from '@ant-design/icons';
+import { Card, Button, Typography, Row, Col, Modal, Form, Input, Tag, Space, ConfigProvider, Tabs, Upload, Spin, Tooltip } from 'antd';
+import { ProjectOutlined, FileTextOutlined, CheckCircleOutlined, ExclamationCircleOutlined, ClockCircleOutlined, CloseCircleOutlined, UploadOutlined, PlusOutlined, ArrowLeftOutlined, PaperClipOutlined } from '@ant-design/icons';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Topic, TopicApproval } from '@/app/interfaces/Topic';
+import { Topic } from '@/app/interfaces/Topic';
 import Swal from 'sweetalert2';
 import { getTopics, createTopic, updateTopic, selectTopic, cancelSelection, getStudentTopic } from '@/app/services/topic';
 import { GetMyGroup } from '@/app/services/group';

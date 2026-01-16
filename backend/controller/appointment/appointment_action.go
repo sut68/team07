@@ -299,6 +299,14 @@ func CreateRoom(c *gin.Context) {
 	}
 
 	db := database.DB()
+
+	// Check if room name already exists
+	var existingRoom entity.Room
+	if err := db.Where("name = ?", room.Name).First(&existingRoom).Error; err == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Room name already exists"})
+		return
+	}
+
 	if err := db.Create(&room).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -372,7 +380,7 @@ func AutoCreateAppointments(c *gin.Context) {
 		Where("appointment_status = ? AND appointment_type_id = ?", "scheduled", req.AppointmentTypeID)
 
 	var groups []entity.GroupProject
-	if err := db.Where("group_status IN ?", []string{"Pending", "In Process","Approved"}).
+	if err := db.Where("group_status IN ?", []string{"Approved"}).
 		Where("id NOT IN (?)", subQuery).
 		Order("RANDOM()").
 		Limit(len(validSlots)).

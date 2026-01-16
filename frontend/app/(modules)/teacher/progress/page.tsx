@@ -6,6 +6,8 @@ import { useAuth } from "../../roleCheck/authContext";
 import { GetProgress, AddProgress, UpProgress, EraseProgress } from "../../../services/progress";
 import { DropWholechat, Getteachergroup } from "@/app/services/chat";
 import { Toast_fail, Toast_success } from "../../../components/Webmessage";
+import { Modal } from "antd";
+import { ExclamationCircleOutlined } from "@ant-design/icons";
 
 const web = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/team07api";
 
@@ -146,18 +148,28 @@ const web = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/team07
   };
 
   const handleDelete = async (id: number) => {
-    if (!id || !confirm("Confirm deleting this block?")) return;
-    setIsLoading(true);
-    try {
-      await EraseProgress({ id });
-      await DropWholechat({ process_id: id, group_project_id: gpji, name: "" });
-      await refresh();
-      Toast_success("ลบข้อมูลสำเร็จ");
-    } catch (err) {
-      Toast_fail(String(err));
-    } finally {
-      setIsLoading(false);
-    }
+    if (!id) return;
+
+    Modal.confirm({
+      title: 'Deleting Block',
+      icon: <ExclamationCircleOutlined />,
+      content: 'Confirm deleting this block?',
+      okText: 'Yes',
+      cancelText: 'No',
+      onOk: async () => {
+        setIsLoading(true);
+        try {
+          await EraseProgress({ id });
+          await DropWholechat({ process_id: id, group_project_id: gpji, name: "" });
+          await refresh();
+          Toast_success("ลบข้อมูลสำเร็จ");
+        } catch (err) {
+          Toast_fail(String(err));
+        } finally {
+          setIsLoading(false);
+        }
+      },
+    });
   };
 
   return (

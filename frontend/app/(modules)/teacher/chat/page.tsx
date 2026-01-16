@@ -35,7 +35,7 @@ import {
   PictureOutlined,
 } from "@ant-design/icons";
 
-import { Avatar, Tooltip, Badge, Input, Button, Empty, Select } from "antd";
+import { Avatar, Tooltip, Badge, Input, Button, Empty, Select, Modal } from "antd";
 import { Toast_fail, Toast_success } from "../../../components/Webmessage";
 
 export interface GroupProject {
@@ -453,32 +453,38 @@ export default function ChatPage() {
     }
   };
 
-  const deleteMessage = async (id: number) => {
+  const deleteMessage = (id: number) => {
     if (!id || isNaN(id)) {
       Toast_fail("Error: Invalid Chat ID. Please refresh.");
       return;
     }
 
-    const isConfirmed = confirm("Are you sure you want to delete this message?");
-    if (!isConfirmed) return;
+    Modal.confirm({
+      title: 'ลบข้อความ',
+      icon: <ExclamationCircleOutlined />,
+      content: 'คุณต้องการลบข้อความนี้ใช่หรือไม่?',
+      okText: 'ยืนยัน',
+      cancelText: 'ยกเลิก',
+      onOk: async () => {
+        try {
+          const payload = {
+            id,
+            group_project_id: groupProjectId,
+            process_id: Number(activeRoomId),
+          };
 
-    try {
-      const payload = {
-        id,
-        group_project_id: groupProjectId,
-        process_id: Number(activeRoomId),
-      };
+          await DropChat(payload);
+          setChats((prev) => prev.filter((c) => Number(c.id) !== id));
 
-      await DropChat(payload);
-      setChats((prev) => prev.filter((c) => Number(c.id) !== id));
-
-      const roomIdStr = `${groupProjectId}:${activeRoomId}`;
-      const socket = socketRef.current;
-      if (socket) socket.emit("delete_message", { id, room_id: roomIdStr });
-    } catch (error) {
-      console.error(error);
-      alert("Failed to delete.");
-    }
+          const roomIdStr = `${groupProjectId}:${activeRoomId}`;
+          const socket = socketRef.current;
+          if (socket) socket.emit("delete_message", { id, room_id: roomIdStr });
+        } catch (error) {
+          console.error(error);
+          alert("Failed to delete.");
+        }
+      }
+    });
   };
 
   const formatTime = (dateStr?: string) => {

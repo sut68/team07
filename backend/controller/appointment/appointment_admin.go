@@ -19,6 +19,13 @@ func CreateAppointmentType(c *gin.Context) {
 
 	db := database.DB()
 
+	// Check if appointment type name already exists
+	var existingType entity.AppointmentType
+	if err := db.Where("name = ?", appointmentType.Name).First(&existingType).Error; err == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Appointment type already exists"})
+		return
+	}
+
 	if err := db.Create(&appointmentType).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

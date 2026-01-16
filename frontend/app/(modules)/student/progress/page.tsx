@@ -4,6 +4,8 @@ import React, { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
 import { useAuth } from "../../roleCheck/authContext";
 import { Toast_fail, Toast_success } from "../../../components/Webmessage";
+import { Modal } from "antd";
+import { ExclamationCircleOutlined } from "@ant-design/icons";
 
 import {
   GetProgress,
@@ -160,23 +162,31 @@ export default function ProgressPage() {
 
   const handleDelete = async (id: number) => {
     if (locked || !id) return;
-    if (!confirm("Confirm deleting this block?")) return;
 
-    setIsLoading(true);
-    try {
-      await EraseProgress({ id });
-      await DropWholechat({
-        process_id: id,
-        group_project_id: gpji,
-        name: "",
-      });
-      await refresh();
-      Toast_success("ลบข้อมูลสำเร็จ");
-    } catch (err) {
-      Toast_fail(String(err));
-    } finally {
-      setIsLoading(false);
-    }
+    Modal.confirm({
+      title: 'Deleting Block',
+      icon: <ExclamationCircleOutlined />,
+      content: 'Confirm deleting this block?',
+      okText: 'Yes',
+      cancelText: 'No',
+      onOk: async () => {
+        setIsLoading(true);
+        try {
+          await EraseProgress({ id });
+          await DropWholechat({
+            process_id: id,
+            group_project_id: gpji,
+            name: "",
+          });
+          await refresh();
+          Toast_success("ลบข้อมูลสำเร็จ");
+        } catch (err) {
+          Toast_fail(String(err));
+        } finally {
+          setIsLoading(false);
+        }
+      },
+    });
   };
 
   return (

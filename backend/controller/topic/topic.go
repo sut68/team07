@@ -515,7 +515,7 @@ func GetStudentTopic(c *gin.Context) {
 
 	// 2. Check for Student Proposal
 	var topic entity.Topic
-	if err := db.Where("group_project_id = ? AND proposer_role = ? AND status != ?", groupID, "Student", "Closed").First(&topic).Error; err == nil {
+	if err := db.Preload("TopicApproval").Where("group_project_id = ? AND proposer_role = ? AND status != ?", groupID, "Student", "Closed").First(&topic).Error; err == nil {
 		c.JSON(http.StatusOK, gin.H{"data": topic, "source": "proposal"})
 		return
 	}

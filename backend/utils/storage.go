@@ -10,13 +10,11 @@ import (
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
+	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/blob"
 	"github.com/google/uuid"
 )
 
 // UploadToAzure - ฟังก์ชันอเนกประสงค์ อัปโหลดได้ทุกไฟล์
-// file: ไฟล์ที่รับมาจาก User (io.Reader)
-// originalFilename: ชื่อไฟล์เดิม (เพื่อเอานามสกุล .pdf, .jpg)
-// folder: ชื่อหมวดหมู่ (เช่น "projects", "chats", "news") -> จะไปสร้างเป็น Virtual Folder บน Azure
 func UploadToAzure(file io.Reader, originalFilename string, folder string, contentType string) (string, error) {
 	connStr := os.Getenv("AZURE_STORAGE_CONNECTION_STRING")
 	containerName := os.Getenv("AZURE_CONTAINER_NAME")
@@ -56,7 +54,7 @@ func UploadToAzure(file io.Reader, originalFilename string, folder string, conte
 		blobPath,
 		file,
 		&azblob.UploadStreamOptions{
-			HTTPHeaders: &azblob.BlobHTTPHeaders{
+			HTTPHeaders: &blob.HTTPHeaders{
 				BlobContentType:        &contentType,
 				BlobContentDisposition: &contentDisposition,
 			},

@@ -266,14 +266,12 @@ func ToggleAdvisorStatus(c *gin.Context) {
 
 	// --- 2. Logic ตัดสิทธิ์ (Auto-Reject) เมื่อปิดรับสมัคร ---
 	if !input.IsOpen {
-		var pendingSelections []entity.SelectAdvisor
-		if err := db.Where("teacher_id = ? AND status = ?", teacherID, "pending").
-			Find(&pendingSelections).Error; err == nil {
-
-			for _, sel := range pendingSelections {
-				sel.Status = "rejected"
-				db.Save(&sel)
-			}
+		// Optimize: Batch update status directly
+		if err := db.Model(&entity.SelectAdvisor{}).
+			Where("teacher_id = ? AND status = ?", teacherID, "pending").
+			Update("status", "rejected").Error; err != nil {
+			// Log warning only
+			// println("Warning: Failed to auto-reject pending requests:", err.Error())
 		}
 	}
 

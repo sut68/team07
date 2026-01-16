@@ -55,6 +55,18 @@ func SaveEvaluation(c *gin.Context) {
 		return
 	}
 
+	// CHECK DATE: Cannot save evaluation before the appointment date
+	currentYear, currentMonth, currentDay := time.Now().Date()
+	apptYear, apptMonth, apptDay := appointment.StartDateTime.Date()
+	today := time.Date(currentYear, currentMonth, currentDay, 0, 0, 0, 0, time.UTC)
+	apptDate := time.Date(apptYear, apptMonth, apptDay, 0, 0, 0, 0, time.UTC)
+
+	if today.Before(apptDate) {
+		tx.Rollback()
+		c.JSON(http.StatusForbidden, gin.H{"error": "Cannot evaluate before the appointment date."})
+		return
+	}
+
 	// CHECK STATUS: Cannot save evaluation if project is completed
 	if appointment.GroupProject.GroupStatus == "Completed" {
 		tx.Rollback()
