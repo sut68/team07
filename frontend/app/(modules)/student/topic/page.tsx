@@ -281,33 +281,46 @@ export default function StudentTopicPage() {
                 <div className="hub-grid">
 
                     {/* Card 1: หัวข้อโครงงาน */}
-                    <div className="menu-card" onClick={() => {
-                        if (myTopic) {
-                            router.push('/student/topic/select?tab=status');
-                        } else {
-                            router.push('/student/topic/select');
-                        }
-                    }}>
-                        <div className="menu-icon" style={{ background: myTopic ? '#f0f9ff' : '#fff1f2', color: myTopic ? '#0284c7' : '#9a0120' }}>
-                            <BookOutlined />
+                    <Tooltip title={!advisorID && !loading ? "กรุณาเลือกอาจารย์ที่ปรึกษาก่อน" : ""}>
+                        <div
+                            className={`menu-card ${!advisorID ? 'disabled' : ''}`}
+                            onClick={() => {
+                                if (!advisorID) {
+                                    if (!loading) message.warning("กรุณาเลือกอาจารย์ที่ปรึกษาก่อน");
+                                    return;
+                                }
+                                if (myTopic) {
+                                    router.push('/student/topic/select?tab=status');
+                                } else {
+                                    router.push('/student/topic/select');
+                                }
+                            }}
+                            style={{
+                                opacity: !advisorID ? 0.6 : 1,
+                                cursor: !advisorID ? 'not-allowed' : 'pointer'
+                            }}
+                        >
+                            <div className="menu-icon" style={{ background: myTopic ? '#f0f9ff' : '#fff1f2', color: myTopic ? '#0284c7' : '#9a0120' }}>
+                                <BookOutlined />
+                            </div>
+                            <h2 className="menu-title">
+                                {myTopic ? 'หัวข้อโครงงาน' : 'เลือก/เสนอหัวข้อโครงงาน'}
+                            </h2>
+                            <p className="menu-desc">
+                                {myTopic ? (
+                                    <>
+                                        {myTopic.title}
+                                        <br />
+                                        <Tag color={getStatusInfo(myTopic.status).color} style={{ marginTop: 8 }}>
+                                            {getStatusInfo(myTopic.status).icon} {getStatusInfo(myTopic.status).text}
+                                        </Tag>
+                                    </>
+                                ) : (
+                                    'เลือกหัวข้อจากอาจารย์ หรือเสนอหัวข้อที่คุณสนใจ'
+                                )}
+                            </p>
                         </div>
-                        <h2 className="menu-title">
-                            {myTopic ? 'หัวข้อโครงงาน' : 'เลือก/เสนอหัวข้อโครงงาน'}
-                        </h2>
-                        <p className="menu-desc">
-                            {myTopic ? (
-                                <>
-                                    {myTopic.title}
-                                    <br />
-                                    <Tag color={getStatusInfo(myTopic.status).color} style={{ marginTop: 8 }}>
-                                        {getStatusInfo(myTopic.status).icon} {getStatusInfo(myTopic.status).text}
-                                    </Tag>
-                                </>
-                            ) : (
-                                'เลือกหัวข้อจากอาจารย์ หรือเสนอหัวข้อที่คุณสนใจ'
-                            )}
-                        </p>
-                    </div>
+                    </Tooltip>
 
                     {/* Card 2: กรอกข้อมูลโครงงาน */}
                     <Tooltip title={
@@ -321,13 +334,24 @@ export default function StudentTopicPage() {
                         <div
                             className={`menu-card ${!(myTopic?.status === 'Approved' && groupStatus === 'Completed' && (isLeader || myProject)) ? 'disabled' : ''}`}
                             onClick={() => {
-                                if (myTopic?.status === 'Approved' && groupStatus === 'Completed') {
-                                    if (myProject) {
-                                        setIsProjectDetailModalOpen(true);
-                                    } else if (isLeader) {
-                                        setIsProjectInfoModalOpen(true);
-                                        setSelectedKeywords([]);
-                                    }
+                                if (myTopic?.status !== 'Approved') {
+                                    message.warning('กรุณารอหัวข้อได้รับการอนุมัติก่อน');
+                                    return;
+                                }
+                                if (groupStatus !== 'Completed') {
+                                    message.warning('กรอกข้อมูลโครงงานที่สมบูรณ์หลังจากผ่านการประเมิน');
+                                    return;
+                                }
+                                if (!isLeader && !myProject) {
+                                    message.warning('เฉพาะหัวหน้ากลุ่มเท่านั้นที่สามารถส่งข้อมูลโครงงานได้');
+                                    return;
+                                }
+
+                                if (myProject) {
+                                    setIsProjectDetailModalOpen(true);
+                                } else if (isLeader) {
+                                    setIsProjectInfoModalOpen(true);
+                                    setSelectedKeywords([]);
                                 }
                             }}
                             style={{

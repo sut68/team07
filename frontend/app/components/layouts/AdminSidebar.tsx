@@ -13,6 +13,7 @@ import {
   MenuUnfoldOutlined,
   ExclamationCircleOutlined,
   MenuOutlined,
+  AppstoreOutlined,
 } from '@ant-design/icons';
 import { Logout } from '../../services/login';
 import 'antd/dist/reset.css';
@@ -27,7 +28,7 @@ export default function AdminSidebar({ children }: SidebarProps) {
   const router = useRouter();
   const { logoutClient } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
+
 
   const selectedKey = useMemo(() => {
     // Map pathname to menu key; use the first two segments
@@ -65,31 +66,26 @@ export default function AdminSidebar({ children }: SidebarProps) {
       return;
     }
     router.push(key);
-    // Close mobile menu after navigation
-    setMobileOpen(false);
   };
 
   return (
     <div className="app-container">
-      <button
-        className="hamburger-btn"
-        onClick={() => setMobileOpen(!mobileOpen)}
-        aria-label={mobileOpen ? "Close menu" : "Open menu"}
-      >
-        <MenuOutlined style={{ fontSize: '24px' }} />
-      </button>
-
-      <div
-        className={`sidebar-overlay ${mobileOpen ? 'active' : ''}`}
-        onClick={() => setMobileOpen(false)}
-      />
-
-      <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
+      <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
 
         <div className="sidebar-header">
           <Link href="/admin/dashboard" className="logo-link">
-            <img src="/image/logo1.png" alt="Admin logo" className={`logo`} />
+            <AppstoreOutlined className="logo-icon" />
+            <span className="logo-text">Capstone Hub</span>
           </Link>
+          <div
+            role="button"
+            tabIndex={0}
+            className="collapse-btn"
+            onClick={() => setCollapsed(!collapsed)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setCollapsed(!collapsed); }}
+          >
+            {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+          </div>
         </div>
 
         <div className="menu-wrapper">
@@ -105,16 +101,7 @@ export default function AdminSidebar({ children }: SidebarProps) {
 
       </aside>
 
-      <div
-        role="button"
-        tabIndex={0}
-        className={`collapse-handle ${collapsed ? 'collapsed' : ''}`}
-        onClick={() => setCollapsed(!collapsed)}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setCollapsed(!collapsed); }}
-        aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-      >
-        {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-      </div>
+
 
       <main className={`main-content`} style={{ marginLeft: collapsed ? '80px' : '256px' }}>{children}</main>
     </div>
