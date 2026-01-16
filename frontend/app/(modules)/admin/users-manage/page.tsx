@@ -446,7 +446,7 @@ export default function UsersManagePage() {
                 )}
             </div>
 
-            {/* Modal Import (คงเดิม) */}
+            {/* Modal Import CSV */}
             {showImport && (
                 <div className="modal-overlay" style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
                     <div className="import-card" style={{ width: '90%', maxWidth: '600px', backgroundColor: 'white', padding: '20px', borderRadius: '10px' }}>
