@@ -760,7 +760,7 @@ export default function ChatPage() {
               <Empty description="เลือกหัวข้อทางซ้ายเพื่อเริ่มแชท" image={Empty.PRESENTED_IMAGE_SIMPLE} />
             </div>
           ) : filteredChats.length === 0 ? (
-            // ✅ FIX: use filteredChats here (not chats)
+            // FIX: use filteredChats here (not chats)
             <div style={{ margin: "auto", textAlign: "center", color: "#9ca3af" }}>
               {chats.length === 0 ? (
                 <>

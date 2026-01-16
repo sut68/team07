@@ -162,7 +162,7 @@ export default function ProfilePage({ initialUser, isReadOnly = false }: Profile
             </div>
           </div>
 
-          {/* ✅ ซ่อนปุ่มแก้ไข ถ้าเป็นโหมด ReadOnly */}
+          {/* ซ่อนปุ่มแก้ไข ถ้าเป็นโหมด ReadOnly */}
           {!isReadOnly && (
             <button
                 onClick={() => setIsEditing(true)}

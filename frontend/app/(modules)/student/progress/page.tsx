@@ -331,7 +331,7 @@ export default function ProgressPage() {
               />
             </div>
 
-            {/* ✅ SHOW CURRENT FILE WHEN EDITING */}
+            {/* SHOW CURRENT FILE WHEN EDITING */}
             {modalMode === "edit" && selectedId != null && (
               (() => {
                 const item = processlist.find(p => getId(p) === selectedId);

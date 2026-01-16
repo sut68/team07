@@ -148,7 +148,7 @@
       "id": "db80d031-ad3f-4846-9c9d-a5fcb8bfce11",
       "comment": "",
       "command": "assertAlert",
-      "target": "✅ นำเข้าสำเร็จ!\nเพิ่มข้อมูลเรียบร้อยแล้ว",
+      "target": "นำเข้าสำเร็จ!\nเพิ่มข้อมูลเรียบร้อยแล้ว",
       "targets": [],
       "value": ""
     }, {

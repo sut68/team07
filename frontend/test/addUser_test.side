@@ -214,7 +214,7 @@
       "id": "4ecb3823-4e18-4d2b-b921-c95ba0f6bdf7",
       "comment": "",
       "command": "assertAlert",
-      "target": "✅ เพิ่มผู้ใช้งานสำเร็จ!",
+      "target": "เพิ่มผู้ใช้งานสำเร็จ!",
       "targets": [],
       "value": ""
     }, {
