@@ -1,10 +1,10 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { GetUserProfile } from '../../services/user'; 
-import { UserProfileInterface } from '../../interfaces/Users'; 
-import "../../style/profile.css"; 
-import EditProfilePage from '../editprofile/editprofile'; 
+import { GetUserProfile } from '../../services/user';
+import { UserProfileInterface } from '../../interfaces/Users';
+import "../../style/profile.css";
+import EditProfilePage from '../editprofile/editprofile';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -17,20 +17,20 @@ export default function ProfilePage() {
 
   // แยกฟังก์ชัน fetch ออกมาเพื่อให้เรียกซ้ำได้ง่าย
   const fetchProfile = async () => {
-      try {
-        const res = await GetUserProfile();
-        if (res.status === 200 && res.data) {
-          setUser(res.data.data || res.data);
-        } else {
-          setError("Failed to load profile data");
-        }
-      } catch (err) {
-        console.error("Error fetching profile:", err);
-        setError("Unauthorized or Network Error");
-        // setTimeout(() => router.push('/login'), 2000); 
-      } finally {
-        setIsLoading(false);
+    try {
+      const res = await GetUserProfile();
+      if (res.status === 200 && res.data) {
+        setUser(res.data.data || res.data);
+      } else {
+        setError("Failed to load profile data");
       }
+    } catch (err) {
+      console.error("Error fetching profile:", err);
+      setError("Unauthorized or Network Error");
+      // setTimeout(() => router.push('/login'), 2000); 
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -43,16 +43,16 @@ export default function ProfilePage() {
 
   // ส่วนสลับหน้า: ถ้าอยู่ในโหมดแก้ไข ให้แสดง EditProfilePage
   if (isEditing && user) {
-      return (
-          <EditProfilePage 
-              user={user} // ส่งข้อมูล user เดิมไปให้
-              onCancel={() => setIsEditing(false)} // เมื่อกดยกเลิก ให้กลับมาหน้าเดิม
-              onSuccess={() => {
-                  setIsEditing(false); // ปิดโหมดแก้ไข
-                  fetchProfile();      // โหลดข้อมูลใหม่ (เผื่อมีการอัปเดต)
-              }}
-          />
-      );
+    return (
+      <EditProfilePage
+        user={user} // ส่งข้อมูล user เดิมไปให้
+        onCancel={() => setIsEditing(false)} // เมื่อกดยกเลิก ให้กลับมาหน้าเดิม
+        onSuccess={() => {
+          setIsEditing(false); // ปิดโหมดแก้ไข
+          fetchProfile();      // โหลดข้อมูลใหม่ (เผื่อมีการอัปเดต)
+        }}
+      />
+    );
   }
 
   if (isLoading) {
@@ -98,7 +98,7 @@ export default function ProfilePage() {
 
           <div className="info-grid">
             <div className="info-item">
-              <span className="info-label">รหัสนักศึกษา / Username</span>
+              <span className="info-label">ชื่อผู้ใช้งาน (Username)</span>
               <div className="info-value">{user.username}</div>
             </div>
 
@@ -130,9 +130,9 @@ export default function ProfilePage() {
             {user.role?.role === 'Student' && (
               <div className="info-item">
                 <span className="info-label">สถานะรายวิชา (Course Status)</span>
-                <div 
-                  className="info-value" 
-                  style={{ 
+                <div
+                  className="info-value"
+                  style={{
                     color: user.pass ? 'green' : '#9a0120', // สีเขียวถ้าผ่าน, สีแดงถ้าไม่ผ่าน
                   }}
                 >
@@ -148,7 +148,7 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
-          
+
           <button
             onClick={() => setIsEditing(true)}
             style={{

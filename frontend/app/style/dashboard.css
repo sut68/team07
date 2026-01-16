@@ -9,6 +9,7 @@
   box-sizing: border-box;
   background-color: #f3f4f6;
   gap: 16px;
+  border-radius: 16px;
 }
 
 /* --- ส่วนซ้าย: ข่าวสาร --- */

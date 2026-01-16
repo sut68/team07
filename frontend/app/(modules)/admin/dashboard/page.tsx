@@ -69,7 +69,7 @@ export default function AdminDashboardPage() {
     return (
         <div className="dashboard-container">
             <div className="dashboard-header">
-                <h1>Dashboard ผู้ดูแลระบบ</h1>
+                <h1>หน้าหลักผู้ดูแลระบบ</h1>
                 <p>ภาพรวมระบบและการรายงานปัญหา</p>
             </div>
 
