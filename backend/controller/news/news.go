@@ -1,11 +1,11 @@
 package news
 
 import (
-	"fmt"
+	//"fmt"
 	"net/http"
-	"os"
-	"path/filepath"
-	"time"
+	//"os"
+	//"path/filepath"
+	//"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sut68/team07/backend/controller/log"
@@ -140,12 +140,12 @@ func DeleteNews(c *gin.Context) {
 		return
 	}
 
-	if news.File != "" {
-		os.Remove(news.File)
-		// Try to remove the directory if it's empty
-		dir := filepath.Dir(news.File)
-		os.Remove(dir)
-	}
+	// if news.File != "" {
+	// 	os.Remove(news.File)
+	// 	// Try to remove the directory if it's empty
+	// 	dir := filepath.Dir(news.File)
+	// 	os.Remove(dir)
+	// }
 
 	if err := database.DB().Delete(&news).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

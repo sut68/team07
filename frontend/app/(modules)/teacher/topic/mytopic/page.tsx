@@ -316,12 +316,16 @@ export default function TeacherMyTopicPage() {
                             <div style={{ marginTop: 8 }}>
                                 <Text strong><PaperClipOutlined /> ไฟล์แนบ:</Text>
                                 <a
-                                    href={`${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/team07api"}/uploads/topics/${viewTopic.file_attachment}`}
+                                    href={
+                                        viewTopic.file_attachment.startsWith('http')
+                                            ? viewTopic.file_attachment
+                                            : `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/team07api"}/uploads/topics/${viewTopic.file_attachment}`
+                                    }
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     style={{ marginLeft: 8 }}
                                 >
-                                    {viewTopic.file_attachment}
+                                    {viewTopic.file_attachment.startsWith('http') ? 'ดาวน์โหลดไฟล์แนบ' : viewTopic.file_attachment}
                                 </a>
                             </div>
                         )}

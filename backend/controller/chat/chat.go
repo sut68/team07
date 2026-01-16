@@ -2,12 +2,12 @@ package chat
 
 import (
 	"bytes"
-	"context"
+	//"context"
 	"encoding/json"
-	"fmt"
+	//"fmt"
 	"io"
 	"net/http"
-	"os"
+	//"os"
 	"path/filepath"
 	"strconv"
 	"strings"

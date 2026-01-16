@@ -754,7 +754,11 @@ export default function TeacherStoragePage() {
                                     <Space>
                                         <FileTextOutlined />
                                         <a
-                                            href={`${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/team07api"}/${selectedProject.file_path.replace(/^\.\//, '').startsWith('uploads') ? selectedProject.file_path.replace(/^\.\//, '') : `uploads/projects/${selectedProject.file_path.replace(/^\.\//, '')}`}`}
+                                            href={
+                                                selectedProject.file_path.startsWith('http') 
+                                                ? selectedProject.file_path 
+                                                : `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/team07api"}/${selectedProject.file_path.replace(/^\.\//, '').startsWith('uploads') ? selectedProject.file_path.replace(/^\.\//, '') : `uploads/projects/${selectedProject.file_path.replace(/^\.\//, '')}`}`
+                                            }
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             style={{ color: '#1890ff' }}
@@ -768,8 +772,14 @@ export default function TeacherStoragePage() {
                                             onClick={() => {
                                                 const link = document.createElement('a');
                                                 const filePath = selectedProject.file_path.replace(/^\.\//, '');
-                                                const fullPath = filePath.startsWith('uploads') ? filePath : `uploads/projects/${filePath}`;
-                                                link.href = `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/team07api"}/${fullPath}`;
+                                                
+                                                if (filePath.startsWith('http')) {
+                                                    link.href = filePath;
+                                                } else {
+                                                    const fullPath = filePath.startsWith('uploads') ? filePath : `uploads/projects/${filePath}`;
+                                                    link.href = `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/team07api"}/${fullPath}`;
+                                                }
+
                                                 link.download = selectedProject.file_path.split('/').pop() || 'document';
                                                 link.target = '_blank';
                                                 document.body.appendChild(link);

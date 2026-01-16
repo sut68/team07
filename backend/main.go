@@ -76,8 +76,8 @@ func main() {
 	apiGroup.POST("/reset-password", authHandler.ResetPassword)
 
 	// Move static files under the API prefix
-	apiGroup.Static("/uploads", "./uploads")
-	apiGroup.Static("/chatsave", "./uploads/chats")
+	// apiGroup.Static("/uploads", "./uploads")    <-- Removed
+	// apiGroup.Static("/chatsave", "./uploads/chats") <-- Removed
 
 	protected := apiGroup.Group("/")
 	protected.Use(middleware.CSRFCheckMiddleware(), middleware.AuthMiddleware())

@@ -23,7 +23,14 @@ export default function NewsCard({ data, role, currentUserId, onEdit, onDelete }
     const categoryLabel = isGeneral ? "ข่าวทั่วไป" : "ข่าวที่ปรึกษา";
 
     const cleanApiUrl = BASE_URL.replace(/\/$/, "");
-    const fileUrl = data.File ? `${cleanApiUrl}/${data.File.replace(/\\/g, '/')}`: null;
+    
+    // Check if data.File is effectively an absolute URL (starts with http)
+    const isAbsoluteUrl = data.File && (data.File.startsWith('http://') || data.File.startsWith('https://'));
+    
+    const fileUrl = data.File 
+        ? (isAbsoluteUrl ? data.File : `${cleanApiUrl}/${data.File.replace(/\\/g, '/')}`)
+        : null;
+
     const fileName = data.File ? data.File.replace(/\\/g, '/').split('/').pop() : "ดาวน์โหลดไฟล์แนบ";
 
     return (
