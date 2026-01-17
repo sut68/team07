@@ -20,7 +20,42 @@ func UploadToAzure(file io.Reader, originalFilename string, folder string, conte
 	containerName := os.Getenv("AZURE_CONTAINER_NAME")
 
 	if connStr == "" || containerName == "" {
-		return "", fmt.Errorf("azure connection string or container name is missing")
+		// Fallback to local storage
+		cwd, err := os.Getwd()
+		if err != nil {
+			return "", err
+		}
+
+		// Ensure directory exists
+		uploadDir := filepath.Join(cwd, "uploads", folder)
+		if err := os.MkdirAll(uploadDir, 0755); err != nil {
+			return "", err
+		}
+
+		// Clean filename
+		ext := filepath.Ext(originalFilename)
+		nameWithoutExt := strings.TrimSuffix(filepath.Base(originalFilename), ext)
+		reg := regexp.MustCompile("[^a-zA-Z0-9-_]")
+		cleanName := reg.ReplaceAllString(nameWithoutExt, "_")
+		if len(cleanName) > 50 {
+			cleanName = cleanName[:50]
+		}
+		newFileName := fmt.Sprintf("%s_%s%s", uuid.New().String(), cleanName, ext)
+		localPath := filepath.Join(uploadDir, newFileName)
+
+		// Create file
+		out, err := os.Create(localPath)
+		if err != nil {
+			return "", err
+		}
+		defer out.Close()
+
+		if _, err = io.Copy(out, file); err != nil {
+			return "", err
+		}
+
+		// Return just the filename so frontend can construct URL
+		return newFileName, nil
 	}
 
 	// 2. ตั้งชื่อไฟล์ใหม่ด้วย UUID (ปลอดภัย + ไม่ซ้ำ)

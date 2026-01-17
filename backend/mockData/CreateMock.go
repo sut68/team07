@@ -97,26 +97,30 @@ var MockActionType = []entity.ActionType{
 }
 
 var MockGroup_member = []entity.GroupMember{
-	{GroupProjectID: 1, StudentID: 12, IsLeader: true},
-	{GroupProjectID: 1, StudentID: 13, IsLeader: false},
-	{GroupProjectID: 1, StudentID: 14, IsLeader: false},
+	{GroupProjectID: 1, StudentID: 12, Leader: true},
+	{GroupProjectID: 1, StudentID: 13, Leader: false},
+	{GroupProjectID: 1, StudentID: 14, Leader: false},
 
-	{GroupProjectID: 2, StudentID: 15, IsLeader: true},
-	{GroupProjectID: 2, StudentID: 16, IsLeader: false},
-	{GroupProjectID: 2, StudentID: 17, IsLeader: false},
+	{GroupProjectID: 2, StudentID: 15, Leader: true},
+	{GroupProjectID: 2, StudentID: 16, Leader: false},
+	{GroupProjectID: 2, StudentID: 17, Leader: false},
 	
-	{GroupProjectID: 3, StudentID: 18, IsLeader: true},
-	{GroupProjectID: 3, StudentID: 19, IsLeader: false},
-	{GroupProjectID: 3, StudentID: 20, IsLeader: false},
+	{GroupProjectID: 3, StudentID: 18, Leader: true},
+	{GroupProjectID: 3, StudentID: 19, Leader: false},
+	{GroupProjectID: 3, StudentID: 20, Leader: false},
 
-	{GroupProjectID: 4, StudentID: 21, IsLeader: true},
-	{GroupProjectID: 4, StudentID: 22, IsLeader: false},
-	{GroupProjectID: 4, StudentID: 23, IsLeader: false},
+	{GroupProjectID: 4, StudentID: 21, Leader: true},
+	{GroupProjectID: 4, StudentID: 22, Leader: false},
+	{GroupProjectID: 4, StudentID: 23, Leader: false},
+}
+
+func UintPtr(n uint) *uint {
+	return &n
 }
 
 var MockGroup_project = []entity.GroupProject{
-	{GroupNumber: 1, GroupStatus: "Completed", Year: 2568, Membership: 3,teacherID: 2},
-	{GroupNumber: 2, GroupStatus: "Completed", Year: 2568, Membership: 3,teacherID: 2},
-	{GroupNumber: 3, GroupStatus: "Completed", Year: 2568, Membership: 3,teacherID: 3},
-	{GroupNumber: 4, GroupStatus: "Completed", Year: 2568, Membership: 3,teacherID: 3},
+	{GroupNumber: 1, GroupStatus: "Completed", Year: 2568, Membership: 3, TeacherID: UintPtr(2)},
+	{GroupNumber: 2, GroupStatus: "Completed", Year: 2568, Membership: 3, TeacherID: UintPtr(2)},
+	{GroupNumber: 3, GroupStatus: "Completed", Year: 2568, Membership: 3, TeacherID: UintPtr(3)},
+	{GroupNumber: 4, GroupStatus: "Completed", Year: 2568, Membership: 3, TeacherID: UintPtr(3)},
 }

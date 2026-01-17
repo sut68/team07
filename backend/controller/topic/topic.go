@@ -287,6 +287,16 @@ func UpdateTopic(c *gin.Context) {
 
 	// Only update status if provided
 	if payload.Status != "" {
+		// New Validation: Prevent closing topic if group is completed
+		if payload.Status == "Closed" && topic.GroupProjectID != nil {
+			var gp entity.GroupProject
+			if err := db.First(&gp, *topic.GroupProjectID).Error; err == nil {
+				if gp.GroupStatus == "Completed" {
+					c.JSON(http.StatusBadRequest, gin.H{"error": "ไม่สามารถปิดหัวข้อได้ เนื่องจากกลุ่มผ่านการประเมินแล้ว"})
+					return
+				}
+			}
+		}
 		topic.Status = payload.Status
 	}
 
@@ -447,6 +457,18 @@ func CancelSelection(c *gin.Context) {
 	}
 
 	db := database.DB()
+
+	// Check Group Status
+	var groupProject entity.GroupProject
+	if err := db.First(&groupProject, payload.GroupProjectID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Group not found"})
+		return
+	}
+	if groupProject.GroupStatus == "Completed" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ไม่สามารถยกเลิกหัวข้อได้ เนื่องจากกลุ่มผ่านการประเมินแล้ว"})
+		return
+	}
+
 	cancelled := false
 
 	// 1. Cancel ALL active selections for this group
