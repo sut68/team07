@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { SignIn, ForgotPassword } from '../../services/login';
 import { SignInInterface, ForgotPasswordInterface } from '../../interfaces/Login';
-import "../../style/login.css"
+import "../../style/login.css";
 import loginbg from "../../../public/image/Background.jpg"
 import { useAuth } from "../roleCheck/authContext";
 import { EyeInvisibleOutlined, EyeOutlined } from '@ant-design/icons';
